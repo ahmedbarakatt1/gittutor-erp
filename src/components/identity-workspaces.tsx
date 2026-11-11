@@ -37,7 +37,7 @@ function ReferenceState({ failed, retry }: { failed: boolean; retry: () => void 
   return failed ? <div className={styles.error} role="alert"><p>{copy.loadFailed}</p><button className={styles.signout} onClick={retry} type="button">{copy.retry}</button></div> : <p className={styles.loading} role="status">{copy.loading}</p>;
 }
 
-function usePagedRecords<T>(path: string) {
+export function usePagedRecords<T>(path: string) {
   const [items, setItems] = useState<T[] | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -74,7 +74,7 @@ function usePagedRecords<T>(path: string) {
     paging.current = true;
     setLoadingMore(true); setFailed(false);
     try {
-      const response = await fetch(`/api/v1/${path}?cursor=${encodeURIComponent(cursor)}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' });
+      const response = await fetch(`/api/v1/${path}${path.includes('?') ? '&' : '?'}cursor=${encodeURIComponent(cursor)}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' });
       if (!response.ok) throw new Error('RECORDS_UNAVAILABLE');
       const body = await response.json();
       if (!Array.isArray(body.data?.items)) throw new Error('RECORDS_UNAVAILABLE');

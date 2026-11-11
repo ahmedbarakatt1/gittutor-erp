@@ -1,0 +1,330 @@
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  8 passed (8)
+      Tests  174 passed (174)
+   Start at  14:41:08
+   Duration  4.75s (import 45%, tests 39%, transform 12%, worker 4%)
+
+    Isolate  8 workers spawned · ~301ms startup each (spawn + environment, per file)
+             at least ~2.11s faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  7 passed (7)
+      Tests  56 passed (56)
+   Start at  14:41:14
+   Duration  17.97s (tests 87%, import 11%, transform 1%)
+
+    Isolate  7 workers spawned · ~324ms startup each (spawn + environment, per file)
+             at least ~1.94s faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 50 tests using 6 workers
+
+(node:16616) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19348) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (999ms)
+  ok  7 [desktop] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (2.3s)
+  ok  3 [desktop] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (3.3s)
+(node:38872) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 [desktop] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (1.5s)
+  ok  2 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (6.5s)
+  ok 10 [mobile] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (3.3s)
+  ok 12 [mobile] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (3.6s)
+  ok 11 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (8.2s)
+  ok  9 [desktop] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (11.2s)
+(node:34740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 13 [mobile] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (3.6s)
+  ok 14 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (2.9s)
+  ok 15 [mobile] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (932ms)
+  ok  6 [desktop] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (16.7s)
+  ok  5 [desktop] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (20.1s)
+  ok 16 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (4.7s)
+  ok 17 [mobile] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (9.4s)
+  ok 20 [desktop] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (5.9s)
+  x  21 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (10.5s)
+(node:17288) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  19 [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (16.5s)
+  x   4 [desktop] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (30.1s)
+(node:28460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28792) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 24 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (11.7s)
+  x  18 [mobile] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (31.1s)
+(node:36556) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 22 [mobile] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (28.4s)
+  ok 27 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (7.4s)
+  ok 29 [mobile] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (9.5s)
+  ok 30 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (8.3s)
+  ok 26 [mobile] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (25.6s)
+  ok 32 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (8.8s)
+  x  25 [desktop] › tests\e2e\catalog.spec.ts:82:1 › administrator creates, approves and publishes through structured editors without leaking compensation (38.2s)
+(node:33692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  34 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (17.9s)
+  ok 33 [mobile] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (32.9s)
+  ok 23 [desktop] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (1.4m)
+  ok 36 [desktop] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (10.0s)
+  ok 31 [mobile] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (1.1m)
+  ok 37 [desktop] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (9.8s)
+  ok 35 [desktop] › tests\e2e\catalog.spec.ts:128:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (45.9s)
+  ok 28 [mobile] › tests\e2e\catalog.spec.ts:82:1 › administrator creates, approves and publishes through structured editors without leaking compensation (1.4m)
+  ok 38 [mobile] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (10.2s)
+  ok 39 [desktop] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (11.0s)
+  ok 41 [mobile] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (5.5s)
+  ok 43 [mobile] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (14.0s)
+  ok 42 [desktop] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (32.7s)
+  ok 40 [mobile] › tests\e2e\catalog.spec.ts:128:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (38.3s)
+  ok 45 [desktop] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (9.4s)
+  ok 44 [mobile] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (26.8s)
+  ok 47 [mobile] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (9.4s)
+  ok 46 [desktop] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (21.0s)
+  ok 48 [mobile] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (14.9s)
+  ok 49 [desktop] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (8.3s)
+  ok 50 [mobile] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (10.9s)
+
+
+  1) [desktop] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses
+
+    Test timeout of 30000ms exceeded.
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      76 |       for (const path of ['policies', 'pricing-versions', 'offers', 'tutors']) expect((await page.request.get(`/api/v1/${path}`)).status()).toBe(actor ? 403 : 401);
+      77 |       expect((await Promise.all(downloadedScripts)).filter(script => script.forbidden)).toEqual([]);
+    > 78 |     } finally { await context.close(); }
+         |                 ^
+      79 |   }
+      80 | });
+      81 |
+        at D:\GitTutor System\tests\e2e\catalog.spec.ts:78:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-desktop\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests\e2e\catalog.spec.ts:82:1 › administrator creates, approves and publishes through structured editors without leaking compensation
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('#pricing').getByRole('status').filter({ hasText: 'Loading current records…' })
+    Expected: 0
+    Received: 1
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('#pricing').getByRole('status').filter({ hasText: 'Loading current records…' }) with timeout 5000ms
+      - waiting for locator('#pricing').getByRole('status').filter({ hasText: 'Loading current records…' })
+        12 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      35 | }
+      36 | async function pickRecord(section: Locator, id: string) {
+    > 37 |   await expect(section.getByRole('status').filter({ hasText: 'Loading current records…' })).toHaveCount(0);
+         |                                                                                             ^
+      38 |   const button = section.getByRole('button').filter({ hasText: id.slice(0, 8) });
+      39 |   for (let page = 0; await button.count() === 0 && page < 20; page++) {
+      40 |     const more = section.getByRole('button', { name: 'Load more records', exact: true });
+        at pickRecord (D:\GitTutor System\tests\e2e\catalog.spec.ts:37:93)
+        at D:\GitTutor System\tests\e2e\catalog.spec.ts:92:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-desktop\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "/learn"
+    Received: "/auth/set-password"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      123 |     await page.getByLabel('Confirm password', { exact: true }).fill(password);
+      124 |     await page.getByRole('button', { name: 'Save password and continue', exact: true }).click();
+    > 125 |     await expect.poll(() => new URL(page.url()).pathname).toBe('/learn');
+          |                                                           ^
+      126 |     const accept = page.getByRole('form', { name: 'Accept staff invitation', exact: true });
+      127 |     await expect(accept).toBeVisible();
+      128 |     await expect(accept.getByLabel('Staff invitation reference', { exact: true })).toHaveValue(id);
+        at D:\GitTutor System\tests\e2e\email-verification.spec.ts:125:59
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\email-verification-staff-r-9c438-accepts-before-staff-access-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\email-verification-staff-r-9c438-accepts-before-staff-access-desktop\error-context.md
+
+  4) [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached ──
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('.giza-accent')
+    Expected: "ready"
+    Received: "waiting"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('.giza-accent') with timeout 5000ms
+      - waiting for locator('.giza-accent')
+        13 × locator resolved to <div aria-hidden="true" class="giza-accent" data-render-state="waiting"></div>
+           - unexpected value "waiting"
+
+
+      52 |   await expect(page.getByTestId('giza-canvas')).toHaveCount(0);
+      53 |   await page.locator('.giza-accent').scrollIntoViewIfNeeded();
+    > 54 |   await expect(page.locator('.giza-accent')).toHaveAttribute('data-render-state', 'ready');
+         |                                              ^
+      55 |   await expect(page.getByTestId('giza-canvas')).toHaveCount(1);
+      56 | });
+      57 |
+        at D:\GitTutor System\tests\e2e\smoke.spec.ts:54:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\smoke-decorative-Giza-accent-loads-only-when-approached-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\smoke-decorative-Giza-accent-loads-only-when-approached-desktop\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\smoke-decorative-Giza-accent-loads-only-when-approached-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\smoke-decorative-Giza-accent-loads-only-when-approached-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [mobile] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses
+
+    Test timeout of 30000ms exceeded.
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      76 |       for (const path of ['policies', 'pricing-versions', 'offers', 'tutors']) expect((await page.request.get(`/api/v1/${path}`)).status()).toBe(actor ? 403 : 401);
+      77 |       expect((await Promise.all(downloadedScripts)).filter(script => script.forbidden)).toEqual([]);
+    > 78 |     } finally { await context.close(); }
+         |                 ^
+      79 |   }
+      80 | });
+      81 |
+        at D:\GitTutor System\tests\e2e\catalog.spec.ts:78:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-mobile\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\catalog-published-catalog--17ae5-and-customer-safe-responses-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached ───
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('.giza-accent')
+    Expected: "ready"
+    Received: "waiting"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('.giza-accent') with timeout 5000ms
+      - waiting for locator('.giza-accent')
+        13 × locator resolved to <div aria-hidden="true" class="giza-accent" data-render-state="waiting"></div>
+           - unexpected value "waiting"
+
+
+      52 |   await expect(page.getByTestId('giza-canvas')).toHaveCount(0);
+      53 |   await page.locator('.giza-accent').scrollIntoViewIfNeeded();
+    > 54 |   await expect(page.locator('.giza-accent')).toHaveAttribute('data-render-state', 'ready');
+         |                                              ^
+      55 |   await expect(page.getByTestId('giza-canvas')).toHaveCount(1);
+      56 | });
+      57 |
+        at D:\GitTutor System\tests\e2e\smoke.spec.ts:54:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\smoke-decorative-Giza-accent-loads-only-when-approached-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\smoke-decorative-Giza-accent-loads-only-when-approached-mobile\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\smoke-decorative-Giza-accent-loads-only-when-approached-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\smoke-decorative-Giza-accent-loads-only-when-approached-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    [desktop] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses
+    [desktop] › tests\e2e\catalog.spec.ts:82:1 › administrator creates, approves and publishes through structured editors without leaking compensation
+    [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access
+    [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached ───
+    [mobile] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses
+    [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached ────
+  44 passed (3.8m)
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

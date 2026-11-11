@@ -10,6 +10,7 @@ export const en = {
     label: 'Main navigation',
     skip: 'Skip to content',
     subjects: 'Subjects',
+    offers: 'Browse offers and terms',
     formats: 'Study formats',
     how: 'How it works',
     faq: 'Questions',

@@ -231,6 +231,7 @@ export const identityCopy = {
     success: 'Profile saved. Changes to public fields are awaiting review; the previously approved public profile stays visible.',
   },
   recordLabels: {
+    pricing_version_id: 'Pricing reference', policy_version_id: 'Terms reference', offer_id: 'Offer reference',
     invitation_id: 'Invitation reference', staff_invitation_id: 'Staff invitation reference', guardian_link_id: 'Guardian link reference', role_grant_id: 'Role grant reference', application_id: 'Application reference', tutor_id: 'Tutor reference', profile_version_id: 'Profile version reference', revoked_at: 'Revoked at',
   } as Record<string, string>,
 };

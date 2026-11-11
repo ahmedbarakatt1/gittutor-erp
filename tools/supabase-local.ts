@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import { adminDatabase, anonymousClient, assertLocalSupabase, loadLocalSupabase, type LocalSupabase } from '../tests/helpers/supabase';
 import { fixtureId } from './db-seed';
 import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
+import { seedCatalog } from './catalog-seed';
 
 const execute = promisify(execFile);
 const workspace = resolve('.local/supabase-bootstrap');
@@ -259,7 +260,7 @@ async function seed() {
       const accepted = await guardian.rpc('accept_guardian_invitation', { p_invitation_id: created.data.invitation_id, p_single_use_token: event.payload.single_use_token, p_expected_version: 1, p_idempotency_key: `synthetic-guardian-accept-v1:${label}` });
       if (accepted.error) throw new Error(`SYNTHETIC_GUARDIAN_ACCEPT_FAILED:${accepted.error.code}`);
     }
-    await Promise.all([...clients.values()].map(client => client.auth.signOut()));
+    await Promise.all([...clients.values()].map(client => client.auth.signOut({ scope: 'local' })));
     console.log(`Seeded ${fixture.actors.length} synthetic Auth identities with current roles and two scoped guardian links. No external delivery requested.`);
   } finally { await database.end(); }
 }
@@ -299,7 +300,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   switch (process.argv[2]) {
     case 'bootstrap': await bootstrap(); break;
     case 'migrate': await applyMigrations(process.argv.includes('--foundation-only')); console.log('Project-local Supabase migrations applied; temporary owner CREATE grants revoked.'); break;
-    case 'seed': await seed(); break;
+    case 'seed': await seed(); await seedCatalog(); break;
     case 'verify': await verify(); break;
     case 'restart': await restart(); break;
     default: throw new Error('Usage: tsx tools/supabase-local.ts bootstrap|migrate|seed|verify|restart');

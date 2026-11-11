@@ -15,7 +15,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
   successMessage: string;
   disabled?: boolean;
   resettable?: boolean;
-  onSaved?: () => void;
+  onSaved?: (result: Record<string, unknown>) => void;
   onPendingChange?: (pending: boolean) => void;
 }) {
   const hydrated = useHydrated();
@@ -62,7 +62,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
       const responseBody = await response.json() as Result;
       if (!response.ok) { setError(responseBody.message || copy.network); setRequestId(responseBody.request_id || ''); return; }
       setResult(responseBody.data || {});
-      onSaved?.();
+      onSaved?.(responseBody.data || {});
     } catch { setError(copy.network); }
     finally { setPending(false); onPendingChange?.(false); }
   }

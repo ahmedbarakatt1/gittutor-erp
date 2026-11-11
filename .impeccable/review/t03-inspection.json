@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-11",
+  "tool": "@playwright/cli",
+  "version": "0.1.24",
+  "session": "git-tutor-ui",
+  "browser": "msedge",
+  "script": ".impeccable/t03-review.code.txt",
+  "viewports": [{ "width": 1440, "height": 1000 }, { "width": 360, "height": 780 }],
+  "data": "actual verified local Auth and synthetic published catalog",
+  "findings": [
+    { "surface": "admin", "overflow360": false, "errors": [], "warnings": [], "failedRequests": [] },
+    { "surface": "subjects", "overflow360": false, "overflowRtl": false, "errors": [], "warnings": [], "failedRequests": [] },
+    { "surface": "offers", "overflow360": false, "overflowRtl": false, "errors": [], "warnings": [], "failedRequests": [] },
+    { "surface": "offer", "overflow360": false, "overflowRtl": false, "errors": [], "warnings": [], "failedRequests": [] },
+    { "surface": "tutor", "overflow360": false, "overflowRtl": false, "errors": [], "warnings": [], "failedRequests": [] }
+  ],
+  "review": "All desktop/mobile images opened; changed admin, subject and tutor images inspected again after one bounded fix batch.",
+  "limits": ["No live provider approval", "No reservation functionality claimed", "No 200-percent browser zoom check"]
+}

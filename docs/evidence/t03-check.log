@@ -1,0 +1,141 @@
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  8 passed (8)
+      Tests  174 passed (174)
+   Start at  14:46:40
+   Duration  4.46s (import 47%, tests 42%, transform 6%, worker 4%)
+
+    Isolate  8 workers spawned · ~299ms startup each (spawn + environment, per file)
+             at least ~2.09s faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  7 passed (7)
+      Tests  56 passed (56)
+   Start at  14:46:47
+   Duration  20.98s (tests 89%, import 10%, transform 1%)
+
+    Isolate  7 workers spawned · ~404ms startup each (spawn + environment, per file)
+             at least ~2.42s faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 50 tests using 2 workers
+
+(node:28560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (457ms)
+  ok  3 [desktop] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (726ms)
+  ok  2 [desktop] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (1.5s)
+  ok  4 [desktop] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (518ms)
+  ok  6 [desktop] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (2.5s)
+  ok  7 [desktop] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (8.6s)
+  ok  8 [desktop] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (2.4s)
+  ok  5 [desktop] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (22.1s)
+  ok  9 [desktop] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (18.5s)
+  ok 11 [desktop] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (5.6s)
+  ok 12 [desktop] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (5.3s)
+  ok 10 [desktop] › tests\e2e\catalog.spec.ts:82:1 › administrator creates, approves and publishes through structured editors without leaking compensation (29.5s)
+  ok 13 [desktop] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (10.2s)
+  ok 14 [desktop] › tests\e2e\catalog.spec.ts:128:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (23.9s)
+  ok 15 [desktop] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (21.9s)
+  ok 16 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (2.0s)
+  ok 18 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (3.4s)
+  ok 17 [desktop] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (6.8s)
+  ok 19 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (2.1s)
+  ok 21 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (1.9s)
+  ok 22 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (4.1s)
+(node:21940) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 20 [desktop] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (22.8s)
+  ok 23 [desktop] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (7.2s)
+  ok 25 [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (5.7s)
+(node:37724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 26 [mobile] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (199ms)
+  ok 27 [mobile] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (164ms)
+  ok 28 [mobile] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (206ms)
+  ok 24 [desktop] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (9.9s)
+  ok 29 [mobile] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (98ms)
+  ok 30 [mobile] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (970ms)
+(node:32156) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 31 [mobile] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (4.6s)
+  ok 33 [mobile] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (2.1s)
+  ok 32 [mobile] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (13.3s)
+  ok 34 [mobile] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (17.6s)
+  ok 36 [mobile] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (6.6s)
+  ok 37 [mobile] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (4.3s)
+  ok 38 [mobile] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (9.0s)
+  ok 35 [mobile] › tests\e2e\catalog.spec.ts:82:1 › administrator creates, approves and publishes through structured editors without leaking compensation (31.7s)
+  ok 39 [mobile] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (18.2s)
+  ok 41 [mobile] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (8.9s)
+  ok 40 [mobile] › tests\e2e\catalog.spec.ts:128:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (26.0s)
+  ok 43 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (3.4s)
+  ok 44 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (3.8s)
+  ok 45 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (3.6s)
+  ok 46 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (2.1s)
+  ok 47 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (4.6s)
+(node:24148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 42 [mobile] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (23.6s)
+  ok 48 [mobile] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (6.9s)
+  ok 49 [mobile] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (11.6s)
+  ok 50 [mobile] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (7.2s)
+
+  50 passed (3.9m)
+$ next build
+▲ Next.js 16.4.6 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 238ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.1s
+  Running TypeScript ...
+  Finished TypeScript in 17.6s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/17) ...
+  Generating static pages using 11 workers (4/17)
+  Generating static pages using 11 workers (8/17)
+  Generating static pages using 11 workers (12/17)
+✓ Generating static pages using 11 workers (17/17) in 3.4s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/catalog
+├ ƒ /api/auth/[action]
+├ ƒ /api/v1/[...path]
+├ ƒ /api/v1/me
+├ ƒ /apply-to-teach
+├ ƒ /auth/callback
+├ ƒ /auth/set-password
+├ ○ /auth/verify
+├ ƒ /learn
+├ ƒ /login
+├ ƒ /offers
+├ ƒ /offers/[id]
+├ ƒ /service
+├ ○ /signup
+├ ƒ /subjects
+├ ƒ /tutor
+└ ƒ /tutors/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

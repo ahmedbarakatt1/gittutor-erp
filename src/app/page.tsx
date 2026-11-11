@@ -1,6 +1,7 @@
 import { StudyExample } from '@/components/study-example';
 import { GizaAccent } from '@/components/giza-accent';
 import { en as copy } from '@/locales/en';
+import Link from 'next/link';
 
 function Wordmark() {
   return <span className="wordmark"><span className="wordmark-git">Git</span><span>Tutor<span className="wordmark-period">.</span></span></span>;
@@ -14,11 +15,11 @@ export default function HomePage() {
       <header className="site-header container" id="top">
         <a className="brand-link" href="#top" aria-label={copy.brand}><Wordmark /></a>
         <nav aria-label={copy.navigation.label}>
-          <a href="#subjects">{copy.navigation.subjects}</a>
+          <Link href="/subjects">{copy.navigation.subjects}</Link>
           <a href="#formats">{copy.navigation.formats}</a>
           <a href="#how-it-works">{copy.navigation.how}</a>
           <a href="#questions">{copy.navigation.faq}</a>
-          <a href="/login">{copy.navigation.account}</a>
+          <Link href="/login">{copy.navigation.account}</Link>
         </nav>
       </header>
 
@@ -53,6 +54,7 @@ export default function HomePage() {
               </article>
             ))}
           </div>
+          <p><Link className="text-link" href="/offers">{copy.navigation.offers}</Link></p>
         </section>
 
         <section className="formats-section section-spacing" id="formats" aria-labelledby="formats-title">
@@ -104,8 +106,8 @@ export default function HomePage() {
       </main>
 
       <footer className="site-footer container">
-        <div className="footer-invitation"><div><h2>{copy.footer.title}</h2><p>{copy.footer.body}</p><a className="button button-primary" href="#subjects">{copy.navigation.explore}</a></div><GizaAccent /></div>
-        <div className="footer-bottom"><Wordmark /><p>{copy.footer.support}</p><a href="/apply-to-teach">{copy.navigation.teach}</a><a href="#top">{copy.footer.back}</a></div>
+        <div className="footer-invitation"><div><h2>{copy.footer.title}</h2><p>{copy.footer.body}</p><Link className="button button-primary" href="/subjects">{copy.navigation.explore}</Link></div><GizaAccent /></div>
+        <div className="footer-bottom"><Wordmark /><p>{copy.footer.support}</p><Link href="/apply-to-teach">{copy.navigation.teach}</Link><a href="#top">{copy.footer.back}</a></div>
       </footer>
     </>
   );

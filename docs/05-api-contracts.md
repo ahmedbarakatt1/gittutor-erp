@@ -28,7 +28,7 @@ Use 201 for creation, 200 for committed changes or replay, and 202 for durable q
 
 | GET route | RPC and scope | Allowed filters and returned fields |
 |---|---|---|
-| `/public/offers` | `list_public_offers`, public | `subject_id, format, from, to`. Offer ID, title, subject, format, approved duration, public price/currency, availability, policy summary/version |
+| `/public/offers` | `list_public_offers`, public | `offer_id, subject_id, format, from, to`. Offer ID, title, subject, format, approved duration, public price/currency, availability, policy summary/version |
 | `/public/tutors/{id}` | `get_public_tutor`, public | Tutor ID, approved display name, subjects, bio, approved photo reference |
 | `/me` | `get_my_account`, U/V | Account ID, verified status, own current roles, locale, authorized learner IDs. V receives only guest status |
 | `/me/enrollments` | `list_my_enrollments`, L | `learner_id,from,to,state`. Authorized own/linked learner seats and customer booking DTOs |
@@ -63,6 +63,10 @@ Use 201 for creation, 200 for committed changes or replay, and 202 for durable q
 Customer/public DTOs exclude tutor fees/ranges, margin, payout destinations, internal notes, provider tokens and other learners' private records. Tutor DTOs expose only that tutor's compensation. Queries declare monetary and person-count grain. A named-entitlement response reports service quanta satisfied independently of carrying value and any explicitly accepted top-up.
 
 ## Identity, catalog and booking commands
+
+### T03 catalog implementation mapping
+
+T03 catalog mapping: `kind` is `booking` and commercial `scope` is `group` or `private`; deployment environment and synthetic provenance are server-owned. Pricing references in policy content resolve the same immutable pricing-bundle UUID, with compensation stored privately. A nested package contract inherits its owning policy UUID as `package_policy_version_id`; the server derives that identity and rejects a different supplied value. Draft offers may reference compatible drafts so package eligibility can name the actual offer before approval. Publication requires complete approved records and enforces environment/provenance gates. `GET /offers` adds the admin-only `list_admin_offers` projection for draft/approved record selection. The public offer read accepts an exact `offer_id` filter for detail pages; public subjects derive from published offer projections without adding anonymous RPC grants. Customer terms hashes cover customer-visible fields only.
 
 ### T02 onboarding read additions
 

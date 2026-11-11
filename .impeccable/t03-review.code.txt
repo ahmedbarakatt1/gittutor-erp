@@ -1,0 +1,52 @@
+async (page) => {
+  const findings = [];
+  let errors = [], warnings = [], failedRequests = [];
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); if (message.type() === 'warning') warnings.push(message.text()); });
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('response', response => { if (response.status() >= 400) failedRequests.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  await page.context().setStorageState('.local/ui-review/t03-desktop-admin.json');
+  await page.goto('http://127.0.0.1:3000/admin/catalog');
+  await page.getByRole('heading', { name: 'Catalog and commercial terms', exact: true }).waitFor();
+  const pricingResponse = await page.request.get('http://127.0.0.1:3000/api/v1/pricing-versions');
+  const tutorResponse = await page.request.get('http://127.0.0.1:3000/api/v1/tutors');
+  if (pricingResponse.status() !== 200 || tutorResponse.status() !== 200) throw new Error('Actual admin session is unavailable');
+  const price = (await pricingResponse.json()).data.items[0];
+  const tutor = (await tutorResponse.json()).data.items.find(item => item.approved_profile_version_id);
+  await page.locator('#pricing').getByRole('button').filter({ hasText: price.pricing_version_id.slice(0, 8) }).click();
+  await page.getByRole('button', { name: 'Sign out', exact: true }).waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.locator('#pricing').evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.screenshot({ path: '.impeccable/review/t03-admin-' + viewport.label + '.png', caret: 'initial' });
+  }
+  findings.push({ surface: 'admin', overflow360: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), errors, warnings, failedRequests });
+  await page.context().clearCookies();
+  const response = await page.request.get('http://127.0.0.1:3000/api/v1/public/offers?limit=100');
+  if (response.status() !== 200) throw new Error('Published catalog is unavailable');
+  const offers = (await response.json()).data.items;
+  const offer = offers.find(item => item.format === 'group' && item.policy_summary.package_enabled) || offers[0];
+  const views = [
+    { label: 'subjects', path: '/subjects', heading: 'Start with your subject.' },
+    { label: 'offers', path: '/offers?subject_id=' + offer.subject.subject_id, heading: 'Make room for understanding.' },
+    { label: 'offer', path: '/offers/' + offer.offer_id, heading: offer.title },
+    ...(tutor ? [{ label: 'tutor', path: '/tutors/' + tutor.tutor_id, heading: 'Learn with ' + tutor.profile_versions.find(profile => profile.profile_version_id === tutor.approved_profile_version_id).display_name + '.' }] : [])
+  ];
+  for (const view of views) {
+    errors = []; warnings = []; failedRequests = [];
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto('http://127.0.0.1:3000' + view.path);
+    await page.getByRole('heading', { name: view.heading, exact: true }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.screenshot({ path: '.impeccable/review/t03-' + view.label + '-desktop.png', fullPage: true, caret: 'initial' });
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.screenshot({ path: '.impeccable/review/t03-' + view.label + '-mobile.png', fullPage: true, caret: 'initial' });
+    const overflow360 = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+    const overflowRtl = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    if (view.label === 'offer') await page.screenshot({ path: '.impeccable/review/t03-offer-rtl.png', fullPage: true, caret: 'initial' });
+    await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+    findings.push({ surface: view.label, overflow360, overflowRtl, errors, warnings, failedRequests });
+  }
+  return findings;
+}

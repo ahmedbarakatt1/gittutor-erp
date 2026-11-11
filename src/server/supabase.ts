@@ -1,5 +1,6 @@
 import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { parseServerConfig } from "./config";
@@ -29,6 +30,15 @@ export async function serverSupabase() {
         catch { /* Cookie writes are owned by proxy and route handlers. */ }
       },
     },
+  });
+}
+
+/** Anonymous catalog reads use only the publishable key and never retain user sessions. */
+export function publicSupabase() {
+  const config = authConfiguration();
+  return createClient(config.supabase_url, config.supabase_publishable_key, {
+    db: { schema: "api" },
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }
 

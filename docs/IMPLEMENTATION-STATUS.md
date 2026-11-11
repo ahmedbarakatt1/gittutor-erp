@@ -2,7 +2,7 @@
 
 ## Current handoff state
 
-Implementation started 2026-11-11. T01 foundation and T02 identity/portal milestones are locally verified; T03 catalog and policy publication begins next. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its owning checks and later-domain prerequisites.
+Implementation started 2026-11-11. T01–T03 are locally verified, including the catalog and approved commercial-policy workflow. T04 booking is next. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its complete owning checks and later-domain prerequisites.
 
 ## Task progress
 
@@ -10,7 +10,7 @@ Implementation started 2026-11-11. T01 foundation and T02 identity/portal milest
 |---|---|---|---|
 | T01 | Repository foundation and test environment | Locally verified | `pnpm check` exit 0: lint, types, 46 unit, 14 integration, 10 browser tests, production build |
 | T02 | Identity, roles and guardian scope | Locally verified | `pnpm check` exit 0: lint, types, 58 unit, 38 real database integration, 38 browser checks and production build; `docs/evidence/t02-check.log` |
-| T03 | Catalog, confidential pricing and policy publication | Planned | Pending implementation |
+| T03 | Catalog, confidential pricing and policy publication | Locally verified | `pnpm check` exit 0: lint, types, 174 unit, 56 integration, 50 browser checks and production build; `docs/evidence/t03-check.log` |
 | T04 | Booking, formation and concurrency | Planned | Pending implementation |
 | T05 | Package entitlement and renewals | Planned | Pending implementation |
 | T06 | Receipt review, allocations and refunds | Planned | Pending implementation |
@@ -64,6 +64,8 @@ No full acceptance status has been upgraded: GT-1601 has executed responsive/RTL
 
 ### T02 executed checks (2026-11-11, isolated local Supabase)
 
+Scoped identity milestone commit: `eeb21ed94aaf45e3e9b617f7fb94979f37d68a40`.
+
 Final consolidated `pnpm check`: **exit 0**, lint/types clean, **58 unit**, **38 real database integration**, **38 browser** checks passed, optimized production build succeeded. Browser checks ran with 6 workers and included the delayed-script regression. Preserved result: `docs/evidence/t02-check.log`. Supabase, both native baselines and synthetic seed repetition were separately verified as described below.
 
 - `pnpm exec vitest run tests/integration/identity.test.ts`: initial missing-RPC RED, then 11 core checks passed. Extended direct-RPC, concurrency, queue scope and transport checks exposed two defects, fixed in additive migrations; latest executed run passed 23 checks including scoped management reads (`.local/t02-identity-final.log`).
@@ -79,6 +81,10 @@ Final consolidated `pnpm check`: **exit 0**, lint/types clean, **58 unit**, **38
 
 ### Decisions and dependencies
 
+- T03: shared restricted JSON Schemas are consumed by pinned Zod 4.6.7 and snapshotted into PostgreSQL validation. Unsupported converter features are excluded and tested; database semantics independently enforce publication cross-rules. Final focused coverage is 116 unit and 18 actual Supabase integration checks, including 71 shared policy and 15 pricing vectors, immutable publication, exact fee bands, approved tutor projections, transport and repeated seeds. The consolidated milestone and browser publication walkthroughs pass as recorded below.
+- T03: preserve the supplied amounts in canonical synthetic seeds and exact arithmetic tests. A new explicitly approved, immutable pricing version may define different amounts or fee bands as a new approved contract; it cannot rewrite a prior published version or an accepted quote. Initial tier sizes remain 2, 3 and 4.
+- T03: initial HTTP regression execution returned 2 failures as expected before routes existed (anonymous catalog returned 401; unavailable administrative route returned 404). `pnpm exec playwright test tests/e2e/catalog-transport.spec.ts --workers=1 --output=.local/t03-transport-green` now passes 6 desktop/mobile checks: anonymous filtering, unsupported/duplicate filter rejection, current customer denial of administrative reads/writes, and public reads with an invalid unexpired account cookie. The last case first reproduced HTTP 503 (`.local/t03-public-cookie-red.log`); public routes now use the stateless anonymous client. Passing output: `.local/t03-transport-green.log`. Full cross-domain acceptance remains unclaimed.
+
 - T02: Docker was recovered by preserving its stale one-socket runtime directory and recreating the runtime directory; existing unrelated container configuration and volumes were preserved. Project-local Supabase is now running with ports bound to loopback, PostgreSQL 17.11, actual Auth/PostgREST/Storage/Mailpit and a persisted disposable-test marker. Local secrets are confined to ignored `.local/supabase.json`; web environment contains public Supabase configuration only.
 - T02: actual Supabase exposed a migration-owner privilege difference masked by native superuser tests. A reproducible local preflight grants the required migration ownership permissions before applying the unchanged T01 migration through the CLI. Native migration checks retain an explicit T01-only baseline; identity tests use real Auth, never a fabricated auth schema. See `docs/T02-AUTH-PREFLIGHT.md`.
 - T02: add own verified-contact and authenticated application-subject reads to support the specified command inputs in usable forms; keep the two-only anonymous RPC rule unchanged. Exact projections are recorded in the API contract.
@@ -91,6 +97,22 @@ Final consolidated `pnpm check`: **exit 0**, lint/types clean, **58 unit**, **38
 - Preserve T04/T05 as `awaiting_T06_integration` after independent checks. Funded confirmation, financial amendments and shared remedies remain unavailable until real integrated transactions pass.
 - All external providers remain fake/manual. Live Supabase, Google, SES, WhatsApp, scanner and approved collection settings require separate readiness evidence. No live data, sends or migrations are authorized by synthetic development.
 
+### T03 executed checks (2026-11-11, isolated local Supabase)
+
+Final consolidated `pnpm check`: **exit 0**, lint/types clean, **174 unit**, **56 real database integration**, **50 browser** checks passed, optimized production build succeeded. Browser checks use two workers with unchanged assertions and zero retries. Preserved output: `docs/evidence/t03-check.log`. Final CLI review covers five catalog surfaces at desktop/mobile and public RTL with no console errors, failing HTTP responses or horizontal overflow; `docs/DESIGN-REVIEW.md` and `.impeccable/review/t03-inspection.json` record the observations.
+
+Delivered public subjects/offers/approved tutor biographies and structured admin pricing, package-policy and publication workflows. Synthetic seeding preserves two canonical pricing bundles, four policies and eight offers across five subjects; it rejects conflicting canonical content and unapproved noncanonical tutor drafts. Approval uses actual Auth-bound administrative commands. Exact seed identities, private/public boundaries and limitations are in `docs/T03-DATABASE-EVIDENCE.md`.
+
+- Coordinating agent: `pnpm exec vitest run tests/unit/pricing.test.ts tests/unit/policies.test.ts tests/integration/catalog-privacy.test.ts` exited 0 on 2026-11-11 at 14:25 local time: 3 files, 125 tests passed (114 unit and 11 actual Supabase integration checks). Output: `.local/t03-root-domain.log`.
+- Catalog transport: 6 desktop/mobile tests passed as detailed above. Browser publication, canonical seed repetition, final privilege verification and the consolidated regression run subsequently passed.
+- Independent review found draft-update response fields that failed the strict DTO after a successful commit, and creation responses incorrectly returning 200. Six real RPC transport regressions failed before the correction and passed after additive migration `20261111123015_catalog_transport_contract.sql`: creation 201, replay 200, exact update shapes, durable replay and concurrent version conflict. Existing command history is preserved; legacy update results are safely projected on replay. Evidence: `.local/t03-rpc-transport-red.log`, `.local/t03-rpc-transport-green.log`. The earlier initial HTTP RED artifact was overwritten by a log-name collision; its observed failure is recorded above, but that original artifact is no longer available.
+- `pnpm build` exited 0 during production-rendering review (`.local/t03-prerender-review.log`). `/subjects`, `/offers`, offer/tutor detail and admin catalog are server-rendered on demand. Subjects use the bundled Next.js `connection()` API so new publications appear without rebuilding. This diagnostic build precedes the final browser-driven loading-component correction and is not the final consolidated milestone run.
+- Final validation review reproduced two parity defects: oversized safe-integer group settings threw during SQL integer conversion, and the TypeScript provenance helper accepted nonsynthetic development records which SQL rejected. Additive migration `20261111123430_catalog_policy_integer_validation.sql` and the aligned helper resolve both. The combined catalog unit/integration command now passes 134 checks (116 unit, 18 database), including 71 shared policy vectors and 15 pricing vectors; `.local/t03-parity-red.log` and `.local/t03-parity-combined-green.log` retain the executed results.
+- First consolidated `pnpm check` exited 1 at lint: `src/app/page.tsx:41` used an anchor for `/offers`, which the Next.js internal-link rule rejects now that the route exists. Later stages did not run. Failure: `docs/evidence/t03-check-first-failed.log`. The link and reviewed mobile admin record-list height were corrected before the final run.
+- Coordinating agent `pnpm db:verify` exited 0: native foundation 7 private RLS tables/5 functions, actual Supabase 9 migrations/25 private RLS tables/69 function boundaries (`.local/t03-root-verify.log`).
+- Second consolidated `pnpm check`: lint/types, 174 unit and 56 integration checks passed; 44/50 browser checks passed, six timed out and build did not run. The six-worker run exceeded 5-second readiness/navigation assertions across catalog, Auth and the decorative model, plus both 30-second multi-account public-catalog journeys. Screenshots showed the completed Auth navigation after its assertion deadline. The local suite now bounds browser workers at two, preserving all assertions, zero retries and each test's independent accounts/connections. Failure evidence: `docs/evidence/t03-check-browser-timeouts.log`; the bounded rerun passed all 50 browser checks and the production build.
+- `pnpm exec tsx tools/validate-evidence.ts` and `python tools/verify-pack.py` both passed: 147 original cases remain `not_run`, all 84 preserved IDs, 18 requirements, 13 tasks and 33 synthetic scenarios remain valid. Actual booking agreement records, funded confirmations, package ledgers, and real email/export/download confidentiality checks remain with their owning later tasks; no full cross-domain acceptance claim is inferred from catalog projections.
+
 ## Continuation
 
-The first incomplete task is T03. T01 and T02 pass their local milestone checks. Continue catalog, confidential pricing and policy publication. Preserve the T04–T06 integration barrier and execute each owning suite before marking it verified.
+The first incomplete task is T04. T01–T03 pass their local milestone checks. Continue reservations, availability and proposal foundations. Preserve the T04–T06 integration barrier: funded confirmation, committed financial amendments and shared remedies require the combined T06 transaction/concurrency checks before all three tasks are marked verified.
