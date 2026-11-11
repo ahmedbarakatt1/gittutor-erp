@@ -26,6 +26,22 @@ function isBrowserKey(value: string): boolean {
   } catch { return false; }
 }
 
+function privateEncryptionKeys(raw: Env) {
+  const key = raw.SECRET_ENCRYPTION_KEY?.trim() || null;
+  const keyId = raw.SECRET_ENCRYPTION_KEY_ID?.trim() || 'v1';
+  let previous: Record<string, string> = {};
+  try {
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(keyId) || (key && !/^[a-f\d]{64}$/i.test(key))) throw new Error();
+    if (raw.SECRET_ENCRYPTION_PREVIOUS_KEYS) {
+      const parsed: unknown = JSON.parse(raw.SECRET_ENCRYPTION_PREVIOUS_KEYS);
+      if (!key || typeof parsed !== 'object' || parsed === null || Array.isArray(parsed) || Object.keys(parsed).length > 8 || Object.hasOwn(parsed, keyId)) throw new Error();
+      if (Object.entries(parsed).some(([id, value]) => !/^[A-Za-z0-9_-]{1,40}$/.test(id) || typeof value !== 'string' || !/^[a-f\d]{64}$/i.test(value))) throw new Error();
+      previous = parsed as Record<string, string>;
+    }
+  } catch { throw new Error('Invalid private encryption configuration'); }
+  return { key, keyId, previous };
+}
+
 /** Server-owned configuration. Never pass this object to a client component or log it. */
 export function parseServerConfig(raw: Env) {
   if (raw.NODE_ENV === "production" && !raw.APP_ENV) throw new Error("APP_ENV must be explicit at production startup");
@@ -55,7 +71,7 @@ export function parseServerConfig(raw: Env) {
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
   const missing = required.filter(key => !raw[key]?.trim());
   if (missing.length) throw new Error(`Missing configuration keys: ${missing.join(", ")}`);
-  if (!isolated && !/^[a-f\d]{64}$/i.test(raw.SECRET_ENCRYPTION_KEY || "")) throw new Error("SECRET_ENCRYPTION_KEY must encode 32 bytes in hexadecimal");
+  const encryption = privateEncryptionKeys(raw);
   return {
     environment, isolated, providers,
     app_base_url: absoluteUrl(raw.APP_BASE_URL || "http://localhost:3000", "APP_BASE_URL", !isolated),
@@ -63,7 +79,9 @@ export function parseServerConfig(raw: Env) {
     supabase_publishable_key: publishableKey,
     worker_database_url: raw.WORKER_DATABASE_URL || null,
     supabase_secret_key: raw.SUPABASE_SECRET_KEY || null,
-    secret_encryption_key: raw.SECRET_ENCRYPTION_KEY || null,
+    secret_encryption_key: encryption.key,
+    secret_encryption_key_id: encryption.keyId,
+    secret_encryption_previous_keys: encryption.previous,
   };
 }
 

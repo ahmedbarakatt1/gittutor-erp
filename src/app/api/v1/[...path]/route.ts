@@ -13,6 +13,10 @@ import {
   listMyWaitlist, listOfferOccurrences, listTutorFeeAgreements, listTutorOccurrences,
 } from "@/modules/booking/queries";
 import { invokePackageCommandWithStatus, type PackageCommandName } from "@/modules/packages/commands";
+import { invokePaymentCommandWithStatus, type PaymentCommandName } from "@/modules/payments/commands";
+import { findPaymentReadRoute, paymentCommandRoutes } from "@/server/payment-http";
+import { lookupTransferPayer } from "@/modules/payments/queries";
+import { refundDestinationServer } from "@/server/refund-destination-server";
 import {
   getMyPackage, getPackageContract, getPackageCoverageOptions, getPackageReconciliation,
   listAdminPackages, listMyPackageLearners, listMyPackages, listPackageContracts, listPackageCoverage,
@@ -21,11 +25,12 @@ import {
 } from "@/modules/packages/queries";
 
 type CommandRoute = { pattern: RegExp; fields: string[]; pathArgument?: string } & (
-  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName }
+  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName }
 );
 const commands: CommandRoute[] = [
+  ...paymentCommandRoutes,
   { family: "packages", pattern: /^packages$/, rpc: "purchase_package", fields: ["learner_id", "package_contract_version_id", "accepted_terms_hash"] },
-  { family: "packages", pattern: /^packages\/([^/]+)\/complimentary-grants$/, rpc: "approve_package_grant", pathArgument: "package_id", fields: ["credit_quanta", "carrying_value_minor", "currency", "grant_kind", "grant_policy_version_id", "source_credit_id", "reason", "evidence_file_id", "expected_version"] },
+  { family: "packages", pattern: /^packages\/([^/]+)\/complimentary-grants$/, rpc: "approve_package_grant", pathArgument: "package_id", fields: ["credit_quanta", "carrying_value_minor", "currency", "grant_kind", "grant_policy_version_id", "source_credit_id", "credit_conversion_intent_id", "reason", "evidence_file_id", "expected_version"] },
   { family: "packages", pattern: /^packages\/([^/]+)\/reserve$/, rpc: "reserve_package_credit", pathArgument: "package_id", fields: ["enrollment_id", "credit_quanta", "coverage_proposal_id", "expected_version"] },
   { family: "packages", pattern: /^package-reservations\/([^/]+)\/release$/, rpc: "release_package_reservation", pathArgument: "reservation_id", fields: ["reason", "expected_version"] },
   { family: "packages", pattern: /^packages\/([^/]+)\/renew$/, rpc: "renew_package", pathArgument: "package_id", fields: ["new_contract_version_id", "transfer_credit_quanta", "accepted_terms_hash", "conversion_proposal_id", "expected_version"] },
@@ -68,6 +73,7 @@ const commands: CommandRoute[] = [
   { family: "booking", pattern: /^operation-proposals$/, rpc: "create_operation_proposal", fields: ["kind", "target_id", "requested_terms", "reason", "expected_version"] },
   { family: "booking", pattern: /^operation-proposals\/([^/]+)\/accept$/, rpc: "accept_operation_proposal", pathArgument: "proposal_id", fields: ["terms_hash", "expected_version"] },
   { family: "booking", pattern: /^operation-proposals\/([^/]+)\/decline$/, rpc: "decline_operation_proposal", pathArgument: "proposal_id", fields: ["reason", "expected_version"] },
+  { family: "booking", pattern: /^operation-proposals\/([^/]+)\/revise-cancellation$/, rpc: "revise_cancellation_proposal", pathArgument: "proposal_id", fields: ["tutor_compensation_minor", "reason", "expected_version"] },
   { family: "booking", pattern: /^operation-proposals\/([^/]+)\/approve$/, rpc: "approve_operation_proposal", pathArgument: "proposal_id", fields: ["terms_hash", "decision", "reason", "expected_version"] },
   { family: "booking", pattern: /^enrollments\/([^/]+)\/cancel$/, rpc: "cancel_enrollment", pathArgument: "enrollment_id", fields: ["reason", "remedy_proposal_id", "expected_version"] },
   { family: "booking", pattern: /^occurrences\/([^/]+)\/reschedule$/, rpc: "reschedule_occurrence", pathArgument: "occurrence_id", fields: ["start_at", "end_at", "time_zone", "reason", "accepted_proposal_id", "expected_version"] },
@@ -81,11 +87,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const path = (await params).path.join("/");
     const route = commands.find(item => item.pattern.test(path));
-    if (!route) throw new DomainError("NOT_FOUND");
+    const payerLookup = /^incoming-transfers\/([^/]+)\/payer-lookup$/.exec(path);
+    const destinationReveal = /^refund-destinations\/([^/]+)\/reveal$/.exec(path);
+    if (!route && !payerLookup && !destinationReveal) throw new DomainError("NOT_FOUND");
     context = requestSupabase(request);
     if (!allowedOrigin(request.headers.get("origin"), context.config.app_base_url, context.config.isolated)) throw new DomainError("FORBIDDEN");
     const { data, error } = await context.client.auth.getClaims();
     if (error || !data?.claims.sub) throw new DomainError("AUTH_REQUIRED");
+    if (payerLookup) {
+      if (request.nextUrl.searchParams.size) throw new DomainError("VALIDATION_ERROR");
+      const body = await readJson(request);
+      const result = await lookupTransferPayer(context.client, payerLookup[1], body as Parameters<typeof lookupTransferPayer>[2]);
+      return context.finish(NextResponse.json({ data: result, request_id: requestId }));
+    }
+    if (destinationReveal) {
+      if (request.nextUrl.searchParams.size) throw new DomainError("VALIDATION_ERROR");
+      const body = await readJson(request);
+      if (body === null || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some(field => !["refund_attempt_id", "reason"].includes(field))) throw new DomainError("VALIDATION_ERROR");
+      const result = await refundDestinationServer(context.client, data.claims, context.config).reveal({ ...body, destination_id: destinationReveal[1] });
+      return context.finish(NextResponse.json({ data: result, request_id: requestId }, { headers: { "Pragma": "no-cache" } }));
+    }
+    if (!route) throw new DomainError("NOT_FOUND");
     const key = request.headers.get("Idempotency-Key");
     if (!key || !key.trim() || key.length > 200) throw new DomainError("VALIDATION_ERROR");
     const body = await readJson(request);
@@ -93,7 +115,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const args: Record<string, unknown> = { p_idempotency_key: key };
     for (const [field, value] of Object.entries(body)) args[`p_${field}`] = value;
     if (route.pathArgument) args[`p_${route.pathArgument}`] = route.pattern.exec(path)![1];
-    const result = route.family === "packages"
+    const result = route.family === "payments" && route.rpc === "propose_refund_destination"
+      ? await refundDestinationServer(context.client, data.claims, context.config).propose(args)
+      : route.family === "payments" && route.rpc === "verify_refund_destination"
+      ? await refundDestinationServer(context.client, data.claims, context.config).verify(args)
+      : route.family === "payments"
+      ? await invokePaymentCommandWithStatus(context.client, route.rpc, args)
+      : route.family === "packages"
       ? await invokePackageCommandWithStatus(context.client, route.rpc, args)
       : route.family === "booking"
       ? await invokeBookingCommandWithStatus(context.client, route.rpc, args)
@@ -114,6 +142,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const path = (await params).path;
     const route = path.join("/");
+    const paymentRead = findPaymentReadRoute(route);
+    if (paymentRead) {
+      const filters = request.nextUrl.searchParams;
+      if (Array.from(filters.keys()).some(key => !paymentRead.fields.includes(key)) || new Set(filters.keys()).size !== filters.size) throw new DomainError("VALIDATION_ERROR");
+      const options: Record<string, unknown> = Object.fromEntries(filters);
+      if (filters.has("limit")) options.limit = Number(filters.get("limit"));
+      context = requestSupabase(request);
+      const { data, error } = await context.client.auth.getClaims();
+      if (error || !data?.claims.sub) throw new DomainError("AUTH_REQUIRED");
+      return context.finish(NextResponse.json({ data: await paymentRead.run(context.client, options), request_id: requestId }));
+    }
     const queryFields: Record<string, string[]> = {
       "tutor-applications": ["cursor", "limit"], "staff-invitations": ["cursor", "limit"],
       "staff-role-grants": ["cursor", "limit"], "me/guardian-links": ["cursor", "limit"],

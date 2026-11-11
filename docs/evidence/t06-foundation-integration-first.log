@@ -1,0 +1,88 @@
+
+ RUN  v5.1.0 D:/GitTutor System
+
+ ❯ tests/integration/group-amendments.test.ts (9 tests | 1 failed) 5793ms
+   ❯ T04 group amendment foundation without T06 financial posting (9)
+     × revised scoped quotes and exact future fee collect acceptance without rewriting current roster or posting money 258ms
+ ❯ tests/integration/package-booking-atomicity.test.ts (3 tests | 1 failed) 2473ms
+   × independent reserve and transfer commands cannot spend the same last credit 477ms
+ ❯ tests/integration/package-transfers.test.ts (4 tests | 2 failed) 1253ms
+   ❯ T05 immutable same-learner renewal and transfer lineage (4)
+     × renewal carries existing value without activating or paying the new purchase, then rejects a lineage cycle 183ms
+     × booking reservation and available transfer share the learner financial lock 286ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/group-amendments.test.ts > T04 group amendment foundation without T06 financial posting > revised scoped quotes and exact future fee collect acceptance without rewriting current roster or posting money
+AssertionError: expected [Function] to throw error including 'DEPENDENCY_UNAVAILABLE' but got 'INSUFFICIENT_FUNDS'
+
+Expected: "DEPENDENCY_UNAVAILABLE"
+Received: "INSUFFICIENT_FUNDS"
+
+ ❯ tests/integration/group-amendments.test.ts:31:184
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/integration/package-booking-atomicity.test.ts > independent reserve and transfer commands cannot spend the same last credit
+AssertionError: expected 'RETRYABLE_CONFLICT' to be 'VERSION_CONFLICT' // Object.is equality
+
+Expected: "VERSION_CONFLICT"
+Received: "RETRYABLE_CONFLICT"
+
+ ❯ tests/integration/package-booking-atomicity.test.ts:101:55
+     99|   ]);
+    100|   expect(results.filter(result => !result.error)).toHaveLength(1);
+    101|   expect(results.find(result => result.error)?.error).toBe('VERSION_CO…
+       |                                                       ^
+    102|   const sourceBalance = (await fixture.database.query('select app_priv…
+    103|   const targetBalance = (await fixture.database.query('select app_priv…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/integration/package-transfers.test.ts > T05 immutable same-learner renewal and transfer lineage > renewal carries existing value without activating or paying the new purchase, then rejects a lineage cycle
+AssertionError: expected { …(21) } to match object { …(4) }
+(24 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,11 +2,11 @@
+    "balances": {
+      "available_credit_quanta": 1000,
+      "available_value_minor": 33333,
+    },
+    "charge": {
+-     "balance_minor": null,
++     "balance_minor": 150000,
+      "original_minor": 150000,
+    },
+    "purchase_state": "pending_funding",
+    "purchased_granted_credit_quanta": 0,
+  }
+
+ ❯ tests/integration/package-transfers.test.ts:14:79
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/integration/package-transfers.test.ts > T05 immutable same-learner renewal and transfer lineage > booking reservation and available transfer share the learner financial lock
+AssertionError: expected 'RETRYABLE_CONFLICT' to be 'VERSION_CONFLICT' // Object.is equality
+
+Expected: "VERSION_CONFLICT"
+Received: "RETRYABLE_CONFLICT"
+
+ ❯ tests/integration/package-transfers.test.ts:33:103
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed | 51 passed (54)
+      Tests  4 failed | 196 passed | 1 skipped (201)
+   Start at  20:09:01
+   Duration  135.20s (tests 88%, import 12%)
+
+    Isolate  54 workers spawned · ~199ms startup each (spawn + environment, per file)
+             at least ~10.52s faster with isolate: false — reuses workers across files instead of one per file
+

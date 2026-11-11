@@ -81,6 +81,7 @@ export function landingForRoles(roles: string[]): string {
   if (roles.includes("admin")) return "/admin";
   if (roles.includes("customer_service")) return "/service";
   if (roles.includes("tutor")) return "/tutor";
+  if (roles.length === 0) return "/learn/payments";
   return "/learn";
 }
 

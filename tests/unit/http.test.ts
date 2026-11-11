@@ -34,6 +34,7 @@ it("schedule errors expose only bounded validated occurrence references from the
 });
 it("portal destinations depend on current roles and remain an internal allowlist", () => {
   expect(landingForRoles(["student"])).toBe("/learn");
+  expect(landingForRoles([])).toBe("/learn/payments");
   expect(landingForRoles(["guardian"])).toBe("/learn");
   expect(landingForRoles(["tutor"])).toBe("/tutor");
   expect(landingForRoles(["customer_service"])).toBe("/service");

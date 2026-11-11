@@ -1,0 +1,48 @@
+### Result
+{"measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false}],"consoleErrors":0,"failedResponses":[],"closedOrdinaryActionCount":0,"claimRenewalCount":0}
+### Ran Playwright code
+```js
+await (async (page) => {
+  let errors = 0, failedResponses = [];
+  page.on('console', message => { if (message.type() === 'error') errors++; });
+  page.on('pageerror', () => errors++);
+  page.on('response', response => { if (response.status() >= 400) failedResponses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  await page.context().setStorageState('.local/ui-review/t06-desktop-refund-admin.json');
+  const list = await page.request.get('http://127.0.0.1:3000/api/v1/review-cases?state=resolved&limit=25');
+  if (list.status() !== 200) throw new Error('Resolved case selection unavailable');
+  const record = (await list.json()).data.items.find(row => row.reported_amount_minor === 300000);
+  if (!record) throw new Error('Executed synthetic split-payment case absent');
+  const detail = (await (await page.request.get('http://127.0.0.1:3000/api/v1/review-cases/' + record.case_id)).json()).data;
+  await page.goto('http://127.0.0.1:3000/admin/payments/reviews/' + record.case_id);
+  await page.getByText('This review is closed. Its recorded decision remains in the case history.', { exact: true }).waitFor();
+  const selector = page.getByLabel('Choose an incoming transfer', { exact: true });
+  const panel = page.getByRole('heading', { name: 'Independent transfer', exact: true }).locator('..');
+  let value;
+  for (let index = 0; index < 20; index++) {
+    await page.waitForFunction(() => !document.body.innerText.includes('Loading current records…'));
+    value = await selector.locator('option').evaluateAll((options, reference) => options.find(option => option.textContent.includes(reference))?.value, detail.receipt.reference);
+    if (value) break;
+    const more = panel.getByRole('button', { name: 'Load more', exact: true });
+    if (!await more.isVisible()) break;
+    await more.click(); await panel.getByText('Loading more…', { exact: true }).waitFor({ state: 'hidden' });
+  }
+  if (!value) throw new Error('Original source candidate absent');
+  await selector.selectOption(value);
+  await page.getByText('Prepared development evidence only. File bytes, uploads and scans are not verified by this screen.', { exact: true }).first().waitFor();
+  await page.waitForFunction(() => !document.body.innerText.includes('Loading current records…'));
+  const measurements = [];
+  for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+    await page.setViewportSize(viewport);
+    await page.getByRole('heading', { name: 'Customer proof', exact: true }).evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.screenshot({ path: '.impeccable/review/t06-staff-comparison-' + viewport.label + '.png' });
+    measurements.push({ viewport: viewport.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+  }
+  return { measurements, consoleErrors: errors, failedResponses, closedOrdinaryActionCount: await page.getByRole('button', { name: 'Apply verified funds', exact: true }).count(), claimRenewalCount: await page.getByRole('button', { name: 'Renew claim', exact: true }).count() };
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:3000/admin/payments/reviews/fc3d707e-f8ef-4c4c-90db-b21ab8289d93
+- Page Title: Payment comparison | Git Tutor
+### Events
+- New console entries: .playwright-cli\console-2026-11-11T17-37-46-705Z.log#L61-L226

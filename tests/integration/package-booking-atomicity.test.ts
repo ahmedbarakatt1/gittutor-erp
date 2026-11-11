@@ -86,7 +86,7 @@ test('independent reserve and transfer commands cannot spend the same last credi
   const source = await fixture.purchase(), target = await fixture.purchase(), policy = await fixture.grantPolicy(50000);
   await fixture.grant(source.resource_id as string, policy, 50000, 1000);
   const hold = await fixture.hold();
-  const results = await raceBookingCalls([
+  const calls = [
     { client: fixture.learner, name: 'reserve_package_credit', args: {
       p_package_id: source.resource_id, p_enrollment_id: hold.enrollmentId, p_credit_quanta: 1000,
       p_coverage_proposal_id: null, p_expected_version: 2, p_idempotency_key: randomUUID(),
@@ -96,7 +96,14 @@ test('independent reserve and transfer commands cannot spend the same last credi
       p_conversion_proposal_id: null, p_reason: 'Synthetic cross-command contention',
       p_expected_target_version: 1, p_expected_version: 2, p_idempotency_key: randomUUID(),
     } },
-  ]);
+  ];
+  const results = await raceBookingCalls(calls);
+  expect(results.filter(result => !result.error)).toHaveLength(1);
+  // Retry only a changed financial graph, keeping the original request and key.
+  // Once the winning transaction is visible, the stale purchase version must fail.
+  for (let index = 0; index < results.length; index++) {
+    if (results[index].error === 'RETRYABLE_CONFLICT') results[index] = (await raceBookingCalls([calls[index]]))[0];
+  }
   expect(results.filter(result => !result.error)).toHaveLength(1);
   expect(results.find(result => result.error)?.error).toBe('VERSION_CONFLICT');
   const sourceBalance = (await fixture.database.query('select app_private.package_balance($1) as balances', [source.resource_id])).rows[0].balances;

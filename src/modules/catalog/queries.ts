@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import schemas from '../../../contracts/runtime/catalog-schemas.json';
+import schemas from '../../../contracts/runtime/catalog-schemas.json' with { type: 'json' };
 import { catalogRpc, CatalogRpcError, type CatalogRpcClient } from './commands';
 import { compensationSchema, customerPricingSchema, policyContentSchema, policyRequiredCommon, type JsonObject } from './policies';
 import { publicOccurrenceSchema } from '../booking/public-occurrence';
@@ -66,7 +66,7 @@ async function read<S extends z.ZodType>(client:CatalogRpcClient,name:string,sch
   if(!result.success) throw new CatalogRpcError('DEPENDENCY_UNAVAILABLE');return result.data;
 }
 const collection=<S extends z.ZodType>(item:S)=>z.object({items:z.array(item),next_cursor:z.string().nullable()}).strict();
-export const listPublicOffers=(client:CatalogRpcClient,options:z.input<typeof publicFilters>={})=>read(client,'list_public_offers',collection(publicOffer),filters(publicFilters,options));
+export const listPublicOffers=(client:CatalogRpcClient,options:z.input<typeof publicFilters>={})=>read(client,'list_public_offers',collection(publicOffer).extend({subjects:z.array(subject)}),filters(publicFilters,options));
 export function getPublicTutor(client:CatalogRpcClient,tutorId:string){if(!id.safeParse(tutorId).success) throw new CatalogRpcError('VALIDATION_ERROR');return read(client,'get_public_tutor',publicTutor,{p_tutor_id:tutorId});}
 export const listPolicies=(client:CatalogRpcClient,options:z.input<typeof policyFilters>={})=>read(client,'list_policies',collection(policy),filters(policyFilters,options));
 export const listPricingVersions=(client:CatalogRpcClient,options:z.input<typeof pricingFilters>={})=>read(client,'list_pricing_versions',collection(pricing),filters(pricingFilters,options));

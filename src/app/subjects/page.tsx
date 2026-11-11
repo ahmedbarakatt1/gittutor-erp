@@ -16,12 +16,8 @@ export default async function SubjectsPage() {
   let unavailable = false;
   try {
     const client = publicSupabase();
-    let cursor: string | null = null;
-    do {
-      const page = await listPublicOffers(client, { cursor, limit: 100 });
-      for (const offer of page.items) subjects.set(offer.subject.slug, offer.subject);
-      cursor = page.next_cursor;
-    } while (cursor);
+    const page = await listPublicOffers(client, { limit: 1 });
+    for (const subject of page.subjects) subjects.set(subject.slug, subject);
   } catch { unavailable = true; }
   return <PublicShell active="subjects"><div className={`${styles.intro} ${styles.subjectIntro}`}><h1>{copy.subjectsTitle}</h1><p>{copy.subjectsDescription}</p></div>
     {unavailable && <CatalogUnavailable retry="/subjects" />}

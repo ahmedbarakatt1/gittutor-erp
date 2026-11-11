@@ -1,4 +1,5 @@
 export const bookingCopy = {
+  reviewReplacement: 'Review replacement terms', replacementNotice: 'These terms replace an earlier proposal. Review this exact version before responding.', restoredCredits: 'Previously used teaching credits to restore', releasedCredits: 'Unused teaching credits to release',
   title: 'Your sessions.', description: 'Choose a learner, review a time and keep every reservation separate.', nav: 'My sessions', browse: 'Browse offers', back: 'All your sessions',
   loading: 'Loading current session details…', failed: 'Session details could not be loaded. Refresh before making a change.', refresh: 'Refresh details', more: 'Load more results', loadingMore: 'Loading more…',
   learner: 'Booking for', chooseLearner: 'Choose a learner', noLearners: 'No learner is currently available for booking. A guardian needs accepted booking permission for each learner.',

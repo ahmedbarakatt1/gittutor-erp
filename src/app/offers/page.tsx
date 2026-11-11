@@ -28,8 +28,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
     const client = publicSupabase();
     const selected = await listPublicOffers(client, { subject_id: validSubject, format: validFormat, cursor: input.cursor, limit: 25, ...(!invalidWindow ? { from: from.instant, to: to.instant } : {}) });
     offers = selected.items; next = selected.next_cursor;
-    let cursor: string | null = null;
-    do { const page = await listPublicOffers(client, { cursor, limit: 100 }); for (const offer of page.items) subjects.set(offer.subject.subject_id, offer.subject); cursor = page.next_cursor; } while (cursor);
+    for (const subject of selected.subjects) subjects.set(subject.subject_id, subject);
   } catch { unavailable = true; }
   const nextParams = new URLSearchParams();
   if (validSubject) nextParams.set('subject_id', validSubject); if (validFormat) nextParams.set('format', validFormat); if (next) nextParams.set('cursor', next);

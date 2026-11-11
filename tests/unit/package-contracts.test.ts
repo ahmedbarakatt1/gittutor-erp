@@ -41,3 +41,12 @@ test('admin replacement of a partial named request binds the original proposal v
  expect(packageProposalInputSchema.safeParse(body).success).toBe(true);
  expect(packageProposalInputSchema.safeParse({...body,p_requested_terms:{...body.p_requested_terms,expected_replaced_version:null}}).success).toBe(false);
 });
+
+test('approved source-credit grants require an exact payer intent and a distinct source-credit valuation policy',()=>{
+ const policy={name:'Reviewed cash credit conversion',eligible_package_contract_version_ids:[id],currency:'EGP',valuation_rule:'reviewed_exact_source_credit',maximum_credit_quanta_per_grant:2000,maximum_carrying_value_minor_per_grant:100000};
+ expect(packageGrantPolicyContentSchema.safeParse(policy).success).toBe(true);
+ const args={p_package_id:id,p_credit_quanta:1000,p_carrying_value_minor:50000,p_currency:'EGP',p_grant_kind:'approved_credit',p_grant_policy_version_id:id,p_source_credit_id:id,p_credit_conversion_intent_id:id,p_reason:'Actual source owner consent',p_evidence_file_id:null,p_expected_version:1,p_idempotency_key:'credit-intent'};
+ expect(packageCommands.approve_package_grant.input.safeParse(args).success).toBe(true);
+ expect(packageCommands.approve_package_grant.input.safeParse({...args,p_credit_conversion_intent_id:null}).success).toBe(false);
+ expect(packageCommands.approve_package_grant.input.safeParse({...args,p_grant_kind:'complimentary',p_source_credit_id:null}).success).toBe(false);
+});

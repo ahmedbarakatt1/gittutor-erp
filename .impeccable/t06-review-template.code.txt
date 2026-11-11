@@ -1,0 +1,73 @@
+async (page) => {
+  const metadata = __METADATA__;
+  const findings = [];
+  let errors = 0, warnings = 0, failedResponses = [];
+  page.on('console', message => { if (message.type() === 'error') errors++; if (message.type() === 'warning') warnings++; });
+  page.on('pageerror', () => errors++);
+  page.on('response', response => { if (response.status() >= 400) failedResponses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  async function settled() {
+    await page.waitForFunction(() => !document.body.innerText.includes('Loading current records…'));
+    await page.evaluate(() => document.fonts.ready);
+  }
+  async function capture(label, target, rtl = false) {
+    await settled(); const measurements = [];
+    for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.evaluate(() => document.activeElement?.blur());
+      if (target) await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      else await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t06-' + label + '-' + viewport.label + '.png', caret: 'initial' });
+      measurements.push({ viewport: viewport.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+    }
+    await page.evaluate(() => { document.activeElement?.blur(); scrollTo({ top: 0, behavior: 'instant' }); });
+    await page.keyboard.press('Tab');
+    const focus = await page.evaluate(() => { const el = document.activeElement, s = getComputedStyle(el); return { tag: el.tagName, outlineWidth: s.outlineWidth, outlineStyle: s.outlineStyle }; });
+    if (rtl) {
+      await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+      if (target) await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t06-' + label + '-rtl.png', caret: 'initial' });
+      measurements.push({ viewport: 360, direction: 'rtl', overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+      await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+    }
+    findings.push({ surface: label, measurements, focus, consoleErrors: errors, consoleWarnings: warnings, failedResponses });
+    errors = 0; warnings = 0; failedResponses = [];
+  }
+  await page.context().setStorageState('.local/ui-review/t06-desktop-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/payments/charges/' + metadata.payment.chargeId);
+  await page.getByRole('heading', { name: 'Payment instructions', exact: true }).waitFor();
+  await page.getByLabel('Payment channel', { exact: true }).waitFor();
+  const firstChannel = await page.getByLabel('Payment channel', { exact: true }).locator('option').evaluateAll(options => options.find(option => option.value)?.value);
+  if (firstChannel) await page.getByLabel('Payment channel', { exact: true }).selectOption(firstChannel);
+  await capture('customer-instructions', null, true);
+  await capture('customer-receipt-form', page.getByRole('heading', { name: 'Report your transfer', exact: true }), true);
+  await page.goto('http://127.0.0.1:3000/learn/payments/' + metadata.payment.receiptId);
+  await page.getByRole('heading', { name: 'Review status', exact: true }).waitFor();
+  await capture('customer-receipt', null, true);
+  await page.goto('http://127.0.0.1:3000/learn/payments/transfers/' + metadata.payment.transferId);
+  await page.getByRole('heading', { name: 'Incoming transfer', exact: true }).waitFor();
+  await capture('payer-source', null, true);
+  await page.goto('http://127.0.0.1:3000/learn/packages/' + metadata.credit.packageId);
+  await page.getByRole('heading', { name: 'Usable teaching credits', exact: true }).waitFor();
+  await capture('source-credit', page.getByRole('heading', { name: 'Usable teaching credits', exact: true }), true);
+  await page.context().setStorageState('.local/ui-review/t06-desktop-refund-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/refunds/' + metadata.refund.refundId);
+  await page.getByRole('heading', { name: 'Refund details', exact: true }).waitFor();
+  await capture('customer-refund', null, true);
+  await page.context().setStorageState('.local/ui-review/t06-desktop-admin.json');
+  await page.goto('http://127.0.0.1:3000/admin/payments');
+  await page.getByLabel('Receiving account', { exact: true }).waitFor();
+  await settled();
+  const firstAccount = await page.getByLabel('Receiving account', { exact: true }).locator('option').evaluateAll(options => options.find(option => option.value)?.value);
+  if (firstAccount) await page.getByLabel('Receiving account', { exact: true }).selectOption(firstAccount);
+  await capture('admin-collection', null);
+  await page.goto('http://127.0.0.1:3000/admin/payments/reviews/' + metadata.payment.caseId);
+  await page.getByRole('heading', { name: 'Customer proof', exact: true }).waitFor();
+  await capture('staff-comparison', page.getByRole('heading', { name: 'Customer proof', exact: true }));
+  await page.context().setStorageState('.local/ui-review/t06-desktop-refund-admin.json');
+  await page.goto('http://127.0.0.1:3000/admin/refunds/' + metadata.refund.refundId);
+  await page.getByRole('heading', { name: 'Refund details', exact: true }).waitFor();
+  await capture('admin-refund', null);
+  await page.getByRole('heading', { name: 'Outgoing attempts', exact: true }).waitFor();
+  await capture('admin-refund-history', page.getByRole('heading', { name: 'Outgoing attempts', exact: true }));
+  return findings;
+}

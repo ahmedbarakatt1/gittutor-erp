@@ -47,7 +47,7 @@ describe('T05 real package purchases and explicitly approved bonus grants',()=>{
   const subsidy=await fixture.grantPolicy(100000);
   await fixture.grant(purchase.resource_id as string,subsidy,100000,2000,2);
   const read=await fixture.rpc('get_my_package',{p_package_id:purchase.resource_id},fixture.learner);
-  expect(read.package).toMatchObject({purchase_state:'pending_funding',purchased_granted_credit_quanta:0,balances:{available_credit_quanta:3000,available_value_minor:100000},charge:{state:'issued',original_minor:150000,allocated_minor:null,balance_minor:null}});
+  expect(read.package).toMatchObject({purchase_state:'pending_funding',purchased_granted_credit_quanta:0,balances:{available_credit_quanta:3000,available_value_minor:100000},charge:{state:'issued',original_minor:150000,allocated_minor:0,balance_minor:150000}});
   expect(JSON.stringify(read)).not.toMatch(/compensation|fee_minor|promotional_subsidy_expense|approved_by|source_credit_id/);
   const accounts=(await fixture.database.query('select distinct account_code from finance_private.ledger_lines where package_purchase_id=$1',[purchase.resource_id])).rows.map(row=>row.account_code);
   expect(accounts).not.toContain('channel_cash');expect(accounts).toContain('promotional_subsidy_expense');
@@ -56,7 +56,7 @@ describe('T05 real package purchases and explicitly approved bonus grants',()=>{
   const purchase=await fixture.purchase();const policy=await fixture.grantPolicy();
   const args={p_package_id:purchase.resource_id,p_grant_policy_version_id:policy,p_credit_quanta:1000,p_carrying_value_minor:0,p_currency:'EGP',p_grant_kind:'complimentary',p_source_credit_id:null,p_reason:'Unauthorized grant regression',p_evidence_file_id:null,p_expected_version:1,p_idempotency_key:randomUUID()};
   expect((await fixture.learner.rpc('approve_package_grant',args)).error?.message).toBe('FORBIDDEN');
-  expect((await fixture.admin.rpc('approve_package_grant',{...args,p_grant_kind:'approved_credit',p_source_credit_id:randomUUID(),p_idempotency_key:randomUUID()})).error?.message).toBe('DEPENDENCY_UNAVAILABLE');
+  expect((await fixture.admin.rpc('approve_package_grant',{...args,p_grant_kind:'approved_credit',p_source_credit_id:randomUUID(),p_idempotency_key:randomUUID()})).error?.message).toBe('VALIDATION_ERROR');
  });
  test('available lot allocation excludes expired history and preserves the exact sequential residual',async()=>{
   const purchase=await fixture.purchase(),policy=await fixture.grantPolicy(100001);
@@ -92,12 +92,12 @@ describe('T05 real package purchases and explicitly approved bonus grants',()=>{
   await expect(fixture.grant(purchase.resource_id as string,policy,1,1000,2)).rejects.toThrow('AMOUNT_OUT_OF_RANGE');
   expect((await fixture.database.query('select count(*)::int as n from app_private.package_lots where purchase_id=$1',[purchase.resource_id])).rows[0].n).toBe(1);
  });
- test('full named entitlement carrying50000 covers reference57500 with zero top-up while funding stays unavailable',async()=>{
+ test('full named entitlement carrying50000 covers reference57500 with zero tuition debt and releases on hold expiry',async()=>{
   const purchase=await fixture.purchase(),policy=await fixture.grantPolicy(50000);await fixture.grant(purchase.resource_id as string,policy,50000,1000);
   const hold=await fixture.hold();expect(hold.quote.customer_price_minor).toBe(57500);
   const reservation=await fixture.rpc('reserve_package_credit',{p_package_id:purchase.resource_id,p_enrollment_id:hold.enrollmentId,p_credit_quanta:1000,p_coverage_proposal_id:null,p_expected_version:2,p_idempotency_key:randomUUID()},fixture.learner);
   expect(reservation).toMatchObject({reserved_credit_quanta:1000,carrying_value_minor:50000,top_up_minor:0});
-  const booking=await fixture.rpc('get_enrollment',{p_enrollment_id:hold.enrollmentId},fixture.learner);expect(booking.funding).toMatchObject({eligible:false,integration_state:'awaiting_T06_integration'});
+  const booking=await fixture.rpc('get_enrollment',{p_enrollment_id:hold.enrollmentId},fixture.learner);expect(booking.funding).toMatchObject({eligible:true,integration_state:'ready',net_charge_minor:0,balance_minor:0,top_up_minor:0});
   await fixture.database.query("update app_private.enrollments set hold_expires_at=now()-interval '1 second' where id=$1",[hold.enrollmentId]);
   await fixture.database.query('select app_private.process_occurrence_booking_due($1,$2)',[hold.occurrenceId,randomUUID()]);
   const read=await fixture.rpc('get_my_package',{p_package_id:purchase.resource_id},fixture.learner);

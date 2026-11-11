@@ -61,7 +61,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
         return;
       }
       const destination = result.data?.redirect_to;
-      if (destination && ['/learn', '/tutor', '/service', '/admin'].includes(destination)) {
+      if (destination && ['/learn', '/learn/payments', '/tutor', '/service', '/admin'].includes(destination)) {
         navigateAfterAuthentication(mode === 'login' ? customerReturnPath(returnTo) || destination : destination);
         return;
       }

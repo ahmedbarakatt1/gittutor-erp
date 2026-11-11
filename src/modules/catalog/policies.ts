@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import schemas from '../../../contracts/runtime/catalog-schemas.json';
+import schemas from '../../../contracts/runtime/catalog-schemas.json' with { type: 'json' };
 
 export type CatalogScope = 'group' | 'private';
 export type JsonObject = Record<string, unknown>;

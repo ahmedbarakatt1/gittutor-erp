@@ -8,9 +8,11 @@ import { catalogCopy } from '@/locales/catalog';
 import { bookingCopy } from '@/locales/booking';
 import { packageCopy } from '@/locales/packages';
 import { bookingStaffCopy } from '@/locales/booking-staff';
+import { paymentCopy } from '@/locales/payments';
 
 export function PortalShell({ kind, account, children, title, description, activePath, showAccount = true }: { kind: PortalKind; account: Account; children?: ReactNode; title?: string; description?: string; activePath?: string; showAccount?: boolean }) {
   const text = copy.portal[kind];
+  const learnerWorkspace = account.roles.some(role => role === 'student' || role === 'guardian');
   const authorizedWorkspaces: PortalKind[] = [];
   if (account.roles.some(role => role === 'student' || role === 'guardian')) authorizedWorkspaces.push('learn');
   if (account.roles.includes('tutor')) authorizedWorkspaces.push('tutor');
@@ -27,13 +29,15 @@ export function PortalShell({ kind, account, children, title, description, activ
     </header>
     <div className={styles.portalLayout}>
       <nav className={styles.portalNav} aria-label={text.workspace}>
-        <Link href={`/${kind}`} aria-current={!activePath || activePath === `/${kind}` ? 'page' : undefined}>{copy.portal.account}</Link>
+        {(kind !== 'learn' || learnerWorkspace) && <Link href={`/${kind}`} aria-current={!activePath || activePath === `/${kind}` ? 'page' : undefined}>{copy.portal.account}</Link>}
         {kind === 'admin' && <Link href="/admin/catalog" aria-current={activePath === '/admin/catalog' ? 'page' : undefined}>{catalogCopy.admin.nav}</Link>}
         {kind === 'admin' && <Link href="/admin/schedule" aria-current={activePath === '/admin/schedule' ? 'page' : undefined}>{bookingStaffCopy.adminNav}</Link>}
         {kind === 'tutor' && <Link href="/tutor/schedule" aria-current={activePath === '/tutor/schedule' ? 'page' : undefined}>{bookingStaffCopy.tutorNav}</Link>}
-        {kind === 'learn' && <Link href="/learn/bookings" aria-current={activePath === '/learn/bookings' ? 'page' : undefined}>{bookingCopy.nav}</Link>}
-        {(kind === 'learn' || kind === 'admin') && <Link href={`/${kind}/packages`} aria-current={activePath === `/${kind}/packages` ? 'page' : undefined}>{packageCopy.nav}</Link>}
-        {kind === 'learn' && <Link href="/learn#learners">{copy.portal.learnerTitle}</Link>}
+        {kind === 'learn' && learnerWorkspace && <Link href="/learn/bookings" aria-current={activePath === '/learn/bookings' ? 'page' : undefined}>{bookingCopy.nav}</Link>}
+        {((kind === 'learn' && learnerWorkspace) || kind === 'admin') && <Link href={`/${kind}/packages`} aria-current={activePath === `/${kind}/packages` ? 'page' : undefined}>{packageCopy.nav}</Link>}
+        {(kind === 'learn' || kind === 'service' || kind === 'admin') && <Link href={`/${kind}/payments`} aria-current={activePath === `/${kind}/payments` ? 'page' : undefined}>{paymentCopy.nav}</Link>}
+        {(kind === 'learn' || kind === 'admin') && <Link href={`/${kind}/refunds`} aria-current={activePath === `/${kind}/refunds` ? 'page' : undefined}>{paymentCopy.refundsNav}</Link>}
+        {kind === 'learn' && learnerWorkspace && <Link href="/learn#learners">{copy.portal.learnerTitle}</Link>}
         {kind === 'learn' && <Link href="/apply-to-teach">{identityCopy.application.nav}</Link>}
         {authorizedWorkspaces.filter(workspace => workspace !== kind).map(workspace => <Link key={workspace} href={`/${workspace}`}>{copy.portal[workspace].workspace}</Link>)}
       </nav>

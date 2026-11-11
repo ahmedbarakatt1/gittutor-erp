@@ -40,7 +40,7 @@ export async function requireAccount(role?: string, returnTo?: string): Promise<
     throw error;
   }
   if (!account) redirect(loginPath());
-  const allowed = role === "student" ? ["student", "guardian"] : role ? [role] : account.roles;
-  if (!allowed.some(item => account.roles.includes(item as Account["roles"][number]))) redirect(loginPath('forbidden'));
+  const allowed = role === "student" ? ["student", "guardian"] : role ? [role] : null;
+  if (allowed && !allowed.some(item => account.roles.includes(item as Account["roles"][number]))) redirect(loginPath('forbidden'));
   return account;
 }

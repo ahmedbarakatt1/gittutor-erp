@@ -65,7 +65,7 @@ export async function seedBooking(){
         if(Number(fee?.fee_minor)!==record.fee||fee.tutor_id!==teacher.id)throw new Error('BOOKING_SEED_FEE_CONFLICT: prior agreement preserved');
       }
     }
-    console.log('Synthetic booking schedule ready: four future forming occurrences with exact approved fees; funded confirmation remains unavailable.');
+    console.log('Synthetic booking schedule ready: four future forming occurrences with exact approved fees. This booking seed does not assert settled funding.');
   }catch(error){if(inTransaction)await database.query('rollback');throw error;}
   finally{await admin.auth.signOut({scope:'local'});await database.query("select pg_advisory_unlock(hashtextextended('git-tutor:booking-seed:v1',0))");await database.end();}
 }

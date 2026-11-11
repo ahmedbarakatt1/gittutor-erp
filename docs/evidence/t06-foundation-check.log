@@ -1,0 +1,292 @@
+Git Tutor T06 foundation checkpoint, 2026-11-11, Africa/Cairo. Pinned Node24.22.1/pnpm11.25.0; actual isolated local Supabase, synthetic records, fake/manual external adapters. Working tree based on3d62d67. T04-T06 gate remains open. This record combines actually executed checks; it is not a full pnpm check pass. Initial consolidated failures are preserved in adjacent logs. Exact commands and decisions: docs/IMPLEMENTATION-STATUS.md.
+
+CHECK: Final lint - exit0
+SOURCE: .local/t06-checkpoint-final-lint.log
+$ eslint .
+
+
+CHECK: Final typecheck - exit0
+SOURCE: .local/t06-checkpoint-final-types.log
+$ tsc --noEmit
+
+
+CHECK: Final units -294 passed/exit0
+SOURCE: .local/t06-checkpoint-final-unit.log
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  28 passed (28)
+      Tests  294 passed (294)
+   Start at  20:37:14
+   Duration  31.53s (import 70%, tests 22%, transform 5%, worker 3%)
+
+    Isolate  28 workers spawned · ~526ms startup each (spawn + environment, per file)
+             at least ~14.22s faster with isolate: false — reuses workers across files instead of one per file
+
+
+
+CHECK: Corrected booking/package SQL -16 passed/exit0
+SOURCE: .local/t06-checkpoint-stale-expectations-green.log
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  20:12:27
+   Duration  11.53s (tests 91%, import 7%, transform 1%)
+
+
+
+CHECK: Actual private artifact expiry/session checks -2 passed/exit0
+SOURCE: .local/t06-refund-private-expanded.log
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  18:56:05
+   Duration  302.83s (tests 100%)
+
+
+
+CHECK: Public subject facets and privacy -13 passed/exit0
+SOURCE: .local/t06-public-facets-green.log
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  20:37:00
+   Duration  5.62s (tests 91%, import 8%, transform 1%)
+
+
+
+CHECK: Focused browser fixes -6 passed/2 failed/exit1; remaining helper corrected below
+SOURCE: .local/t06-checkpoint-browser-fixes.log
+
+Running 8 tests using 1 worker
+
+(node:27492) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\booking.spec.ts:68:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (30.5s)
+  x  2 [desktop] › tests\e2e\booking.spec.ts:124:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms (6.8s)
+(node:16128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 3 [desktop] › tests\e2e\packages.spec.ts:86:1 › partial named coverage receives an explicit reviewed remaining-service price before learner acceptance (24.2s)
+  ok 4 [desktop] › tests\e2e\subjects.spec.ts:3:1 › subject discovery uses the four study areas with real course links and supplied contact channels (4.1s)
+(node:19220) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 [mobile] › tests\e2e\booking.spec.ts:68:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (43.1s)
+  x  6 [mobile] › tests\e2e\booking.spec.ts:124:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms (8.5s)
+(node:25964) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 7 [mobile] › tests\e2e\packages.spec.ts:86:1 › partial named coverage receives an explicit reviewed remaining-service price before learner acceptance (25.6s)
+  ok 8 [mobile] › tests\e2e\subjects.spec.ts:3:1 › subject discovery uses the four study areas with real course links and supplied contact channels (3.5s)
+
+
+  1) [desktop] › tests\e2e\booking.spec.ts:124:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms
+
+    Error: Required option 29b0590b-625f-57d7-ae33-2b06e76dfc1c was absent after the final /api/v1/policies page
+
+      33 |     if (await field.locator(`option[value="${value}"]`).count()) break;
+      34 |     const more = controls.getByRole('button', { name: 'Load more results', exact: true });
+    > 35 |     if (!await more.count()) throw new Error(`Required option ${value} was absent after the final ${path} page`);
+         |                                    ^
+      36 |     const pending = page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === 'GET');
+      37 |     await more.click(); const response = await pending; expect(response.status()).toBe(200);
+      38 |     const cursor = (await response.json()).data.next_cursor as string | null;
+        at ensurePagedOption (D:\GitTutor System\tests\e2e\booking.spec.ts:35:36)
+        at D:\GitTutor System\tests\e2e\booking.spec.ts:136:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile] › tests\e2e\booking.spec.ts:124:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms
+
+    Error: Required option 29b0590b-625f-57d7-ae33-2b06e76dfc1c was absent after the final /api/v1/policies page
+
+      33 |     if (await field.locator(`option[value="${value}"]`).count()) break;
+      34 |     const more = controls.getByRole('button', { name: 'Load more results', exact: true });
+    > 35 |     if (!await more.count()) throw new Error(`Required option ${value} was absent after the final ${path} page`);
+         |                                    ^
+      36 |     const pending = page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === 'GET');
+      37 |     await more.click(); const response = await pending; expect(response.status()).toBe(200);
+      38 |     const cursor = (await response.json()).data.next_cursor as string | null;
+        at ensurePagedOption (D:\GitTutor System\tests\e2e\booking.spec.ts:35:36)
+        at D:\GitTutor System\tests\e2e\booking.spec.ts:136:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace .local\test-results-t06-checkpoint-fixes\booking-a-group-change-col-af9f2-it-preserves-original-terms-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests\e2e\booking.spec.ts:124:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms
+    [mobile] › tests\e2e\booking.spec.ts:124:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms
+  6 passed (2.7m)
+
+
+CHECK: Final group-change browsers -2 passed/exit0
+SOURCE: .local/t06-group-pagination-green.log
+
+Running 2 tests using 1 worker
+
+(node:38780) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\booking.spec.ts:138:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms (1.0m)
+(node:11520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 [mobile] › tests\e2e\booking.spec.ts:138:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms (44.4s)
+
+  2 passed (1.9m)
+
+
+CHECK: Final database boundaries -exit0
+SOURCE: .local/t06-checkpoint-final-db.log
+$ tsx tools/db-verify.ts && tsx tools/supabase-local.ts verify
+Database verification passed: 7 private tables with RLS, 5 functions checked, api-only exposure.
+Real Supabase verification passed: 99 migrations, 122 private RLS tables, 419 function boundaries.
+
+
+CHECK: Final build -exit0
+SOURCE: .local/t06-checkpoint-final-build.log
+$ next build
+▲ Next.js 16.4.6 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 137ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.3s
+  Running TypeScript ...
+  Finished TypeScript in 15.0s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/30) ...
+  Generating static pages using 11 workers (7/30)
+  Generating static pages using 11 workers (14/30)
+  Generating static pages using 11 workers (22/30)
+✓ Generating static pages using 11 workers (30/30) in 863ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/catalog
+├ ƒ /admin/packages
+├ ƒ /admin/payments
+├ ƒ /admin/payments/imports/[id]
+├ ƒ /admin/payments/reconciliation
+├ ƒ /admin/payments/reviews
+├ ƒ /admin/payments/reviews/[id]
+├ ƒ /admin/payments/transfers/[id]
+├ ƒ /admin/refunds
+├ ƒ /admin/refunds/[id]
+├ ƒ /admin/schedule
+├ ƒ /api/auth/[action]
+├ ƒ /api/v1/[...path]
+├ ƒ /api/v1/me
+├ ƒ /apply-to-teach
+├ ƒ /auth/callback
+├ ƒ /auth/set-password
+├ ○ /auth/verify
+├ ƒ /learn
+├ ƒ /learn/bookings
+├ ƒ /learn/bookings/[id]
+├ ƒ /learn/packages
+├ ƒ /learn/packages/[id]
+├ ƒ /learn/payments
+├ ƒ /learn/payments/[id]
+├ ƒ /learn/payments/charges/[id]
+├ ƒ /learn/payments/plans/[id]
+├ ƒ /learn/payments/transfers/[id]
+├ ƒ /learn/refunds
+├ ƒ /learn/refunds/[id]
+├ ƒ /login
+├ ƒ /offers
+├ ƒ /offers/[id]
+├ ƒ /service
+├ ƒ /service/payments
+├ ƒ /service/payments/[id]
+├ ƒ /service/payments/imports/[id]
+├ ƒ /service/payments/incoming
+├ ƒ /service/payments/transfers/[id]
+├ ○ /signup
+├ ƒ /subjects
+├ ƒ /tutor
+├ ƒ /tutor/schedule
+└ ƒ /tutors/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+CHECK: Pack validation -exit0
+SOURCE: .local/t06-checkpoint-final-pack.log
+PASS document links and 7 JSON files
+PASS 147 acceptance cases, 84 preserved IDs, 18 requirements and 13 tasks
+PASS pricing, policy scope and selected financial oracles in the 33-scenario fixture set
+Application execution evidence is recorded separately during implementation.
+
+
+CHECK: Acceptance evidence validation -147 not_run/exit0
+SOURCE: .local/t06-checkpoint-final-evidence.log
+{
+  "valid": true,
+  "passed": 0,
+  "not_run": 147,
+  "errors": []
+}
+

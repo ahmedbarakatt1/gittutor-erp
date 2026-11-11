@@ -7,7 +7,7 @@ describe("configuration boundary", () => {
     expect(config.providers).toEqual({ email: "fake", calendar: "fake", whatsapp: "fake", file_scan: "fake", payments: "manual" });
   });
   it("public projection contains only browser identity configuration", () => {
-    const config = parseServerConfig({ APP_ENV: "test", SUPABASE_SECRET_KEY: "secret-do-not-serialize", WORKER_DATABASE_URL: "postgres://private", SECRET_ENCRYPTION_KEY: "another-secret" });
+    const config = parseServerConfig({ APP_ENV: "test", SUPABASE_SECRET_KEY: "secret-do-not-serialize", WORKER_DATABASE_URL: "postgres://private", SECRET_ENCRYPTION_KEY: "a".repeat(64) });
     expect(publicConfig(config)).toEqual({ supabase_url: null, supabase_publishable_key: null });
     expect(JSON.stringify(publicConfig(config))).not.toContain("secret");
   });
@@ -37,5 +37,18 @@ describe("configuration boundary", () => {
   });
   it("validates complete live configuration without exposing secrets", () => {
     expect(() => parseServerConfig({ APP_ENV: "production", EMAIL_ADAPTER: "ses", CALENDAR_ADAPTER: "google", WHATSAPP_ADAPTER: "cloud", FILE_SCAN_ADAPTER: "clamav" })).toThrow();
+  });
+  it('keeps versioned encryption keys private and validates provided development keys too', () => {
+    const config = parseServerConfig({ APP_ENV: 'test', SECRET_ENCRYPTION_KEY: 'a'.repeat(64), SECRET_ENCRYPTION_KEY_ID: 'current', SECRET_ENCRYPTION_PREVIOUS_KEYS: JSON.stringify({ prior: 'b'.repeat(64) }) });
+    expect(config.secret_encryption_key_id).toBe('current');
+    expect(config.secret_encryption_previous_keys).toEqual({ prior: 'b'.repeat(64) });
+    expect(Object.keys(publicConfig(config))).toEqual(['supabase_url', 'supabase_publishable_key']);
+    expect(() => parseServerConfig({ APP_ENV: 'test', SECRET_ENCRYPTION_KEY: 'invalid-private-key' })).toThrow('Invalid private encryption configuration');
+  });
+  it('rejects invalid rotation maps and duplicate active key identities without echoing secrets', () => {
+    for (const previous of ['not-json', '[]', JSON.stringify({ v1: 'b'.repeat(64) }), JSON.stringify({ previous: 'private-invalid-material' })]) {
+      expect(() => parseServerConfig({ APP_ENV: 'test', SECRET_ENCRYPTION_KEY: 'a'.repeat(64), SECRET_ENCRYPTION_PREVIOUS_KEYS: previous })).toThrow('Invalid private encryption configuration');
+    }
+    expect(() => parseServerConfig({ APP_ENV: 'test', SECRET_ENCRYPTION_PREVIOUS_KEYS: JSON.stringify({ prior: 'b'.repeat(64) }) })).toThrow('Invalid private encryption configuration');
   });
 });

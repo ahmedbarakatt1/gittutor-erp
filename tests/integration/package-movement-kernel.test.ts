@@ -20,7 +20,7 @@ describe('T05 private historical movement kernel, without a T08 qualification cl
   expect((await f.database.query('select app_private.package_balance($1) as b',[purchase.resource_id])).rows[0].b).toMatchObject({available_credit_quanta:1000,available_value_minor:50001,consumed_credit_quanta:0,consumed_value_minor:0});
   const value=(await f.database.query("select coalesce(sum(signed_minor),0)::int as value from finance_private.ledger_lines where package_purchase_id=$1 and account_code='tuition_revenue'",[purchase.resource_id])).rows[0].value;expect(value).toBe(0);
   const currentVersion=(await f.database.query('select version from app_private.package_purchases where id=$1',[purchase.resource_id])).rows[0].version;
-  expect((await f.admin.rpc('restore_package_credit',{p_consumption_id:consume.movement_id,p_credit_quanta:1,p_remedy_id:randomUUID(),p_reason:'No invented T06 financial remedy',p_expected_version:currentVersion,p_idempotency_key:randomUUID()})).error?.message).toBe('DEPENDENCY_UNAVAILABLE');
+  expect((await f.admin.rpc('restore_package_credit',{p_consumption_id:consume.movement_id,p_credit_quanta:1,p_remedy_id:randomUUID(),p_reason:'No invented T06 financial remedy',p_expected_version:currentVersion,p_idempotency_key:randomUUID()})).error?.message).toBe('REMEDY_REQUIRED');
  });
  test('zero-value consumed quantity still has an independent remedy cap',async()=>{
   const purchase=await f.purchase(),policy=await f.grantPolicy();await f.grant(purchase.resource_id as string,policy,0,1000);const hold=await f.hold();

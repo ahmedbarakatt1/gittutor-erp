@@ -12,6 +12,7 @@ import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
 import { seedCatalog } from './catalog-seed';
 import { seedBooking } from './booking-seed';
 import { seedPackages } from './package-seed';
+import { seedPayments } from './payments-seed';
 import { chooseLocalBootstrapPlan, historicalBootstrapSource, historicalCatalogCutoff, historicalCatalogMigrations } from './bootstrap-plan';
 
 const execute = promisify(execFile);
@@ -26,6 +27,16 @@ export function assertMigrationMarker(value: { environment: string; fixture_mark
 export function assertEnvironmentFileWritable(content: string) {
   const matches = content.matchAll(/^\s*(?:export\s+)?APP_ENV\s*=\s*["']?([^\s"'#]+)/gm);
   for (const match of matches) if (!['development', 'test'].includes(match[1])) throw new Error('ENVIRONMENT_FILE_IS_NOT_LOCAL');
+}
+
+/** Generate only missing local material. Re-running setup must never rotate keys protecting saved destinations. */
+export function withLocalEncryptionKey(content: string): string {
+  assertEnvironmentFileWritable(content);
+  const definitions = [...content.matchAll(/^[\t ]*(?:export[\t ]+)?SECRET_ENCRYPTION_KEY[\t ]*=[\t ]*([^\r\n]*)/gm)];
+  if (definitions.length > 1) throw new Error('LOCAL_ENCRYPTION_CONFIGURATION_AMBIGUOUS');
+  if (definitions.length && !['', '""', "''"].includes(definitions[0][1].trim())) return content;
+  const line = `SECRET_ENCRYPTION_KEY=${randomBytes(32).toString('hex')}`;
+  return definitions.length ? content.replace(definitions[0][0], line) : `${content}${content.endsWith('\n') ? '' : '\n'}${line}\n`;
 }
 
 type DefinerBoundary = {
@@ -68,6 +79,21 @@ export function assertPackageWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
   if (fn.proname === 'process_package_due' && (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef
     || fn.signature !== 'app_private.process_package_due(uuid,text)' || fn.rolname !== 'git_tutor_commands'
     || fn.executors.some(role => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_PACKAGE_WORKER_BOUNDARY_INVALID');
+}
+
+const paymentWorkerSignatures: Record<string, string> = {
+  prepare_refund_destination_context: 'uuid,uuid,uuid,text',
+  read_refund_destination_for_server: 'uuid,uuid,uuid,text,uuid,text',
+  issue_destination_validation_artifact: 'uuid,uuid,uuid,integer,text,text,text,text,jsonb',
+  prepare_statement_import: 'uuid,text',
+  finalize_statement_import: 'uuid,integer,text,text,jsonb,text,text',
+};
+export function assertPaymentWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' | 'nspname' | 'signature' | 'rolname' | 'prosecdef' | 'executors'> & { worker: boolean }) {
+  const signature = paymentWorkerSignatures[fn.proname];
+  if (signature) {
+    if (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef || fn.signature !== `app_private.${fn.proname}(${signature})`
+      || fn.rolname !== 'git_tutor_commands' || [...fn.executors].sort().join(',') !== 'git_tutor_commands,git_tutor_worker') throw new Error('SUPABASE_PAYMENT_WORKER_BOUNDARY_INVALID');
+  } else if (fn.worker && (fn.nspname === 'finance_private' || /refund_destination|statement_import|destination_validation_artifact/.test(fn.proname))) throw new Error('SUPABASE_PAYMENT_WORKER_BOUNDARY_INVALID');
 }
 
 async function verifyProjectContainer() {
@@ -172,7 +198,7 @@ async function publicEnvironment(config: LocalSupabase) {
   assertEnvironmentFileWritable(existing);
   const lines = existing.split(/\r?\n/).filter(line => line && !/^(APP_ENV|APP_BASE_URL|NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)=/.test(line));
   lines.push('APP_ENV=development', 'APP_BASE_URL=http://127.0.0.1:3000', `NEXT_PUBLIC_SUPABASE_URL=${config.url}`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${config.publishable_key}`);
-  await writeFile('.env.local', `${lines.join('\n')}\n`, { mode: 0o600 });
+  await writeFile('.env.local', withLocalEncryptionKey(`${lines.join('\n')}\n`), { mode: 0o600 });
 }
 
 async function copyLocalConfiguration() {
@@ -356,6 +382,7 @@ async function verify() {
       if (fn.nspname === 'app_private' && fn.proname.startsWith('booking_') && fn.worker) throw new Error(`SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID:${fn.proname}`);
       if (fn.proname === 'process_occurrence_booking_due' && (fn.nspname !== 'app_private' || !fn.worker || fn.signature !== 'app_private.process_occurrence_booking_due(uuid,text)' || fn.rolname !== 'git_tutor_commands' || fn.executors.some((role: string) => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID');
       assertPackageWorkerBoundary(fn);
+      assertPaymentWorkerBoundary(fn);
       assertAllowedDefiner(fn);
     }
     console.log(`Real Supabase verification passed: ${files.length} migrations, ${tables.rowCount} private RLS tables, ${functions.rowCount} function boundaries.`);
@@ -367,7 +394,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   switch (process.argv[2]) {
     case 'bootstrap': await bootstrap(); break;
     case 'migrate': if (process.argv.includes('--foundation-only')) await applyMigrations(true); else await migrateLocalProject(); console.log('Project-local Supabase migrations applied; temporary owner CREATE grants revoked.'); break;
-    case 'seed': await seed(); await seedCatalog(); await seedBooking(); await seedPackages(); break;
+    case 'seed': await seed(); await seedCatalog(); await seedBooking(); await seedPackages(); await seedPayments(); break;
     case 'verify': await verify(); break;
     case 'restart': await restart(); break;
     default: throw new Error('Usage: tsx tools/supabase-local.ts bootstrap|migrate|seed|verify|restart');

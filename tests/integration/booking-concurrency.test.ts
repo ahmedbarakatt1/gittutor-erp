@@ -77,8 +77,8 @@ describe('T04 independent booking foundation on real Supabase',()=>{
     await fixture.rpc('accept_quote',{p_quote_id:held.quote_id,p_quote_hash:quote.quote_hash,p_expected_version:1,p_idempotency_key:randomUUID()},fixture.students[0]);
     const fee=await fixture.rpc('approve_tutor_fee',{p_occurrence_id:occurrence.occurrence_id,p_tutor_id:fixture.tutorId,p_fee_minor:25000,p_currency:'EGP',p_duration_minutes:60,p_compensation_policy_version_id:catalogFixtureIds.private_pricing,p_target_tier:null,p_purpose:'initial',p_reason:'Exact synthetic private fee',p_expected_version:1,p_idempotency_key:randomUUID()});
     const result=await fixture.admin.rpc('confirm_occurrence',{p_occurrence_id:occurrence.occurrence_id,p_expected_version:fee.version,p_idempotency_key:randomUUID()});
-    expect(result.error?.message).toBe('DEPENDENCY_UNAVAILABLE');
-    const record=await fixture.rpc('get_enrollment',{p_enrollment_id:held.enrollment_id},fixture.students[0]);expect(record.state).toBe('held');expect(record.funding).toMatchObject({integration_state:'awaiting_T06_integration',eligible:false,net_charge_minor:null});
+    expect(result.error?.message).toBe('INSUFFICIENT_FUNDS');
+    const record=await fixture.rpc('get_enrollment',{p_enrollment_id:held.enrollment_id},fixture.students[0]);expect(record.state).toBe('held');expect(record.funding).toMatchObject({integration_state:'ready',eligible:false,net_charge_minor:50000,allocated_minor:0,balance_minor:50000});
   });
 
   test('exact occurrence reads resolve beyond the default window and retain actor and offer scope',async()=>{

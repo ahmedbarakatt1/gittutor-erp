@@ -28,7 +28,7 @@ Use 201 for creation, 200 for committed changes or replay, and 202 for durable q
 
 | GET route | RPC and scope | Allowed filters and returned fields |
 |---|---|---|
-| `/public/offers` | `list_public_offers`, public | `offer_id, subject_id, format, from, to`. Offer ID, title, subject, format, approved duration, public price/currency, availability, policy summary/version |
+| `/public/offers` | `list_public_offers`, public | `offer_id, subject_id, format, from, to`. Offer ID, title, subject, format, approved duration, public price/currency, availability, policy summary/version. Page also returns `subjects: [{subject_id,title,slug}]`: distinct currently eligible catalog subjects, sorted by title/ID and independent of filters/cursor, so discovery does not enumerate every offer page. |
 | `/public/tutors/{id}` | `get_public_tutor`, public | Tutor ID, approved display name, subjects, bio, approved photo reference |
 | `/me` | `get_my_account`, U/V | Account ID, verified status, own current roles, locale, authorized learner IDs. V receives only guest status |
 | `/me/enrollments` | `list_my_enrollments`, L | `learner_id,from,to,state`. Authorized own/linked learner seats and customer booking DTOs |

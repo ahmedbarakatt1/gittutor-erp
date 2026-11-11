@@ -1,0 +1,266 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - link "Skip to account" [ref=f2e3] [cursor=pointer]:
+      - /url: "#account"
+    - banner [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - link "Back to Git Tutor" [ref=f2e6] [cursor=pointer]:
+          - /url: /
+          - text: Git Tutor.
+        - generic [ref=f2e7]: Learning
+      - button "Sign out" [ref=f2e9] [cursor=pointer]
+    - generic [ref=f2e10]:
+      - navigation "Learning" [ref=f2e11]:
+        - link "Account" [ref=f2e12] [cursor=pointer]:
+          - /url: /learn
+        - link "My sessions" [ref=f2e13] [cursor=pointer]:
+          - /url: /learn/bookings
+        - link "Packages" [ref=f2e14] [cursor=pointer]:
+          - /url: /learn/packages
+        - link "Payments" [ref=f2e15] [cursor=pointer]:
+          - /url: /learn/payments
+        - link "Refunds" [ref=f2e16] [cursor=pointer]:
+          - /url: /learn/refunds
+        - link "Your learners" [ref=f2e17] [cursor=pointer]:
+          - /url: /learn#learners
+        - link "Apply to teach" [ref=f2e18] [cursor=pointer]:
+          - /url: /apply-to-teach
+      - main [ref=f2e19]:
+        - heading "Payment instructions" [level=1] [ref=f2e20]
+        - paragraph [ref=f2e21]: A receipt is a report. Funds are applied only after the service team independently verifies the transfer.
+        - button "Refresh records" [ref=f2e23] [cursor=pointer]
+        - generic [ref=f2e24]:
+          - heading "Calculus package" [level=2] [ref=f2e25]
+          - paragraph [ref=f2e26]:
+            - text: LearnerA ·
+            - generic [ref=f2e27]: Current charge
+          - generic [ref=f2e28]:
+            - generic [ref=f2e29]:
+              - term [ref=f2e30]: Original charge
+              - definition [ref=f2e31]: EGP 1,500.00
+            - generic [ref=f2e32]:
+              - term [ref=f2e33]: Approved adjustments
+              - definition [ref=f2e34]: EGP 0.00
+            - generic [ref=f2e35]:
+              - term [ref=f2e36]: Current tuition
+              - definition [ref=f2e37]: EGP 1,500.00
+            - generic [ref=f2e38]:
+              - term [ref=f2e39]: Cash applied
+              - definition [ref=f2e40]: EGP 1,500.00
+            - generic [ref=f2e41]:
+              - term [ref=f2e42]: Package value applied
+              - definition [ref=f2e43]: EGP 0.00
+            - generic [ref=f2e44]:
+              - term [ref=f2e45]: Remaining balance
+              - definition [ref=f2e46]: EGP 0.00
+            - generic [ref=f2e47]:
+              - term [ref=f2e48]: Reserved for refund
+              - definition [ref=f2e49]: EGP 0.00
+            - generic [ref=f2e50]:
+              - term [ref=f2e51]: Refunds settled
+              - definition [ref=f2e52]: EGP 0.00
+            - generic [ref=f2e53]:
+              - term [ref=f2e54]: Cash released to its owner
+              - definition [ref=f2e55]: EGP 0.00
+        - generic [ref=f2e56]:
+          - heading "Payment instructions" [level=2] [ref=f2e57]
+          - generic [ref=f2e58]:
+            - generic [ref=f2e59]:
+              - term [ref=f2e60]: Required for confirmation
+              - definition [ref=f2e61]: EGP 1,500.00
+            - generic [ref=f2e62]:
+              - term [ref=f2e63]: Still needed for confirmation
+              - definition [ref=f2e64]: EGP 0.00
+          - strong [ref=f2e66]:
+            - text: "Booking outcome:"
+            - generic [ref=f2e67]: No booking confirmation applies
+          - generic [ref=f2e68]:
+            - generic [ref=f2e69]: Payment channel
+            - combobox "Payment channel" [ref=f2e70]:
+              - option "Choose a record" [selected]
+              - option "InstaPay · synthetic-500bb619-c074-439e-95f7-e9c175901d96@instapay"
+              - option "InstaPay · synthetic-9102502d-1faa-4cac-814f-c2877c6e935a@instapay"
+              - option "InstaPay · synthetic-3cc3f5fb-187c-4559-8474-4b2866e02219@instapay"
+              - option "InstaPay · synthetic-57f3aa4a-89fb-46e3-b14a-57241fbcc75c@instapay"
+              - option "InstaPay · synthetic-8918a3df-f15f-4401-b66f-9df6dc7cb521@instapay"
+              - option "InstaPay · synthetic-75171957-2f0c-4352-983d-92c9e77db7e1@instapay"
+              - option "InstaPay · synthetic-4c8ebe40-48ce-486a-b761-ce3b850ef624@instapay"
+              - option "InstaPay · synthetic-f30dc297-fd59-4a4b-ba6a-1ee2573daf48@instapay"
+              - option "InstaPay · synthetic-39045b8c-58fb-4d95-abe6-723e6f0cbec9@instapay"
+              - option "InstaPay · synthetic-359735a8-9914-4a6f-b79e-fa5f47719440@instapay"
+              - option "InstaPay · synthetic-5c5fcd56-6332-4d01-a51c-2dee93104d0e@instapay"
+              - option "InstaPay · synthetic-50d62df3-40a6-4d50-b470-2fc2d8970b13@instapay"
+              - option "InstaPay · synthetic-9c5829dc-f927-4d69-ab3b-71b1084a69c0@instapay"
+              - option "InstaPay · synthetic-b49da385-2f15-4613-b8f4-49458412e2e5@instapay"
+              - option "InstaPay · synthetic-bec954c9-6641-42fc-a14b-ae62d91b9dfe@instapay"
+              - option "InstaPay · synthetic-c349db61-bbc9-40e9-9965-8ccd485c7108@instapay"
+              - option "InstaPay · synthetic-aa7fd1be-d3a7-43a2-88a7-5c7c1f62b3f8@instapay"
+              - option "InstaPay · synthetic-efa1030b-cb29-4304-9d3d-e9caefde5d73@instapay"
+              - option "InstaPay · synthetic-d592d858-6da0-4d62-a2d8-5268210c0898@instapay"
+              - option "InstaPay · synthetic-5e0fec8b-4611-4840-86ec-3b19930eb8d9@instapay"
+              - option "InstaPay · synthetic-c67fb952-d860-437a-85f1-e77f0d29cdd3@instapay"
+              - option "InstaPay · synthetic-c84cc62a-2203-4d4d-b0c2-b5ce401b0b2b@instapay"
+              - option "InstaPay · synthetic-b8f5e96f-ab76-4c85-9048-6d243666f800@instapay"
+              - option "InstaPay · synthetic-fd0abeec-f3a6-43dc-9e7c-828f2e10e9c8@instapay"
+              - option "InstaPay · synthetic-5fee713b-54fe-4edd-acb2-5d01ec68a305@instapay"
+              - option "InstaPay · synthetic-a26d3105-7b13-4ebf-9839-055e3072ea1c@instapay"
+              - option "InstaPay · synthetic-45938cf7-f7ca-4587-bb80-e013c165e012@instapay"
+              - option "InstaPay · synthetic-f6fc11bc-1dca-4a83-b8dc-a1cfb01b7451@instapay"
+              - option "InstaPay · synthetic-c2ad55ff-1129-478b-8f2b-bcbc6adf62f4@instapay"
+              - option "InstaPay · synthetic-0fe48c67-ae53-422c-b725-f55d736ace27@instapay"
+              - option "InstaPay · synthetic-1da69fdf-8404-4320-9aea-331cedd0f7a1@instapay"
+              - option "InstaPay · synthetic-713d66df-4087-4618-bac4-5358f0a153a0@instapay"
+              - option "InstaPay · synthetic-47543475-8932-48cb-b067-9fcd8ffc1843@instapay"
+              - option "InstaPay · synthetic-8a9ca513-22f3-4354-9c78-e8196b6f4071@instapay"
+              - option "InstaPay · synthetic-bbf28a6b-415d-4e54-8502-d72b60b6d362@instapay"
+              - option "InstaPay · synthetic-4b79bb5d-8186-4d96-87f9-b844b5c4e0ff@instapay"
+              - option "InstaPay · synthetic-5ebe26a2-9da2-4667-be67-0dabcb78d819@instapay"
+              - option "InstaPay · synthetic-6c26d129-207f-494e-8db5-628e4627072d@instapay"
+              - option "InstaPay · synthetic-ded03804-06c8-4925-8503-7e63213f61a4@instapay"
+              - option "InstaPay · synthetic-6bc26fcd-4f77-4452-b7a3-63e71cac6884@instapay"
+              - option "InstaPay · synthetic-89e83fc1-ead4-49ff-b126-f993f3ff6ae2@instapay"
+              - option "InstaPay · synthetic-edcdcf06-8dfe-4c1e-a8a1-785a21d35910@instapay"
+              - option "InstaPay · synthetic-d94e6fef-49ab-4180-93e9-30a01daeda7f@instapay"
+              - option "InstaPay · synthetic-b1e48d7e-6c5d-4f69-b4ee-a6f488d4a0ce@instapay"
+              - option "InstaPay · synthetic-25938b4a-1cb5-4e8c-9428-e5e821c1b9f7@instapay"
+              - option "InstaPay · synthetic-4b2bb884-774a-44d3-ad9b-9f79a9ebe88d@instapay"
+              - option "InstaPay · synthetic-d6696dbb-a535-4cdb-858e-35e9bd99832b@instapay"
+              - option "InstaPay · synthetic-8ef12e70-d5bd-49ba-92bf-88c9f81deb3d@instapay"
+              - option "InstaPay · synthetic-563e0f87-f5e4-4016-b447-5b5ecf120db0@instapay"
+              - option "InstaPay · synthetic-b2c87b4c-67bf-4ee6-ba35-30f19b0b6f67@instapay"
+              - option "InstaPay · synthetic-5d3adfc6-d07d-4e5d-8510-e610e15dc4e3@instapay"
+              - option "InstaPay · synthetic-01fe2199-5e9e-496f-896e-a8cc844320d3@instapay"
+              - option "InstaPay · synthetic-1a775253-e108-4e51-a046-9f1c8b8bd215@instapay"
+              - option "InstaPay · synthetic-9298da25-f006-42f3-a194-6dc31144e02b@instapay"
+              - option "InstaPay · synthetic-f745da83-6a1a-4c56-b7ad-ff8462b9eb8e@instapay"
+              - option "InstaPay · synthetic-73b09c72-5bbb-4c91-85ea-54c4af9676d1@instapay"
+              - option "InstaPay · synthetic-a57ae041-1bb9-4c00-aa96-95b2ac5d6666@instapay"
+              - option "InstaPay · synthetic-c9cf24c8-2e74-4eb6-a90c-2f536fbde294@instapay"
+              - option "InstaPay · synthetic-5fbfb9be-71e9-4990-bc50-11a5ed2ad701@instapay"
+              - option "InstaPay · synthetic-6b29f683-1969-4f28-bace-c1cf34c66a6b@instapay"
+              - option "InstaPay · synthetic-b21668ec-a9b6-4d84-877e-09791359741c@instapay"
+              - option "InstaPay · synthetic-c9ace440-b0b0-4c1a-b3c2-564715a88ef1@instapay"
+              - option "InstaPay · synthetic-da1f66a1-e678-4aae-8245-a7aa3cb00b2b@instapay"
+              - option "InstaPay · synthetic-8b117538-766f-4c17-9d74-2fdea738b428@instapay"
+              - option "InstaPay · synthetic-f83cfeb3-1b30-4710-a1ad-4d659b9e1bec@instapay"
+              - option "InstaPay · synthetic-495adcfd-ede5-40c7-b56a-2398de46806e@instapay"
+              - option "InstaPay · synthetic-b7f86c8f-e17c-4f2c-80b0-c0bb308f381f@instapay"
+              - option "InstaPay · synthetic-16118a04-45b6-46ac-b9bf-d43ec875c2a1@instapay"
+              - option "InstaPay · synthetic-cda83e0c-4bff-48aa-be82-39e9dbe4890e@instapay"
+              - option "InstaPay · synthetic-17131fc0-54c9-481b-9956-d32a6c7dabb6@instapay"
+              - option "InstaPay · synthetic-e006537f-0687-428f-936b-563e84784eeb@instapay"
+              - option "InstaPay · synthetic-3aeedad6-995f-409c-9333-d03cac65cb52@instapay"
+              - option "InstaPay · synthetic-ff7e0dd0-158d-465c-b048-f0a8c74d1a39@instapay"
+              - option "InstaPay · synthetic-89d00017-4c44-4c8d-9f7b-ad730df26157@instapay"
+              - option "InstaPay · synthetic-579fd5a5-ecc9-423b-b572-8e491bc3f257@instapay"
+              - option "InstaPay · synthetic-d828d186-f1f0-4823-8478-4d526dc458b1@instapay"
+              - option "InstaPay · synthetic-87d21a48-c992-448a-b874-dd67908296be@instapay"
+              - option "InstaPay · synthetic-f8a2a847-b349-4ccd-a47a-bed4a3467558@instapay"
+              - option "InstaPay · synthetic-174eb79a-773f-4bbd-be54-d8201fa09b68@instapay"
+              - option "InstaPay · synthetic-c87f2df4-6ca4-4bce-8b36-931c78eb790e@instapay"
+              - option "InstaPay · synthetic-fb403f09-f256-457b-a279-efab677a8b85@instapay"
+              - option "InstaPay · synthetic-b6b821d8-10ef-4934-97c3-d8f6f03e1452@instapay"
+              - option "InstaPay · synthetic-0be93ac2-d7b5-4720-bbdc-17a93d00431d@instapay"
+              - option "InstaPay · synthetic-5442e0a8-b78d-47f7-beab-b2e5260e69c3@instapay"
+              - option "InstaPay · synthetic-b118dff9-f3f1-4f2b-b5c0-1774c6f4749b@instapay"
+              - option "InstaPay · synthetic-a7c1a9d6-6dd2-4bba-8fea-5337d098b70d@instapay"
+              - option "InstaPay · synthetic-96bec788-9a4c-417f-863f-92d299591b99@instapay"
+              - option "InstaPay · synthetic-ac396bef-a9cb-4887-839c-454509eded35@instapay"
+              - option "InstaPay · synthetic-a4f91e73-335c-4277-882a-1f214a7b2cca@instapay"
+              - option "InstaPay · synthetic-4963a0f3-83ce-4981-8023-b4b312d26838@instapay"
+              - option "InstaPay · synthetic-eab51370-8c11-4bec-99ff-c01b38870ce3@instapay"
+              - option "InstaPay · synthetic-eadb2db2-4318-49e1-8c21-284a1f0f618b@instapay"
+              - option "InstaPay · synthetic-a16cbf21-57af-4ed8-b36d-a0b410491a20@instapay"
+              - option "InstaPay · synthetic-73631b85-3e9a-46f2-915a-8d3d93e257f7@instapay"
+              - option "InstaPay · synthetic-cc9eec8b-f37d-4f6c-9cdf-09746fc07a6b@instapay"
+              - option "InstaPay · synthetic-25906645-ce35-4e44-9a9b-721f3a00fabc@instapay"
+              - option "InstaPay · synthetic-fe35be00-0a7e-4fa2-b0b6-1547fe358d41@instapay"
+              - option "InstaPay · synthetic-35d4d52d-b930-4931-84d3-b19e204c9491@instapay"
+              - option "InstaPay · synthetic-738a7479-131d-45d6-b825-2ec9098bed7d@instapay"
+              - option "InstaPay · synthetic-08816b74-ee8a-43ad-8d18-8b979cd2f3b2@instapay"
+              - option "InstaPay · synthetic-78e65865-8a41-45e0-9381-4467ec625669@instapay"
+              - option "InstaPay · synthetic-c0dbb6f5-9795-4464-9127-20576fd180e3@instapay"
+              - option "InstaPay · synthetic-fd420e14-0a8c-4781-9778-27ef0fcb213c@instapay"
+              - option "InstaPay · synthetic-25bbcabb-edb5-4761-9253-7878e7a0c456@instapay"
+              - option "InstaPay · synthetic-400b6cd1-078e-400b-9f9b-0e8b80155f03@instapay"
+              - option "InstaPay · synthetic-ef976c3b-f5be-49de-aa26-930c27541c10@instapay"
+              - option "InstaPay · synthetic-8247446a-64fb-4daa-bdef-a299cbb5ff30@instapay"
+              - option "InstaPay · synthetic-08728aa5-6e5e-407c-a9b8-dc2d5963f97b@instapay"
+              - option "InstaPay · synthetic-5a2bc0ed-868e-4b35-816d-955792274192@instapay"
+              - option "InstaPay · synthetic-000e25b2-1f34-49ed-a92e-1ac9e47151d2@instapay"
+              - option "InstaPay · synthetic-1b54d2ec-ac25-45f4-bde6-5a4154cb45d7@instapay"
+              - option "InstaPay · synthetic-3e3760f5-e0cc-4b33-a235-9868212f85ed@instapay"
+              - option "InstaPay · synthetic-1f9b3654-76ff-4eee-945c-f7f5fc3c32e7@instapay"
+              - option "InstaPay · synthetic-27bd122f-324d-40cd-aba5-4f66a8f736f7@instapay"
+              - option "InstaPay · synthetic-7b1cfe9a-7487-47d0-8351-94d69bb84b9d@instapay"
+              - option "InstaPay · synthetic-2c43b5ca-9f19-498d-bf07-ef8e6b4db61d@instapay"
+              - option "InstaPay · synthetic-2be219dc-7248-4147-b244-7880be49af71@instapay"
+              - option "InstaPay · synthetic-997972c7-c19c-4085-949e-b00ae0cc8696@instapay"
+              - option "InstaPay · synthetic-171a9347-c547-4049-9f58-e0f73f865a4f@instapay"
+              - option "InstaPay · synthetic-93b067a3-74d1-42d1-89e0-a4d0d70d0cc2@instapay"
+              - option "InstaPay · synthetic-469a4c4c-3b2d-410a-b7dd-dc03abbee81f@instapay"
+              - option "InstaPay · synthetic-64a0164a-921f-41b2-8012-0eb94cbb2f21@instapay"
+              - option "InstaPay · synthetic-0be53542-2c86-4b34-a1e8-7009003c3604@instapay"
+              - option "InstaPay · synthetic-1bdf93a3-cb91-462a-8a71-62efc7013211@instapay"
+              - option "InstaPay · synthetic-495f50ae-88e1-4072-ad73-2f62af12b25a@instapay"
+              - option "InstaPay · synthetic-b69a5fb5-8a4d-49cb-8810-db000ee7ac29@instapay"
+              - option "InstaPay · synthetic-ed73ea23-5ea0-4163-89e1-e30e36e1bfb6@instapay"
+              - option "InstaPay · synthetic-9274f8d5-3bec-45e3-a7a3-0ed9125dc056@instapay"
+              - option "InstaPay · synthetic-7cb409c2-e760-4156-a413-79481d47bddb@instapay"
+              - option "InstaPay · synthetic-00d09614-c99a-418d-a787-c9cd422ee688@instapay"
+              - option "InstaPay · synthetic-6daa33e1-b9af-4b35-98c3-593006b2e1a6@instapay"
+              - option "InstaPay · synthetic-0d309107-19a7-4e04-9842-5224098effcb@instapay"
+              - option "InstaPay · synthetic-1d445113-0b37-46dc-84b8-53700d0538e7@instapay"
+              - option "InstaPay · synthetic-9909e629-f549-4544-b690-abb8a558e2bb@instapay"
+              - option "InstaPay · synthetic-7134b6b4-a8b2-4b63-b330-d25970cd86b9@instapay"
+              - option "InstaPay · synthetic-a1cf27fe-087b-44bd-b350-e165f0776a51@instapay"
+              - option "InstaPay · synthetic-e6d6cf08-d087-4ef0-935d-bcd6a3bdc573@instapay"
+              - option "InstaPay · synthetic-035b2749-bc16-4050-8534-a5911159ad4a@instapay"
+              - option "InstaPay · synthetic-e9b90996-7090-47d6-9063-a91bc27ef13b@instapay"
+              - option "InstaPay · synthetic-27932445-0ffe-479a-a4d7-f02d39560bc3@instapay"
+              - option "InstaPay · synthetic-69c90450-63d7-42be-bddd-64871041c7ad@instapay"
+              - option "InstaPay · synthetic-a9223dc3-69ae-441b-8105-178211d1345a@instapay"
+              - option "InstaPay · synthetic-5395633b-955e-44fe-998f-5f53b534d6ee@instapay"
+              - option "InstaPay · synthetic-6d18e7c3-d4ae-47f6-a6d6-f16e5359b277@instapay"
+              - option "InstaPay · synthetic-47db5415-3243-4b1a-bef8-390b7e0e5a77@instapay"
+              - option "InstaPay · synthetic-33861a3c-43fc-40d7-98b6-2b4cf85a3cf3@instapay"
+              - option "InstaPay · synthetic-fa0fc744-0f97-4da3-8f90-14ed57fbae87@instapay"
+              - option "InstaPay · synthetic-b4eccacb-db4b-48f6-8596-9a81bcf0f72f@instapay"
+              - option "InstaPay · synthetic-4fc364c1-f9bc-4e4d-9cfc-d541797795d1@instapay"
+              - option "InstaPay · synthetic-8c195bea-2ffa-40c1-8332-2b4ae98c4d8a@instapay"
+              - option "InstaPay · synthetic-842e4806-77c5-4c70-9031-0fb7e31623ef@instapay"
+              - option "InstaPay · synthetic-eff4ff03-634c-4ab0-9e65-1d3e1582edd0@instapay"
+              - option "InstaPay · synthetic-e7338cb0-16cd-49a9-8afe-cff587b0865f@instapay"
+              - option "InstaPay · synthetic-22b7ca83-c389-496f-9405-a5a65f018fdd@instapay"
+              - option "InstaPay · synthetic-af737b97-910c-4f79-aed4-280f044cec1c@instapay"
+              - option "InstaPay · synthetic-5bd365ce-5c5b-4b36-aa77-042e1f52f45e@instapay"
+              - option "InstaPay · synthetic-dad642b3-b0b2-45ad-84a7-e4376ee244d0@instapay"
+              - option "InstaPay · synthetic-73958534-5960-4b41-9a7f-2e1905f45cf8@instapay"
+              - option "InstaPay · synthetic-ac6840ce-4edd-408b-a4ec-a80c18285d28@instapay"
+              - option "InstaPay · synthetic-7c40d23b-5170-42ac-9b45-515e6962be09@instapay"
+              - option "InstaPay · synthetic-3a75cefd-67c7-4153-bad5-a93f0bebf167@instapay"
+              - option "InstaPay · synthetic-01024ca9-061f-4c90-bc05-463ceb4d531e@instapay"
+              - option "InstaPay · synthetic-ae6c26ad-ba38-4d91-9f75-16d9626f05f0@instapay"
+              - option "InstaPay · synthetic-1e63615c-afe0-4d61-bfa2-e6621a05d961@instapay"
+              - option "InstaPay · synthetic-142b9975-899e-45c5-89c9-93777d2795e5@instapay"
+              - option "InstaPay · synthetic-b600edf1-3220-4fa4-940e-ef34efd81421@instapay"
+              - option "InstaPay · synthetic-1c14f4ce-71b4-4865-8f61-9f200c83ade3@instapay"
+              - option "InstaPay · synthetic-cfb03c6a-98b6-473e-a11c-85b8fd47ccad@instapay"
+              - option "InstaPay · synthetic-7f188292-4595-47fd-aada-1fef4547eed9@instapay"
+              - option "InstaPay · synthetic-6bec2992-9f47-4a9d-a91b-f56753e20cad@instapay"
+              - option "InstaPay · synthetic-7ab3fba8-c131-4188-9a67-fcfb3e1c4a39@instapay"
+              - option "InstaPay · synthetic-44653942-aae3-4938-ae8c-6867085a3ccd@instapay"
+              - option "InstaPay · synthetic-0048e7bb-91ba-487a-81a3-51c1d24ff5fa@instapay"
+              - option "InstaPay · synthetic-106e31ac-a62e-47ba-86c5-d3f13105dd8e@instapay"
+              - option "InstaPay · synthetic-146a0d17-73f5-4136-9aaf-071e3af13314@instapay"
+              - option "InstaPay · synthetic-d04b532f-1f22-4147-bceb-346484e7efeb@instapay"
+              - option "InstaPay · synthetic-5f30f510-0f5f-4ee3-8667-fec5765c47eb@instapay"
+              - option "InstaPay · synthetic-55a0b312-df30-4e8f-8cbc-534b0bfba113@instapay"
+              - option "InstaPay · synthetic-f29c44d0-6913-45ba-a01f-0c164b90f50f@instapay"
+              - option "InstaPay · synthetic-49e6fd23-9c0b-4b2b-8024-aa17ba804b6a@instapay"
+              - option "InstaPay · synthetic-c68ff39b-824c-46dd-8df5-8e181a7787a3@instapay"
+              - option "InstaPay · synthetic-4cf00c13-a5cb-4721-ae67-ca3c4d26eebb@instapay"
+              - option "InstaPay · synthetic-0c335e51-9bdc-40a6-b000-dbca887c26e7@instapay"
+              - option "InstaPay · synthetic-aeb61fa3-b2ed-4aa7-8a38-4393d23bbf19@instapay"
+  - button "Open Next.js Dev Tools" [ref=f2e76] [cursor=pointer]
+  - alert [ref=f2e80]

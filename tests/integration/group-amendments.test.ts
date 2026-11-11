@@ -5,7 +5,7 @@ import { invokeBookingCommandWithStatus } from '../../src/modules/booking/comman
 import { getEnrollment, getGroupAmendment } from '../../src/modules/booking/queries';
 import { authClient } from '../helpers/supabase';
 
-describe('T04 group amendment foundation without T06 financial posting',()=>{
+describe('scoped group amendment consent and funding prerequisites',()=>{
   let fixture:Awaited<ReturnType<typeof proposalFixture>>;
   beforeAll(async()=>{fixture=await proposalFixture()},120000);afterAll(async()=>{await fixture?.close()});
   async function prepare(expiryMs=600000){
@@ -15,7 +15,7 @@ describe('T04 group amendment foundation without T06 financial posting',()=>{
     const args={p_occurrence_id:occurrence.id,p_add_learner_ids:[fixture.learnerIds.stranger],p_remove_enrollment_ids:[],p_target_tier:3,p_fee_agreement_id:(fee.data as {fee_agreement_id:string}).fee_agreement_id,p_replacement_policy_version_id:replacement,p_expires_at:new Date(Date.now()+expiryMs).toISOString(),p_reason:'Synthetic two to three proposal',p_expected_version:occurrence.version,p_idempotency_key:randomUUID()};
     return {occurrence,first,second,args};
   }
-  test('revised scoped quotes and exact future fee collect acceptance without rewriting current roster or posting money',async()=>{
+  test('accepted revised quotes and exact future fee cannot commit without funding or rewrite the current roster',async()=>{
     const fixtureCase=await prepare();
     const before=await getEnrollment(fixture.clients.learner,fixtureCase.first.resource_id as string);
     const created=await invokeBookingCommandWithStatus(fixture.clients.admin,'propose_group_amendment',fixtureCase.args);
@@ -28,7 +28,7 @@ describe('T04 group amendment foundation without T06 financial posting',()=>{
       await invokeBookingCommandWithStatus(fixture.clients[who],'accept_group_amendment',{p_amendment_id:id,p_terms_hash:proposal.terms_hash,p_expected_version:proposal.version,p_idempotency_key:randomUUID()});
     }
     const proposed=await getGroupAmendment(fixture.clients.admin,id,{view:'admin'});expect(proposed.state).toBe('accepted');
-    await expect(invokeBookingCommandWithStatus(fixture.clients.admin,'commit_group_amendment',{p_amendment_id:id,p_expected_version:proposed.version,p_idempotency_key:randomUUID()})).rejects.toThrow('DEPENDENCY_UNAVAILABLE');
+    await expect(invokeBookingCommandWithStatus(fixture.clients.admin,'commit_group_amendment',{p_amendment_id:id,p_expected_version:proposed.version,p_idempotency_key:randomUUID()})).rejects.toThrow('INSUFFICIENT_FUNDS');
     const after=await getEnrollment(fixture.clients.learner,fixtureCase.first.resource_id as string);expect(after.quote).toEqual(before.quote);
     const row=(await fixture.database.query('select target_tier,current_fee_agreement_id,policy_version_id from app_private.occurrences where id=$1',[fixtureCase.occurrence.id])).rows[0];
     expect(row.target_tier).toBe(2);expect(row.current_fee_agreement_id).toBe(fixtureCase.occurrence.feeId);expect(row.policy_version_id).toBe(fixture.policyIds.group);

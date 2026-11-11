@@ -6,6 +6,7 @@ import { executeLeasedJob, type JobHandler } from './execute';
 import { staffInvitationHandler } from './auth-invitations';
 import { bookingDueHandler } from './booking-due';
 import { packageDueHandler } from './package-due';
+import { statementImportHandler } from './statement-import';
 
 const configuration = parseServerConfig(process.env);
 const pool = createDatabasePool(databaseUrl('worker'));
@@ -18,6 +19,7 @@ const handlers: Record<string, JobHandler> = {
   'identity.staff_invitation': staffInvitationHandler(pool),
   'booking.process_due': bookingDueHandler(pool),
   'packages.process_due': packageDueHandler(pool),
+  'payments.validate_statement': statementImportHandler(pool),
   'foundation.healthcheck': {
     execute: async job => `fake:healthcheck:${job.event_id}`,
     reconcile: async () => ({ outcome: 'not_sent' }), // Pure local healthcheck has no external side effect.
