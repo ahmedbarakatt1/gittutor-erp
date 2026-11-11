@@ -1,0 +1,42 @@
+'use client';
+
+import { useId, useState } from 'react';
+import type { AdminOccurrence, OperationProposal, GroupAmendment } from '@/modules/booking/queries';
+import { bookingStaffCopy as copy } from '@/locales/booking-staff';
+import { bookingCopy } from '@/locales/booking';
+import { IdentityForm, TextField } from '../identity-form';
+import { CustomerTerms } from './customer-proposals';
+import { CairoInput, Check, ReadState, Select, SessionTime, instantField, money, useBookingRecord } from './shared';
+import styles from './booking.module.css';
+import formStyles from '../auth.module.css';
+
+type TutorProposalTerms = Extract<OperationProposal, { view: 'tutor' }>['terms'];
+
+function TeachingTerms({ terms }: { terms: TutorProposalTerms }) {
+  return <section className={styles.private}><h3>{copy.privateTerms}</h3><p>{copy.privateNotice}</p><dl className={styles.facts}><div><dt>{bookingCopy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div><div><dt>{copy.approvedFee}</dt><dd>{terms.fee_minor === null ? copy.feePending : money(terms.fee_minor)}</dd></div><div><dt>{copy.duration}</dt><dd>{terms.duration_minutes} min</dd></div></dl>{terms.fee_agreement_state === 'pending_approval' && <p>{copy.pendingFee}</p>}</section>;
+}
+
+export function StaffProposal({ id, kind, view, names = {}, onSaved }: { id: string; kind: 'operation' | 'amendment'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
+  const decisionId = useId();
+  const route = kind === 'amendment' ? 'amendments' : 'operation-proposals'; const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=${view}`);
+  const proposal = record.data?.view === view ? record.data : undefined;
+  function saved() { record.reload(); onSaved?.(); }
+  return <details className={styles.detail}><summary>{copy.review}</summary><ReadState pending={!proposal} {...record} />{proposal && <div key={`${id}-${proposal.version}-${proposal.accepted_at}`}><p>{bookingCopy.states[proposal.state] || proposal.state}</p>{proposal.view === 'tutor' && <><TeachingTerms terms={proposal.terms} />{proposal.accepted_at ? <p className={formStyles.saved}>{copy.acceptedSaved}</p> : ['proposed', 'accepted'].includes(proposal.state) && <IdentityForm action={`${route}/${id}/accept`} submitLabel={copy.accept} successMessage={copy.acceptedSaved} disabled={!proposal.can_accept} resettable={false} onSaved={saved} payload={() => ({ terms_hash: proposal.terms_hash, expected_version: proposal.version })}><Check name="teaching_consent" label={copy.acceptConsent} /></IdentityForm>}{['proposed', 'accepted'].includes(proposal.state) && <IdentityForm action={`${route}/${id}/decline`} submitLabel={bookingCopy.decline} successMessage={bookingCopy.declined} resettable={false} onSaved={saved} payload={form => ({ reason: String(form.get('reason')).trim(), expected_version: proposal.version })}><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>}</>}
+    {proposal.view === 'admin' && <>{proposal.terms.tutor && <TeachingTerms terms={proposal.terms.tutor} />}<h3>{copy.required}</h3><ul>{proposal.required_acceptances.map(item => <li key={`${item.participant_type}-${item.participant_id}`}>{names[item.participant_id] || (item.participant_type === 'tutor' ? copy.tutor : copy.learner)} · {item.accepted_at ? copy.received : copy.awaiting}</li>)}</ul>{proposal.terms.customers.map(terms => <details className={styles.detail} key={terms.learner_id}><summary>{names[terms.learner_id] || copy.learner}</summary><CustomerTerms terms={terms} /></details>)}{kind === 'operation' && ['proposed', 'accepted'].includes(proposal.state) && <IdentityForm action={`${route}/${id}/approve`} submitLabel={copy.approve} successMessage={copy.approvalSaved} resettable={false} onSaved={saved} payload={form => ({ terms_hash: proposal.terms_hash, decision: String(form.get('decision')), reason: String(form.get('reason')).trim(), expected_version: proposal.version })}><div className={formStyles.field}><label htmlFor={decisionId}>{copy.decision}</label><select id={decisionId} name="decision" required defaultValue="rejected"><option value="approved" disabled={proposal.required_acceptances.some(item => !item.accepted_at)}>{copy.approveOption}</option><option value="rejected">{copy.rejectOption}</option></select></div><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>}
+      {kind === 'amendment' && <div className={styles.notice}><p>{copy.commitPending}</p><button type="button" className={formStyles.primary} disabled>{copy.commit}</button></div>}
+      {proposal.kind === 'reschedule' && proposal.state === 'approved' && proposal.target_type === 'occurrence' && proposal.terms.tutor && <IdentityForm action={`occurrences/${proposal.target_id}/reschedule`} submitLabel={copy.moveSubmit} successMessage={copy.moved} resettable={false} onSaved={saved} payload={form => ({ start_at: proposal.terms.tutor!.start_at, end_at: proposal.terms.tutor!.end_at, time_zone: 'Africa/Cairo', accepted_proposal_id: id, reason: String(form.get('reason')).trim(), expected_version: proposal.base_version })}><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>}
+    </>}
+  </div>}</details>;
+}
+
+export function CreateOperationProposal({ occurrence, view = 'admin', onSaved }: { occurrence: AdminOccurrence['occurrence']; view?: 'admin' | 'tutor'; onSaved?: () => void }) {
+  const [kind, setKind] = useState('reschedule'); const [remedy, setRemedy] = useState('policy_default'); const [created, setCreated] = useState('');
+  const duration = Date.parse(occurrence.end_at) - Date.parse(occurrence.start_at);
+  return <details className={styles.section}><summary>{copy.newProposal}</summary><Select name="proposal_kind" label={copy.proposalKind} value={kind} onChange={value => { setKind(value); setCreated(''); }}><option value="reschedule">{copy.reschedule}</option>{view === 'admin' && <option value="cancellation_remedy">{copy.cancellation}</option>}</Select>
+    <IdentityForm key={`${occurrence.occurrence_id}-${occurrence.version}-${kind}`} action="operation-proposals" submitLabel={copy.submitProposal} successMessage={copy.proposalSaved} resettable={false} onSaved={result => { setCreated(String(result.proposal_id)); onSaved?.(); }} payload={form => {
+      const expires_at = instantField(form, 'expires_at');
+      const requested_terms = kind === 'reschedule' ? { target_type: 'occurrence', start_at: instantField(form, 'start_at'), end_at: new Date(Date.parse(instantField(form, 'start_at')) + duration).toISOString(), time_zone: 'Africa/Cairo', expires_at } : { target_type: 'occurrence', remedy, expires_at };
+      return { kind, target_id: occurrence.occurrence_id, expected_version: occurrence.version, requested_terms, reason: String(form.get('reason')).trim() };
+    }}>{kind === 'reschedule' ? <><CairoInput name="start_at" label={copy.proposedStart} /><p>{copy.duration}: {duration / 60_000} min. {copy.durationNote}</p></> : <Select name="remedy" label={bookingCopy.remedy} value={remedy} onChange={setRemedy}>{Object.entries(bookingCopy.remedies).filter(([value]) => value !== 'none').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}<CairoInput name="expires_at" label={copy.expiry} /><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>{created && <StaffProposal id={created} kind="operation" view={view} />}
+  </details>;
+}

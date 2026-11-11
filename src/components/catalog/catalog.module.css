@@ -14,6 +14,12 @@
 .filter { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 20px; padding-block: 24px; border-block: 1px solid var(--border); }
 .filter label { display: block; font-size: 14px; font-weight: 700; margin-block-end: 8px; }
 .filter select { inline-size: 100%; min-block-size: 48px; padding: 12px; background: white; border: 1px solid #85877e; border-radius: 6px; font-size: 16px; }
+.timeFilters { grid-column: 1 / -1; }
+.timeFilters summary { cursor: pointer; font-weight: 650; }
+.timeFilters > p { margin-block: 1rem; color: var(--muted); }
+.timeFilters > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1.25rem; }
+.timeFilters input { min-inline-size: 0; inline-size: 100%; min-block-size: 48px; padding: 12px; background: white; border: 1px solid #85877e; border-radius: 6px; font-size: 16px; }
+.timeFilters input:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .button { display: inline-block; min-block-size: 48px; border: 0; background: var(--brand); color: white; border-radius: 6px; padding: 12px 22px; font-weight: 700; text-align: center; text-decoration: none; }
 .button:hover { background: var(--brand-hover); }
 .button:disabled { background: #696a62; cursor: default; }

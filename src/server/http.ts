@@ -60,18 +60,21 @@ const errors: Record<string, [number, string]> = {
   REMEDY_RESERVED: [409, "This benefit is already reserved by another remedy."],
   HISTORY_UNKNOWN: [409, "The historical evidence is incomplete."],
   FILE_REJECTED: [422, "This file does not meet the upload requirements."],
-  WINDOW_CLOSED: [422, "The reply window has closed. Use an eligible template."],
+  WINDOW_CLOSED: [422, "The time window for this action has closed. Refresh to see the available actions."],
   TEMPLATE_REQUIRED: [422, "Choose an eligible approved message template."],
   RETRYABLE_CONFLICT: [503, "Another change is in progress. Retry this action shortly."],
   DEPENDENCY_UNAVAILABLE: [503, "This service is temporarily unavailable. Try again shortly."],
   RATE_LIMITED: [429, "Too many requests. Please wait before trying again."],
 };
 
-export function safeError(error: unknown): { status: number; code: string; message: string } {
+const scheduleConflictFields = z.object({ conflicting_occurrence_ids: z.array(z.uuid()).max(100) }).strict();
+export function safeError(error: unknown): { status: number; code: string; message: string; field_errors?: { conflicting_occurrence_ids: string[] } } {
   const candidate = typeof error === "object" && error !== null
     ? ("code" in error && typeof error.code === "string" && errors[error.code] ? error.code : "message" in error ? error.message : null) : null;
   const code = typeof candidate === "string" && errors[candidate] ? candidate : "DEPENDENCY_UNAVAILABLE";
-  return { code, status: errors[code][0], message: errors[code][1] };
+  const fields = code === "SCHEDULE_CONFLICT" && typeof error === "object" && error !== null && "field_errors" in error
+    ? scheduleConflictFields.safeParse(error.field_errors) : null;
+  return { code, status: errors[code][0], message: errors[code][1], ...(fields?.success ? { field_errors: fields.data } : {}) };
 }
 
 export function landingForRoles(roles: string[]): string {

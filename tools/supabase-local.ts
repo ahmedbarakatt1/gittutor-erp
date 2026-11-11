@@ -10,6 +10,7 @@ import { adminDatabase, anonymousClient, assertLocalSupabase, loadLocalSupabase,
 import { fixtureId } from './db-seed';
 import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
 import { seedCatalog } from './catalog-seed';
+import { seedBooking } from './booking-seed';
 
 const execute = promisify(execFile);
 const workspace = resolve('.local/supabase-bootstrap');
@@ -282,6 +283,7 @@ async function verify() {
       p.oid::regprocedure::text as signature,pg_get_function_result(p.oid) as result,p.prosrc,p.provolatile,l.lanname,
       array(select coalesce(g.rolname,'PUBLIC')::text from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a left join pg_roles g on g.oid=a.grantee where a.privilege_type='EXECUTE') as executors,
       has_function_privilege('anon',p.oid,'EXECUTE') as anonymous,
+      has_function_privilege('git_tutor_worker',p.oid,'EXECUTE') as worker,
       has_function_privilege('authenticated',p.oid,'EXECUTE') as authenticated
       from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner join pg_language l on l.oid=p.prolang
       where n.nspname in ('api','app_private','finance_private')`);
@@ -289,6 +291,8 @@ async function verify() {
       const publicRead = fn.nspname === 'api' && ['list_public_offers', 'get_public_tutor'].includes(fn.proname);
       if (fn.anonymous && !publicRead) throw new Error(`SUPABASE_ANON_FUNCTION_INVALID:${fn.proname}`);
       if (fn.nspname !== 'api' && fn.authenticated) throw new Error(`SUPABASE_PRIVATE_FUNCTION_INVALID:${fn.proname}`);
+      if (fn.nspname === 'app_private' && fn.proname.startsWith('booking_') && fn.worker) throw new Error(`SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID:${fn.proname}`);
+      if (fn.proname === 'process_occurrence_booking_due' && (fn.nspname !== 'app_private' || !fn.worker || fn.signature !== 'app_private.process_occurrence_booking_due(uuid,text)' || fn.rolname !== 'git_tutor_commands' || fn.executors.some((role: string) => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID');
       assertAllowedDefiner(fn);
     }
     console.log(`Real Supabase verification passed: ${files.length} migrations, ${tables.rowCount} private RLS tables, ${functions.rowCount} function boundaries.`);
@@ -300,7 +304,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   switch (process.argv[2]) {
     case 'bootstrap': await bootstrap(); break;
     case 'migrate': await applyMigrations(process.argv.includes('--foundation-only')); console.log('Project-local Supabase migrations applied; temporary owner CREATE grants revoked.'); break;
-    case 'seed': await seed(); await seedCatalog(); break;
+    case 'seed': await seed(); await seedCatalog(); await seedBooking(); break;
     case 'verify': await verify(); break;
     case 'restart': await restart(); break;
     default: throw new Error('Usage: tsx tools/supabase-local.ts bootstrap|migrate|seed|verify|restart');

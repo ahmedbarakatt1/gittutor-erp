@@ -5,9 +5,9 @@ import { identityCopy as copy } from '@/locales/auth';
 import { useHydrated } from './use-hydrated';
 import styles from './auth.module.css';
 
-type Result = { data?: Record<string, unknown>; code?: string; message?: string; request_id?: string };
+type Result = { data?: Record<string, unknown>; code?: string; message?: string; request_id?: string; field_errors?: { conflicting_occurrence_ids?: string[] } };
 
-export function IdentityForm({ children, action, payload, submitLabel, successMessage, disabled = false, resettable = true, onSaved, onPendingChange }: {
+export function IdentityForm({ children, action, payload, submitLabel, successMessage, disabled = false, resettable = true, onSaved, onPendingChange, onFailure }: {
   children: ReactNode;
   action: string | ((data: FormData) => string);
   payload: (data: FormData) => Record<string, unknown>;
@@ -17,6 +17,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
   resettable?: boolean;
   onSaved?: (result: Record<string, unknown>) => void;
   onPendingChange?: (pending: boolean) => void;
+  onFailure?: (result: Result) => void;
 }) {
   const hydrated = useHydrated();
   const operation = useRef<{ key: string; signature: string; storageKey: string } | null>(null);
@@ -60,7 +61,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
       }
       const response = await fetch(`/api/v1/${path}`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.current.key }, body: JSON.stringify(body) });
       const responseBody = await response.json() as Result;
-      if (!response.ok) { setError(responseBody.message || copy.network); setRequestId(responseBody.request_id || ''); return; }
+      if (!response.ok) { setError(responseBody.message || copy.network); setRequestId(responseBody.request_id || ''); onFailure?.(responseBody); return; }
       setResult(responseBody.data || {});
       onSaved?.(responseBody.data || {});
     } catch { setError(copy.network); }

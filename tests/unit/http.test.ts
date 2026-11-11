@@ -16,6 +16,22 @@ it("unclassified errors never expose secrets or internal database messages", () 
   expect(JSON.stringify(safeError(new Error("postgres private token: secret")))).not.toMatch(/postgres|token|secret/);
   expect(safeError({ message: "VERSION_CONFLICT" }).status).toBe(409);
 });
+it("schedule errors expose only bounded validated occurrence references from the domain boundary", () => {
+  const id = '9d9a5658-a7e2-42d2-8195-4cb1a18d56f0';
+  const fields = { conflicting_occurrence_ids: [id] };
+  expect(safeError({ code: 'SCHEDULE_CONFLICT', field_errors: fields })).toMatchObject({ status: 409, field_errors: fields });
+  for (const error of [
+    { code: 'FORBIDDEN', field_errors: fields },
+    { code: 'SCHEDULE_CONFLICT', details: JSON.stringify(fields) },
+    { code: 'SCHEDULE_CONFLICT', field_errors: { conflicting_occurrence_ids: ['invalid'] } },
+    { code: 'SCHEDULE_CONFLICT', field_errors: { conflicting_occurrence_ids: Array(101).fill(id) } },
+    { code: 'SCHEDULE_CONFLICT', field_errors: { ...fields, tutor_fee_minor: 45000, internal_notes: 'PRIVATE_MARKER' } },
+  ]) {
+    const response = safeError(error);
+    expect(response).not.toHaveProperty('field_errors');
+    expect(JSON.stringify(response)).not.toMatch(/tutor_fee|internal_notes|PRIVATE_MARKER/);
+  }
+});
 it("portal destinations depend on current roles and remain an internal allowlist", () => {
   expect(landingForRoles(["student"])).toBe("/learn");
   expect(landingForRoles(["guardian"])).toBe("/learn");

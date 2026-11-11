@@ -64,6 +64,10 @@ Customer/public DTOs exclude tutor fees/ranges, margin, payout destinations, int
 
 ## Identity, catalog and booking commands
 
+### T04 booking implementation mapping
+
+The exact supplemental booking schemas, scoped projections and transactional boundary are defined in [the T04 booking contract](T04-BOOKING-CONTRACT.md). They add named learner selection, explicit waitlist consent and departure, capacity edits, proposal decline, and exact fee target/purpose. Quote terms retain a separate revision from operational changes. Proposal reads use an explicitly authorized `customer`, `tutor` or `admin` view, defaulting to customer fields even for accounts with multiple roles. Public availability extends the existing offer projection without another anonymous RPC. Confirmation and financial amendments remain unavailable until the T04–T06 integration checkpoint.
+
 ### T03 catalog implementation mapping
 
 T03 catalog mapping: `kind` is `booking` and commercial `scope` is `group` or `private`; deployment environment and synthetic provenance are server-owned. Pricing references in policy content resolve the same immutable pricing-bundle UUID, with compensation stored privately. A nested package contract inherits its owning policy UUID as `package_policy_version_id`; the server derives that identity and rejects a different supplied value. Draft offers may reference compatible drafts so package eligibility can name the actual offer before approval. Publication requires complete approved records and enforces environment/provenance gates. `GET /offers` adds the admin-only `list_admin_offers` projection for draft/approved record selection. The public offer read accepts an exact `offer_id` filter for detail pages; public subjects derive from published offer projections without adding anonymous RPC grants. Customer terms hashes cover customer-visible fields only.

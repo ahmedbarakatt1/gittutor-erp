@@ -2,6 +2,7 @@ import { z } from 'zod';
 import schemas from '../../../contracts/runtime/catalog-schemas.json';
 import { catalogRpc, CatalogRpcError, type CatalogRpcClient } from './commands';
 import { compensationSchema, customerPricingSchema, policyContentSchema, policyRequiredCommon, type JsonObject } from './policies';
+import { publicOccurrenceSchema } from '../booking/public-occurrence';
 
 const id=z.uuid(); const version=z.number().int().positive(); const scope=z.enum(['group','private']); const instant=z.iso.datetime({offset:true});
 const status=z.enum(['draft','approved','published','retired']);
@@ -23,6 +24,7 @@ const summarySchema=z.fromJSONSchema({type:'object',additionalProperties:false,
   properties:Object.fromEntries(publicPolicyFields.map(field=>[field,(publicRequired as readonly string[]).includes(field)?schemas.policy_content.properties[field].anyOf[0]:schemas.policy_content.properties[field]])),
   required:publicRequired,
 } as Parameters<typeof z.fromJSONSchema>[0]) as z.ZodType<PublicPolicySummary>;
+export { summarySchema as publicPolicySummarySchema };
 export function projectCustomerPolicy(content:unknown):PublicPolicySummary {
   const source=typeof content==='object' && content!==null && !Array.isArray(content)?content as JsonObject:{};
   const candidate=Object.fromEntries(publicPolicyFields.filter(field=>Object.hasOwn(source,field)).map(field=>[field,source[field]]));
@@ -33,7 +35,7 @@ export function projectCustomerPolicy(content:unknown):PublicPolicySummary {
 const publicOffer=z.object({offer_id:id,title:z.string(),subject,format:scope,duration_minutes:version,capacity:z.number().int().min(1).max(4),target_tier:z.number().int().nullable(),
   seat_price_minor:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),currency:z.literal('EGP'),pricing_version_id:id,policy_version_id:id,
   customer_terms_hash:z.string().regex(/^[a-f0-9]{64}$/),policy_summary:summarySchema,
-  availability:z.object({scheduled_occurrences:z.number().int().nonnegative(),next_start_at:instant.nullable()}).strict()}).strict();
+  availability:z.object({scheduled_occurrences:z.number().int().nonnegative(),next_start_at:instant.nullable(),next_occurrences:z.array(publicOccurrenceSchema).max(5),has_more:z.boolean()}).strict()}).strict();
 const publicTutor=z.object({tutor_id:id,display_name:z.string(),bio:z.string(),subjects:z.array(subject),photo_reference:z.string().nullable()}).strict();
 const provenance={version,environment_scope:z.enum(['production','development_test']),is_synthetic:z.boolean(),approved_by:id.nullable(),approved_at:instant.nullable(),effective_at:instant.nullable(),content_hash:z.string().regex(/^[a-f0-9]{64}$/),validation_errors:z.array(z.string())};
 const policy=z.object({policy_version_id:id,kind:z.literal('booking'),scope,status,content:policyContentSchema,...provenance}).strict();

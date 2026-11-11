@@ -5,6 +5,8 @@ import { authCopy as copy, identityCopy, type PortalKind } from '@/locales/auth'
 import type { Account } from '@/server/auth';
 import styles from './auth.module.css';
 import { catalogCopy } from '@/locales/catalog';
+import { bookingCopy } from '@/locales/booking';
+import { bookingStaffCopy } from '@/locales/booking-staff';
 
 export function PortalShell({ kind, account, children, title, description, activePath, showAccount = true }: { kind: PortalKind; account: Account; children?: ReactNode; title?: string; description?: string; activePath?: string; showAccount?: boolean }) {
   const text = copy.portal[kind];
@@ -26,7 +28,10 @@ export function PortalShell({ kind, account, children, title, description, activ
       <nav className={styles.portalNav} aria-label={text.workspace}>
         <Link href={`/${kind}`} aria-current={!activePath || activePath === `/${kind}` ? 'page' : undefined}>{copy.portal.account}</Link>
         {kind === 'admin' && <Link href="/admin/catalog" aria-current={activePath === '/admin/catalog' ? 'page' : undefined}>{catalogCopy.admin.nav}</Link>}
-        {kind === 'learn' && <a href="#learners">{copy.portal.learnerTitle}</a>}
+        {kind === 'admin' && <Link href="/admin/schedule" aria-current={activePath === '/admin/schedule' ? 'page' : undefined}>{bookingStaffCopy.adminNav}</Link>}
+        {kind === 'tutor' && <Link href="/tutor/schedule" aria-current={activePath === '/tutor/schedule' ? 'page' : undefined}>{bookingStaffCopy.tutorNav}</Link>}
+        {kind === 'learn' && <Link href="/learn/bookings" aria-current={activePath === '/learn/bookings' ? 'page' : undefined}>{bookingCopy.nav}</Link>}
+        {kind === 'learn' && <Link href="/learn#learners">{copy.portal.learnerTitle}</Link>}
         {kind === 'learn' && <Link href="/apply-to-teach">{identityCopy.application.nav}</Link>}
         {authorizedWorkspaces.filter(workspace => workspace !== kind).map(workspace => <Link key={workspace} href={`/${workspace}`}>{copy.portal[workspace].workspace}</Link>)}
       </nav>
@@ -42,7 +47,7 @@ export function PortalShell({ kind, account, children, title, description, activ
             <div><dt>{copy.portal.verified}</dt><dd className={styles.status}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="m7.5 12 3 3 6-6" /></svg>{copy.portal.verified}</dd></div>
           </dl>
         </section>}
-        {kind === 'learn' && <section id="learners" className={styles.section} aria-labelledby="learners-heading">
+        {kind === 'learn' && showAccount && <section id="learners" className={styles.section} aria-labelledby="learners-heading">
           <h2 id="learners-heading">{copy.portal.learnerTitle}</h2>
           <p>{copy.portal.learnerDescription}</p>
           {account.authorized_learner_ids.length ? <ul className={styles.learnerList}>{account.authorized_learner_ids.map((id) => <li key={id}><span>{copy.portal.learnerReference}</span><strong data-testid="learner-id">{id}</strong></li>)}</ul> : <p>{copy.portal.noLearners}</p>}

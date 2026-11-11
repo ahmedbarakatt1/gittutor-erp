@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { authCopy as copy } from '@/locales/auth';
 import { useHydrated } from './use-hydrated';
+import { bookingReturnPath } from '@/modules/identity/return-path';
 import styles from './auth.module.css';
 
 type ApiResult = { data?: { redirect_to?: string; verification_required?: boolean }; code?: string; message?: string; request_id?: string };
@@ -13,7 +14,7 @@ function navigateAfterAuthentication(path: string) {
   window.location.assign(new URL(path, window.location.origin).href);
 }
 
-export function AuthForm({ mode, unavailable = false, forbidden = false }: { mode: 'login' | 'signup'; unavailable?: boolean; forbidden?: boolean }) {
+export function AuthForm({ mode, unavailable = false, forbidden = false, returnTo }: { mode: 'login' | 'signup'; unavailable?: boolean; forbidden?: boolean; returnTo?: string }) {
   const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +62,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false }: { mod
       }
       const destination = result.data?.redirect_to;
       if (destination && ['/learn', '/tutor', '/service', '/admin'].includes(destination)) {
-        navigateAfterAuthentication(destination);
+        navigateAfterAuthentication(mode === 'login' ? bookingReturnPath(returnTo) || destination : destination);
         return;
       }
       setError(copy.error.generic);

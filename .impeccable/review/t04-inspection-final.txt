@@ -1,0 +1,74 @@
+### Result
+[{"surface":"customer-reservation","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false},{"viewport":360,"direction":"rtl","overflow":false}],"focus":{"tag":"A","text":"Skip to account","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]},{"surface":"customer-quote","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false},{"viewport":360,"direction":"rtl","overflow":false}],"focus":{"tag":"SUMMARY","text":"Request a change","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]},{"surface":"provisional-seat","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false},{"viewport":360,"direction":"rtl","overflow":false}],"focus":{"tag":"SUMMARY","text":"Review proposed change","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]},{"surface":"provisional-terms","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false},{"viewport":360,"direction":"rtl","overflow":false}],"focus":{"tag":"SUMMARY","text":"Review proposed change","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]},{"surface":"admin-schedule","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false}],"focus":{"tag":"A","text":"Skip to account","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]},{"surface":"admin-private","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false}],"focus":{"tag":"BUTTON","text":"Refresh details","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]},{"surface":"tutor-availability","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false}],"focus":{"tag":"BUTTON","text":"Refresh details","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":["Failed to load resource: the server responded with a status of 409 (Conflict)"],"warnings":[],"failedResponses":[{"path":"/api/v1/availability","status":409}]},{"surface":"tutor-conflict","measurements":[{"viewport":1440,"overflow":false},{"viewport":360,"overflow":false}],"focus":{"tag":"A","text":"Review this session","outlineStyle":"solid","outlineWidth":"3px"},"consoleErrors":[],"warnings":[],"failedResponses":[]}]
+### Ran Playwright code
+```js
+await (async (page) => {
+  const metadata = {"amendment":{"occurrenceId":"635f69c4-35bf-43c2-a7b7-7b4dd47ed5bc","amendmentId":"303653a9-2c17-4edd-a17c-19089efdea32","enrollmentId":"ec7d2154-2a20-416b-8c5c-be6cde42d0b9","provisionalEnrollmentId":"2dee843d-6c5e-47bb-8db3-dc9229bc13ee"},"tutor":{"occurrenceId":"672a2ddb-4bfc-4580-a4ce-68fcbfcc1bd1","localDate":"2026-11-13"},"booking":{"occurrenceId":"3d6ba6c1-d2dc-4418-ab8b-0d3028cd3611","enrollmentIds":["744cdcaa-937b-4f31-ab4d-b46c960b1769","6a6c52aa-94da-455a-86cb-22f2134db064"],"offerId":"c78baa1a-dca8-5666-a87d-2a4320cc487c"}};
+  const findings = [];
+  let consoleErrors = [], warnings = [], failedResponses = [];
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); if (message.type() === 'warning') warnings.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); });
+  page.on('pageerror', error => consoleErrors.push(error.message.replace(/https?:\/\/\S+/g, '[url]')));
+  page.on('response', response => { if (response.status() >= 400) failedResponses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  async function capture(label, target, rtl = false) {
+    const measurements = [];
+    for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+      await page.evaluate(() => document.activeElement?.blur());
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.evaluate(() => document.fonts.ready);
+      if (target) await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      else await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t04-' + label + '-' + viewport.label + '.png', caret: 'initial' });
+      measurements.push({ viewport: viewport.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+    }
+    await page.evaluate(() => { document.activeElement?.blur(); scrollTo({ top: 0, behavior: 'instant' }); });
+    await page.keyboard.press('Tab');
+    const focus = await page.evaluate(() => { const element = document.activeElement; const style = getComputedStyle(element); return { tag: element.tagName, text: element.textContent.trim().slice(0, 80), outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth }; });
+    if (rtl) {
+      await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+      measurements.push({ viewport: 360, direction: 'rtl', overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+      if (target) await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t04-' + label + '-rtl.png', caret: 'initial' });
+      await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+    }
+    findings.push({ surface: label, measurements, focus, consoleErrors, warnings, failedResponses });
+    consoleErrors = []; warnings = []; failedResponses = [];
+  }
+  await page.context().setStorageState('.local/ui-review/t04-desktop-guardian.json');
+  await page.goto('http://127.0.0.1:3000/learn/bookings/' + metadata.booking.enrollmentIds[0]);
+  await page.getByRole('heading', { name: 'Your exact quote', exact: true }).waitFor();
+  await capture('customer-reservation', null, true);
+  await capture('customer-quote', page.getByRole('region', { name: 'Your exact quote', exact: true }), true);
+  await page.context().setStorageState('.local/ui-review/t04-desktop-proposal-added.json');
+  await page.goto('http://127.0.0.1:3000/learn/bookings/' + metadata.amendment.provisionalEnrollmentId);
+  await page.getByRole('heading', { name: 'Proposed quote', exact: true }).waitFor();
+  await page.getByText('Review proposed change', { exact: true }).click();
+  await page.getByText('Proposed tuition', { exact: true }).waitFor();
+  await capture('provisional-seat', page.getByRole('region', { name: 'Proposed quote', exact: true }), true);
+  const proposal = page.locator('details').filter({ has: page.getByText('Review proposed change', { exact: true }) }).first();
+  await capture('provisional-terms', proposal, true);
+  await page.context().setStorageState('.local/ui-review/t04-desktop-admin.json');
+  await page.goto('http://127.0.0.1:3000/admin/schedule?occurrence=' + metadata.booking.occurrenceId);
+  const privateHeading = page.getByRole('heading', { name: 'Confidential teaching terms', exact: true });
+  await privateHeading.waitFor();
+  await page.getByRole('button', { name: 'Approve exact tutor fee', exact: true }).waitFor({ state: 'visible' });
+  await capture('admin-schedule', page.locator('#sessions'));
+  await capture('admin-private', privateHeading);
+  await page.context().setStorageState('.local/ui-review/t04-mobile-tutor.json');
+  await page.goto('http://127.0.0.1:3000/tutor/schedule?occurrence=' + metadata.tutor.occurrenceId);
+  const availability = page.getByRole('form', { name: 'Save availability', exact: true });
+  await availability.getByRole('button', { name: 'Add a date exception', exact: true }).click();
+  await availability.getByLabel('Date 1', { exact: true }).fill(metadata.tutor.localDate);
+  await availability.getByLabel('Reason for this request', { exact: true }).fill('Synthetic rendered conflict review');
+  const conflict = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/availability' && response.request().method() === 'POST');
+  await availability.getByRole('button', { name: 'Save availability', exact: true }).click();
+  if ((await conflict).status() !== 409) throw new Error('Expected preserved availability conflict');
+  const affected = page.getByRole('region', { name: 'Sessions affected by this change', exact: true });
+  await affected.getByRole('link', { name: 'Review this session', exact: true }).waitFor();
+  await capture('tutor-availability', page.locator('#availability'));
+  await capture('tutor-conflict', affected);
+  return findings;
+}
+)(page);
+```
+### Events
+- New console entries: .playwright-cli\console-2026-11-11T13-54-55-585Z.log#L21-L295

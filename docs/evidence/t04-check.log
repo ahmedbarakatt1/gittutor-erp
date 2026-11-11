@@ -1,0 +1,171 @@
+v24.22.1
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  12 passed (12)
+      Tests  194 passed (194)
+   Start at  16:05:12
+   Duration  3.47s (import 57%, tests 29%, transform 9%, worker 4%)
+
+    Isolate  12 workers spawned · ~150ms startup each (spawn + environment, per file)
+             at least ~1.65s faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  12 passed (12)
+      Tests  100 passed (100)
+   Start at  16:05:16
+   Duration  23.95s (tests 90%, import 9%, transform 1%)
+
+    Isolate  12 workers spawned · ~159ms startup each (spawn + environment, per file)
+             at least ~1.75s faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 74 tests using 2 workers
+
+(node:32024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28792) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (197ms)
+  ok  2 [desktop] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (160ms)
+  ok  4 [desktop] › tests\e2e\booking-transport.spec.ts:14:1 › booking learner selection uses current customer scope and a narrow name projection (437ms)
+  ok  5 [desktop] › tests\e2e\booking-transport.spec.ts:34:1 › customer cookies cannot inspect administrative scheduling or exact fee agreements (451ms)
+  ok  6 [desktop] › tests\e2e\booking-transport.spec.ts:48:1 › booking mutations reject forged actors, missing operation keys and foreign cookie origins (474ms)
+  ok  7 [desktop] › tests\e2e\booking.spec.ts:36:1 › booking and schedule workspaces require a verified session (2.8s)
+  ok  3 [desktop] › tests\e2e\booking-concurrency.spec.ts:16:1 › independent browsers keep a last-seat conflict explicit and never silently join a waitlist (7.8s)
+  ok  8 [desktop] › tests\e2e\booking.spec.ts:44:1 › a public scheduled-session selection survives verified sign-in (5.8s)
+  ok  9 [desktop] › tests\e2e\booking-concurrency.spec.ts:30:1 › GT-208 independent queue walkthrough expires one offer and promotes exactly the next learner (10.0s)
+  ok 11 [desktop] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (392ms)
+  ok 12 [desktop] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (95ms)
+  ok 13 [desktop] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (737ms)
+  ok 10 [desktop] › tests\e2e\booking.spec.ts:53:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (17.6s)
+  ok 14 [desktop] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (9.6s)
+  ok 15 [desktop] › tests\e2e\booking.spec.ts:94:1 › tutor availability conflict preserves the scheduled session and shows its Cairo time (3.3s)
+  ok 16 [desktop] › tests\e2e\catalog.spec.ts:91:1 › administrator creates, approves and publishes through structured editors without leaking compensation (13.8s)
+  ok 17 [desktop] › tests\e2e\booking.spec.ts:109:1 › a group change collects separate learner and tutor consent while financial commit stays unavailable (19.3s)
+  ok 18 [desktop] › tests\e2e\catalog.spec.ts:137:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (9.6s)
+  ok 20 [desktop] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (2.5s)
+  ok 19 [desktop] › tests\e2e\booking.spec.ts:139:1 › a customer can request a reviewed cancellation but cannot consent to unknown financial consequences (4.0s)
+  ok 21 [desktop] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (932ms)
+  ok 23 [desktop] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (9.5s)
+  ok 24 [desktop] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (2.9s)
+  ok 22 [desktop] › tests\e2e\booking.spec.ts:149:1 › an accepted schedule-only proposal is reviewed and applied without changing the saved tuition (14.0s)
+  ok 25 [desktop] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (1.8s)
+  ok 26 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (1.2s)
+  ok 28 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (1.2s)
+  ok 29 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (1.1s)
+  ok 30 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (1.0s)
+  ok 27 [desktop] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (3.6s)
+  ok 31 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (1.1s)
+(node:29876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 33 [desktop] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (2.1s)
+  ok 32 [desktop] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (6.2s)
+  ok 34 [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (2.5s)
+  ok 35 [desktop] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (2.3s)
+(node:26240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 37 [mobile] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (110ms)
+  ok 38 [mobile] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (125ms)
+  ok 39 [mobile] › tests\e2e\booking-concurrency.spec.ts:16:1 › independent browsers keep a last-seat conflict explicit and never silently join a waitlist (6.3s)
+  ok 36 [desktop] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (7.6s)
+  ok 41 [desktop] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (6.3s)
+(node:6240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 42 [mobile] › tests\e2e\booking-transport.spec.ts:14:1 › booking learner selection uses current customer scope and a narrow name projection (774ms)
+  ok 43 [mobile] › tests\e2e\booking-transport.spec.ts:34:1 › customer cookies cannot inspect administrative scheduling or exact fee agreements (602ms)
+  ok 40 [mobile] › tests\e2e\booking-concurrency.spec.ts:30:1 › GT-208 independent queue walkthrough expires one offer and promotes exactly the next learner (9.4s)
+  ok 44 [mobile] › tests\e2e\booking-transport.spec.ts:48:1 › booking mutations reject forged actors, missing operation keys and foreign cookie origins (382ms)
+  ok 46 [mobile] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (361ms)
+  ok 47 [mobile] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (181ms)
+  ok 48 [mobile] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (933ms)
+  ok 45 [mobile] › tests\e2e\booking.spec.ts:36:1 › booking and schedule workspaces require a verified session (2.2s)
+  ok 50 [mobile] › tests\e2e\booking.spec.ts:44:1 › a public scheduled-session selection survives verified sign-in (5.7s)
+  ok 49 [mobile] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (9.7s)
+  ok 51 [mobile] › tests\e2e\booking.spec.ts:53:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (15.4s)
+  ok 52 [mobile] › tests\e2e\catalog.spec.ts:91:1 › administrator creates, approves and publishes through structured editors without leaking compensation (13.0s)
+  ok 53 [mobile] › tests\e2e\booking.spec.ts:94:1 › tutor availability conflict preserves the scheduled session and shows its Cairo time (3.1s)
+  ok 54 [mobile] › tests\e2e\catalog.spec.ts:137:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (10.0s)
+  ok 56 [mobile] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (2.1s)
+  ok 57 [mobile] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (1.0s)
+  ok 58 [mobile] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (9.0s)
+  ok 55 [mobile] › tests\e2e\booking.spec.ts:109:1 › a group change collects separate learner and tutor consent while financial commit stays unavailable (22.4s)
+  ok 59 [mobile] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (2.6s)
+  ok 61 [mobile] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (1.9s)
+  ok 60 [mobile] › tests\e2e\booking.spec.ts:139:1 › a customer can request a reviewed cancellation but cannot consent to unknown financial consequences (3.9s)
+  ok 62 [mobile] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (3.3s)
+  ok 64 [mobile] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (7.1s)
+  ok 63 [mobile] › tests\e2e\booking.spec.ts:149:1 › an accepted schedule-only proposal is reviewed and applied without changing the saved tuition (11.9s)
+  ok 65 [mobile] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (2.5s)
+  ok 66 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (984ms)
+  ok 68 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (1.1s)
+  ok 69 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (1.1s)
+  ok 70 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (1.1s)
+  ok 71 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (1.1s)
+(node:5688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 67 [mobile] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (7.6s)
+  ok 72 [mobile] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (2.1s)
+  ok 74 [mobile] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (2.4s)
+  ok 73 [mobile] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (5.5s)
+
+  74 passed (3.0m)
+$ next build
+▲ Next.js 16.4.6 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 152ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.9s
+  Running TypeScript ...
+  Finished TypeScript in 8.9s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/20) ...
+  Generating static pages using 11 workers (5/20) 
+  Generating static pages using 11 workers (10/20) 
+  Generating static pages using 11 workers (15/20) 
+✓ Generating static pages using 11 workers (20/20) in 709ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/catalog
+├ ƒ /admin/schedule
+├ ƒ /api/auth/[action]
+├ ƒ /api/v1/[...path]
+├ ƒ /api/v1/me
+├ ƒ /apply-to-teach
+├ ƒ /auth/callback
+├ ƒ /auth/set-password
+├ ○ /auth/verify
+├ ƒ /learn
+├ ƒ /learn/bookings
+├ ƒ /learn/bookings/[id]
+├ ƒ /login
+├ ƒ /offers
+├ ƒ /offers/[id]
+├ ƒ /service
+├ ○ /signup
+├ ƒ /subjects
+├ ƒ /tutor
+├ ƒ /tutor/schedule
+└ ƒ /tutors/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -75,7 +75,6 @@ export const authCopy = {
       description: 'Your account and the learners you can help, in one place.',
       workspace: 'Learning',
       future: [
-        { name: 'My sessions', reason: 'Available when session booking opens and you have a reservation.' },
         { name: 'Packages and payments', reason: 'Available when approved packages and payment review are enabled.' },
         { name: 'Study files', reason: 'Available with a booking and secure file uploads.' },
       ],
@@ -85,7 +84,6 @@ export const authCopy = {
       description: 'Your verified teaching account.',
       workspace: 'Teaching',
       future: [
-        { name: 'Schedule and sessions', reason: 'Requires published occurrences assigned to you.' },
         { name: 'Earnings', reason: 'Requires approved session completion and earning records.' },
         { name: 'Payout methods', reason: 'Requires the protected payout verification workflow.' },
       ],
@@ -105,9 +103,7 @@ export const authCopy = {
       description: 'Your verified administrative access.',
       workspace: 'Administration',
       future: [
-        { name: 'Sessions and groups', reason: 'Requires approved offers and scheduled occurrences.' },
         { name: 'Finance', reason: 'Requires financial postings and reconciled settlement records.' },
-        { name: 'Policies', reason: 'Requires the commercial policy review and publication workflow.' },
       ],
     },
   },

@@ -58,10 +58,10 @@ test('published catalog has working filters, readable terms and customer-safe re
     const context = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
     try {
       const page = await context.newPage(); if (actor) await signIn(page, actor);
-      const downloadedScripts: Promise<{ path: string; forbidden: boolean }>[] = [];
+      const downloadedScripts = new Set<string>();
       page.on('response', response => {
         const url = new URL(response.url());
-        if (response.status() === 200 && url.origin === baseURL && url.pathname.startsWith('/_next/static/') && url.pathname.endsWith('.js')) downloadedScripts.push(response.text().then(body => ({ path: url.pathname, forbidden: forbidden.test(body) })));
+        if (response.status() === 200 && url.origin === baseURL && url.pathname.startsWith('/_next/static/') && url.pathname.endsWith('.js')) downloadedScripts.add(url.href);
       });
       const offers = await items<PublicOffer>(page.request, 'public/offers');
       expect(offers.length).toBeGreaterThan(0); expect(JSON.stringify(offers)).not.toMatch(forbidden);
@@ -70,11 +70,20 @@ test('published catalog has working filters, readable terms and customer-safe re
       await page.goto('/offers'); await page.getByLabel('Subject', { exact: true }).selectOption(offer.subject.subject_id); await page.getByLabel('Study format', { exact: true }).selectOption('group'); await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`subject_id=${offer.subject.subject_id}.*format=group`));
       await page.goto(`/offers/${offer.offer_id}`); await expect(page.getByRole('heading', { name: offer.title, exact: true })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Before you reserve' })).toBeVisible(); await expect(page.getByRole('button', { name: 'Reservations not open yet' })).toBeDisabled();
+      await expect(page.getByRole('heading', { name: 'Before you reserve' })).toBeVisible();
+      if (offer.availability.scheduled_occurrences > 0) await expect(page.getByRole('heading', { name: 'Upcoming sessions', exact: true })).toBeVisible();
+      else await expect(page.getByRole('button', { name: 'Reservations not open yet' })).toBeDisabled();
       expect(await page.content()).not.toMatch(forbidden); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.evaluate(() => { document.documentElement.dir = 'rtl'; }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       for (const path of ['policies', 'pricing-versions', 'offers', 'tutors']) expect((await page.request.get(`/api/v1/${path}`)).status()).toBe(actor ? 403 : 401);
-      expect((await Promise.all(downloadedScripts)).filter(script => script.forbidden)).toEqual([]);
+      // Full-document filter navigation can invalidate DevTools response handles.
+      // Inspect every exact browser-observed asset URL through the same context.
+      expect(downloadedScripts.size).toBeGreaterThan(0);
+      for (const url of downloadedScripts) {
+        const script = await context.request.get(url);
+        expect(script.status()).toBe(200);
+        expect(await script.text()).not.toMatch(forbidden);
+      }
     } finally { await context.close(); }
   }
 });
