@@ -5,11 +5,13 @@ import type { AdminOccurrence, OperationProposal, GroupAmendment } from '@/modul
 import { bookingStaffCopy as copy } from '@/locales/booking-staff';
 import { bookingCopy } from '@/locales/booking';
 import { packageCopy } from '@/locales/packages';
+import { transferCopy } from '@/locales/enrollment-transfers';
 import { IdentityForm, TextField } from '../identity-form';
 import { CustomerTerms } from './customer-proposals';
 import { CairoInput, Check, ReadState, Select, SessionTime, instantField, money, moneyField, useBookingRecord } from './shared';
 import { AmountField } from '../payments/shared';
 import { PackageProposalReview } from '../packages/package-proposals';
+import { StaffTransferReview } from './staff-transfer';
 import { CreditField, creditField, credits } from '../packages/shared';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
@@ -17,10 +19,13 @@ import formStyles from '../auth.module.css';
 type TutorProposalTerms = Extract<OperationProposal, { view: 'tutor' }>['terms'];
 
 function TeachingTerms({ terms }: { terms: TutorProposalTerms }) {
-  return <section className={styles.private}><h3>{copy.privateTerms}</h3><p>{copy.privateNotice}</p><dl className={styles.facts}><div><dt>{bookingCopy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div><div><dt>{terms.fee_agreement_state === 'reviewed_cancellation' ? copy.cancellationCompensation : copy.approvedFee}</dt><dd>{terms.fee_minor === null ? copy.feePending : money(terms.fee_minor)}</dd></div><div><dt>{copy.duration}</dt><dd>{terms.duration_minutes} min</dd></div></dl>{terms.fee_agreement_state === 'pending_approval' && <p>{copy.pendingFee}</p>}</section>;
+  return <section className={styles.private}><h3>{copy.privateTerms}</h3><p>{copy.privateNotice}</p>{terms.fee_basis === 'retained_previous_agreement' && <p>{transferCopy.retainedFee}</p>}<dl className={styles.facts}><div><dt>{bookingCopy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div><div><dt>{terms.fee_agreement_state === 'reviewed_cancellation' ? copy.cancellationCompensation : copy.approvedFee}</dt><dd>{terms.fee_minor === null ? copy.feePending : money(terms.fee_minor)}</dd></div><div><dt>{copy.duration}</dt><dd>{terms.duration_minutes} min</dd></div></dl>{terms.fee_agreement_state === 'pending_approval' && <p>{copy.pendingFee}</p>}</section>;
 }
 
-export function StaffProposal({ id: initialId, kind, view, names = {}, onSaved }: { id: string; kind: 'operation' | 'amendment'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
+export function StaffProposal(props: { id: string; kind: 'operation' | 'amendment' | 'enrollment_transfer'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
+  return props.kind === 'enrollment_transfer' ? <StaffTransferReview id={props.id} view={props.view} onSaved={props.onSaved} /> : <BookingStaffProposal {...props} kind={props.kind} />;
+}
+function BookingStaffProposal({ id: initialId, kind, view, names = {}, onSaved }: { id: string; kind: 'operation' | 'amendment'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
   const [id, setId] = useState(initialId);
   const decisionId = useId();
   const route = kind === 'amendment' ? 'amendments' : 'operation-proposals'; const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=${view}`);

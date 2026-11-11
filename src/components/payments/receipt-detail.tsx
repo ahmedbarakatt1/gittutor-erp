@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { ChargeAmendmentFundingOption, ChargeSummary, CustomerPayment, PaymentPlan, ReceiptVersion } from '@/modules/payments/queries';
+import type { CustomerEnrollmentTransfer } from '@/modules/booking/enrollment-transfers';
+import { transferCopy } from '@/locales/enrollment-transfers';
 import { paymentCopy as copy } from '@/locales/payments';
 import { IdentityForm, TextField } from '../identity-form';
 import { Select, Check, CairoTimestamp, money } from '../booking/shared';
@@ -30,13 +32,20 @@ function PaymentPlanEditor({ receipt, onSaved }: { receipt: CustomerPayment; onS
   const [targets, setTargets] = useState<ChargeSummary[]>([receipt.charge]);
   const selectedCharge = charges.items?.find(row => row.charge_id === selected);
   return <details className={styles.disclosure}><summary>{copy.planTitle}</summary><p className={styles.intro}>{copy.planDescription}</p><Select name="target_learner" label={copy.targetLearner} value={learners.items?.some(row => row.learner_id === learner) ? learner : ''} onChange={value => { setLearner(value); setSelected(''); }}><option value="">{copy.chooseLearner}</option>{learners.items?.map(row => <option key={row.learner_id} value={row.learner_id}>{row.display_name}</option>)}</Select><PaymentReadState pending={!learners.items} {...learners} />{learner && <><Select name="target_charge" label={copy.chooseCharge} value={selected} onChange={setSelected}><option value="">{copy.chooseCharge}</option>{charges.items?.filter(row => !targets.some(target => target.charge_id === row.charge_id)).map(row => <option key={row.charge_id} value={row.charge_id}>{row.title} · {row.learner.display_name} · {money(row.balance_minor)}</option>)}</Select><PaymentReadState pending={!charges.items} {...charges} /><button className={formStyles.signout} type="button" disabled={!selectedCharge} onClick={() => { if (selectedCharge) setTargets(rows => [...rows, selectedCharge]); setSelected(''); }}>{copy.addTarget}</button></>}<IdentityForm key={`plan-${receipt.receipt.version}`} action={`receipts/${receipt.receipt.receipt_id}/payment-plans`} submitLabel={copy.createPlan} successMessage={copy.planSaved} resettable={false} disabled={targets.length === 0} payload={form => {
-    const rows = targets.map(target => ({ charge_id: target.charge_id, amount_minor: amountField(form, `amount-${target.charge_id}`), conditional_amendment_id: String(form.get(`amendment-${target.charge_id}`) || '') || null }));
+    const rows = targets.map(target => ({ charge_id: target.charge_id, amount_minor: amountField(form, `amount-${target.charge_id}`), conditional_amendment_id: String(form.get(`amendment-${target.charge_id}`) || '') || null, ...(target.conditional_transfer_proposal_id ? { conditional_transfer_proposal_id: target.conditional_transfer_proposal_id } : {}) }));
     if (rows.reduce((sum, row) => sum + BigInt(row.amount_minor), 0n) > BigInt(receipt.receipt.reported_amount_minor)) throw new Error('AMOUNT_OUT_OF_RANGE');
     return { targets: rows, expected_version: receipt.receipt.version };
   }} onSaved={() => { plans.reload(); onSaved(); }}>{targets.length === 0 && <p>{copy.noTargets}</p>}{targets.map(target => <PaymentTarget key={target.charge_id} charge={target} remove={() => setTargets(rows => rows.filter(row => row.charge_id !== target.charge_id))} />)}<Check name="consent" label={copy.planConsent} /></IdentityForm><h3>{copy.currentPlans}</h3><PaymentReadState pending={!plans.items} {...plans} /><ul className={styles.list}>{plans.items?.map(plan => <li key={plan.payment_plan_id}><p>{copy.targets}: {plan.targets.length}</p>{plan.targets.map((target, index) => <p key={target.charge_id}>{copy.target} {index + 1}: <bdi>{money(target.amount_minor)}</bdi></p>)}<p className={styles.reference}>{copy.reference}: {plan.payment_plan_id.slice(0, 8)}</p></li>)}</ul></details>;
 }
 
 function PaymentTarget({ charge, remove }: { charge: ChargeSummary; remove: () => void }) {
+  return charge.conditional_transfer_proposal_id ? <TransferPaymentTarget charge={charge} proposalId={charge.conditional_transfer_proposal_id} remove={remove} /> : <OrdinaryPaymentTarget charge={charge} remove={remove} />;
+}
+function TransferPaymentTarget({ charge, proposalId, remove }: { charge: ChargeSummary; proposalId: string; remove: () => void }) {
+  const record = usePaymentRecord<CustomerEnrollmentTransfer>(`enrollment-transfer-proposals/${proposalId}?view=customer&learner_id=${charge.learner.learner_id}`);
+  return <div className={styles.target}><h3>{charge.title}</h3><p>{charge.learner.display_name}</p><p className={styles.notice}>{transferCopy.held}</p><PaymentReadState pending={!record.data} {...record} />{record.data?.funding && <p>{transferCopy.additionalNeeded}: {money(record.data.funding.additional_required_minor)}. {transferCopy.additionalExplanation}</p>}<AmountField name={`amount-${charge.charge_id}`} label={`${copy.targetAmount} — ${charge.title}`} /><button className={formStyles.signout} type="button" onClick={remove}>{copy.remove}</button></div>;
+}
+function OrdinaryPaymentTarget({ charge, remove }: { charge: ChargeSummary; remove: () => void }) {
   const choices = usePaymentList<ChargeAmendmentFundingOption>(charge.enrollment_id ? `charges/${charge.charge_id}/amendment-funding-options` : null), [selected, setSelected] = useState(charge.conditional_amendment_id || 'ordinary');
   const choice = choices.items?.find(row => row.amendment_id === selected);
   const current = selected === 'ordinary' && !charge.conditional_amendment_id;

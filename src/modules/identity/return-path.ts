@@ -22,7 +22,7 @@ export function customerReturnPath(value: unknown): string | undefined {
   if (booking) return booking;
   if (typeof value !== 'string' || value.length > 500 || /\s/.test(value)) return undefined;
   if (value === '/learn/payments' || value === '/learn/refunds') return value;
-  const payment = /^(\/learn\/(?:refunds|payments(?:\/(?:charges|transfers|plans))?))\/([^/?#]+)$/.exec(value);
+  const payment = /^(\/learn\/(?:refunds|payments(?:\/(?:charges|transfers|plans|enrollment-transfer-consents))?))\/([^/?#]+)$/.exec(value);
   if (payment) return z.uuid().safeParse(payment[2]).success ? value : undefined;
   const detail = /^\/learn\/packages\/([^/?#]+)$/.exec(value);
   if (detail) {

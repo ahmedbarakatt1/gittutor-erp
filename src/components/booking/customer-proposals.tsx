@@ -9,6 +9,7 @@ import { usePagedRecords } from '../identity-workspaces';
 import { OfferTerms } from '../catalog/offer-terms';
 import { CairoInput, CairoTimestamp, Check, ReadState, Select, SessionTime, cairoDate, cairoTime, instantField, money, useBookingRecord } from './shared';
 import { PackageProposalReview } from '../packages/package-proposals';
+import { CustomerTransferReview } from './customer-transfer';
 import { formatCreditQuanta } from '@/modules/shared/format';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
@@ -28,7 +29,10 @@ export function CustomerTerms({ terms }: { terms: CustomerProposalTerms }) {
   </dl>{terms.extinguished_credit_quanta > 0 && <p className={styles.notice}>{copy.cancellationCreditNotice}</p>}<OfferTerms terms={terms.customer_policy} policyId={terms.policy_version_id} headingId={headingId} /></>;
 }
 
-export function CustomerProposal({ id: initialId, learnerId, kind = 'operation' }: { id: string; learnerId: string; kind?: 'operation' | 'amendment' }) {
+export function CustomerProposal(props: { id: string; learnerId: string; kind?: 'operation' | 'amendment' | 'enrollment_transfer' }) {
+  return props.kind === 'enrollment_transfer' ? <CustomerTransferReview id={props.id} learnerId={props.learnerId} /> : <BookingCustomerProposal {...props} kind={props.kind} />;
+}
+function BookingCustomerProposal({ id: initialId, learnerId, kind = 'operation' }: { id: string; learnerId: string; kind?: 'operation' | 'amendment' }) {
   const [id, setId] = useState(initialId);
   const route = kind === 'amendment' ? 'amendments' : 'operation-proposals';
   const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=customer&learner_id=${encodeURIComponent(learnerId)}`);
@@ -49,6 +53,6 @@ export function CustomerChangeRequest({ enrollment }: { enrollment: CustomerEnro
     <IdentityForm key={`${kind}-${enrollment.version}`} action="operation-proposals" submitLabel={copy.submitRequest} successMessage={copy.requested} resettable={false} onSaved={result => setProposalId(String(result.proposal_id))} payload={form => ({ kind, target_id: enrollment.enrollment_id, expected_version: enrollment.version, requested_terms: kind === 'reschedule' ? { target_type: 'enrollment', destination_occurrence_id: destination, expires_at: instantField(form, 'expires_at') } : { target_type: 'enrollment', remedy, expires_at: instantField(form, 'expires_at') }, reason: String(form.get('reason')).trim() })}>
       {kind === 'reschedule' ? <Select name="destination" label={copy.destination} value={destination} onChange={setDestination}><option value="">{copy.chooseDestination}</option>{choices.items?.filter(item => item.occurrence_id !== enrollment.occurrence.occurrence_id && item.available_seats > 0).map(item => <option key={item.occurrence_id} value={item.occurrence_id}>{cairoDate(item.start_at)} {cairoTime(item.start_at)} · {item.tutor.display_name} · {money(item.customer_price_minor)}</option>)}</Select> : <Select name="remedy" label={copy.remedy} value={remedy} onChange={setRemedy}>{Object.entries(copy.remedies).filter(([value]) => value !== 'none').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}
       <CairoInput name="expires_at" label={copy.requestExpiry} /><TextField name="reason" label={copy.reason} maxLength={2000} />
-    </IdentityForm>{proposalId && <CustomerProposal id={proposalId} learnerId={enrollment.learner.learner_id} />}
+    </IdentityForm>{proposalId && <CustomerProposal id={proposalId} learnerId={enrollment.learner.learner_id} kind={kind === 'reschedule' ? 'enrollment_transfer' : 'operation'} />}
   </details>;
 }

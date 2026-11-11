@@ -7,6 +7,8 @@ import { getApplicationSubjects, getLearnerSummary, getMyGuardianLinks, getMyVer
 import { invokeCatalogCommandWithStatus, type CatalogCommandName } from "@/modules/catalog/commands";
 import { getPublicTutor, listAdminOffers, listAdminTutors, listPolicies, listPricingVersions, listPublicOffers } from "@/modules/catalog/queries";
 import { invokeBookingCommandWithStatus, type BookingCommandName } from "@/modules/booking/commands";
+import { invokeEnrollmentTransferCommand, type EnrollmentTransferCommandName } from "@/modules/booking/enrollment-transfers";
+import { enrollmentTransferCommandRoutes, findEnrollmentTransferReadRoute } from "@/server/enrollment-transfer-http";
 import {
   getAdminTutorAvailability, getEnrollment, getGroupAmendment, getOperationProposal, getQuote, getTutorAvailability,
   listAdminFeeAgreements, listAdminOccurrences, listBookingLearners, listMyBookingLearners, listMyEnrollments,
@@ -25,10 +27,11 @@ import {
 } from "@/modules/packages/queries";
 
 type CommandRoute = { pattern: RegExp; fields: string[]; pathArgument?: string } & (
-  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName }
+  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName } | { family: "enrollment-transfer"; rpc: EnrollmentTransferCommandName }
 );
 const commands: CommandRoute[] = [
   ...paymentCommandRoutes,
+  ...enrollmentTransferCommandRoutes,
   { family: "packages", pattern: /^packages$/, rpc: "purchase_package", fields: ["learner_id", "package_contract_version_id", "accepted_terms_hash"] },
   { family: "packages", pattern: /^packages\/([^/]+)\/complimentary-grants$/, rpc: "approve_package_grant", pathArgument: "package_id", fields: ["credit_quanta", "carrying_value_minor", "currency", "grant_kind", "grant_policy_version_id", "source_credit_id", "credit_conversion_intent_id", "reason", "evidence_file_id", "expected_version"] },
   { family: "packages", pattern: /^packages\/([^/]+)\/reserve$/, rpc: "reserve_package_credit", pathArgument: "package_id", fields: ["enrollment_id", "credit_quanta", "coverage_proposal_id", "expected_version"] },
@@ -66,7 +69,7 @@ const commands: CommandRoute[] = [
   { family: "booking", pattern: /^occurrences\/([^/]+)\/waitlist$/, rpc: "join_waitlist", pathArgument: "occurrence_id", fields: ["learner_id"] },
   { family: "booking", pattern: /^waitlist\/([^/]+)\/leave$/, rpc: "leave_waitlist", pathArgument: "waitlist_entry_id", fields: ["expected_version"] },
   { family: "booking", pattern: /^occurrences\/([^/]+)\/fee-agreements$/, rpc: "approve_tutor_fee", pathArgument: "occurrence_id", fields: ["tutor_id", "fee_minor", "currency", "duration_minutes", "compensation_policy_version_id", "target_tier", "purpose", "reason", "expected_version"] },
-  { family: "booking", pattern: /^occurrences\/([^/]+)\/amendments$/, rpc: "propose_group_amendment", pathArgument: "occurrence_id", fields: ["add_learner_ids", "remove_enrollment_ids", "target_tier", "fee_agreement_id", "replacement_policy_version_id", "expires_at", "reason", "expected_version"] },
+  { family: "booking", pattern: /^occurrences\/([^/]+)\/amendments$/, rpc: "propose_group_amendment", pathArgument: "occurrence_id", fields: ["add_learner_ids", "remove_enrollment_ids", "target_tier", "fee_agreement_id", "replacement_policy_version_id", "package_dispositions", "removed_remedy", "expires_at", "reason", "expected_version"] },
   { family: "booking", pattern: /^amendments\/([^/]+)\/accept$/, rpc: "accept_group_amendment", pathArgument: "amendment_id", fields: ["terms_hash", "expected_version"] },
   { family: "booking", pattern: /^amendments\/([^/]+)\/decline$/, rpc: "decline_group_amendment", pathArgument: "amendment_id", fields: ["reason", "expected_version"] },
   { family: "booking", pattern: /^amendments\/([^/]+)\/commit$/, rpc: "commit_group_amendment", pathArgument: "amendment_id", fields: ["expected_version"] },
@@ -123,6 +126,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ? await invokePaymentCommandWithStatus(context.client, route.rpc, args)
       : route.family === "packages"
       ? await invokePackageCommandWithStatus(context.client, route.rpc, args)
+      : route.family === "enrollment-transfer"
+      ? await invokeEnrollmentTransferCommand(context.client, route.rpc, args)
       : route.family === "booking"
       ? await invokeBookingCommandWithStatus(context.client, route.rpc, args)
       : route.family === "catalog"
@@ -142,7 +147,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const path = (await params).path;
     const route = path.join("/");
-    const paymentRead = findPaymentReadRoute(route);
+    const paymentRead = findPaymentReadRoute(route) || findEnrollmentTransferReadRoute(route);
     if (paymentRead) {
       const filters = request.nextUrl.searchParams;
       if (Array.from(filters.keys()).some(key => !paymentRead.fields.includes(key)) || new Set(filters.keys()).size !== filters.size) throw new DomainError("VALIDATION_ERROR");

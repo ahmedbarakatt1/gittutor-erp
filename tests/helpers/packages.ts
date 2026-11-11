@@ -4,18 +4,19 @@ import {policyFixture} from '../unit/policy-vectors';
 import {catalogFixtureIds} from '../../tools/catalog-seed';
 import {fixtureId} from '../../tools/db-seed';
 
-export async function packageFixture(options:{coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up';cancellationRefundBasisPoints?:number}={}){
+export async function packageFixture(options:{coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up';cancellationRefundBasisPoints?:number;groupTargetSize?:2|3|4}={}){
  const booking=await bookingFixture();
  await booking.availability();
  const content=policyFixture('group');
- Object.assign(content,{group_target_size:2,group_minimum_size:2,group_capacity:4,customer_pricing_version:catalogFixtureIds.group_pricing,compensation_policy_version:catalogFixtureIds.group_pricing});
+ const target=options.groupTargetSize??2;
+ Object.assign(content,{group_target_size:target,group_minimum_size:2,group_capacity:4,customer_pricing_version:catalogFixtureIds.group_pricing,compensation_policy_version:catalogFixtureIds.group_pricing});
  if(options.cancellationRefundBasisPoints!==undefined)content.customer_cancellation_windows=[{minimum_minutes_before_start:0,maximum_minutes_before_start_exclusive:null,refund_basis_points:options.cancellationRefundBasisPoints}];
  const pack=content.package_contract as Record<string,unknown>;
  Object.assign(pack,{package_policy_version_id:null,eligible_offer_ids:null,grant_credit_quanta:3000,purchase_value_minor:150000,expiry_mode:'days_from_grant',expiry_days:90});
  if(options.coverageRule){pack.coverage_rule=options.coverageRule;content.confirmation_funding_sources=options.coverageRule==='named_entitlement_covers_eligible_occurrence'?['verified_payment_allocation','reserved_named_package_entitlement']:['verified_payment_allocation','reserved_eligible_package_value'];}
  const draft=await booking.rpc('create_policy_draft',{p_kind:'booking',p_scope:'group',p_content:content,p_idempotency_key:randomUUID()});
  const policyId=draft.resource_id as string;
- const offer=await booking.rpc('create_offer',{p_subject_id:fixtureId('subject_calculus'),p_format:'group',p_duration_minutes:60,p_capacity:4,p_target_tier:2,p_pricing_version_id:catalogFixtureIds.group_pricing,p_policy_version_id:policyId,p_idempotency_key:randomUUID()});
+ const offer=await booking.rpc('create_offer',{p_subject_id:fixtureId('subject_calculus'),p_format:'group',p_duration_minutes:60,p_capacity:4,p_target_tier:target,p_pricing_version_id:catalogFixtureIds.group_pricing,p_policy_version_id:policyId,p_idempotency_key:randomUUID()});
  Object.assign(pack,{package_policy_version_id:policyId,eligible_offer_ids:[offer.resource_id]});
  await booking.rpc('update_policy_draft',{p_policy_version_id:policyId,p_content:content,p_expected_version:1,p_idempotency_key:randomUUID()});
  await booking.rpc('approve_policy_version',{p_policy_version_id:policyId,p_effective_at:new Date().toISOString(),p_approval_note:'Synthetic explicit package purchase policy',p_expected_version:2,p_idempotency_key:randomUUID()});
@@ -29,7 +30,7 @@ export async function packageFixture(options:{coverageRule?:'named_entitlement_c
  };
  const grant=async(purchaseId:string,policyId:string,value=0,quanta=3000,expected=1)=>booking.rpc('approve_package_grant',{p_package_id:purchaseId,p_grant_policy_version_id:policyId,p_credit_quanta:quanta,p_carrying_value_minor:value,p_currency:'EGP',p_grant_kind:'complimentary',p_source_credit_id:null,p_reason:'Synthetic explicitly approved bonus',p_evidence_file_id:null,p_expected_version:expected,p_idempotency_key:randomUUID()});
  const hold=async()=>{
-  const times=booking.interval();const occurrence=await booking.rpc('create_occurrence',{p_offer_id:offer.resource_id,p_tutor_id:booking.tutorId,p_start_at:times.start_at,p_end_at:times.end_at,p_time_zone:'Africa/Cairo',p_target_tier:2,p_idempotency_key:randomUUID()});
+  const times=booking.interval();const occurrence=await booking.rpc('create_occurrence',{p_offer_id:offer.resource_id,p_tutor_id:booking.tutorId,p_start_at:times.start_at,p_end_at:times.end_at,p_time_zone:'Africa/Cairo',p_target_tier:target,p_idempotency_key:randomUUID()});
   const seat=await booking.reserve(occurrence.resource_id as string);const quote=await booking.rpc('get_quote',{p_quote_id:seat.quote_id},learner);
   await booking.rpc('accept_quote',{p_quote_id:seat.quote_id,p_quote_hash:quote.quote_hash,p_expected_version:quote.version,p_idempotency_key:randomUUID()},learner);
   return {occurrenceId:occurrence.resource_id as string,enrollmentId:seat.enrollment_id as string,quoteId:seat.quote_id as string,quote};

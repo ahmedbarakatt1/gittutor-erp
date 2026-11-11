@@ -7,10 +7,11 @@ import { resolveCairoLocalTime } from '@/modules/booking/scheduling';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
 
-export function useBookingRecord<T>(path: string) {
-  const [state, setState] = useState<{ path: string; data?: T; failed?: boolean }>({ path });
+export function useBookingRecord<T>(path: string | null) {
+  const [state, setState] = useState<{ path: string | null; data?: T; failed?: boolean }>({ path });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    if (!path) return;
     const controller = new AbortController();
     fetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('READ_FAILED');

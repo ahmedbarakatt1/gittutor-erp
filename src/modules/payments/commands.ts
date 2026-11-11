@@ -56,7 +56,7 @@ export const paymentCommands = {
     output: finish({ new_evidence_version: version, case_id: id }),
   },
   authorize_payment_plan: {
-    input: z.object({ p_receipt_id: id, p_targets: exactTargets(target.extend({ conditional_amendment_id: id.nullable().optional() }).strict()), ...write }).strict(),
+    input: z.object({ p_receipt_id: id, p_targets: exactTargets(target.extend({ conditional_amendment_id: id.nullable().optional(), conditional_transfer_proposal_id: id.nullable().optional() }).strict().refine(value => !(value.conditional_amendment_id && value.conditional_transfer_proposal_id))), ...write }).strict(),
     output: finish({ payment_plan_id: id, plan_version: version, plan_hash: hash }),
   },
   claim_review_case: {
