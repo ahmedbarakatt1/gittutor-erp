@@ -1,0 +1,16 @@
+async (page) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('.giza-accent').scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector('.giza-accent').dataset.renderState === 'ready');
+  for (const angle of [0, 90, 180, 270]) {
+    await page.evaluate((value) => document.querySelector('.giza-accent').gizaReview.azimuth(value), angle);
+    await page.locator('.giza-accent').screenshot({ path: `.img2threejs/review/angle-${angle}.png` });
+  }
+  await page.evaluate(() => document.querySelector('.giza-accent').gizaReview.azimuth(0));
+  console.log(await page.evaluate(() => ({
+    state: document.querySelector('.giza-accent').dataset.renderState,
+    triangles: document.querySelector('.giza-accent').gizaReview.triangles,
+    partCount: document.querySelector('.giza-accent').gizaReview.parts().length,
+    canvasCount: document.querySelectorAll('[data-testid="giza-canvas"]').length,
+  })));
+}

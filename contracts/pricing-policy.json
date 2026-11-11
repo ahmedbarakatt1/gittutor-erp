@@ -1,0 +1,150 @@
+{
+  "contract_id": "git_tutor_pricing_manifest",
+  "schema_version": 1,
+  "version": "2026-11-11.1",
+  "requirement_ids": ["R01", "R02", "R03", "R04", "R11", "R13", "R18"],
+  "manifest_scope": "server_only_authoring",
+  "source": {
+    "kind": "explicit_user_pricing_image",
+    "amounts_status": "confirmed",
+    "spreadsheet_role": "business_scenario_reference"
+  },
+  "interpretation": {
+    "currency": "EGP",
+    "minor_unit_exponent": 2,
+    "pricing_unit": "per_occurrence",
+    "duration_minutes": null,
+    "status": "development_context_pending_commercial_approval",
+    "live_publication_requires_context_approval": true
+  },
+  "customer_pricing": {
+    "contract_id": "git_tutor_customer_pricing",
+    "version": "2026-11-11.1",
+    "scope": "customer_projection_allowlist",
+    "amounts_status": "confirmed",
+    "currency": "EGP",
+    "group_tiers": [
+      {"tier_id": "group_2", "group_size": 2, "seat_price_minor": 57500},
+      {"tier_id": "group_3", "group_size": 3, "seat_price_minor": 55000},
+      {"tier_id": "group_4", "group_size": 4, "seat_price_minor": 50000}
+    ],
+    "private_pricing": {
+      "status": "unset",
+      "seat_price_minor": null,
+      "pricing_unit": null,
+      "duration_minutes": null
+    },
+    "additional_group_tiers": {
+      "status": "requires_approved_contract",
+      "tiers": []
+    },
+    "projection_fields": [
+      "contract_id",
+      "version",
+      "currency",
+      "pricing_unit",
+      "duration_minutes",
+      "tier_id",
+      "group_size",
+      "seat_price_minor",
+      "commercial_policy_version_id"
+    ]
+  },
+  "internal_compensation": {
+    "contract_id": "git_tutor_internal_compensation",
+    "version": "2026-11-11.1",
+    "scope": "privileged_server_contract",
+    "amounts_status": "confirmed",
+    "currency": "EGP",
+    "group_fee_bands": [
+      {"tier_id": "group_2", "fee_min_minor": 45000, "fee_max_minor": 45000},
+      {"tier_id": "group_3", "fee_min_minor": 60000, "fee_max_minor": 65000},
+      {"tier_id": "group_4", "fee_min_minor": 70000, "fee_max_minor": 75000}
+    ],
+    "occurrence_agreement": {
+      "exact_fee_required": true,
+      "approval_required_before_occurrence_confirmation": true,
+      "range_validation": "inclusive",
+      "required_fields": [
+        "occurrence_id",
+        "tutor_id",
+        "exact_fee_minor",
+        "currency",
+        "agreed_duration_minutes",
+        "compensation_policy_version_id",
+        "approved_by",
+        "approved_at"
+      ],
+      "fee_exception_requires_new_approved_policy": true,
+      "posted_earning_change": "linked_adjustment"
+    },
+    "private_compensation": {
+      "status": "unset",
+      "fee_min_minor": null,
+      "fee_max_minor": null
+    },
+    "authorized_projections": {
+      "admin": "full_compensation_contract",
+      "tutor": "own_assigned_occurrence_exact_agreement_and_statement",
+      "customer_service": "payment_case_customer_amounts_only",
+      "student": "customer_pricing_only",
+      "guardian": "authorized_customer_pricing_only"
+    }
+  },
+  "invariants": [
+    {"id": "PRICE_001", "rule": "all_monetary_values_are_integer_minor_units"},
+    {"id": "PRICE_002", "rule": "customer_projections_use_only_customer_pricing_allowlist"},
+    {"id": "PRICE_003", "rule": "confirmed_occurrence_has_one_exact_approved_fee"},
+    {"id": "PRICE_004", "rule": "confirmed_charges_and_fee_reference_one_committed_pricing_version"},
+    {"id": "PRICE_005", "rule": "accepted_amendments_post_linked_charge_and_fee_adjustments_atomically"},
+    {"id": "PRICE_006", "rule": "unsupported_group_size_requires_approved_tier"},
+    {"id": "PRICE_007", "rule": "contribution_uses_exact_fee_and_net_earned_tuition"}
+  ],
+  "development_examples": {
+    "status": "synthetic_non_publishable",
+    "currency": "EGP",
+    "pricing_unit": "per_occurrence",
+    "duration_minutes": 60,
+    "exact_fee_selections": [
+      {"tier_id": "group_2", "exact_fee_minor": 45000, "tuition_minor": 115000, "contribution_minor": 70000},
+      {"tier_id": "group_3", "exact_fee_minor": 62500, "tuition_minor": 165000, "contribution_minor": 102500},
+      {"tier_id": "group_4", "exact_fee_minor": 72500, "tuition_minor": 200000, "contribution_minor": 127500}
+    ],
+    "accepted_amendments": [
+      {
+        "fixture_id": "group_two_to_three",
+        "from_tier_id": "group_2",
+        "to_tier_id": "group_3",
+        "credit_per_existing_enrollment_minor": 2500,
+        "existing_enrollment_count": 2,
+        "new_enrollment_charge_minor": 55000,
+        "new_exact_fee_minor": 62500,
+        "new_tuition_total_minor": 165000,
+        "required_acceptances": "all_affected_authorized_bookers_and_assigned_tutor",
+        "admin_approval_required": true
+      },
+      {
+        "fixture_id": "group_three_to_four",
+        "from_tier_id": "group_3",
+        "to_tier_id": "group_4",
+        "credit_per_existing_enrollment_minor": 5000,
+        "existing_enrollment_count": 3,
+        "new_enrollment_charge_minor": 50000,
+        "new_exact_fee_minor": 72500,
+        "new_tuition_total_minor": 200000,
+        "required_acceptances": "all_affected_authorized_bookers_and_assigned_tutor",
+        "admin_approval_required": true
+      }
+    ],
+    "dropout_with_full_refund": {
+      "fixture_id": "locked_four_to_three_guarantee",
+      "policy_status": "proposed_business_approval_required",
+      "original_tuition_minor": 200000,
+      "refunded_seat_minor": 50000,
+      "remaining_seat_price_minor": 50000,
+      "remaining_tuition_minor": 150000,
+      "exact_tutor_fee_minor": 72500,
+      "contribution_minor": 77500
+    }
+  }
+}

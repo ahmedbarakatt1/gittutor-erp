@@ -1,0 +1,4720 @@
+{
+  "targetName": "Giza pyramid accent",
+  "targetId": "giza-pyramid-accent",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": ".img2threejs/references/kheops-pyramid.jpg",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.3333,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      3.0,
+      2.0,
+      4.0
+    ],
+    "note": "Oblique orthographic miniature; not a camera-matched photogrammetry reconstruction."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "stepped limestone pyramid",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "architectural",
+        "hard-surface"
+      ],
+      "structureKind": [
+        "repeated modules"
+      ],
+      "motionPotential": [
+        "static prop"
+      ],
+      "materialFamilies": [
+        "stone"
+      ],
+      "notes": "Bounded stylized miniature of the visible Khufu pyramid; hidden sides inferred by fourfold symmetry."
+    },
+    "complexity": {
+      "tier": "simple",
+      "scores": {
+        "silhouetteComplexity": 1,
+        "componentCount": 1,
+        "hierarchyDepth": 1,
+        "repetitionDensity": 1,
+        "materialLayerCount": 1,
+        "localDetailDensity": 1,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 0
+      },
+      "estimatedCounts": {
+        "macroComponents": 1,
+        "mesoComponents": 18,
+        "microFeatureGroups": 3,
+        "materialLayers": 1,
+        "repetitionSystems": 1
+      },
+      "reasoning": [
+        "Simple square-base macro form; 18 stepped courses preserve exposed masonry at footer scale."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "simple",
+      "minimumComponentLevels": [
+        "macro"
+      ],
+      "needsRepetitionSystems": false,
+      "needsMaterialLocalOverrides": false,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Simple stylized architectural accent; macro slope and course rhythm are the quality target, not survey detail."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 9,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "square-footprint",
+          "description": "Square foundation footprint",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "critical",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "componentTree.root.localFeatures",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/square-footprint"
+          }
+        },
+        {
+          "id": "height-ratio",
+          "description": "Height 0.63 of base width",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "critical",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "componentTree.root.localFeatures",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/height-ratio"
+          }
+        },
+        {
+          "id": "four-faces",
+          "description": "Four converging triangular face envelope",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "critical",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "componentTree.root.localFeatures",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/four-faces"
+          }
+        },
+        {
+          "id": "course-rhythm",
+          "description": "18 stepped horizontal courses",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "critical",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "componentTree.root.localFeatures",
+          "kind": "ridge",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/course-rhythm"
+          }
+        },
+        {
+          "id": "flat-apex",
+          "description": "Small flattened apex instead of perfect point",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "critical",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "componentTree.root.localFeatures",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/flat-apex"
+          }
+        },
+        {
+          "id": "base-contact",
+          "description": "Bottom course contacts ground without floating",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "important",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "componentTree.root.localFeatures",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/base-contact"
+          }
+        },
+        {
+          "id": "matte-stone",
+          "description": "Nonmetallic matte limestone",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "important",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "materials.stone.localOverrides",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/matte-stone"
+          }
+        },
+        {
+          "id": "warm-albedo",
+          "description": "Warm beige limestone albedo",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "important",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "materials.stone.localOverrides",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/warm-albedo"
+          }
+        },
+        {
+          "id": "course-variation",
+          "description": "Subtle deterministic per-course stone value variation",
+          "componentId": "root",
+          "materialId": "stone",
+          "importance": "important",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9,
+          "mappedTo": "materials.stone.localOverrides",
+          "kind": "contour",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "root/course-variation"
+          }
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": ".img2threejs/references/kheops-pyramid.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "simple",
+    "definitionOfDone": [
+      "Square-based stepped limestone pyramid readable at 240x180 CSS pixels.",
+      "Height/base ratio 0.63, flat apex and flush course contacts.",
+      "Matte beige stone with no metallic highlight, no texture fetches, no animation loop."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 1,
+      "mesoComponents": 0,
+      "microFeatureGroups": 0,
+      "materialLayers": 1,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front-oblique",
+      "right",
+      "rear",
+      "left"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "giza-silhouette",
+      "name": "Square base, four converging faces, 0.63 ratio and truncated apex",
+      "tier": "critical",
+      "passIds": [
+        "blockout"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "giza-courses",
+      "name": "Masonry course rhythm and flush contact",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "giza-limestone",
+      "name": "Matte warm limestone with visible step shading",
+      "tier": "critical",
+      "passIds": [
+        "material-pass",
+        "surface-pass"
+      ],
+      "minimumScore": 0.75,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "blockout",
+    "completedPasses": [],
+    "lastCompletedPass": "",
+    "blockedReason": "blockout requires a browser screenshot and self-correction review before structural-pass unlocks",
+    "nextRequiredEvidence": [
+      "blockout browser render screenshot from your agent's browser/screenshot tool",
+      "side-by-side reference/render comparison sheet",
+      "AI vision score >= 0.7 with layer scores and mismatch critique",
+      "critical semantic feature scores from the same image pair meeting their individual thresholds",
+      "reviewHistory entry for blockout with action=continue"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "Hidden faces inferred from square symmetry.",
+    "18 courses stand in for fine masonry at 240x180px; not survey-accurate."
+  ],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "Square footprint with four converging stepped faces and truncated apex",
+    "aspectRatios": [
+      "height/base width 0.63"
+    ],
+    "symmetry": "fourfold around Y",
+    "dominantCurves": [],
+    "negativeSpaces": [],
+    "landmarks": [
+      "square base",
+      "four corners",
+      "flattened apex"
+    ]
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [
+        "Square base, approximately 0.63 height/base ratio, stepped limestone courses, truncated apex."
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "root",
+      "name": "Limestone course 1",
+      "level": "macro",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 2.0,
+        "height": 0.0701,
+        "depth": 2.0,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.035,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "root-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        },
+        {
+          "id": "square-footprint",
+          "name": "Square foundation footprint",
+          "type": "observed-feature",
+          "description": "Square foundation footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "height-ratio",
+          "name": "Height 0.63 of base width",
+          "type": "observed-feature",
+          "description": "Height 0.63 of base width",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "four-faces",
+          "name": "Four converging triangular face envelope",
+          "type": "observed-feature",
+          "description": "Four converging triangular face envelope",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "course-rhythm",
+          "name": "18 stepped horizontal courses",
+          "type": "observed-feature",
+          "description": "18 stepped horizontal courses",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "flat-apex",
+          "name": "Small flattened apex instead of perfect point",
+          "type": "observed-feature",
+          "description": "Small flattened apex instead of perfect point",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "base-contact",
+          "name": "Bottom course contacts ground without floating",
+          "type": "observed-feature",
+          "description": "Bottom course contacts ground without floating",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "matte-stone",
+          "name": "Nonmetallic matte limestone",
+          "type": "observed-feature",
+          "description": "Nonmetallic matte limestone",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "warm-albedo",
+          "name": "Warm beige limestone albedo",
+          "type": "observed-feature",
+          "description": "Warm beige limestone albedo",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        },
+        {
+          "id": "course-variation",
+          "name": "Subtle deterministic per-course stone value variation",
+          "type": "observed-feature",
+          "description": "Subtle deterministic per-course stone value variation",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.9
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-01",
+      "name": "Limestone course 2",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.035,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.10500000000000001,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.8888888888888888,
+        "height": 0.0701,
+        "depth": 1.8888888888888888,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.07,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-01-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-02",
+      "name": "Limestone course 3",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.10500000000000001,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.17500000000000002,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.7777777777777777,
+        "height": 0.0701,
+        "depth": 1.7777777777777777,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.14,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-02-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-03",
+      "name": "Limestone course 4",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.17500000000000002,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.24500000000000002,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.6666666666666667,
+        "height": 0.0701,
+        "depth": 1.6666666666666667,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.21000000000000002,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-03-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-04",
+      "name": "Limestone course 5",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.24500000000000002,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.31500000000000006,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.5555555555555556,
+        "height": 0.0701,
+        "depth": 1.5555555555555556,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.28,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-04-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-05",
+      "name": "Limestone course 6",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.31500000000000006,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.385,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.4444444444444444,
+        "height": 0.0701,
+        "depth": 1.4444444444444444,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.35000000000000003,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-05-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-06",
+      "name": "Limestone course 7",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.385,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.45500000000000007,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.3333333333333335,
+        "height": 0.0701,
+        "depth": 1.3333333333333335,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.42000000000000004,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-06-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-07",
+      "name": "Limestone course 8",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.45500000000000007,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.525,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.2222222222222223,
+        "height": 0.0701,
+        "depth": 1.2222222222222223,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.49000000000000005,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-07-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-08",
+      "name": "Limestone course 9",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.525,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.5950000000000001,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.1111111111111112,
+        "height": 0.0701,
+        "depth": 1.1111111111111112,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.56,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-08-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-09",
+      "name": "Limestone course 10",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.5950000000000001,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.6650000000000001,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 1.0,
+        "height": 0.0701,
+        "depth": 1.0,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.6300000000000001,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-09-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-10",
+      "name": "Limestone course 11",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.665,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.7350000000000001,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.8888888888888888,
+        "height": 0.0701,
+        "depth": 0.8888888888888888,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.7000000000000001,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-10-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-11",
+      "name": "Limestone course 12",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.735,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.805,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.7777777777777777,
+        "height": 0.0701,
+        "depth": 0.7777777777777777,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.77,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-11-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-12",
+      "name": "Limestone course 13",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.805,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.8750000000000001,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.6666666666666667,
+        "height": 0.0701,
+        "depth": 0.6666666666666667,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.8400000000000001,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-12-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-13",
+      "name": "Limestone course 14",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.8750000000000001,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.9450000000000002,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.5555555555555556,
+        "height": 0.0701,
+        "depth": 0.5555555555555556,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.9100000000000001,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-13-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-14",
+      "name": "Limestone course 15",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          0.9450000000000001,
+          0
+        ],
+        "localEnd": [
+          0,
+          1.0150000000000001,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.4444444444444444,
+        "height": 0.0701,
+        "depth": 0.4444444444444444,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0.9800000000000001,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-14-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-15",
+      "name": "Limestone course 16",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          1.0150000000000001,
+          0
+        ],
+        "localEnd": [
+          0,
+          1.085,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.33333333333333326,
+        "height": 0.0701,
+        "depth": 0.33333333333333326,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          1.05,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-15-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-16",
+      "name": "Limestone course 17",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          1.0850000000000002,
+          0
+        ],
+        "localEnd": [
+          0,
+          1.155,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.22222222222222232,
+        "height": 0.0701,
+        "depth": 0.22222222222222232,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          1.12,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-16-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    },
+    {
+      "id": "course-17",
+      "name": "Limestone course 18",
+      "level": "meso",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Rigid square masonry course; assembled solid with countable planar faces.",
+      "geometryDescriptor": {
+        "topologyIntent": "Square solid course, stepped in from preceding course equally on four sides",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": {
+        "parentSocket": "stack-center",
+        "contactType": "flush-stack",
+        "localStart": [
+          0,
+          1.1550000000000002,
+          0
+        ],
+        "localEnd": [
+          0,
+          1.225,
+          0
+        ],
+        "embedDepth": 0.0001,
+        "overlap": 0.0001,
+        "gapTolerance": 0.0001
+      },
+      "dimensions": {
+        "width": 0.11111111111111116,
+        "height": 0.0701,
+        "depth": 0.11111111111111116,
+        "units": "relative",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          1.1900000000000002,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "stack-center",
+            "position": [
+              0,
+              0.035,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "purpose": "Course stack axis"
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "course-17-stepped-course",
+          "name": "Square stepped masonry course",
+          "type": "geometric-course",
+          "description": "Flush base, parallel top, constant 0.07 rise, decreasing square footprint",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 172, 120, 1)",
+        "secondaryAlbedo": "rgba(184, 158, 109, 1)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.95,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "base",
+      "name": "Matte limestone",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#C6AC78",
+      "color": "#C6AC78",
+      "albedo": {
+        "dominant": "#C6AC78",
+        "secondary": [
+          "#B89E6D",
+          "#D4BD91"
+        ],
+        "samplingNotes": "Warm beige observed; directional shadow excluded from albedo.",
+        "map": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_albedo.png",
+          "url": "base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        }
+      },
+      "colorVariation": {
+        "palette": [
+          "#493520",
+          "#624C36",
+          "#AF8C66",
+          "#84684C",
+          "#D3AE82"
+        ],
+        "pattern": "reference-derived pixel palette",
+        "amplitude": 0.22,
+        "heightCorrelation": 0.42
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.464,
+          "role": "reference-derived broad albedo and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 14.0,
+          "amplitude": 0.35,
+          "role": "reference-derived cracks, ridges, pores, grain, or leaf clusters"
+        },
+        {
+          "id": "micro",
+          "frequency": 72.0,
+          "amplitude": 0.14,
+          "role": "reference-derived micro highlight breakup under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.95,
+        "variation": 0.095,
+        "map": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_roughness.png",
+          "url": "base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "localResponse": "reference-derived roughness estimate; cavities and textured zones trend rougher, bright highlights trend smoother"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "reference-derived height-gradient normal map",
+        "strength": 0.496,
+        "map": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_normal.png",
+          "url": "base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "heightSource": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_height.png",
+          "url": "base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "reference-derived height field",
+        "amplitude": 0.08,
+        "map": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_height.png",
+          "url": "base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        }
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.38,
+        "contactShadowBias": 0.35,
+        "map": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_ao.png",
+          "url": "base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        },
+        "notes": "Reference-derived cavity estimate from local height minima; verify against grazing-light screenshot."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "course-variation",
+          "description": "Subtle warm beige stone variation, matte finish",
+          "mask": "procedural-course",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there.",
+        "Reference-derived maps are estimates from image pixels; verify with neutral, grazing, and reference-matched renders.",
+        "Do not treat baked image shadows as final albedo; rerun extraction with a tighter material crop if highlights/shadows pollute the maps."
+      ],
+      "notes": "Bounded stylization: matte limestone, no photo texture; exact granular masonry texture not claimed.",
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "D:\\GitTutor System\\.img2threejs\\zones\\mid-face.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_albedo.png",
+            "url": "base_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_roughness.png",
+            "url": "base_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_height.png",
+            "url": "base_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_normal.png",
+            "url": "base_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_ao.png",
+            "url": "base_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 632,
+          "sourceHeight": 243,
+          "mapSize": 256,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 632,
+            "height": 243
+          },
+          "mask": {
+            "backgroundColor": "#9AA4AB",
+            "backgroundNoise": 101.843,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.968
+          },
+          "mapStats": {
+            "valueRange": 0.5248,
+            "heightP90Gradient": 0.28964,
+            "roughnessBase": 0.893,
+            "roughnessVariation": 0.095,
+            "normalStrength": 0.496,
+            "blurRadius": 5
+          },
+          "palette": [
+            "#493520",
+            "#624C36",
+            "#AF8C66",
+            "#84684C",
+            "#D3AE82"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      }
+    }
+  ],
+  "repetitionSystems": [],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root",
+        "course-01",
+        "course-02",
+        "course-03",
+        "course-04",
+        "course-05",
+        "course-06",
+        "course-07",
+        "course-08",
+        "course-09",
+        "course-10",
+        "course-11",
+        "course-12",
+        "course-13",
+        "course-14",
+        "course-15",
+        "course-16",
+        "course-17"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [],
+  "reviewHistory": [],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "bounded-stylized-accent",
+    "targetTriangles": 6000,
+    "maxDrawCalls": 24,
+    "textureSize": 128,
+    "fpsTarget": 30,
+    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers."
+  },
+  "lightingFromPhoto": [
+    "Key light from upper front left, warm daylight, directional intensity 3.",
+    "Fill light hemisphere ivory/stone intensity 2.",
+    "Exposure 1, ACES filmic tone mapping, transparent canvas over ivory background.",
+    "Contact shadow via ambient occlusion at course joints; no unsupported ground mesh."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Giza stepped limestone pyramid accent square base pyramid stepped masonry limestone architectural matte stone static low poly",
+    "index": {
+      "status": "rebuilt",
+      "reason": "missing",
+      "fingerprint": "62f2831e1d52eeb6dbb94a87c44fa25b1f4926626a7b1f8c2bcadc63e04e9471"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-roughness",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Material And PBR",
+        "key_path": null,
+        "score": 10.131147057917,
+        "snippets": [
+          "Roughness is microfacet scatter: high roughness reads matte and low roughness reads glossy. Recognition cues: low roughness reads as a sharp, mirror-like, tight specular highlight; high roughness reads as a blurry, wide, dim highlight and matte ..."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Material And PBR",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 5 — Materials & surface (PBR)",
+            "key_path": null
+          },
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          },
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation — merged recognition cues + Three.js target instead of duplicating this entity."
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-wearness-alpha-mask",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[9]",
+        "score": 5.7988979171,
+        "snippets": [
+          "CS2-specific per-pixel durability control embedded in the alpha channel of the Base Color texture, independent of visible transparency. Cơ chế điều khiển độ bền theo từng pixel đặc thù của CS2, nhúng trong kênh alpha của texture Base Color, độc ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[9]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-opacity-alpha",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[8]",
+        "score": 3.161627411124,
+        "snippets": [
+          "Controls material transparency and blend mode; in CS2 workflows the alpha channel of Base Color is repurposed as a non-transparency data channel. Kiểm soát độ trong suốt và chế độ blend của vật liệu; trong quy trình CS2, kênh alpha của Base ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[8]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "pbrExtractionHistory": [
+    {
+      "materialId": "base",
+      "confidence": 0.829,
+      "verdict": "pass",
+      "usable": true,
+      "maps": {
+        "albedo": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_albedo.png",
+          "url": "base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_roughness.png",
+          "url": "base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_height.png",
+          "url": "base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_normal.png",
+          "url": "base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "D:\\GitTutor System\\.img2threejs\\material-evidence\\base_ao.png",
+          "url": "base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.299,
+        "aspectRatioDelta": 0.3451,
+        "scaleDelta": 0.4595,
+        "bilateralSymmetryError": 0.0328,
+        "colorDelta": {
+          "checked": 18,
+          "maxDeltaE": 3.3,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.3
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.299 is below threshold 0.85",
+        "aspect-ratio delta 0.345 exceeds threshold 0.05",
+        "scale delta 0.460 exceeds threshold 0.08",
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [],
+      "renderHash": "fdc4f0c2a32bf769",
+      "passId": "blockout"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+# Git Tutor Codex implementation pack
+
+## Run the local implementation
+
+The application is being built from the pack below; current scope and verified checks are recorded in [implementation status](docs/IMPLEMENTATION-STATUS.md). Use the pinned Node runtime from `.node-version` and pnpm 11.25.0.
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm db:start
+pnpm db:migrate
+pnpm seed:synthetic
+pnpm dev
+```
+
+Open `http://localhost:3000`. The native database bootstrap currently uses PostgreSQL 17 on Windows and creates its own loopback cluster on port 55432. Generated local credentials and database files live only in ignored `.local/`. `gittutor_dev` and `gittutor_test` are separate disposable databases; integration checks refuse the development database. See [database setup evidence](docs/T01-DATABASE-EVIDENCE.md) for paths and environment limitations.
+
+Run the worker separately with `pnpm worker:dev`. Run `pnpm check` for static, unit, database, browser and build checks after `pnpm exec playwright install chromium`. Use `pnpm db:verify` for required migration objects and privilege checks. `pnpm exec tsx tools/validate-evidence.ts` validates acceptance evidence without changing case statuses.
+
+Provider modes default to fake/manual in isolated development. Copy `.env.example` to `.env.local` when configuring Supabase and integrations. Production startup requires an explicit `APP_ENV` and complete live configuration; the current local implementation is not a live-release approval.
+
+Prepared by Hossam Nabil Elsabbagh. Revision 1, 11 November 2026.
+
+This folder is a development handoff for the Git Tutor website and tutoring operations platform. It contains the requirements, pricing contracts, data and API design, implementation tasks, synthetic scenarios, and acceptance criteria that Codex should use when building the application.
+
+## Start in Codex
+
+1. Extract this folder into the directory where the application will be developed.
+2. For a new project, open this folder as the project root. For an existing repository, place the pack in `implementation/git-tutor/` and ask Codex to merge the relevant root instructions while preserving that repository's existing guidance.
+3. Open the project in Codex. For the CLI, open a terminal in that directory and run `codex` after completing the normal installation and sign-in flow.
+4. Paste the contents of [CODEX-START.md](CODEX-START.md) into the first task.
+5. Codex should inspect the repository, record its bootstrap choices, and execute the ordered implementation tasks. Missing external credentials are tracked in the integration readiness table while local implementation continues.
+
+`AGENTS.md` provides compact repository instructions. Codex supports repository instructions through this filename. [Official AGENTS.md guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+
+## What controls implementation
+
+| File | Purpose |
+|---|---|
+| [CODEX-START.md](CODEX-START.md) | Initial implementation prompt and continuation instructions |
+| [AGENTS.md](AGENTS.md) | Persistent engineering rules |
+| [docs/00-contract-spine.md](docs/00-contract-spine.md) | Shared vocabulary, requirement IDs and authoritative inputs |
+| [docs/01-product-spec.md](docs/01-product-spec.md) | User journeys, scope and completion conditions |
+| [docs/02-business-rules.md](docs/02-business-rules.md) | Pricing, packages, session and financial rules |
+| [docs/03-architecture.md](docs/03-architecture.md) | Application boundaries and runtime architecture |
+| [docs/04-data-model.md](docs/04-data-model.md) | Record grains, constraints and transaction responsibilities |
+| [docs/05-api-contracts.md](docs/05-api-contracts.md) | Commands, queries, request fields and responses |
+| [docs/06-security-integrations.md](docs/06-security-integrations.md) | Role scopes, files, Meet, payments, email and WhatsApp |
+| [docs/07-ui-spec.md](docs/07-ui-spec.md) | Website, four portal experiences and component behavior |
+| [docs/08-acceptance-tests.md](docs/08-acceptance-tests.md) | Test layers, traceability and required evidence |
+| [docs/09-setup-release.md](docs/09-setup-release.md) | Environment setup, deployment and recovery readiness |
+| [docs/superpowers/plans/2026-11-11-git-tutor.md](docs/superpowers/plans/2026-11-11-git-tutor.md) | Ordered, checkable implementation tasks |
+| [contracts/pricing-policy.json](contracts/pricing-policy.json) | Confirmed pricing inputs and internal compensation ranges |
+| [contracts/policy-settings.json](contracts/policy-settings.json) | Draft business settings and synthetic development examples |
+| [fixtures/acceptance-cases.json](fixtures/acceptance-cases.json) | Machine-readable acceptance cases |
+| [fixtures/domain-scenarios.json](fixtures/domain-scenarios.json) | Synthetic domain scenarios and expected outcomes |
+| [docs/PACK-VALIDATION.md](docs/PACK-VALIDATION.md) | Handoff validation results and implementation status |
+
+## Choices made for the handoff
+
+- A greenfield implementation uses Next.js App Router, TypeScript and Supabase Auth/PostgreSQL/private Storage, plus a durable Node.js worker.
+- The currency starts with EGP and the business timezone is Africa/Cairo. The supplied group amounts are interpreted as per occurrence in development scenarios.
+- Tutor compensation and margins are privileged internal data. The customer contract contains tuition and the customer's financial position.
+- The workbook supplies workflow examples. Test and seed records are synthetic. The supplied names, contacts, balances and payment history are excluded from this pack.
+- Duration, deposits, holds, cancellation remedies, package terms and group amendments remain versioned commercial settings. Synthetic settings allow implementation and testing. Publication checks require complete, approved offer terms.
+- The visual starting point is the earlier red, ink and warm-ivory Git Tutor interface. The latest pricing image supplies the commercial amounts. Brand assets and theme approval are recorded before public publication.
+
+## Pack verification
+
+Run `python tools/verify-pack.py` from this folder to check document links, JSON structure, requirement coverage, pricing arithmetic and synthetic-fixture consistency. This checks the handoff resources. Application test commands are established by task T01 and then executed by each owning task.
+
+## Expected first deliverable from Codex
+
+A running local application with working authentication boundaries, the public catalog, confidential group pricing, a persisted private/group reservation, and the first automated database and browser checks. Subsequent tasks complete packages, payment review, teaching, finance, notifications, customer records, support and analytics.
+
+Continue through the implementation plan until its local completion conditions are met. Record the exact external configuration still required for live integrations in `docs/IMPLEMENTATION-STATUS.md`.

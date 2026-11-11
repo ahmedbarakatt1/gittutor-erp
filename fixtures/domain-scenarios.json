@@ -1,0 +1,1382 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_status": "synthetic_specification",
+  "execution_status": "not_run",
+  "provenance": "Entirely synthetic records. The supplied group prices are authoritative inputs. Other amounts, dates, identities and policy choices are explicit test data.",
+  "currency": "EGP",
+  "money_representation": "integer_minor_units",
+  "credit_representation": {
+    "name": "credit_quanta",
+    "half_occurrence_credit_quanta": 500,
+    "purpose": "Exact fixture arithmetic. The seeder maps these quantities to the implementation's exact entitlement representation.",
+    "credit_quanta_per_session": 1000
+  },
+  "clock": {
+    "frozen_now": "2030-02-12T18:00:00Z",
+    "display_timezone": "Africa/Cairo",
+    "rule": "Inject the clock. Resolve timezone behavior with the implementation's pinned timezone database."
+  },
+  "isolation": "Each scenario runs in an isolated test database, schema or transaction. Labels map deterministically to test UUIDs. Fake providers capture outbound work locally.",
+  "actors": [
+    {
+      "id": "learner_a",
+      "name": "LearnerA",
+      "email": "learner.a@example.test",
+      "role": "student"
+    },
+    {
+      "id": "learner_b",
+      "name": "LearnerB",
+      "email": "learner.b@example.test",
+      "role": "student"
+    },
+    {
+      "id": "learner_c",
+      "name": "LearnerC",
+      "email": "learner.c@example.test",
+      "role": "student"
+    },
+    {
+      "id": "learner_d",
+      "name": "LearnerD",
+      "email": "learner.d@example.test",
+      "role": "student"
+    },
+    {
+      "id": "guardian_a",
+      "name": "GuardianA",
+      "email": "guardian.a@example.test",
+      "role": "guardian"
+    },
+    {
+      "id": "guardian_b",
+      "name": "GuardianB",
+      "email": "guardian.b@example.test",
+      "role": "guardian"
+    },
+    {
+      "id": "tutor_a",
+      "name": "TutorA",
+      "email": "tutor.a@example.test",
+      "role": "tutor"
+    },
+    {
+      "id": "tutor_b",
+      "name": "TutorB",
+      "email": "tutor.b@example.test",
+      "role": "tutor"
+    },
+    {
+      "id": "cs_a",
+      "name": "AgentA",
+      "email": "agent.a@example.test",
+      "role": "customer_service"
+    },
+    {
+      "id": "cs_b",
+      "name": "AgentB",
+      "email": "agent.b@example.test",
+      "role": "customer_service"
+    },
+    {
+      "id": "admin_a",
+      "name": "AdminA",
+      "email": "admin.a@example.test",
+      "role": "admin"
+    },
+    {
+      "id": "applicant_a",
+      "name": "ApplicantA",
+      "email": "applicant.a@example.test",
+      "role": "student"
+    }
+  ],
+  "policies": [
+    {
+      "policy_version_id": "fixture_policy_group_v1",
+      "status": "published",
+      "environment_scope": "development_test",
+      "is_synthetic": true,
+      "approved_by": "fixture_admin",
+      "approved_at": "2026-11-11T09:00:00Z",
+      "effective_at": "2026-12-01T00:00:00Z",
+      "offer_format": "group",
+      "currency": "EGP",
+      "pricing_unit": "per_occurrence",
+      "duration_minutes": 60,
+      "customer_pricing_version": "2026-11-11.1",
+      "compensation_policy_version": "2026-11-11.1",
+      "private_seat_price_minor": null,
+      "private_fee_rule": null,
+      "group_target_size": 4,
+      "group_capacity": 4,
+      "group_minimum_size": 2,
+      "hold_minutes": 30,
+      "confirmation_deadline_minutes_before_start": 1440,
+      "formation_failure_action": "offer_revised_quote_or_cancel",
+      "deposit_basis_points": 5000,
+      "deposit_rounding": "ceiling_minor_unit",
+      "confirmation_funding_sources": [
+        "verified_payment_allocation",
+        "reserved_named_package_entitlement"
+      ],
+      "amendment_acceptance_rule": "all_affected_authorized_bookers_and_assigned_tutor",
+      "amendment_acceptance_minutes": 60,
+      "latest_amendment_minutes_before_start": 60,
+      "post_confirmation_dropout_price_guarantee": true,
+      "below_minimum_group_action": "admin_proposal_with_customer_acceptance",
+      "customer_cancellation_windows": [
+        {
+          "minimum_minutes_before_start": 1440,
+          "maximum_minutes_before_start_exclusive": null,
+          "refund_basis_points": 10000
+        },
+        {
+          "minimum_minutes_before_start": 0,
+          "maximum_minutes_before_start_exclusive": 1440,
+          "refund_basis_points": 0
+        }
+      ],
+      "tutor_cancellation_compensation_rule": "reviewed_exact_adjustment",
+      "platform_or_tutor_cancellation_remedy": "full_customer_value_resolution",
+      "learner_no_show_rule": "retain_charge_consume_reserved_entitlement",
+      "tutor_fee_for_delivered_session": "agreed_fee_subject_to_approved_adjustments",
+      "individual_early_departure_rule": "attendance_fact_with_reviewed_remedy",
+      "partial_class_remedy_rule": "reviewed_exact_adjustment",
+      "partial_class_rounding": "reviewed_integer_amount",
+      "allowed_refund_remedies": [
+        "cash_refund",
+        "monetary_account_credit",
+        "package_entitlement_restoration"
+      ],
+      "package_enabled": true,
+      "package_contract": {
+        "package_policy_version_id": "fixture_package_group4_60_v1",
+        "eligible_offer_ids": [
+          "fixture_group4_60_minute_offer"
+        ],
+        "credit_quanta_per_session": 1000,
+        "grant_credit_quanta": 3000,
+        "base_duration_minutes": 60,
+        "eligible_formats": [
+          "group"
+        ],
+        "purchase_value_minor": 150000,
+        "currency": "EGP",
+        "coverage_rule": "named_entitlement_covers_eligible_occurrence",
+        "expiry_mode": "none",
+        "expiry_days": null,
+        "expired_value_accounting_rule": "reviewed_contractual_resolution",
+        "restoration_expiry_rule": "preserve_original_lot_terms",
+        "carryover_rule": "transfer_available_units_and_actual_value",
+        "rounding_rule": "largest_remainder_batches_and_final_residual_sequentially",
+        "partial_consumption_rule": "reviewed_exact_credit_quanta_and_value",
+        "refund_remedy_rule": "exclusive_or_value_bounded_split_of_cash_credit_restoration"
+      },
+      "id": "fixture_policy_group_v1",
+      "version": 1,
+      "fixture_envelope_status": "synthetic_non_publishable",
+      "business_approval": false,
+      "warning": "Published only inside development_test. These test settings do not establish Git Tutor live commercial terms."
+    },
+    {
+      "id": "fixture_review_policy_v1",
+      "version": 1,
+      "claim_lease_seconds": 300,
+      "receipt_uploader_roles": [
+        "student",
+        "guardian"
+      ],
+      "required_evidence_state": "ready_for_review",
+      "required_transfer_state": "settled",
+      "independent_transfer_matching": true,
+      "current_relationship_and_role_check": "inside_authorizing_transaction"
+    },
+    {
+      "policy_version_id": "fixture_policy_group_amendment_v2",
+      "status": "published",
+      "environment_scope": "development_test",
+      "is_synthetic": true,
+      "approved_by": "fixture_admin",
+      "approved_at": "2026-11-11T09:00:00Z",
+      "effective_at": "2026-12-01T00:00:00Z",
+      "offer_format": "group",
+      "currency": "EGP",
+      "pricing_unit": "per_occurrence",
+      "duration_minutes": 60,
+      "customer_pricing_version": "2026-11-11.1",
+      "compensation_policy_version": "2026-11-11.1",
+      "private_seat_price_minor": null,
+      "private_fee_rule": null,
+      "group_target_size": 4,
+      "group_capacity": 4,
+      "group_minimum_size": 2,
+      "hold_minutes": 30,
+      "confirmation_deadline_minutes_before_start": 1440,
+      "formation_failure_action": "offer_revised_quote_or_cancel",
+      "deposit_basis_points": 5000,
+      "deposit_rounding": "ceiling_minor_unit",
+      "confirmation_funding_sources": [
+        "verified_payment_allocation",
+        "reserved_named_package_entitlement"
+      ],
+      "amendment_acceptance_rule": "all_affected_authorized_bookers_and_assigned_tutor",
+      "amendment_acceptance_minutes": 60,
+      "latest_amendment_minutes_before_start": 60,
+      "post_confirmation_dropout_price_guarantee": false,
+      "below_minimum_group_action": "admin_proposal_with_customer_acceptance",
+      "customer_cancellation_windows": [
+        {
+          "minimum_minutes_before_start": 1440,
+          "maximum_minutes_before_start_exclusive": null,
+          "refund_basis_points": 10000
+        },
+        {
+          "minimum_minutes_before_start": 0,
+          "maximum_minutes_before_start_exclusive": 1440,
+          "refund_basis_points": 0
+        }
+      ],
+      "tutor_cancellation_compensation_rule": "reviewed_exact_adjustment",
+      "platform_or_tutor_cancellation_remedy": "full_customer_value_resolution",
+      "learner_no_show_rule": "retain_charge_consume_reserved_entitlement",
+      "tutor_fee_for_delivered_session": "agreed_fee_subject_to_approved_adjustments",
+      "individual_early_departure_rule": "attendance_fact_with_reviewed_remedy",
+      "partial_class_remedy_rule": "reviewed_exact_adjustment",
+      "partial_class_rounding": "reviewed_integer_amount",
+      "allowed_refund_remedies": [
+        "cash_refund",
+        "monetary_account_credit",
+        "package_entitlement_restoration"
+      ],
+      "package_enabled": true,
+      "package_contract": {
+        "package_policy_version_id": "fixture_package_group4_60_v1",
+        "eligible_offer_ids": [
+          "fixture_group4_60_minute_offer"
+        ],
+        "credit_quanta_per_session": 1000,
+        "grant_credit_quanta": 3000,
+        "base_duration_minutes": 60,
+        "eligible_formats": [
+          "group"
+        ],
+        "purchase_value_minor": 150000,
+        "currency": "EGP",
+        "coverage_rule": "named_entitlement_covers_eligible_occurrence",
+        "expiry_mode": "none",
+        "expiry_days": null,
+        "expired_value_accounting_rule": "reviewed_contractual_resolution",
+        "restoration_expiry_rule": "preserve_original_lot_terms",
+        "carryover_rule": "transfer_available_units_and_actual_value",
+        "rounding_rule": "largest_remainder_batches_and_final_residual_sequentially",
+        "partial_consumption_rule": "reviewed_exact_credit_quanta_and_value",
+        "refund_remedy_rule": "exclusive_or_value_bounded_split_of_cash_credit_restoration"
+      },
+      "id": "fixture_policy_group_amendment_v2",
+      "version": 2,
+      "fixture_envelope_status": "synthetic_non_publishable",
+      "business_approval": false,
+      "warning": "Synthetic voluntary replacement terms. Every affected authorized booker and the assigned tutor must accept this version before the admin commits any customer or tutor adjustment."
+    },
+    {
+      "policy_version_id": "fixture_policy_private_v1",
+      "status": "published",
+      "environment_scope": "development_test",
+      "is_synthetic": true,
+      "approved_by": "fixture_admin",
+      "approved_at": "2026-11-11T09:00:00Z",
+      "effective_at": "2026-12-01T00:00:00Z",
+      "offer_format": "private",
+      "currency": "EGP",
+      "pricing_unit": "per_occurrence",
+      "duration_minutes": 60,
+      "customer_pricing_version": "fixture_private_customer_pricing_v1",
+      "compensation_policy_version": "fixture_private_compensation_v1",
+      "private_seat_price_minor": 50000,
+      "private_fee_rule": {
+        "currency": "EGP",
+        "fee_min_minor": 25000,
+        "fee_max_minor": 25000,
+        "exact_occurrence_approval_required": true
+      },
+      "group_target_size": null,
+      "group_capacity": null,
+      "group_minimum_size": null,
+      "hold_minutes": 30,
+      "confirmation_deadline_minutes_before_start": 60,
+      "formation_failure_action": null,
+      "deposit_basis_points": 5000,
+      "deposit_rounding": "ceiling_minor_unit",
+      "confirmation_funding_sources": [
+        "verified_payment_allocation"
+      ],
+      "amendment_acceptance_rule": null,
+      "amendment_acceptance_minutes": null,
+      "latest_amendment_minutes_before_start": null,
+      "post_confirmation_dropout_price_guarantee": null,
+      "below_minimum_group_action": null,
+      "customer_cancellation_windows": [
+        {
+          "minimum_minutes_before_start": 1440,
+          "maximum_minutes_before_start_exclusive": null,
+          "refund_basis_points": 10000
+        },
+        {
+          "minimum_minutes_before_start": 0,
+          "maximum_minutes_before_start_exclusive": 1440,
+          "refund_basis_points": 0
+        }
+      ],
+      "tutor_cancellation_compensation_rule": "reviewed_exact_adjustment",
+      "platform_or_tutor_cancellation_remedy": "full_customer_value_resolution",
+      "learner_no_show_rule": "retain_charge",
+      "tutor_fee_for_delivered_session": "agreed_fee_subject_to_approved_adjustments",
+      "individual_early_departure_rule": "attendance_fact_with_reviewed_remedy",
+      "partial_class_remedy_rule": "reviewed_exact_adjustment",
+      "partial_class_rounding": "reviewed_integer_amount",
+      "allowed_refund_remedies": [
+        "cash_refund",
+        "monetary_account_credit"
+      ],
+      "package_enabled": false,
+      "package_contract": null,
+      "id": "fixture_policy_private_v1",
+      "version": 1,
+      "fixture_envelope_status": "synthetic_non_publishable",
+      "business_approval": false
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "SCN-BASE",
+      "description": "Reusable identities and isolated state",
+      "actors": [
+        "learner_a",
+        "learner_b",
+        "learner_c",
+        "learner_d",
+        "guardian_a",
+        "guardian_b",
+        "tutor_a",
+        "tutor_b",
+        "cs_a",
+        "cs_b",
+        "admin_a"
+      ],
+      "policy_id": "fixture_policy_group_v1",
+      "expected": {
+        "cross_scenario_shared_state": false,
+        "external_messages_sent": 0
+      },
+      "offer_policy_by_format": {
+        "group": "fixture_policy_group_v1",
+        "private": "fixture_policy_private_v1"
+      }
+    },
+    {
+      "id": "SCN-IDENTITY",
+      "description": "A linked guardian, an unrelated guardian and separately scoped siblings",
+      "relationships": [
+        {
+          "guardian_id": "guardian_a",
+          "student_id": "learner_a",
+          "state": "active",
+          "consent_version": 1
+        },
+        {
+          "guardian_id": "guardian_a",
+          "student_id": "learner_b",
+          "state": "pending",
+          "consent_version": 1
+        }
+      ],
+      "unrelated_guardian_id": "guardian_b",
+      "invitation": {
+        "id": "invite_a",
+        "intended_account_id": "guardian_a",
+        "single_use": true
+      },
+      "expected": {
+        "guardian_a_initial_student_scope": [
+          "learner_a"
+        ],
+        "guardian_b_initial_student_scope": []
+      }
+    },
+    {
+      "id": "SCN-PRICE-TWO",
+      "description": "Authoritative two-person group price",
+      "input": {
+        "group_size": 2,
+        "seat_price_minor": 57500,
+        "tutor_fee_min_minor": 45000,
+        "tutor_fee_max_minor": 45000,
+        "approved_tutor_fee_minor": 45000
+      },
+      "expected": {
+        "customer_tuition_total_minor": 115000,
+        "internal_contribution_minor": 70000
+      }
+    },
+    {
+      "id": "SCN-PRICE-THREE",
+      "description": "Three-person group with an approved exact tutor fee",
+      "input": {
+        "group_size": 3,
+        "seat_price_minor": 55000,
+        "tutor_fee_min_minor": 60000,
+        "tutor_fee_max_minor": 65000,
+        "approved_tutor_fee_minor": 62500
+      },
+      "expected": {
+        "customer_tuition_total_minor": 165000,
+        "internal_contribution_minor": 102500,
+        "contribution_at_fee_min_minor": 105000,
+        "contribution_at_fee_max_minor": 100000
+      }
+    },
+    {
+      "id": "SCN-PRICE-FOUR",
+      "description": "Four-person group with an approved exact tutor fee",
+      "input": {
+        "group_size": 4,
+        "seat_price_minor": 50000,
+        "tutor_fee_min_minor": 70000,
+        "tutor_fee_max_minor": 75000,
+        "approved_tutor_fee_minor": 72500
+      },
+      "expected": {
+        "customer_tuition_total_minor": 200000,
+        "internal_contribution_minor": 127500,
+        "contribution_at_fee_min_minor": 130000,
+        "contribution_at_fee_max_minor": 125000
+      }
+    },
+    {
+      "id": "SCN-FORMING-REPRICE",
+      "description": "Draft-policy formation repricing from two to three to four participants",
+      "policy_id": "fixture_policy_group_v1",
+      "occurrence_state": "forming",
+      "quote_versions": [
+        {
+          "version": 1,
+          "group_size": 2,
+          "seat_price_minor": 57500,
+          "tuition_total_minor": 115000,
+          "proposed_tutor_fee_minor": 45000
+        },
+        {
+          "version": 2,
+          "group_size": 3,
+          "seat_price_minor": 55000,
+          "tuition_total_minor": 165000,
+          "proposed_tutor_fee_minor": 62500
+        },
+        {
+          "version": 3,
+          "group_size": 4,
+          "seat_price_minor": 50000,
+          "tuition_total_minor": 200000,
+          "proposed_tutor_fee_minor": 72500
+        }
+      ],
+      "expected": {
+        "acceptance_required_for_current_quote": true,
+        "historical_quote_versions_retained": 3,
+        "cash_created_by_quote_changes_minor": 0,
+        "confirmed_charge_created_before_acceptance_minor": 0,
+        "assigned_tutor_acceptance_required": true,
+        "admin_confirmation_approval_required": true
+      }
+    },
+    {
+      "id": "SCN-CONFIRMED-DROPOUT",
+      "description": "A confirmed four-person group loses one participant under an explicit draft refund policy",
+      "policy_id": "fixture_policy_group_v1",
+      "initial": {
+        "confirmed_participants": [
+          "learner_a",
+          "learner_b",
+          "learner_c",
+          "learner_d"
+        ],
+        "seat_price_minor": 50000,
+        "customer_charges_minor": 200000,
+        "settled_receipts_minor": 200000,
+        "approved_tutor_fee_minor": 72500
+      },
+      "cancelled_participant_id": "learner_d",
+      "authorized_refund_minor": 50000,
+      "expected_after_cancellation": {
+        "remaining_seat_price_minor": 50000,
+        "remaining_customer_charges_minor": 150000,
+        "net_cash_received_minor": 150000,
+        "customer_receivable_minor": 0,
+        "approved_tutor_fee_minor": 72500,
+        "internal_contribution_minor": 77500
+      }
+    },
+    {
+      "id": "SCN-DEPOSIT-HALF",
+      "description": "Configured fifty-percent deposit with exact integer arithmetic",
+      "policy_id": "fixture_policy_group_v1",
+      "input": {
+        "seat_price_minor": 57500,
+        "deposit_basis_points": 5000
+      },
+      "expected": {
+        "deposit_due_minor": 28750,
+        "remaining_charge_minor": 28750,
+        "threshold_minus_one_minor": 28749,
+        "threshold_exact_minor": 28750
+      }
+    },
+    {
+      "id": "SCN-PARTIAL-TRANSFERS",
+      "description": "Two independently verified installments settle one charge",
+      "input": {
+        "charge_minor": 50000,
+        "settled_transfer_amounts_minor": [
+          30000,
+          20000
+        ]
+      },
+      "expected": {
+        "cash_received_minor": 50000,
+        "allocated_minor": 50000,
+        "receivable_minor": 0,
+        "allocation_count": 2,
+        "customer_credit_minor": 0
+      },
+      "offer_policy_id": "fixture_policy_private_v1"
+    },
+    {
+      "id": "SCN-OVERPAYMENT",
+      "description": "A 550 payment against a 500 charge preserves the surplus",
+      "input": {
+        "charge_minor": 50000,
+        "settled_transfer_minor": 55000
+      },
+      "expected": {
+        "cash_received_minor": 55000,
+        "allocated_minor": 50000,
+        "receivable_minor": 0,
+        "customer_credit_liability_minor": 5000,
+        "revenue_from_surplus_minor": 0
+      },
+      "offer_policy_id": "fixture_policy_private_v1"
+    },
+    {
+      "id": "SCN-FEE-ADJUSTMENT",
+      "description": "An approved adjustment preserves the original earned-fee entry",
+      "initial": {
+        "original_fee_agreement_minor": 62500,
+        "original_earning_entry_minor": 62500,
+        "paid_minor": 0
+      },
+      "adjustment": {
+        "id": "fee_adjustment_a",
+        "amount_minor": 2500,
+        "reason": "Synthetic approved fee correction",
+        "actor_id": "admin_a"
+      },
+      "expected": {
+        "original_earning_entry_minor": 62500,
+        "adjustment_entry_minor": 2500,
+        "current_earned_total_minor": 65000,
+        "payable_minor": 65000,
+        "cash_effect_minor": 0,
+        "adjustment_entry_count_after_replay": 1
+      }
+    },
+    {
+      "id": "SCN-CANCELLED-PAID",
+      "description": "A cancelled occurrence already has a settled tutor advance",
+      "input": {
+        "occurrence_state": "cancelled",
+        "settled_tutor_advance_minor": 45000,
+        "approved_cancellation_fee_minor": 0,
+        "recovery_decision": "unresolved"
+      },
+      "expected": {
+        "cash_outflow_minor": 45000,
+        "earned_tutor_fee_minor": 0,
+        "tutor_payable_minor": 0,
+        "unresolved_tutor_advance_asset_minor": 45000,
+        "automatic_new_payment_count": 0,
+        "resolution_case_required": true
+      }
+    },
+    {
+      "id": "SCN-UNKNOWN-PAYOUT",
+      "description": "Provider timeout with an unknown transfer outcome",
+      "input": {
+        "earned_payable_minor": 62500,
+        "attempt_amount_minor": 62500,
+        "payout_attempt_state": "unknown",
+        "provider_reference": "synthetic_payout_ref_a"
+      },
+      "expected_before_reconciliation": {
+        "local_settled_payout_minor": 0,
+        "payable_minor": 62500,
+        "new_send_attempts_on_retry": 0
+      },
+      "expected_after_provider_reports_settled": {
+        "local_settled_payout_minor": 62500,
+        "payable_minor": 0,
+        "settled_posting_count": 1,
+        "additional_provider_sends": 0
+      }
+    },
+    {
+      "id": "SCN-PARTIAL-PAYOUT",
+      "description": "A partial tutor payout carries forward the remaining payable",
+      "input": {
+        "earned_minor": 25000,
+        "settled_payout_minor": 15000
+      },
+      "expected": {
+        "payable_minor": 10000,
+        "expense_minor": 25000,
+        "cash_outflow_minor": 15000
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-BASE",
+      "description": "Package issue, reservation and delivery use separate records",
+      "input": {
+        "owner_id": "learner_a",
+        "package_id": "package_a",
+        "grant_credit_quanta": 3000,
+        "package_price_minor": 150000,
+        "settled_payment_minor": 150000,
+        "base_duration_minutes": 60,
+        "credit_quanta_per_session": 1000,
+        "eligible_formats": [
+          "group"
+        ]
+      },
+      "expected_after_grant": {
+        "available_credit_quanta": 3000,
+        "reserved_credit_quanta": 0,
+        "contract_liability_minor": 150000,
+        "earned_tuition_minor": 0
+      },
+      "expected_after_reserve": {
+        "available_credit_quanta": 2000,
+        "reserved_credit_quanta": 1000,
+        "contract_liability_minor": 150000,
+        "earned_tuition_minor": 0
+      },
+      "expected_after_consume": {
+        "available_credit_quanta": 2000,
+        "reserved_credit_quanta": 0,
+        "consumed_credit_quanta": 1000,
+        "contract_liability_minor": 100000,
+        "earned_tuition_minor": 50000,
+        "additional_cash_received_minor": 0
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-LAST-CREDIT",
+      "description": "Two transactions race for the last package credit",
+      "input": {
+        "package_id": "package_last",
+        "available_credit_quanta": 1000,
+        "request_quanta_each": 1000,
+        "parallel_connections": 2
+      },
+      "expected": {
+        "successful_reservations": 1,
+        "conflicting_reservations": 1,
+        "available_credit_quanta": 0,
+        "reserved_credit_quanta": 1000,
+        "minimum_balance_credit_quanta": 0
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-PARTIAL",
+      "description": "An explicitly approved half-session consumes half a credit",
+      "policy_id": "fixture_policy_group_v1",
+      "input": {
+        "package_id": "package_partial",
+        "credit_quanta_per_session": 1000,
+        "grant_credit_quanta": 3000,
+        "package_price_minor": 150000,
+        "base_duration_minutes": 60,
+        "eligible_formats": [
+          "group"
+        ],
+        "delivered_minutes": 30,
+        "reserved_credit_quanta": 1000,
+        "approved_consumption_credit_quanta": 500,
+        "approved_released_credit_quanta": 500,
+        "original_full_occurrence_tutor_fee_minor": 72500,
+        "approved_tutor_fee_adjustment_minor": -36250,
+        "approved_tutor_earning_minor": 36250
+      },
+      "expected": {
+        "consumed_credit_quanta": 500,
+        "released_credit_quanta": 500,
+        "reserved_credit_quanta": 0,
+        "remaining_credit_quanta": 2500,
+        "earned_customer_tuition_minor": 25000,
+        "remaining_contract_liability_minor": 125000,
+        "approved_tutor_earning_minor": 36250,
+        "cash_effect_of_consumption_minor": 0
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-TRANSFER",
+      "description": "Credit and attached value move together between the same owner's packages",
+      "input": {
+        "owner_id": "learner_a",
+        "source_package_id": "package_source",
+        "target_package_id": "package_target",
+        "source_available_credit_quanta": 3000,
+        "source_unearned_value_minor": 150000,
+        "target_available_credit_quanta": 2000,
+        "target_unearned_value_minor": 100000,
+        "transfer_credit_quanta": 1500,
+        "transfer_value_minor": 75000,
+        "transfer_id": "credit_transfer_a"
+      },
+      "expected": {
+        "source_available_credit_quanta": 1500,
+        "source_unearned_value_minor": 75000,
+        "target_available_credit_quanta": 3500,
+        "target_unearned_value_minor": 175000,
+        "combined_available_credit_quanta": 5000,
+        "combined_unearned_value_minor": 250000,
+        "cash_effect_minor": 0,
+        "earned_revenue_effect_minor": 0,
+        "transfer_out_count": 1,
+        "transfer_in_count": 1
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-REMEDY",
+      "description": "One failed-delivery remedy chooses cash or restored credit under the draft policy",
+      "input": {
+        "package_id": "package_remedy",
+        "original_package_price_minor": 100000,
+        "original_grant_credit_quanta": 2000,
+        "affected_consumed_credit_quanta": 1000,
+        "affected_value_minor": 50000,
+        "remaining_quanta_before_remedy": 1000,
+        "remedy_id": "remedy_a"
+      },
+      "cash_refund_branch": {
+        "refund_minor": 50000,
+        "restored_credit_quanta": 0,
+        "remaining_credit_quanta": 1000,
+        "remaining_contract_liability_minor": 50000,
+        "revenue_reversal_minor": 50000
+      },
+      "credit_restore_branch": {
+        "refund_minor": 0,
+        "restored_credit_quanta": 1000,
+        "remaining_credit_quanta": 2000,
+        "remaining_contract_liability_minor": 100000,
+        "revenue_reversal_minor": 50000
+      },
+      "expected": {
+        "maximum_total_remedy_value_minor": 50000,
+        "combined_full_cash_and_full_credit_allowed": false,
+        "successful_remedy_count_after_replay": 1
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-ROUNDING",
+      "description": "Package value conservation with a non-divisible minor-unit total",
+      "policy_id": "fixture_policy_group_v1",
+      "input": {
+        "package_price_minor": 100001,
+        "grant_credit_quanta": 3000,
+        "consumption_steps_credit_quanta": [
+          1000,
+          1000,
+          1000
+        ],
+        "exact_unit_value": {
+          "numerator_minor": 100001,
+          "denominator": 3
+        },
+        "allocation_mode": "sequential_remaining_lot_value_over_remaining_credit_quanta_with_final_residual",
+        "rounding_rule": "largest_remainder_batches_and_final_residual_sequentially"
+      },
+      "expected": {
+        "cumulative_recognition_minor": [
+          33333,
+          66667,
+          100001
+        ],
+        "recognition_entries_minor": [
+          33333,
+          33334,
+          33334
+        ],
+        "total_recognition_minor": 100001,
+        "final_contract_liability_minor": 0,
+        "final_remaining_credit_quanta": 0
+      },
+      "uneven_portion_variant": {
+        "package_price_minor": 100000,
+        "grant_credit_quanta": 3000,
+        "consumption_steps_credit_quanta": [
+          1000,
+          500,
+          1500
+        ],
+        "expected_recognition_entries_minor": [
+          33333,
+          16666,
+          50001
+        ],
+        "expected_cumulative_recognition_minor": [
+          33333,
+          49999,
+          100000
+        ],
+        "expected_final_remaining_credit_quanta": 0,
+        "expected_final_contract_liability_minor": 0
+      },
+      "batch_variant": {
+        "package_price_minor": 100001,
+        "grant_credit_quanta": 3000,
+        "ordered_allocation_ids": [
+          "credit_lot_a",
+          "credit_lot_b",
+          "credit_lot_c"
+        ],
+        "allocation_credit_quanta": [
+          1000,
+          1000,
+          1000
+        ],
+        "expected_allocated_values_minor": [
+          33334,
+          33334,
+          33333
+        ],
+        "expected_total_minor": 100001
+      }
+    },
+    {
+      "id": "SCN-REVIEW",
+      "description": "Current customer evidence, settled independent transfer and review ownership",
+      "policy_id": "fixture_review_policy_v1",
+      "input": {
+        "student_id": "learner_a",
+        "charge_id": "charge_review_a",
+        "charge_minor": 50000,
+        "receipt_id": "receipt_a_v1",
+        "receipt_version": 1,
+        "receipt_state": "ready_for_review",
+        "receipt_uploader_id": "learner_a",
+        "transfer_id": "transfer_review_a",
+        "transfer_state": "settled",
+        "transfer_minor": 50000,
+        "receiving_account_id": "receiving_account_a",
+        "channel": "instapay",
+        "external_transaction_id": "external_a",
+        "review_case_id": "review_a",
+        "review_version": 1,
+        "review_state": "unassigned",
+        "claimants": [
+          "cs_a",
+          "cs_b"
+        ],
+        "provider_mode": "fake"
+      },
+      "expected_after_one_valid_resolution": {
+        "allocated_minor": 50000,
+        "customer_receivable_minor": 0,
+        "allocation_count": 1,
+        "resolved_case_count": 1,
+        "confirmation_outbox_count": 1
+      },
+      "expected_before_valid_resolution": {
+        "booking_allocated_minor": 0,
+        "booking_confirmation_count": 0
+      },
+      "offer_policy_id": "fixture_policy_private_v1"
+    },
+    {
+      "id": "SCN-LEDGER",
+      "description": "Primary-ledger balances reconcile cash, obligations and earned results",
+      "input": {
+        "opening_cash_minor": 0,
+        "package_purchase_and_receipt_minor": 100000,
+        "package_grant_credit_quanta": 2000,
+        "package_consumed_credit_quanta": 1000,
+        "private_session_charge_minor": 50000,
+        "private_session_settled_receipt_minor": 55000,
+        "private_session_delivered": true,
+        "approved_tutor_earning_minor": 45000,
+        "settled_tutor_payout_minor": 15000,
+        "paid_marketing_expense_minor": 10000
+      },
+      "expected": {
+        "cash_receipts_minor": 155000,
+        "cash_disbursements_minor": 25000,
+        "cash_balance_minor": 130000,
+        "customer_receivable_minor": 0,
+        "package_contract_liability_minor": 50000,
+        "customer_credit_liability_minor": 5000,
+        "tutor_payable_minor": 30000,
+        "earned_tuition_minor": 100000,
+        "tutor_expense_minor": 45000,
+        "marketing_expense_minor": 10000,
+        "contribution_minor": 55000,
+        "operating_result_minor": 45000,
+        "sum_obligations_and_result_minor": 130000
+      },
+      "policy_context": "A separate synthetic private-accounting policy version selects the input amounts. The live private tariff remains unset.",
+      "synthetic_policy_overrides": {
+        "base_private_policy_id": "fixture_policy_private_v1",
+        "derived_private_policy_id": "fixture_policy_private_ledger_v1",
+        "derived_compensation_policy_version_id": "fixture_private_compensation_ledger_v1",
+        "private_fee_min_minor": 45000,
+        "private_fee_max_minor": 45000,
+        "base_package_policy_id": "fixture_package_group4_60_v1",
+        "derived_package_policy_id": "fixture_package_ledger_v1",
+        "package_grant_credit_quanta": 2000,
+        "package_purchase_value_minor": 100000,
+        "environment_scope": "development_test",
+        "is_synthetic": true,
+        "approval_actor_id": "admin_a",
+        "approval_required_before_seeded_agreement": true
+      }
+    },
+    {
+      "id": "SCN-ATTRIBUTION",
+      "description": "Stable inquiry cohorts and first-attendance qualification",
+      "input": {
+        "lead_id": "lead_a",
+        "first_eligible_inquiry_at": "2030-01-31T21:30:00Z",
+        "later_inquiry_at": "2030-02-01T07:00:00Z",
+        "booking_at": "2030-02-05T10:00:00Z",
+        "first_completed_present_attendance_at": "2030-02-12T15:00:00Z",
+        "returning_student_prior_attendance_at": "2029-12-10T15:00:00Z",
+        "future_occurrence_start_at": "2030-02-13T15:00:00Z"
+      },
+      "expected": {
+        "lead_cohort": "2030-01",
+        "booking_month": "2030-02",
+        "unique_leads_after_three_inquiries": 1,
+        "interaction_count_after_three_inquiries": 3,
+        "newly_taught_for_first_attendee": 1,
+        "newly_taught_for_returning_attendee": 0,
+        "newly_taught_for_absent_newcomer": 0,
+        "newly_taught_for_future_booking": 0
+      },
+      "source_examples": [
+        {
+          "source_id": "source_unknown",
+          "self_reported_source": "social",
+          "verified_paid_touch": false,
+          "verified_organic_touch": false,
+          "expected_bucket": "unassigned"
+        },
+        {
+          "source_id": "source_organic",
+          "self_reported_source": null,
+          "verified_paid_touch": false,
+          "verified_organic_touch": true,
+          "expected_bucket": "organic"
+        }
+      ]
+    },
+    {
+      "id": "SCN-EXPORT",
+      "description": "Occurrence-level fees and ratio metrics retain their aggregation grain",
+      "input": {
+        "occurrence_id": "occurrence_export_a",
+        "participant_count": 2,
+        "seat_charge_minor": 57500,
+        "occurrence_fee_minor": 45000,
+        "cohorts": [
+          {
+            "id": "cohort_a",
+            "eligible_leads": 4,
+            "newly_taught_students": 2
+          },
+          {
+            "id": "cohort_b",
+            "eligible_leads": 6,
+            "newly_taught_students": 3
+          }
+        ]
+      },
+      "expected": {
+        "tuition_total_minor": 115000,
+        "occurrence_fee_total_minor": 45000,
+        "occurrence_count": 1,
+        "conversion_ratio": {
+          "numerator": 5,
+          "denominator": 10
+        },
+        "customer_export_fee_fields": []
+      }
+    },
+    {
+      "id": "SCN-CUSTOMER-PRIVACY",
+      "description": "Privileged markers remain absent from every customer output surface",
+      "private_record": {
+        "approved_tutor_fee_minor": 62500,
+        "tutor_fee_min_minor": 60000,
+        "tutor_fee_max_minor": 65000,
+        "contribution_minor": 102500,
+        "internal_note": "synthetic_internal_fee_note",
+        "payout_destination": "synthetic_unpublished_payee",
+        "provider_credential": "fixture_secret_never_dispatch"
+      },
+      "forbidden_key_patterns": [
+        "tutor_fee",
+        "tutor_compensation",
+        "approved_fee",
+        "fee_range",
+        "contribution",
+        "margin",
+        "payout_destination",
+        "internal_note",
+        "provider_credential",
+        "exact_fee",
+        "fee_min",
+        "fee_max",
+        "compensation_policy",
+        "earned_tutor",
+        "tutor_payable"
+      ],
+      "customer_surfaces": [
+        "public_catalog_json",
+        "public_tutor_profile_json",
+        "student_dashboard_json",
+        "guardian_dashboard_json",
+        "booking_quote_json",
+        "session_detail_json",
+        "package_detail_json",
+        "receipt_detail_json",
+        "customer_export",
+        "receipt_download",
+        "customer_email",
+        "guardian_email",
+        "whatsapp_customer_message",
+        "customer_notification",
+        "server_rendered_html",
+        "browser_bundle",
+        "browser_network_responses",
+        "analytics_payloads",
+        "download_metadata"
+      ],
+      "expected": {
+        "forbidden_fields_found": 0,
+        "private_markers_found": 0,
+        "privileged_rpc_successes_for_customer_roles": 0
+      }
+    },
+    {
+      "id": "SCN-FILES",
+      "description": "Private attachment lifecycle with controlled scanner results",
+      "files": [
+        {
+          "id": "file_clean_a",
+          "owner_id": "learner_a",
+          "filename": "synthetic-question.txt",
+          "mime_type": "text/plain",
+          "scanner_result": "clean",
+          "audience": "student_and_assigned_tutor"
+        },
+        {
+          "id": "file_quarantined_a",
+          "owner_id": "learner_a",
+          "filename": "synthetic-receipt.png",
+          "mime_type": "image/png",
+          "scanner_result": "quarantined",
+          "audience": "owner_and_authorized_review_staff"
+        },
+        {
+          "id": "file_shared_a",
+          "owner_id": "tutor_a",
+          "filename": "synthetic-worksheet.pdf",
+          "mime_type": "application/pdf",
+          "scanner_result": "clean",
+          "audience": "current_occurrence_participants"
+        }
+      ],
+      "expected": {
+        "public_bucket_objects": 0,
+        "quarantined_customer_downloads": 0
+      }
+    },
+    {
+      "id": "SCN-CALENDAR",
+      "description": "Calendar and meeting provisioning through a deterministic fake provider",
+      "input": {
+        "occurrence_id": "occurrence_calendar_a",
+        "request_id": "meeting_request_a",
+        "provider_event_id": "synthetic_event_a",
+        "meeting_url": "https://meet.example.test/synthetic-room",
+        "start_at": "2030-02-13T15:00:00Z",
+        "end_at": "2030-02-13T16:00:00Z"
+      },
+      "expected_after_timeout_and_reconciliation": {
+        "provider_event_count": 1,
+        "meeting_link_count": 1,
+        "provisioning_state": "ready"
+      },
+      "provider_contract_gate": "Verify actual configured provider admission, revocation and retry capabilities before enabling the corresponding production behavior."
+    },
+    {
+      "id": "SCN-MESSAGING",
+      "description": "Outbox replay, consent and human handoff with a fake delivery provider",
+      "input": {
+        "event_id": "notification_event_a",
+        "recipient_id": "learner_a",
+        "channel": "email",
+        "duplicate_event_count": 5,
+        "configured_whatsapp_window_seconds": 86400,
+        "whatsapp_last_inbound_at": "2030-02-11T17:00:00Z",
+        "whatsapp_opt_in": true,
+        "human_handoff_active": true
+      },
+      "expected": {
+        "email_delivery_count_after_replay": 1,
+        "bot_replies_during_human_handoff": 0,
+        "free_form_whatsapp_sends_at_25_hours": 0,
+        "live_external_messages_sent_by_tests": 0
+      }
+    },
+    {
+      "id": "SCN-RECOVERY",
+      "description": "Restore and event replay reconcile against a fixed primary-ledger checkpoint",
+      "checkpoint_scenario_id": "SCN-LEDGER",
+      "input": {
+        "committed_event_ids": [
+          "event_package_receipt",
+          "event_seat_receipt",
+          "event_completion",
+          "event_payout",
+          "event_expense"
+        ],
+        "replay_count_per_event": 3
+      },
+      "expected": {
+        "cash_balance_minor": 130000,
+        "tutor_payable_minor": 30000,
+        "package_contract_liability_minor": 50000,
+        "customer_credit_liability_minor": 5000,
+        "duplicate_money_postings": 0,
+        "duplicate_provider_payouts": 0
+      }
+    },
+    {
+      "id": "SCN-CATALOG",
+      "description": "Approved policy publication and responsive public presentation",
+      "input": {
+        "approved_offer_id": "offer_approved_a",
+        "draft_offer_id": "offer_draft_a",
+        "incomplete_policy_offer_id": "offer_incomplete_a",
+        "viewport_widths": [
+          320,
+          768,
+          1440
+        ],
+        "direction_modes": [
+          "ltr",
+          "rtl"
+        ],
+        "public_locale_fixture": "en",
+        "secondary_locale_fixture": "pseudo_rtl"
+      },
+      "expected": {
+        "public_offer_ids": [
+          "offer_approved_a"
+        ],
+        "horizontal_page_overflow_count": 0,
+        "keyboard_unreachable_primary_actions": 0,
+        "customer_visible_tutor_fee_fields": 0
+      }
+    },
+    {
+      "id": "SCN-TUTOR-ONBOARDING",
+      "description": "Public application, controlled role grant and reviewed public-profile publication",
+      "input": {
+        "applicant_id": "applicant_a",
+        "application_id": "application_a",
+        "application_state": "pending_review",
+        "existing_role": "student",
+        "assigned_tutor_id": "tutor_a",
+        "public_profile_version": 1,
+        "proposed_public_profile_version": 2,
+        "published_bio": "Explains synthetic practice problems.",
+        "proposed_bio": "Explains synthetic practice problems with worked examples.",
+        "private_contact_email": "tutor.a@example.test",
+        "internal_application_note": "synthetic_internal_application_note"
+      },
+      "expected": {
+        "self_granted_tutor_memberships": 0,
+        "publicly_exposed_private_profile_fields": 0,
+        "approved_public_profile_version_before_review": 1,
+        "approved_public_profile_version_after_admin_review": 2
+      }
+    },
+    {
+      "id": "SCN-VOLUNTARY-GROUP-AMENDMENT",
+      "description": "Separately accepted replacement terms select a new synthetic policy version",
+      "prior_policy_id": "fixture_policy_group_v1",
+      "policy_id": "fixture_policy_group_amendment_v2",
+      "initial": {
+        "remaining_participants": [
+          "learner_a",
+          "learner_b",
+          "learner_c"
+        ],
+        "remaining_customer_charges_minor": 150000,
+        "net_cash_received_minor": 150000,
+        "approved_tutor_fee_minor": 72500,
+        "prior_guarantee_remains_effective_until_replacement": true
+      },
+      "proposal": {
+        "group_size": 3,
+        "new_seat_price_minor": 55000,
+        "new_exact_tutor_fee_minor": 62500,
+        "post_confirmation_dropout_price_guarantee": false,
+        "required_acceptances": "all_affected_authorized_bookers_and_assigned_tutor",
+        "admin_approval_required": true
+      },
+      "expected_after_all_required_acceptances_and_admin_commit": {
+        "customer_debit_adjustment_per_remaining_seat_minor": 5000,
+        "customer_debit_adjustments_total_minor": 15000,
+        "remaining_customer_charges_minor": 165000,
+        "customer_receivable_minor": 15000,
+        "cash_change_from_amendment_minor": 0,
+        "tutor_fee_adjustment_minor": -10000,
+        "current_agreed_tutor_fee_minor": 62500,
+        "original_fee_snapshot_minor": 72500,
+        "commit_mode": "single_atomic_amendment"
+      }
+    },
+    {
+      "id": "SCN-PACKAGE-COVERAGE-MODES",
+      "description": "Discounted service entitlement and explicit monetary-value coverage use different confirmation and debt rules",
+      "input": {
+        "student_id": "learner_a",
+        "offer_id": "fixture_group2_60_minute_offer",
+        "group_size": 2,
+        "standalone_seat_reference_price_minor": 57500,
+        "credit_quanta_per_session": 1000,
+        "required_credit_quanta": 1000,
+        "reserved_credit_quanta": 1000,
+        "original_funded_lot_carrying_value_minor": 50000,
+        "deposit_basis_points": 5000,
+        "value_mode_top_up_settled_minor": 0
+      },
+      "synthetic_policy_overrides": {
+        "base_policy_id": "fixture_policy_group_v1",
+        "group_target_size": 2,
+        "group_capacity": 2,
+        "group_minimum_size": 2,
+        "duration_minutes": 60,
+        "eligible_offer_ids": [
+          "fixture_group2_60_minute_offer"
+        ],
+        "base_duration_minutes": 60,
+        "eligible_formats": [
+          "group"
+        ],
+        "grant_credit_quanta": 1000,
+        "purchase_value_minor": 50000,
+        "environment_scope": "development_test",
+        "is_synthetic": true,
+        "approval_actor_id": "admin_a",
+        "derive_separate_published_policy_for_each_coverage_mode": true
+      },
+      "coverage_modes": [
+        {
+          "coverage_rule": "named_entitlement_covers_eligible_occurrence",
+          "derived_policy_version_id": "fixture_policy_named_coverage_v1",
+          "confirmation_funding_sources": [
+            "verified_payment_allocation",
+            "reserved_named_package_entitlement"
+          ],
+          "expected": {
+            "confirmation_funding_satisfied": true,
+            "additional_cash_due_minor": 0,
+            "additional_receivable_minor": 0,
+            "consumed_credit_quanta": 1000,
+            "package_tuition_recognized_minor": 50000,
+            "original_entitlement_refund_ceiling_minor": 50000,
+            "reference_price_revaluation_minor": 0,
+            "total_tuition_recognized_on_authorized_delivery_minor": 50000
+          }
+        },
+        {
+          "coverage_rule": "allocated_value_with_explicit_top_up",
+          "derived_policy_version_id": "fixture_policy_value_coverage_v1",
+          "confirmation_funding_sources": [
+            "verified_payment_allocation",
+            "reserved_eligible_package_value"
+          ],
+          "expected": {
+            "monetary_charge_minor": 57500,
+            "applied_package_value_minor": 50000,
+            "additional_receivable_minor": 7500,
+            "monetary_deposit_threshold_minor": 28750,
+            "deposit_shortfall_minor": 0,
+            "confirmation_funding_satisfied": true,
+            "package_tuition_recognized_minor": 50000,
+            "original_entitlement_refund_ceiling_minor": 50000,
+            "total_tuition_recognized_on_authorized_delivery_minor": 57500,
+            "separate_monetary_tuition_component_minor": 7500
+          }
+        }
+      ],
+      "deposit_boundary_variant": {
+        "original_funded_lot_carrying_value_minor": 25000,
+        "required_credit_quanta": 1000,
+        "reserved_credit_quanta": 1000,
+        "standalone_seat_reference_price_minor": 57500,
+        "deposit_basis_points": 5000,
+        "named_coverage_expected": {
+          "confirmation_funding_satisfied": true,
+          "additional_cash_due_minor": 0,
+          "additional_receivable_minor": 0,
+          "package_tuition_recognized_minor": 25000,
+          "original_entitlement_refund_ceiling_minor": 25000
+        },
+        "value_coverage_expected": {
+          "applied_package_value_minor": 25000,
+          "additional_receivable_minor": 32500,
+          "monetary_deposit_threshold_minor": 28750,
+          "deposit_shortfall_minor": 3750,
+          "confirmation_funding_satisfied": false,
+          "verified_top_up_to_reach_threshold_minor": 3750,
+          "receivable_after_threshold_top_up_minor": 28750,
+          "original_entitlement_refund_ceiling_minor": 25000,
+          "total_tuition_recognized_on_authorized_delivery_minor": 57500,
+          "separate_monetary_tuition_component_minor": 32500
+        }
+      },
+      "conservation_rule": "Named coverage consumes the eligible service units and their original carrying value. Explicit value coverage creates only the agreed monetary shortfall. The package-funded refund component is capped by original consumed lot value and the shared remedy balance. Any separately settled top-up retains its own payment and refund scope."
+    }
+  ],
+  "environment_scope": "development_test",
+  "is_synthetic": true,
+  "live_publication_allowed": false,
+  "label_aliases": {
+    "fixture_admin": "admin_a",
+    "fixture_group4_60_minute_offer": "offer_approved_a"
+  },
+  "policy_override_rule": "A scenario override creates its own synthetic policy version in development_test. Preserve the shared published fixture policy.",
+  "default_policy_by_offer_format": {
+    "group": "fixture_policy_group_v1",
+    "private": "fixture_policy_private_v1"
+  },
+  "contract_sources": [
+    "../contracts/pricing-policy.json",
+    "../contracts/policy-settings.json"
+  ]
+}

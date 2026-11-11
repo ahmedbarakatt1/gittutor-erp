@@ -1,0 +1,68 @@
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  4 passed (4)
+      Tests  46 passed (46)
+   Start at  12:52:06
+   Duration  1.48s (tests 73%, import 16%, transform 6%, worker 5%)
+
+    Isolate  4 workers spawned · ~219ms startup each (spawn + environment, per file)
+             at least ~656ms faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  3 passed (3)
+      Tests  14 passed (14)
+   Start at  12:52:09
+   Duration  4.61s (tests 89%, import 8%, transform 2%, worker 1%)
+
+    Isolate  3 workers spawned · ~273ms startup each (spawn + environment, per file)
+             at least ~545ms faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 10 tests using 2 workers
+
+(node:37064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (3.7s)
+  ok  1 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (3.8s)
+  ok  3 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (3.0s)
+  ok  4 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (2.9s)
+  ok  5 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (2.1s)
+  ok  6 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (2.3s)
+  ok  7 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (1.9s)
+  ok  8 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (2.0s)
+  ok  9 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (2.0s)
+  ok 10 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (1.8s)
+
+  10 passed (16.5s)
+$ next build
+▲ Next.js 16.4.6 (Turbopack)
+✓ Running next.config.ts took 139ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1078ms
+  Running TypeScript ...
+  Finished TypeScript in 9.1s ...
+  Collecting page data using 4 workers ...
+  Generating static pages using 4 workers (0/3) ...
+✓ Generating static pages using 4 workers (3/3) in 1438ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+
+
+○  (Static)  prerendered as static content

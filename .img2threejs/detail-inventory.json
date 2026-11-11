@@ -1,0 +1,71 @@
+{
+  "sourceImage": "D:\\GitTutor System\\.img2threejs\\references\\kheops-pyramid.jpg",
+  "zonesDir": "D:\\GitTutor System\\.img2threejs\\zones",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 9,
+    "details": [
+      {
+        "id": "apex",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.42,
+          "y": 0.25,
+          "width": 0.18,
+          "height": 0.2,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "D:\\GitTutor System\\.img2threejs\\zones\\apex.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "mid-face",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.3,
+          "y": 0.45,
+          "width": 0.4,
+          "height": 0.25,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "D:\\GitTutor System\\.img2threejs\\zones\\mid-face.png",
+        "confidence": 0.0
+      },
+      {
+        "id": "base",
+        "kind": "",
+        "description": "",
+        "region": {
+          "x": 0.1,
+          "y": 0.7,
+          "width": 0.8,
+          "height": 0.2,
+          "units": "normalized"
+        },
+        "scale": "",
+        "affects": "",
+        "mapsTo": {
+          "type": "",
+          "ref": ""
+        },
+        "evidenceRef": "D:\\GitTutor System\\.img2threejs\\zones\\base.png",
+        "confidence": 0.0
+      }
+    ]
+  },
+  "authoringInstruction": "Open each zone crop under zonesDir and replace every detail stub's kind, description, scale, affects, mapsTo, and confidence with what is actually observed. Add more detail entries per zone if a single zone contains multiple distinct marks; do not leave stubs unfilled or unlinked (mapsTo must reference a real component.localFeatures or material.localOverrides entry)."
+}

@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "front-oblique",
+    "sourcePath": "D:\\GitTutor System\\.img2threejs\\references\\kheops-pyramid.jpg",
+    "width": 1581,
+    "height": 971,
+    "foregroundCoverage": 0.7205,
+    "largestComponentFraction": 0.998,
+    "pHash": 18370320288578699392,
+    "duplicateOfHash": null
+  }
+}

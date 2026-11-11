@@ -1,0 +1,18 @@
+async (page) => {
+  await page.goto('http://127.0.0.1:3000');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('.giza-accent').scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector('.giza-accent').dataset.renderState === 'ready');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: '.impeccable/review/desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.screenshot({ path: '.impeccable/review/mobile.png', fullPage: true });
+  await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+  await page.screenshot({ path: '.impeccable/review/mobile-rtl.png', fullPage: true });
+  await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+  await page.setViewportSize({ width: 720, height: 800 });
+  await page.screenshot({ path: '.impeccable/review/reflow-720.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('.footer-invitation').screenshot({ path: '.impeccable/review/footer-accent.png' });
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
