@@ -7,6 +7,7 @@ import { IdentityForm, TextField } from '../identity-form';
 import { usePagedRecords } from '../identity-workspaces';
 import { OfferTerms } from '../catalog/offer-terms';
 import { CairoInput, CairoTimestamp, Check, ReadState, Select, SessionTime, cairoDate, cairoTime, instantField, money, useBookingRecord } from './shared';
+import { PackageProposalReview } from '../packages/package-proposals';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
 
@@ -18,6 +19,7 @@ export function CustomerTerms({ terms }: { terms: CustomerProposalTerms }) {
 export function CustomerProposal({ id, learnerId, kind = 'operation' }: { id: string; learnerId: string; kind?: 'operation' | 'amendment' }) {
   const route = kind === 'amendment' ? 'amendments' : 'operation-proposals';
   const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=customer&learner_id=${encodeURIComponent(learnerId)}`);
+  if (record.data?.kind === 'package_coverage' || record.data?.kind === 'package_conversion') return <PackageProposalReview id={id} learnerId={learnerId} view="customer" />;
   const proposal = record.data?.view === 'customer' ? record.data : undefined;
   const financialPending = proposal && proposal.terms.remedy !== 'none' && proposal.terms.remedy_amount_minor === null;
   return <details className={styles.detail}><summary>{copy.reviewChange}</summary><ReadState pending={!proposal} {...record} />{proposal && <div key={`${id}-${proposal.version}-${proposal.accepted_at}`}><h3>{copy.proposal}</h3><p>{copy.proposalDescription}</p><p>{copy.states[proposal.state] || proposal.state}</p><p>{copy.proposalExpires}: <CairoTimestamp value={proposal.expires_at} /></p><CustomerTerms terms={proposal.terms} /><p>{copy.pendingApproval}</p>{financialPending && <p className={styles.notice}>{copy.financialPending}</p>}

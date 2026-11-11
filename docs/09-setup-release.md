@@ -56,6 +56,8 @@ The payment design starts with manually verified receiving-account evidence. A f
 
 Use dedicated test accounts and synthetic data. Seed operations verify the target environment before changing records. Tests isolate their data and concurrent sessions. The staging environment has its own credentials, receiving destinations where appropriate, sender configuration and callback URLs.
 
+The local migration wrapper preserves immutable historical fixtures when policy validation evolves. Only a verified empty, loopback Supabase project with the persisted disposable marker may claim the initial historical-seed stage. It applies migrations through `20261111123430`, seeds original identity/catalog records through genuine administrative RPCs, saves completion of that stage, and then appends later migrations. Retries use the protected fixture registry claim; an unknown or inconsistent stage fails. Existing projects are never reset or downgraded. Production migration execution remains fixture-free. The full fresh-stack rehearsal is tracked separately from guard tests and existing-project append verification in `IMPLEMENTATION-STATUS.md`.
+
 Provider network timeouts are tested separately from business transaction failure. A repeated provider callback updates the same logical operation. A worker restart resumes persisted jobs without repeating a financial posting.
 
 ## Deployment topology

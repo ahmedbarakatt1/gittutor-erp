@@ -75,7 +75,7 @@ export const authCopy = {
       description: 'Your account and the learners you can help, in one place.',
       workspace: 'Learning',
       future: [
-        { name: 'Packages and payments', reason: 'Available when approved packages and payment review are enabled.' },
+        { name: 'Payments', reason: 'Available when payment evidence and independent reconciliation are enabled.' },
         { name: 'Study files', reason: 'Available with a booking and secure file uploads.' },
       ],
     },
@@ -227,6 +227,7 @@ export const identityCopy = {
     success: 'Profile saved. Changes to public fields are awaiting review; the previously approved public profile stays visible.',
   },
   recordLabels: {
+    package_purchase_id: 'Package reference', charge_id: 'Charge reference', lot_id: 'Credit lot reference', reservation_id: 'Credit reservation reference', transfer_id: 'Transfer reference', successor_package_id: 'New package reference', grant_policy_version_id: 'Bonus policy reference', proposal_id: 'Proposal reference',
     pricing_version_id: 'Pricing reference', policy_version_id: 'Terms reference', offer_id: 'Offer reference',
     invitation_id: 'Invitation reference', staff_invitation_id: 'Staff invitation reference', guardian_link_id: 'Guardian link reference', role_grant_id: 'Role grant reference', application_id: 'Application reference', tutor_id: 'Tutor reference', profile_version_id: 'Profile version reference', revoked_at: 'Revoked at',
   } as Record<string, string>,

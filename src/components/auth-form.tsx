@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { authCopy as copy } from '@/locales/auth';
 import { useHydrated } from './use-hydrated';
-import { bookingReturnPath } from '@/modules/identity/return-path';
+import { customerReturnPath } from '@/modules/identity/return-path';
 import styles from './auth.module.css';
 
 type ApiResult = { data?: { redirect_to?: string; verification_required?: boolean }; code?: string; message?: string; request_id?: string };
@@ -62,7 +62,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
       }
       const destination = result.data?.redirect_to;
       if (destination && ['/learn', '/tutor', '/service', '/admin'].includes(destination)) {
-        navigateAfterAuthentication(mode === 'login' ? bookingReturnPath(returnTo) || destination : destination);
+        navigateAfterAuthentication(mode === 'login' ? customerReturnPath(returnTo) || destination : destination);
         return;
       }
       setError(copy.error.generic);

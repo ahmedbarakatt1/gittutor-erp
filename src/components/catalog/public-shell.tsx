@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { formatMinorUnits } from '@/modules/shared/format';
 import { catalogCopy as copy } from '@/locales/catalog';
 import styles from './catalog.module.css';
 
@@ -23,4 +24,4 @@ export function CatalogUnavailable({ retry = '/offers' }: { retry?: string }) {
 export function CatalogLoading() { return <PublicShell><p className={styles.empty} role="status">{copy.loading}</p></PublicShell>; }
 export function CatalogNotFound() { return <PublicShell><section className={styles.empty}><h1>{copy.notFound}</h1><p>{copy.notFoundDescription}</p><Link className={styles.button} href="/offers">{copy.offers}</Link></section></PublicShell>; }
 
-export const formatTuition = (minor: number, currency = 'EGP') => new Intl.NumberFormat(copy.locale, { style: 'currency', currency, maximumFractionDigits: minor % 100 ? 2 : 0 }).format(minor / 100);
+export const formatTuition = (minor: number, currency = 'EGP') => formatMinorUnits(minor, currency, copy.locale, true);

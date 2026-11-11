@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -11,6 +11,8 @@ import { fixtureId } from './db-seed';
 import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
 import { seedCatalog } from './catalog-seed';
 import { seedBooking } from './booking-seed';
+import { seedPackages } from './package-seed';
+import { chooseLocalBootstrapPlan, historicalBootstrapSource, historicalCatalogCutoff, historicalCatalogMigrations } from './bootstrap-plan';
 
 const execute = promisify(execFile);
 const workspace = resolve('.local/supabase-bootstrap');
@@ -58,6 +60,14 @@ export function assertAllowedDefiner(fn: DefinerBoundary) {
   if (!fn.proconfig?.includes('search_path=""') || ((fn.rolcanlogin || fn.rolbypassrls) && !allowedBridge)) {
     throw new Error(`SUPABASE_DEFINER_INVALID:${fn.proname}`);
   }
+}
+
+export function assertPackageWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' | 'nspname' | 'signature' | 'rolname' | 'prosecdef' | 'executors'> & { worker: boolean }) {
+  const privateHelper = fn.nspname === 'finance_private' || (fn.nspname === 'app_private' && fn.proname.startsWith('package_'));
+  if (privateHelper && fn.worker) throw new Error('SUPABASE_PACKAGE_WORKER_BOUNDARY_INVALID');
+  if (fn.proname === 'process_package_due' && (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef
+    || fn.signature !== 'app_private.process_package_due(uuid,text)' || fn.rolname !== 'git_tutor_commands'
+    || fn.executors.some(role => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_PACKAGE_WORKER_BOUNDARY_INVALID');
 }
 
 async function verifyProjectContainer() {
@@ -111,7 +121,7 @@ async function owners(database: Client, enable: boolean) {
   }
 }
 
-async function applyMigrations(foundationOnly = false) {
+async function applyMigrations(foundationOnly = false, migrationWorkspace?: string) {
   const config = await captureConfig();
   const database = new Client({ connectionString: config.database_url });
   await database.connect();
@@ -130,7 +140,8 @@ async function applyMigrations(foundationOnly = false) {
     assertMigrationMarker(existingMarker, verifiedFreshBootstrap);
     await owners(database, true);
     permissionsGranted = true;
-    await runCli(['migration', 'up', ...(foundationOnly ? ['--workdir', workspace] : [])], 'supabase-migrations.log');
+    const selectedWorkspace = foundationOnly ? workspace : migrationWorkspace;
+    await runCli(['migration', 'up', ...(selectedWorkspace ? ['--workdir', selectedWorkspace] : [])], 'supabase-migrations.log');
     await database.query("insert into app_private.environment_metadata(singleton,environment,fixture_marker) values(true,'test',$1) on conflict(singleton) do nothing", [marker]);
     const stored = (await database.query('select environment,fixture_marker from app_private.environment_metadata where singleton')).rows[0];
     if (stored.environment !== 'test' || stored.fixture_marker !== marker) throw new Error('LOCAL_SUPABASE_REQUIRED');
@@ -205,6 +216,57 @@ async function bootstrap() {
   await runCli(['start', '--workdir', workspace, '--network-id', 'gittutor_local_isolated', '--exclude', exclusions], 'supabase-start.log');
   await publicEnvironment(await captureConfig());
   console.log('Real local Supabase Auth, API, private Storage and Mailpit ready; generated credentials remain in ignored .local/supabase.json.');
+}
+
+/** Local-only orchestration preserves the original approved fixture versions on a fresh installation. */
+async function migrateLocalProject() {
+  const config = await captureConfig();
+  const database = new Client({ connectionString: config.database_url });
+  await database.connect();
+  try {
+    await verifyProjectContainer();
+    await database.query("select pg_advisory_lock(hashtextextended('git-tutor:local-migration-bootstrap:v1',0))");
+    const stored = (await database.query('select environment,fixture_marker from app_private.environment_metadata where singleton')).rows[0];
+    assertMigrationMarker(stored, false);
+    const claimLabel = 'local_historical_catalog_bootstrap_v1';
+    let claim = (await database.query('select content from app_private.synthetic_fixture_registry where label=$1', [claimLabel])).rows[0]?.content ?? null;
+    const versions = (await database.query('select version from supabase_migrations.schema_migrations order by version')).rows.map(row => row.version as string);
+    const authUsers = Number((await database.query('select count(*) as count from auth.users')).rows[0].count);
+    let hasDomainData = false;
+    if (!claim && !authUsers) {
+      const tables = (await database.query("select format('%I.%I',n.nspname,c.relname) as qualified from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('app_private','finance_private') and c.relkind='r' and c.relname<>'environment_metadata' order by n.nspname,c.relname")).rows;
+      for (const table of tables) {
+        // Qualified identifiers come only from PostgreSQL format(%I), never from command input.
+        if ((await database.query(`select exists(select 1 from ${table.qualified}) as populated`)).rows[0].populated) { hasDomainData = true; break; }
+      }
+    }
+    const plan = chooseLocalBootstrapPlan({ ...stored, applied_versions: versions, auth_users: authUsers, has_domain_data: hasDomainData, claim });
+    if (plan === 'start_historical_seed') {
+      claim = { source_version: historicalBootstrapSource, cutoff: historicalCatalogCutoff, stage: 'claimed' };
+      await database.query('insert into app_private.synthetic_fixture_registry(id,label,kind,content) values($1,$2,$3,$4)', [fixtureId(claimLabel), claimLabel, 'local_bootstrap', claim]);
+    }
+    if (plan !== 'append') {
+      const legacyWorkspace = resolve('.local', `supabase-historical-${randomUUID()}`);
+      await mkdir(resolve(legacyWorkspace, 'supabase/migrations'), { recursive: true });
+      await writeFile(resolve(legacyWorkspace, 'supabase/config.toml'), await readFile(resolve(workspace, 'supabase/config.toml')));
+      await mkdir(resolve(legacyWorkspace, 'supabase/templates'), { recursive: true });
+      for (const file of (await readdir(resolve(workspace, 'supabase/templates'))).filter(name => name.endsWith('.html'))) {
+        await writeFile(resolve(legacyWorkspace, 'supabase/templates', file), await readFile(resolve(workspace, 'supabase/templates', file)));
+      }
+      const files = historicalCatalogMigrations((await readdir('supabase/migrations')).filter(file => file.endsWith('.sql')));
+      for (const file of files) await writeFile(resolve(legacyWorkspace, 'supabase/migrations', file), await readFile(resolve('supabase/migrations', file)));
+      await applyMigrations(false, legacyWorkspace);
+      await seed();
+      await seedCatalog();
+      claim = { ...claim, stage: 'catalog_seeded' };
+      await database.query('update app_private.synthetic_fixture_registry set content=$1 where label=$2', [claim, claimLabel]);
+    }
+    await applyMigrations();
+    if (claim && claim.stage !== 'complete') await database.query('update app_private.synthetic_fixture_registry set content=$1 where label=$2', [{ ...claim, stage: 'complete' }, claimLabel]);
+  } finally {
+    await database.query("select pg_advisory_unlock(hashtextextended('git-tutor:local-migration-bootstrap:v1',0))").catch(() => undefined);
+    await database.end();
+  }
 }
 
 async function seed() {
@@ -293,6 +355,7 @@ async function verify() {
       if (fn.nspname !== 'api' && fn.authenticated) throw new Error(`SUPABASE_PRIVATE_FUNCTION_INVALID:${fn.proname}`);
       if (fn.nspname === 'app_private' && fn.proname.startsWith('booking_') && fn.worker) throw new Error(`SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID:${fn.proname}`);
       if (fn.proname === 'process_occurrence_booking_due' && (fn.nspname !== 'app_private' || !fn.worker || fn.signature !== 'app_private.process_occurrence_booking_due(uuid,text)' || fn.rolname !== 'git_tutor_commands' || fn.executors.some((role: string) => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID');
+      assertPackageWorkerBoundary(fn);
       assertAllowedDefiner(fn);
     }
     console.log(`Real Supabase verification passed: ${files.length} migrations, ${tables.rowCount} private RLS tables, ${functions.rowCount} function boundaries.`);
@@ -303,8 +366,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   await mkdir('.local', { recursive: true });
   switch (process.argv[2]) {
     case 'bootstrap': await bootstrap(); break;
-    case 'migrate': await applyMigrations(process.argv.includes('--foundation-only')); console.log('Project-local Supabase migrations applied; temporary owner CREATE grants revoked.'); break;
-    case 'seed': await seed(); await seedCatalog(); await seedBooking(); break;
+    case 'migrate': if (process.argv.includes('--foundation-only')) await applyMigrations(true); else await migrateLocalProject(); console.log('Project-local Supabase migrations applied; temporary owner CREATE grants revoked.'); break;
+    case 'seed': await seed(); await seedCatalog(); await seedBooking(); await seedPackages(); break;
     case 'verify': await verify(); break;
     case 'restart': await restart(); break;
     default: throw new Error('Usage: tsx tools/supabase-local.ts bootstrap|migrate|seed|verify|restart');

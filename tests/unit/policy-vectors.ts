@@ -1,5 +1,5 @@
-import source from '../../contracts/policy-settings.json';
-import price from '../../contracts/pricing-policy.json';
+import source from '../../contracts/policy-settings.json' with {type:'json'};
+import price from '../../contracts/pricing-policy.json' with {type:'json'};
 
 export const policyId = '9d9a5658-a7e2-42d2-8195-4cb1a18d56f0';
 export const pricingId = 'f0fb79a4-1e58-4775-b927-c3de9567b795';
@@ -9,7 +9,7 @@ export function policyFixture(scope: 'group'|'private'): Record<string, unknown>
   const content = structuredClone(fixture.policy!) as Record<string, unknown>;
   for (const key of ['policy_version_id','status','environment_scope','is_synthetic','approved_by','approved_at','effective_at']) delete content[key];
   content.customer_pricing_version = pricingId; content.compensation_policy_version = pricingId;
-  if (content.package_contract) Object.assign(content.package_contract, { package_policy_version_id: policyId, eligible_offer_ids: [offerId] });
+  if (content.package_contract) Object.assign(content.package_contract, { package_policy_version_id: policyId, eligible_offer_ids: [offerId], purchase_activation_rule:'full_settled_charge', expiry_clock:'elapsed_24_hour_days' });
   return content;
 }
 export function pricingFixture(scope: 'group'|'private') {
@@ -75,7 +75,7 @@ export function policyVectors(): PolicyVector[] {
     const content=structuredClone(group); delete content[field];
     vectors.push({name:`required group ${field}`,scope:'group',content,valid:false});
   }
-  for (const field of source.field_contracts.package_contract.required_fields) {
+  for (const field of [...source.field_contracts.package_contract.required_fields,'purchase_activation_rule','expiry_clock']) {
     const content=structuredClone(group); delete (content.package_contract as Record<string,unknown>)[field];
     vectors.push({name:`required package ${field}`,scope:'group',content,valid:false});
   }

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { IdentityRpcClient } from '../identity/commands';
 import { availabilityInputSchema, datedExceptionSchema, weeklyIntervalSchema } from './scheduling';
 import { meetingStatusSchema, occurrenceStateSchema } from './public-occurrence';
+import { packageProposalInputSchema } from '../packages/proposal-contract';
 
 export type BookingRpcClient=IdentityRpcClient;
 const codes=new Set(['AUTH_REQUIRED','SESSION_REVOKED','VERIFIED_ACCOUNT_REQUIRED','FORBIDDEN','CONSENT_REQUIRED','OWNER_REQUIRED','NOT_FOUND','VALIDATION_ERROR','AMOUNT_OUT_OF_RANGE','INVALID_TIME','VERSION_CONFLICT','IDEMPOTENCY_CONFLICT','CAPACITY_CONFLICT','SCHEDULE_CONFLICT','INSUFFICIENT_FUNDS','INSUFFICIENT_ENTITLEMENT','POLICY_INCOMPLETE','STATE_CONFLICT','WINDOW_CLOSED','DEPENDENCY_UNAVAILABLE','RETRYABLE_CONFLICT']);
@@ -55,10 +56,10 @@ export const bookingCommands={
   accept_group_amendment:{input:z.object({p_amendment_id:id,p_terms_hash:hash,...write}).strict(),output:finish({accepted_at:instant})},
   decline_group_amendment:{input:z.object({p_amendment_id:id,p_reason:reason,...write}).strict(),output:finish({state:proposalStateSchema})},
   commit_group_amendment:{input:z.object({p_amendment_id:id,...write}).strict(),output:finish({occurrence_version:version,charge_adjustment_ids:ids})},
-  create_operation_proposal:{input:z.discriminatedUnion('p_kind',[
+  create_operation_proposal:{input:z.union([z.discriminatedUnion('p_kind',[
     z.object({...proposalInput,p_kind:z.literal('reschedule'),p_requested_terms:z.union([scheduleTerms,transferTerms])}).strict(),
     z.object({...proposalInput,p_kind:z.literal('cancellation_remedy'),p_requested_terms:cancellationTerms}).strict(),
-  ]),output:finish({proposal_id:id,terms_hash:hash,expires_at:instant,required_actions:z.array(z.string())})},
+  ]),packageProposalInputSchema]),output:finish({proposal_id:id,terms_hash:hash,expires_at:instant,required_actions:z.array(z.string())})},
   accept_operation_proposal:{input:z.object({p_proposal_id:id,p_terms_hash:hash,...write}).strict(),output:finish({accepted_at:instant})},
   decline_operation_proposal:{input:z.object({p_proposal_id:id,p_reason:reason,...write}).strict(),output:finish({state:proposalStateSchema})},
   approve_operation_proposal:{input:z.object({p_proposal_id:id,p_terms_hash:hash,p_decision:z.enum(['approved','rejected']),p_reason:reason,...write}).strict(),output:finish({approval_id:id,state:proposalStateSchema})},

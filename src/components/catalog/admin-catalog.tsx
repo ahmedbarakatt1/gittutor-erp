@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useId, useState, type ReactNode } from 'react';
 import type { AdminOffer, AdminPolicy, AdminPricing, AdminTutor } from '@/modules/catalog/queries';
+import { parseScaledIntegerInput, scaledIntegerInput } from '@/modules/shared/format';
 import { catalogCopy } from '@/locales/catalog';
 import { policyCopy } from '@/locales/catalog-policy';
 import { IdentityForm, TextField } from '../identity-form';
@@ -17,15 +18,8 @@ type Subject = { subject_id: string; title: string };
 type Records<T> = ReturnType<typeof usePagedRecords<T>>;
 type ObjectValue = Record<string, unknown>;
 const object = (value: unknown): ObjectValue => typeof value === 'object' && value !== null && !Array.isArray(value) ? value as ObjectValue : {};
-const minor = (value: FormDataEntryValue | null) => {
-  const text = String(value ?? '');
-  if (!/^\d+(\.\d{1,2})?$/.test(text)) throw new Error('Invalid amount');
-  const [whole, fraction = ''] = text.split('.');
-  const amount = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
-  if (!Number.isSafeInteger(amount)) throw new Error('Invalid amount');
-  return amount;
-};
-const amount = (value: unknown) => typeof value === 'number' ? value / 100 : '';
+const minor = (value: FormDataEntryValue | null) => parseScaledIntegerInput(String(value ?? ''), 2);
+const amount = (value: unknown) => typeof value === 'number' ? scaledIntegerInput(value, 2) : '';
 const short = (id: string) => id.slice(0, 8);
 const label = (scope: Scope, id: string, status: string) => `${catalogCopy.formats[scope]} · ${status} · ${short(id)}`;
 

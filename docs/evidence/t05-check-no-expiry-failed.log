@@ -1,0 +1,448 @@
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  18 passed (18)
+      Tests  239 passed (239)
+   Start at  17:33:19
+   Duration  4.87s (import 61%, tests 27%, transform 8%, worker 4%)
+
+    Isolate  18 workers spawned · ~148ms startup each (spawn + environment, per file)
+             at least ~2.52s faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  21 passed (21)
+      Tests  139 passed (139)
+   Start at  17:33:25
+   Duration  41.32s (tests 91%, import 9%)
+
+    Isolate  21 workers spawned · ~158ms startup each (spawn + environment, per file)
+             at least ~3.16s faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 96 tests using 2 workers
+
+(node:14588) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (170ms)
+  ok  2 [desktop] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (187ms)
+  ok  4 [desktop] › tests\e2e\booking-transport.spec.ts:14:1 › booking learner selection uses current customer scope and a narrow name projection (380ms)
+  ok  5 [desktop] › tests\e2e\booking-transport.spec.ts:34:1 › customer cookies cannot inspect administrative scheduling or exact fee agreements (435ms)
+  ok  6 [desktop] › tests\e2e\booking-transport.spec.ts:48:1 › booking mutations reject forged actors, missing operation keys and foreign cookie origins (504ms)
+  ok  7 [desktop] › tests\e2e\booking.spec.ts:36:1 › booking and schedule workspaces require a verified session (2.6s)
+  ok  3 [desktop] › tests\e2e\booking-concurrency.spec.ts:44:1 › independent browsers keep a last-seat conflict explicit and never silently join a waitlist (6.3s)
+  ok  8 [desktop] › tests\e2e\booking.spec.ts:44:1 › a public scheduled-session selection survives verified sign-in (8.2s)
+  ok  9 [desktop] › tests\e2e\booking-concurrency.spec.ts:58:1 › GT-208 independent queue walkthrough expires one offer and promotes exactly the next learner (8.6s)
+  ok 11 [desktop] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (455ms)
+  ok 12 [desktop] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (155ms)
+  ok 13 [desktop] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (485ms)
+  ok 14 [desktop] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (14.4s)
+  ok 10 [desktop] › tests\e2e\booking.spec.ts:53:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (20.4s)
+  ok 16 [desktop] › tests\e2e\booking.spec.ts:94:1 › tutor availability conflict preserves the scheduled session and shows its Cairo time (3.2s)
+  ok 15 [desktop] › tests\e2e\catalog.spec.ts:91:1 › administrator creates, approves and publishes through structured editors without leaking compensation (16.9s)
+  ok 18 [desktop] › tests\e2e\catalog.spec.ts:159:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (9.5s)
+  ok 17 [desktop] › tests\e2e\booking.spec.ts:109:1 › a group change collects separate learner and tutor consent while financial commit stays unavailable (21.1s)
+  ok 19 [desktop] › tests\e2e\package-transport.spec.ts:14:1 › package learner selection is authenticated, scoped and narrowly projected (403ms)
+  ok 21 [desktop] › tests\e2e\package-transport.spec.ts:33:1 › customers cannot read package administration, subsidy authoring or privileged reconciliation (292ms)
+  ok 22 [desktop] › tests\e2e\package-transport.spec.ts:47:1 › package mutations reject caller actors, synthetic funding assertions and foreign origins (450ms)
+  ok 23 [desktop] › tests\e2e\packages.spec.ts:35:1 › package workspaces require a verified session (1.7s)
+  ok 20 [desktop] › tests\e2e\booking.spec.ts:139:1 › a customer can request a reviewed cancellation but cannot consent to unknown financial consequences (3.7s)
+  ok 25 [desktop] › tests\e2e\booking.spec.ts:149:1 › an accepted schedule-only proposal is reviewed and applied without changing the saved tuition (10.6s)
+  ok 26 [desktop] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (1.6s)
+  ok 27 [desktop] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (797ms)
+  x  24 [desktop] › tests\e2e\packages.spec.ts:43:1 › a reviewed duration conversion binds exact carryover and the separate renewal purchase (17.8s)
+(node:18228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 28 [desktop] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (7.9s)
+  ok 30 [desktop] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (3.0s)
+  ok 31 [desktop] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (1.7s)
+  ok 29 [desktop] › tests\e2e\packages.spec.ts:57:1 › value coverage requires explicit consent to the server-calculated cash top-up (6.7s)
+  ok 32 [desktop] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (3.8s)
+  ok 34 [desktop] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (6.4s)
+  ok 35 [desktop] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (3.8s)
+  ok 33 [desktop] › tests\e2e\packages.spec.ts:70:1 › partial named coverage receives an explicit reviewed remaining-service price before learner acceptance (16.8s)
+  ok 36 [desktop] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (9.9s)
+  ok 37 [desktop] › tests\e2e\packages.spec.ts:86:1 › guardian package purchases keep siblings separate and booking-only consent does not expose financial records (10.4s)
+  ok 38 [desktop] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (6.0s)
+  ok 40 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (1.6s)
+  ok 41 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (1.0s)
+  ok 39 [desktop] › tests\e2e\packages.spec.ts:109:1 › independent browser contexts cannot reserve the same final package credit twice (5.0s)
+  ok 42 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (794ms)
+  ok 44 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (907ms)
+  ok 45 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (1.3s)
+(node:30332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 46 [desktop] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (1.8s)
+  ok 47 [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (1.9s)
+(node:38660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 48 [mobile] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (102ms)
+  ok 49 [mobile] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (79ms)
+  ok 50 [mobile] › tests\e2e\booking-concurrency.spec.ts:44:1 › independent browsers keep a last-seat conflict explicit and never silently join a waitlist (5.8s)
+  x  43 [desktop] › tests\e2e\packages.spec.ts:120:1 › named coverage, release, renewal and transfer preserve usable credits independently of payment (19.5s)
+(node:14892) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 51 [mobile] › tests\e2e\booking-concurrency.spec.ts:58:1 › GT-208 independent queue walkthrough expires one offer and promotes exactly the next learner (8.0s)
+  ok 53 [mobile] › tests\e2e\booking-transport.spec.ts:14:1 › booking learner selection uses current customer scope and a narrow name projection (547ms)
+  ok 54 [mobile] › tests\e2e\booking-transport.spec.ts:34:1 › customer cookies cannot inspect administrative scheduling or exact fee agreements (1.6s)
+  ok 55 [mobile] › tests\e2e\booking-transport.spec.ts:48:1 › booking mutations reject forged actors, missing operation keys and foreign cookie origins (1.6s)
+  ok 56 [mobile] › tests\e2e\booking.spec.ts:36:1 › booking and schedule workspaces require a verified session (2.3s)
+  ok 57 [mobile] › tests\e2e\booking.spec.ts:44:1 › a public scheduled-session selection survives verified sign-in (8.9s)
+  x  52 [desktop] › tests\e2e\packages.spec.ts:137:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge (25.8s)
+(node:33900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 59 [mobile] › tests\e2e\catalog-transport.spec.ts:5:1 › public catalog reads need no account and reject unsupported or repeated filters (339ms)
+  ok 60 [mobile] › tests\e2e\catalog-transport.spec.ts:19:1 › an invalid unexpired account cookie cannot prevent anonymous catalog access (180ms)
+  ok 61 [mobile] › tests\e2e\catalog-transport.spec.ts:29:1 › current customer cookies cannot read commercial administration or approve a policy (587ms)
+  ok 58 [mobile] › tests\e2e\booking.spec.ts:53:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (18.1s)
+  ok 63 [mobile] › tests\e2e\booking.spec.ts:94:1 › tutor availability conflict preserves the scheduled session and shows its Cairo time (3.4s)
+  ok 62 [mobile] › tests\e2e\catalog.spec.ts:56:1 › published catalog has working filters, readable terms and customer-safe responses (15.3s)
+  ok 64 [mobile] › tests\e2e\booking.spec.ts:109:1 › a group change collects separate learner and tutor consent while financial commit stays unavailable (25.6s)
+  x  65 [mobile] › tests\e2e\catalog.spec.ts:91:1 › administrator creates, approves and publishes through structured editors without leaking compensation (18.8s)
+(node:26388) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 66 [mobile] › tests\e2e\booking.spec.ts:139:1 › a customer can request a reviewed cancellation but cannot consent to unknown financial consequences (4.2s)
+  ok 67 [mobile] › tests\e2e\catalog.spec.ts:159:1 › approved tutor biography survives a new unapproved edit and excludes private contacts (12.6s)
+  ok 69 [mobile] › tests\e2e\package-transport.spec.ts:14:1 › package learner selection is authenticated, scoped and narrowly projected (790ms)
+  ok 70 [mobile] › tests\e2e\package-transport.spec.ts:33:1 › customers cannot read package administration, subsidy authoring or privileged reconciliation (490ms)
+  ok 71 [mobile] › tests\e2e\package-transport.spec.ts:47:1 › package mutations reject caller actors, synthetic funding assertions and foreign origins (674ms)
+  ok 72 [mobile] › tests\e2e\packages.spec.ts:35:1 › package workspaces require a verified session (2.0s)
+  ok 68 [mobile] › tests\e2e\booking.spec.ts:149:1 › an accepted schedule-only proposal is reviewed and applied without changing the saved tuition (14.8s)
+  ok 74 [mobile] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (2.3s)
+  ok 75 [mobile] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (1.2s)
+  ok 76 [mobile] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (6.4s)
+  ok 77 [mobile] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (2.6s)
+  ok 78 [mobile] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (1.5s)
+  ok 79 [mobile] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (3.0s)
+  x  73 [mobile] › tests\e2e\packages.spec.ts:43:1 › a reviewed duration conversion binds exact carryover and the separate renewal purchase (18.5s)
+(node:24808) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 80 [mobile] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (6.5s)
+  ok 82 [mobile] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (2.7s)
+  ok 81 [mobile] › tests\e2e\packages.spec.ts:57:1 › value coverage requires explicit consent to the server-calculated cash top-up (6.3s)
+  ok 83 [mobile] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (7.5s)
+  ok 85 [mobile] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (6.2s)
+  ok 86 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (1.4s)
+  ok 84 [mobile] › tests\e2e\packages.spec.ts:70:1 › partial named coverage receives an explicit reviewed remaining-service price before learner acceptance (14.8s)
+  ok 87 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (1.0s)
+  ok 89 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (941ms)
+  ok 90 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (1.3s)
+  ok 91 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (2.1s)
+(node:37884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 88 [mobile] › tests\e2e\packages.spec.ts:86:1 › guardian package purchases keep siblings separate and booking-only consent does not expose financial records (11.3s)
+  ok 92 [mobile] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (4.7s)
+  ok 94 [mobile] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (5.7s)
+  ok 93 [mobile] › tests\e2e\packages.spec.ts:109:1 › independent browser contexts cannot reserve the same final package credit twice (7.3s)
+  x  95 [mobile] › tests\e2e\packages.spec.ts:120:1 › named coverage, release, renewal and transfer preserve usable credits independently of payment (19.9s)
+(node:30768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  96 [mobile] › tests\e2e\packages.spec.ts:137:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge (23.5s)
+
+
+  1) [desktop] › tests\e2e\packages.spec.ts:43:1 › a reviewed duration conversion binds exact carryover and the separate renewal purchase 
+
+    TimeoutError: locator.selectOption: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for locator('details').filter({ has: locator('summary').filter({ hasText: /^Review a credit conversion$/ }) }).getByLabel('New package terms', { exact: true })
+        - locator resolved to <select id="_r_4_" required="" name="new_contract">…</select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+        - waiting 20ms
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+          - waiting 100ms
+        29 × waiting for element to be visible and enabled
+           - did not find some options
+         - retrying select option action
+           - waiting 500ms
+
+
+      44 |   test.setTimeout(180_000); const fixture = await packageFixture(); const target = await additionalPackageContract(fixture, 90); const purchase = await fixture.purchase(); const packageId = String(purchase.package_purchase_id); const policy = await fixture.grantPolicy(50000); await fixture.grant(packageId, policy, 50000, 1000); const customer = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
+      45 |   try {
+    > 46 |     const adminPage = await admin.newPage(); await login(adminPage, 'admin_a'); await adminPage.goto(`/admin/packages?package=${packageId}`); const conversion = adminPage.locator('details').filter({ has: adminPage.locator('summary').filter({ hasText: /^Review a credit conversion$/ }) }); await conversion.locator('summary').click(); await conversion.getByLabel('New package terms', { exact: true }).selectOption(target.policyId);
+         |                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+      47 |     const form = conversion.getByRole('form', { name: 'Create conversion proposal', exact: true }); await form.getByLabel('Source credits', { exact: true }).fill('1'); await form.getByLabel('Credits after conversion', { exact: true }).fill('0.666'); const expiry = formatCairoInstant(new Date(Date.now() + 600_000).toISOString()); await form.getByLabel('Proposal expires at', { exact: true }).fill(`${expiry.local_date}T${expiry.local_time}`); await form.getByLabel('Reason for this action', { exact: true }).fill('Review 60 to 90 minute credit conversion without adding service'); const created = await submit(adminPage, form, 'operation-proposals', 201); const proposalId = String(created.proposal_id);
+      48 |     const page = await customer.newPage(); await login(page, 'learner_a'); await page.goto(`/learn/packages/${packageId}`); const review = page.locator(`[data-proposal-id="${proposalId}"]`); await review.locator('summary').click(); const response = await customer.request.get(`/api/v1/operation-proposals/${proposalId}?view=customer&learner_id=${fixture.learnerId}`); expect(response.status()).toBe(200); const dto = (await response.json()).data; expect(dto.terms).toMatchObject({ source_credit_quanta: 1000, target_credit_quanta: 666, carrying_value_minor: 50000, old_base_duration_minutes: 60, new_base_duration_minutes: 90, service_duration_delta_second_quanta: -3600, creates_new_purchase: true, new_purchase_credit_quanta: 3000, new_purchase_value_minor: 150000 }); expect(JSON.stringify(dto)).not.toMatch(forbidden); await expect(review.getByText('-3.6 seconds', { exact: true })).toBeVisible();
+      49 |     const consent = review.getByRole('form', { name: 'Accept these package terms', exact: true }); await consent.getByLabel('I accept these exact package terms for this learner.').check(); await submit(page, consent, `operation-proposals/${proposalId}/accept`, 200);
+        at D:\GitTutor System\tests\e2e\packages.spec.ts:46:401
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-desktop\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests\e2e\packages.spec.ts:120:1 › named coverage, release, renewal and transfer preserve usable credits independently of payment 
+
+    TimeoutError: locator.selectOption: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for getByLabel('New package terms', { exact: true })
+        - locator resolved to <select id="_r_1_" required="" name="new_contract">…</select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+        - waiting 20ms
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+          - waiting 100ms
+        29 × waiting for element to be visible and enabled
+           - did not find some options
+         - retrying select option action
+           - waiting 500ms
+
+
+      124 |     const reserve = coverage.getByRole('form', { name: 'Reserve package credits', exact: true }); await reserve.getByLabel('I accept the displayed credit quantity and coverage terms for this learner.').check(); const reserved = await submit(page, reserve, `packages/${sourceId}/reserve`, 201); expect(reserved.carrying_value_minor).toBe(50000); expect(reserved.top_up_minor).toBe(0); await expect(coverage.getByRole('heading', { name: 'Covered by package', exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Confirm session', exact: true })).toBeDisabled();
+      125 |     await coverage.locator('summary').filter({ hasText: /^Release reserved credits$/ }).click(); const release = coverage.getByRole('form', { name: 'Release reserved credits', exact: true }); await release.getByLabel('I have reviewed the learner, quantity and saved terms.').check(); await submit(page, release, `package-reservations/${reserved.reservation_id}/release`, 200);
+    > 126 |     await page.goto(`/learn/packages/${sourceId}`); await page.locator('summary').filter({ hasText: /^Renew with approved terms$/ }).click(); const renewal = page.getByRole('form', { name: 'Create renewal purchase', exact: true }); await page.getByLabel('New package terms', { exact: true }).selectOption(fixture.policyId); await renewal.getByLabel('Credits to carry over', { exact: true }).fill('1'); await renewal.getByLabel('I accept the new purchase terms and the displayed carryover quantity.').check(); const renewed = await submit(page, renewal, `packages/${sourceId}/renew`, 201); const targetId = String(renewed.successor_package_id);
+          |                                                                                                                                                                                                                                                                                                     ^
+      127 |     const successor = (await (await context.request.get(`/api/v1/packages/${targetId}`)).json()).data as PackageDetail; expect(successor.package).toMatchObject({ purchase_state: 'pending_funding', purchased_granted_credit_quanta: 0, balances: { available_credit_quanta: 1000, available_value_minor: 50000 }, charge: { allocated_minor: null, balance_minor: null } }); expect(successor.lineage_page.items).toHaveLength(1);
+      128 |     await page.reload(); await page.locator('summary').filter({ hasText: /^Transfer available credits$/ }).click(); const transfer = page.getByRole('form', { name: 'Transfer these credits', exact: true }); await page.getByLabel('Receiving package', { exact: true }).selectOption(targetId); await transfer.getByLabel('Credits', { exact: true }).fill('1'); await transfer.getByLabel('Reason for this action', { exact: true }).fill('Synthetic compatible carryover'); await transfer.getByLabel('I have reviewed the learner, quantity and saved terms.').check(); await submit(page, transfer, `packages/${sourceId}/transfers`, 201);
+      129 |     const before = (await (await context.request.get(`/api/v1/packages/${targetId}`)).json()).data as PackageDetail; expect(before.package.balances.available_credit_quanta).toBe(2000); expect(before.package.balances.available_value_minor).toBe(100000);
+        at D:\GitTutor System\tests\e2e\packages.spec.ts:126:293
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-desktop\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop] › tests\e2e\packages.spec.ts:137:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge 
+
+    TimeoutError: locator.check: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for locator('#bonus-policies').getByRole('form', { name: 'Create bonus policy draft', exact: true }).locator('input[name="contracts"][value="8a0fa60b-84d9-476a-a32e-52fc6edcc208"]')
+
+
+      24 |   if (!await disclosure.evaluate(element => (element as HTMLDetailsElement).open)) await disclosure.locator('summary').click();
+      25 |   await section.getByLabel('Valuation rule', { exact: true }).selectOption(valued ? 'reviewed_exact_capped_subsidy' : 'zero_value');
+    > 26 |   const form = section.getByRole('form', { name: 'Create bonus policy draft', exact: true }); await form.getByLabel('Policy name', { exact: true }).fill(`Browser ${valued ? 'subsidy' : 'zero'} ${randomUUID()}`); await form.locator(`input[name="contracts"][value="${fixture.policyId}"]`).check(); await form.getByLabel('Maximum credits per grant', { exact: true }).fill('3'); if (valued) await form.getByLabel('Maximum value per grant (EGP)', { exact: true }).fill('1000');
+         |                                                                                                                                                                                                                                                                                                ^
+      27 |   const result = await submit(page, form, 'package-grant-policies', 201); const id = String(result.grant_policy_version_id);
+      28 |   const approval = section.getByRole('form', { name: 'Approve bonus policy', exact: true }); await approval.getByLabel('Effective from', { exact: true }).fill('2026-01-01T12:00'); await approval.getByLabel('Approval note', { exact: true }).fill('Synthetic browser-reviewed bonus; no cash settlement'); await submit(page, approval, `package-grant-policies/${id}/approve`, 200); return id;
+      29 | }
+        at createGrantPolicy (D:\GitTutor System\tests\e2e\packages.spec.ts:26:288)
+        at D:\GitTutor System\tests\e2e\packages.spec.ts:151:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-desktop\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-desktop\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [mobile] › tests\e2e\catalog.spec.ts:91:1 › administrator creates, approves and publishes through structured editors without leaking compensation 
+
+    Error: apiRequestContext.get: read ECONNRESET
+    Call log:
+      - → GET http://127.0.0.1:3000/api/v1/public/offers?offer_id=40e1e277-a2ca-4806-a4f7-39a9d4db6268&limit=100
+        - user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      22 |   do {
+      23 |     const query = path.startsWith('me/') ? '' : `${path.includes('?') ? '&' : '?'}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    > 24 |     const response: APIResponse = await request.get(`/api/v1/${path}${query}`);
+         |                                                 ^
+      25 |     expect(response.status()).toBe(200);
+      26 |     const body = await response.json() as { data: { items: T[]; next_cursor: string | null } }; all.push(...body.data.items); cursor = body.data.next_cursor;
+      27 |   } while (cursor);
+        at items (D:\GitTutor System\tests\e2e\catalog.spec.ts:24:49)
+        at D:\GitTutor System\tests\e2e\catalog.spec.ts:153:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-mobile\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\catalog-administrator-crea-b8b1d-ithout-leaking-compensation-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [mobile] › tests\e2e\packages.spec.ts:43:1 › a reviewed duration conversion binds exact carryover and the separate renewal purchase 
+
+    TimeoutError: locator.selectOption: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for locator('details').filter({ has: locator('summary').filter({ hasText: /^Review a credit conversion$/ }) }).getByLabel('New package terms', { exact: true })
+        - locator resolved to <select id="_r_4_" required="" name="new_contract">…</select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+        - waiting 20ms
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+          - waiting 100ms
+        29 × waiting for element to be visible and enabled
+           - did not find some options
+         - retrying select option action
+           - waiting 500ms
+
+
+      44 |   test.setTimeout(180_000); const fixture = await packageFixture(); const target = await additionalPackageContract(fixture, 90); const purchase = await fixture.purchase(); const packageId = String(purchase.package_purchase_id); const policy = await fixture.grantPolicy(50000); await fixture.grant(packageId, policy, 50000, 1000); const customer = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
+      45 |   try {
+    > 46 |     const adminPage = await admin.newPage(); await login(adminPage, 'admin_a'); await adminPage.goto(`/admin/packages?package=${packageId}`); const conversion = adminPage.locator('details').filter({ has: adminPage.locator('summary').filter({ hasText: /^Review a credit conversion$/ }) }); await conversion.locator('summary').click(); await conversion.getByLabel('New package terms', { exact: true }).selectOption(target.policyId);
+         |                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+      47 |     const form = conversion.getByRole('form', { name: 'Create conversion proposal', exact: true }); await form.getByLabel('Source credits', { exact: true }).fill('1'); await form.getByLabel('Credits after conversion', { exact: true }).fill('0.666'); const expiry = formatCairoInstant(new Date(Date.now() + 600_000).toISOString()); await form.getByLabel('Proposal expires at', { exact: true }).fill(`${expiry.local_date}T${expiry.local_time}`); await form.getByLabel('Reason for this action', { exact: true }).fill('Review 60 to 90 minute credit conversion without adding service'); const created = await submit(adminPage, form, 'operation-proposals', 201); const proposalId = String(created.proposal_id);
+      48 |     const page = await customer.newPage(); await login(page, 'learner_a'); await page.goto(`/learn/packages/${packageId}`); const review = page.locator(`[data-proposal-id="${proposalId}"]`); await review.locator('summary').click(); const response = await customer.request.get(`/api/v1/operation-proposals/${proposalId}?view=customer&learner_id=${fixture.learnerId}`); expect(response.status()).toBe(200); const dto = (await response.json()).data; expect(dto.terms).toMatchObject({ source_credit_quanta: 1000, target_credit_quanta: 666, carrying_value_minor: 50000, old_base_duration_minutes: 60, new_base_duration_minutes: 90, service_duration_delta_second_quanta: -3600, creates_new_purchase: true, new_purchase_credit_quanta: 3000, new_purchase_value_minor: 150000 }); expect(JSON.stringify(dto)).not.toMatch(forbidden); await expect(review.getByText('-3.6 seconds', { exact: true })).toBeVisible();
+      49 |     const consent = review.getByRole('form', { name: 'Accept these package terms', exact: true }); await consent.getByLabel('I accept these exact package terms for this learner.').check(); await submit(page, consent, `operation-proposals/${proposalId}/accept`, 200);
+        at D:\GitTutor System\tests\e2e\packages.spec.ts:46:401
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-mobile\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\packages-a-reviewed-durati-92217-e-separate-renewal-purchase-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [mobile] › tests\e2e\packages.spec.ts:120:1 › named coverage, release, renewal and transfer preserve usable credits independently of payment 
+
+    TimeoutError: locator.selectOption: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for getByLabel('New package terms', { exact: true })
+        - locator resolved to <select id="_r_1_" required="" name="new_contract">…</select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+        - waiting 20ms
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+          - waiting 100ms
+        29 × waiting for element to be visible and enabled
+           - did not find some options
+         - retrying select option action
+           - waiting 500ms
+
+
+      124 |     const reserve = coverage.getByRole('form', { name: 'Reserve package credits', exact: true }); await reserve.getByLabel('I accept the displayed credit quantity and coverage terms for this learner.').check(); const reserved = await submit(page, reserve, `packages/${sourceId}/reserve`, 201); expect(reserved.carrying_value_minor).toBe(50000); expect(reserved.top_up_minor).toBe(0); await expect(coverage.getByRole('heading', { name: 'Covered by package', exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Confirm session', exact: true })).toBeDisabled();
+      125 |     await coverage.locator('summary').filter({ hasText: /^Release reserved credits$/ }).click(); const release = coverage.getByRole('form', { name: 'Release reserved credits', exact: true }); await release.getByLabel('I have reviewed the learner, quantity and saved terms.').check(); await submit(page, release, `package-reservations/${reserved.reservation_id}/release`, 200);
+    > 126 |     await page.goto(`/learn/packages/${sourceId}`); await page.locator('summary').filter({ hasText: /^Renew with approved terms$/ }).click(); const renewal = page.getByRole('form', { name: 'Create renewal purchase', exact: true }); await page.getByLabel('New package terms', { exact: true }).selectOption(fixture.policyId); await renewal.getByLabel('Credits to carry over', { exact: true }).fill('1'); await renewal.getByLabel('I accept the new purchase terms and the displayed carryover quantity.').check(); const renewed = await submit(page, renewal, `packages/${sourceId}/renew`, 201); const targetId = String(renewed.successor_package_id);
+          |                                                                                                                                                                                                                                                                                                     ^
+      127 |     const successor = (await (await context.request.get(`/api/v1/packages/${targetId}`)).json()).data as PackageDetail; expect(successor.package).toMatchObject({ purchase_state: 'pending_funding', purchased_granted_credit_quanta: 0, balances: { available_credit_quanta: 1000, available_value_minor: 50000 }, charge: { allocated_minor: null, balance_minor: null } }); expect(successor.lineage_page.items).toHaveLength(1);
+      128 |     await page.reload(); await page.locator('summary').filter({ hasText: /^Transfer available credits$/ }).click(); const transfer = page.getByRole('form', { name: 'Transfer these credits', exact: true }); await page.getByLabel('Receiving package', { exact: true }).selectOption(targetId); await transfer.getByLabel('Credits', { exact: true }).fill('1'); await transfer.getByLabel('Reason for this action', { exact: true }).fill('Synthetic compatible carryover'); await transfer.getByLabel('I have reviewed the learner, quantity and saved terms.').check(); await submit(page, transfer, `packages/${sourceId}/transfers`, 201);
+      129 |     const before = (await (await context.request.get(`/api/v1/packages/${targetId}`)).json()).data as PackageDetail; expect(before.package.balances.available_credit_quanta).toBe(2000); expect(before.package.balances.available_value_minor).toBe(100000);
+        at D:\GitTutor System\tests\e2e\packages.spec.ts:126:293
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-mobile\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\packages-named-coverage-re-a9194-ts-independently-of-payment-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [mobile] › tests\e2e\packages.spec.ts:137:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge 
+
+    TimeoutError: locator.check: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for locator('#bonus-policies').getByRole('form', { name: 'Create bonus policy draft', exact: true }).locator('input[name="contracts"][value="c22f5e25-4e25-4399-9a0d-ab45be8df226"]')
+
+
+      24 |   if (!await disclosure.evaluate(element => (element as HTMLDetailsElement).open)) await disclosure.locator('summary').click();
+      25 |   await section.getByLabel('Valuation rule', { exact: true }).selectOption(valued ? 'reviewed_exact_capped_subsidy' : 'zero_value');
+    > 26 |   const form = section.getByRole('form', { name: 'Create bonus policy draft', exact: true }); await form.getByLabel('Policy name', { exact: true }).fill(`Browser ${valued ? 'subsidy' : 'zero'} ${randomUUID()}`); await form.locator(`input[name="contracts"][value="${fixture.policyId}"]`).check(); await form.getByLabel('Maximum credits per grant', { exact: true }).fill('3'); if (valued) await form.getByLabel('Maximum value per grant (EGP)', { exact: true }).fill('1000');
+         |                                                                                                                                                                                                                                                                                                ^
+      27 |   const result = await submit(page, form, 'package-grant-policies', 201); const id = String(result.grant_policy_version_id);
+      28 |   const approval = section.getByRole('form', { name: 'Approve bonus policy', exact: true }); await approval.getByLabel('Effective from', { exact: true }).fill('2026-01-01T12:00'); await approval.getByLabel('Approval note', { exact: true }).fill('Synthetic browser-reviewed bonus; no cash settlement'); await submit(page, approval, `package-grant-policies/${id}/approve`, 200); return id;
+      29 | }
+        at createGrantPolicy (D:\GitTutor System\tests\e2e\packages.spec.ts:26:288)
+        at D:\GitTutor System\tests\e2e\packages.spec.ts:151:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-mobile\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-mobile\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\packages-an-interrupted-pu-bbded-rate-from-the-issued-charge-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7 failed
+    [desktop] › tests\e2e\packages.spec.ts:43:1 › a reviewed duration conversion binds exact carryover and the separate renewal purchase 
+    [desktop] › tests\e2e\packages.spec.ts:120:1 › named coverage, release, renewal and transfer preserve usable credits independently of payment 
+    [desktop] › tests\e2e\packages.spec.ts:137:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge 
+    [mobile] › tests\e2e\catalog.spec.ts:91:1 › administrator creates, approves and publishes through structured editors without leaking compensation 
+    [mobile] › tests\e2e\packages.spec.ts:43:1 › a reviewed duration conversion binds exact carryover and the separate renewal purchase 
+    [mobile] › tests\e2e\packages.spec.ts:120:1 › named coverage, release, renewal and transfer preserve usable credits independently of payment 
+    [mobile] › tests\e2e\packages.spec.ts:137:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge 
+  89 passed (5.6m)
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

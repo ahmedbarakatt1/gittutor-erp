@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState, type ReactNode } from 'react';
+import { formatMinorUnits } from '@/modules/shared/format';
 import { bookingCopy as copy } from '@/locales/booking';
 import { resolveCairoLocalTime } from '@/modules/booking/scheduling';
 import styles from './booking.module.css';
@@ -26,7 +27,7 @@ export function Select({ name, label, value, onChange, children, required = true
   const id = useId(); return <div className={formStyles.field}><label htmlFor={id}>{label}</label><select id={id} name={name} value={value} onChange={event => onChange(event.target.value)} required={required}>{children}</select></div>;
 }
 export function Check({ name, label }: { name: string; label: string }) { return <label className={styles.choice}><input type="checkbox" name={name} required />{label}</label>; }
-export function money(value: number, currency = 'EGP') { return new Intl.NumberFormat('en-EG', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value / 100); }
+export function money(value: number, currency = 'EGP') { return formatMinorUnits(value, currency); }
 export function cairoDate(value: string) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)); }
 export function cairoTime(value: string) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)); }
 export function SessionTime({ start, end }: { start: string; end: string }) { return <bdi dir="ltr" className={styles.date}><time dateTime={start}>{cairoDate(start)} · {cairoTime(start)}</time>–<time dateTime={end}>{cairoTime(end)}</time><span className={styles.meta}> {copy.timezone}</span></bdi>; }

@@ -1,0 +1,25 @@
+import { z } from 'zod';
+const id=z.uuid(),version=z.number().int().positive().max(2147483647),amount=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),quantity=amount.positive(),instant=z.iso.datetime({offset:true}),hash=z.string().regex(/^[a-f0-9]{64}$/);
+export const packageCoverageRuleSchema=z.enum(['named_entitlement_covers_eligible_occurrence','allocated_value_with_explicit_top_up']);
+const format=z.enum(['private','group']);
+export const packageProposalStateSchema=z.enum(['proposed','accepted','approved','committed','declined','expired']);
+const outer={p_target_id:id,p_expected_version:version,p_reason:z.string().trim().min(1).max(2000),p_idempotency_key:z.string().min(1).max(200)};
+export const packageProposalInputSchema=z.discriminatedUnion('p_kind',[
+ z.object({...outer,p_kind:z.literal('package_coverage'),p_requested_terms:z.object({target_type:z.literal('enrollment'),package_purchase_id:id,expected_package_version:version,credit_quanta:quantity,remaining_service_price_minor:amount.nullable(),replaces_proposal_id:id.nullable().optional(),expected_replaced_version:version.nullable().optional(),expires_at:instant}).strict().refine(row=>((row.replaces_proposal_id??null)===null)===((row.expected_replaced_version??null)===null))}).strict(),
+ z.object({...outer,p_kind:z.literal('package_conversion'),p_requested_terms:z.object({target_type:z.literal('package_purchase'),target_package_id:id.nullable(),new_contract_version_id:id,expected_target_version:version.nullable(),source_credit_quanta:amount,target_credit_quanta:amount,expires_at:instant}).strict().refine(row=>(row.target_package_id===null)===(row.expected_target_version===null)).refine(row=>(row.source_credit_quanta>0&&row.target_credit_quanta>0)||(row.target_package_id===null&&row.source_credit_quanta===0&&row.target_credit_quanta===0))}).strict(),
+]);
+export const packageCoverageTermsSchema=z.object({learner_id:id,enrollment_id:id,package_purchase_id:id,quote_id:id,quote_hash:hash,package_contract_version_id:id,coverage_rule:packageCoverageRuleSchema,required_credit_quanta:quantity,reserved_credit_quanta:quantity,carrying_value_minor:amount,standalone_reference_price_minor:amount,agreed_top_up_minor:amount.nullable(),remaining_service_credit_quanta:amount,remaining_service_price_minor:amount.nullable(),currency:z.literal('EGP')}).strict();
+export const packageConversionTermsSchema=z.object({learner_id:id,source_package_id:id,target_package_id:id.nullable(),new_contract_version_id:id,new_contract_terms_hash:hash,creates_new_purchase:z.boolean(),new_purchase_credit_quanta:amount,new_purchase_value_minor:amount,source_credit_quanta:amount,target_credit_quanta:amount,carrying_value_minor:amount,currency:z.literal('EGP'),old_base_duration_minutes:quantity,new_base_duration_minutes:quantity,original_expiry_at:instant.nullable(),converted_expiry_at:instant.nullable(),lot_allocations:z.array(z.object({lot_id:id,source_credit_quanta:quantity,target_credit_quanta:quantity,value_minor:amount,expires_at:instant.nullable()}).strict()),eligibility_changes:z.object({removed_offer_ids:z.array(id),added_offer_ids:z.array(id),old_formats:z.array(format),new_formats:z.array(format)}).strict(),service_duration_delta_second_quanta:z.number().int().min(-Number.MAX_SAFE_INTEGER).max(0),rounding_rule:z.literal('reviewed_exact_credit_quanta')}).strict().refine(row=>(row.source_credit_quanta>0&&row.target_credit_quanta>0)||(row.creates_new_purchase&&row.target_package_id===null&&row.source_credit_quanta===0&&row.target_credit_quanta===0&&row.carrying_value_minor===0&&row.lot_allocations.length===0));
+const base={proposal_id:id,version,target_id:id,base_version:version,policy_version_id:id,state:packageProposalStateSchema,expires_at:instant,terms_hash:hash,accepted_at:instant.nullable(),can_accept:z.boolean(),required_actions:z.array(z.string())};
+const accepts=z.array(z.object({participant_type:z.literal('learner'),participant_id:id,accepted_at:instant.nullable()}).strict());
+export const packageProposalSchema=z.union([
+ z.object({...base,kind:z.literal('package_coverage'),target_type:z.literal('enrollment'),view:z.literal('customer'),terms:packageCoverageTermsSchema}).strict(),
+ z.object({...base,kind:z.literal('package_coverage'),target_type:z.literal('enrollment'),view:z.literal('admin'),terms:packageCoverageTermsSchema,required_acceptances:accepts}).strict(),
+ z.object({...base,kind:z.literal('package_conversion'),target_type:z.literal('package_purchase'),view:z.literal('customer'),terms:packageConversionTermsSchema}).strict(),
+ z.object({...base,kind:z.literal('package_conversion'),target_type:z.literal('package_purchase'),view:z.literal('admin'),terms:packageConversionTermsSchema,required_acceptances:accepts}).strict(),
+]);
+export type PackageProposal=z.infer<typeof packageProposalSchema>;
+export type PackageCoverageTerms=z.infer<typeof packageCoverageTermsSchema>;
+export type PackageConversionTerms=z.infer<typeof packageConversionTermsSchema>;
+
+

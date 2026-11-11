@@ -76,7 +76,7 @@ export const catalogCopy = {
     departure: { attendance_fact_with_reviewed_remedy: 'An early departure is recorded and any remedy is reviewed.', retain_charge_if_class_fully_delivered: 'The agreed charge is retained if the class is fully delivered, even if a learner leaves early.' },
     partial: { reviewed_exact_adjustment: 'Partial delivery is reviewed for an exact adjustment.', approved_duration_proration: 'Partial delivery uses the approved duration-proration rule.' },
     remedies: { cash_refund: 'Cash refund', monetary_account_credit: 'Monetary account credit', package_entitlement_restoration: 'Package entitlement restoration' },
-    packageSessions: (sessions: number, duration: number, price: string) => `${sessions} included sessions of ${duration} minutes for ${price}.`,
+    packageSessions: (sessions: string, duration: number, price: string) => `${sessions} included sessions of ${duration} minutes for ${price}.`,
     packageCoverage: { named_entitlement_covers_eligible_occurrence: 'Reserved included sessions cover eligible teaching; its standalone price does not add another tuition charge.', allocated_value_with_explicit_top_up: 'Eligible package value is applied to tuition. Any top-up requires explicit acceptance.' },
     packageExpiry: (days: number | null) => days === null ? 'This package does not expire.' : `This package expires ${days} days after it is granted.`,
     packageRules: 'Restored sessions retain the original package terms. Renewal transfers only available sessions and their actual remaining value. Expired value and partial use require a reviewed resolution.',

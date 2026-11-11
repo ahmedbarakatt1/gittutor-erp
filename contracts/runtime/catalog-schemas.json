@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "policy_content": {
     "type": "object",
     "properties": {
@@ -706,6 +706,30 @@
                   {
                     "enum": [
                       "exclusive_or_value_bounded_split_of_cash_credit_restoration"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "purchase_activation_rule": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "full_settled_charge"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "expiry_clock": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "elapsed_24_hour_days"
                     ]
                   },
                   {

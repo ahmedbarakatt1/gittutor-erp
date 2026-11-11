@@ -13,6 +13,34 @@ async function signIn(page: Page, label: string) {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expect(page.getByTestId('account-id')).toHaveText(user.id, { timeout: 15_000 });
 }
 
+async function findOfferedSeat(page: Page, enrollmentId: string) {
+  const isOfferedPage = (url: string) => {
+    const parsed = new URL(url);
+    return parsed.pathname === '/api/v1/me/waitlist' && parsed.searchParams.get('state') === 'offered';
+  };
+  const firstResponse = page.waitForResponse(response => isOfferedPage(response.url()));
+  await page.goto('/learn/bookings');
+  const first = await firstResponse; expect(first.status()).toBe(200);
+  let body = (await first.json()).data as { items: unknown[]; next_cursor: string | null };
+  const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'A temporary seat is available', exact: true }) });
+  const offer = section.locator(`a[href="/learn/bookings/${enrollmentId}"]`).filter({ hasText: 'A temporary seat is available' });
+  let loaded = body.items.length;
+  await expect(section.getByRole('listitem')).toHaveCount(loaded);
+  // The collection is intentionally paginated. Follow its actual controls instead of assuming
+  // this fixture's seat is one of the first 25 entries in a preserved development database.
+  for (let pageNumber = 1; !await offer.count() && body.next_cursor && pageNumber < 100; pageNumber++) {
+    const cursor = body.next_cursor;
+    const pending = page.waitForResponse(response => isOfferedPage(response.url()) && new URL(response.url()).searchParams.get('cursor') === cursor);
+    await section.getByRole('button', { name: 'Load more results', exact: true }).click();
+    const response = await pending; expect(response.status()).toBe(200);
+    body = (await response.json()).data;
+    loaded += body.items.length;
+    await expect(section.getByRole('listitem')).toHaveCount(loaded);
+  }
+  await expect(offer).toBeVisible();
+  return offer;
+}
+
 test('independent browsers keep a last-seat conflict explicit and never silently join a waitlist', async ({ browser }, info) => {
   test.setTimeout(120_000); const fixture = await bookingFixture(); await fixture.availability(); const occurrenceId = String((await fixture.occurrence('group')).occurrence_id); await fixture.reserve(occurrenceId);
   const contexts = await Promise.all([1, 2].map(() => browser.newContext({ baseURL, viewport: info.project.use.viewport })));
@@ -48,11 +76,11 @@ test('GT-208 independent queue walkthrough expires one offer and promotes exactl
     // Only fixture-owned timestamps move. The actual worker uses database time and restricted grants.
     await fixture.database.query("update app_private.enrollments set hold_expires_at=now()-interval '1 second' where id=$1", [initial.enrollment_id]); await runOwnDueJob();
     const first = (await fixture.database.query('select state,offered_enrollment_id from app_private.waitlist_entries where id=$1', [entries[0]])).rows[0]; expect(first.state).toBe('offered');
-    await pages[0].goto('/learn/bookings'); await expect(pages[0].locator(`a[href="/learn/bookings/${first.offered_enrollment_id}"]`).filter({ hasText: 'A temporary seat is available' })).toBeVisible();
+    await findOfferedSeat(pages[0], first.offered_enrollment_id);
     expect((await fixture.database.query('select state from app_private.waitlist_entries where id=$1', [entries[1]])).rows[0].state).toBe('waiting');
     await fixture.database.query("update app_private.enrollments set hold_expires_at=now()-interval '1 second' where id=$1", [first.offered_enrollment_id]); await runOwnDueJob();
     const second = (await fixture.database.query('select state,offered_enrollment_id from app_private.waitlist_entries where id=$1', [entries[1]])).rows[0]; expect(second.state).toBe('offered'); expect((await fixture.database.query('select state from app_private.waitlist_entries where id=$1', [entries[0]])).rows[0].state).toBe('expired');
-    await pages[1].goto('/learn/bookings'); const offer = pages[1].locator(`a[href="/learn/bookings/${second.offered_enrollment_id}"]`).filter({ hasText: 'A temporary seat is available' }); await expect(offer).toBeVisible(); await offer.click(); await pages[1].waitForURL('**/learn/bookings/' + second.offered_enrollment_id, { timeout: 15_000 }); await expect(pages[1].getByRole('heading', { name: 'Your exact quote', exact: true })).toBeVisible();
+    const offer = await findOfferedSeat(pages[1], second.offered_enrollment_id); await offer.click(); await pages[1].waitForURL('**/learn/bookings/' + second.offered_enrollment_id, { timeout: 15_000 }); await expect(pages[1].getByRole('heading', { name: 'Your exact quote', exact: true })).toBeVisible();
     await expect(pages[1].getByRole('button', { name: 'Confirm session', exact: true })).toBeDisabled();
     expect((await fixture.database.query("select count(*)::int as count from app_private.enrollments where occurrence_id=$1 and state='held' and hold_expires_at>now()", [occurrenceId])).rows[0].count).toBe(1);
   } finally { await Promise.all(contexts.map(context => context.close())); await worker.end(); await fixture.close(); }

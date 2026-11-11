@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthPage } from '@/components/auth-page';
 import { AuthUnavailableError, getCurrentAccount } from '@/server/auth';
-import { bookingReturnPath } from '@/modules/identity/return-path';
+import { customerReturnPath } from '@/modules/identity/return-path';
 
 export const metadata: Metadata = { title: 'Sign in | Git Tutor', robots: { index: false, follow: false } };
 
@@ -12,5 +12,5 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     unavailable = true;
   }
   const params = await searchParams;
-  return <AuthPage mode="login" unavailable={unavailable} forbidden={params.reason === 'forbidden'} returnTo={bookingReturnPath(params.return_to)} />;
+  return <AuthPage mode="login" unavailable={unavailable} forbidden={params.reason === 'forbidden'} returnTo={customerReturnPath(params.return_to)} />;
 }

@@ -1,0 +1,64 @@
+async (page) => {
+  const metadata = METADATA;
+  const findings = [];
+  let consoleErrors = [], warnings = [], failedResponses = [];
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); if (message.type() === 'warning') warnings.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); });
+  page.on('pageerror', error => consoleErrors.push(error.message.replace(/https?:\/\/\S+/g, '[url]')));
+  page.on('response', response => { if (response.status() >= 400) failedResponses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  async function capture(label, target, rtl = false) {
+    const measurements = [];
+    for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+      await page.evaluate(() => document.activeElement?.blur());
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.evaluate(() => document.fonts.ready);
+      if (target) await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      else await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t05-' + label + '-' + viewport.label + '.png', caret: 'initial' });
+      measurements.push({ viewport: viewport.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+    }
+    await page.evaluate(() => { document.activeElement?.blur(); scrollTo({ top: 0, behavior: 'instant' }); });
+    await page.keyboard.press('Tab');
+    const focus = await page.evaluate(() => { const element = document.activeElement; const style = getComputedStyle(element); return { tag: element.tagName, text: element.textContent.trim().slice(0, 80), outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth }; });
+    if (rtl) {
+      await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+      measurements.push({ viewport: 360, direction: 'rtl', overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+      if (target) await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t05-' + label + '-rtl.png', caret: 'initial' });
+      await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+    }
+    findings.push({ surface: label, measurements, focus, consoleErrors, warnings, failedResponses });
+    consoleErrors = []; warnings = []; failedResponses = [];
+  }
+  await page.context().setStorageState('.local/ui-review/t05-desktop-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/packages/' + metadata.purchase.packageId);
+  await page.getByRole('heading', { name: 'Purchased credits are waiting for payment', exact: true }).waitFor();
+  await capture('purchase-charge', page.getByRole('region', { name: 'Package purchase', exact: true }), true);
+  await capture('usable-credits', page.getByRole('heading', { name: 'Usable teaching credits', exact: true }), true);
+  await page.getByRole('heading', { name: 'Credits issued', exact: true }).first().waitFor();
+  await capture('customer-history', page.locator('details').filter({ has: page.locator('summary').filter({ hasText: /^Credit history$/ }) }), true);
+  await page.context().setStorageState('.local/ui-review/t05-desktop-coverage-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/bookings/' + metadata.coverage.enrollmentId);
+  await page.locator('#package-coverage').getByRole('heading', { name: 'Covered by package', exact: true }).waitFor();
+  await capture('named-coverage', page.locator('#package-coverage'), true);
+  await page.context().setStorageState('.local/ui-review/t05-desktop-value-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/bookings/' + metadata.value.enrollmentId);
+  await page.locator('#package-coverage').getByText('EGP 75.00', { exact: true }).waitFor();
+  await capture('value-topup', page.locator('#package-coverage'), true);
+  await page.context().setStorageState('.local/ui-review/t05-desktop-conversion-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/packages?learner=' + metadata.conversion.learnerId);
+  const conversion = page.locator('[data-proposal-id="' + metadata.conversion.proposalId + '"]');
+  await conversion.locator('summary').click();
+  await conversion.getByText('-3.6 seconds', { exact: true }).waitFor();
+  await capture('conversion-terms', conversion, true);
+  await capture('conversion-duration', conversion.getByText('Service-duration change', { exact: true }), true);
+  await page.context().setStorageState('.local/ui-review/t05-desktop-admin.json');
+  await page.goto('http://127.0.0.1:3000/admin/packages?package=' + metadata.purchase.packageId);
+  const grant = page.getByRole('region', { name: 'Add approved bonus credits', exact: true });
+  await grant.getByLabel('Approved bonus policy', { exact: true }).waitFor();
+  await capture('admin-grant', grant);
+  const reconciliation = page.locator('details').filter({ has: page.locator('summary').filter({ hasText: /^Quantity and value reconciliation$/ }) });
+  await reconciliation.locator('summary').click();
+  await reconciliation.getByText('Posted movements match the saved credit and value balances.', { exact: true }).waitFor();
+  await capture('admin-reconciliation', reconciliation);
+  return findings;
+}

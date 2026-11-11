@@ -1,0 +1,26 @@
+import { z } from 'zod';
+import type { IdentityRpcClient } from '../identity/commands';
+export type PackageRpcClient=IdentityRpcClient;
+const codes=new Set(['AUTH_REQUIRED','SESSION_REVOKED','VERIFIED_ACCOUNT_REQUIRED','FORBIDDEN','CONSENT_REQUIRED','NOT_FOUND','VALIDATION_ERROR','AMOUNT_OUT_OF_RANGE','INVALID_TIME','VERSION_CONFLICT','IDEMPOTENCY_CONFLICT','INSUFFICIENT_FUNDS','INSUFFICIENT_ENTITLEMENT','POLICY_INCOMPLETE','STATE_CONFLICT','EVIDENCE_REQUIRED','REMEDY_RESERVED','WINDOW_CLOSED','DEPENDENCY_UNAVAILABLE','RETRYABLE_CONFLICT']);
+export class PackageRpcError extends Error{constructor(public readonly code:string){super(code);this.name='PackageRpcError'}}
+export async function packageRpc(client:PackageRpcClient,name:string,args?:Record<string,unknown>){const result=await client.rpc(name,args);if(result.error)throw new PackageRpcError(codes.has(result.error.message)?result.error.message:'DEPENDENCY_UNAVAILABLE');return result}
+const id=z.uuid(),version=z.number().int().positive().max(2147483647),amount=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),quantity=amount.positive(),key=z.string().min(1).max(200),reason=z.string().trim().min(1).max(2000),hash=z.string().regex(/^[a-f0-9]{64}$/);
+const write={p_expected_version:version,p_idempotency_key:key},common={command_id:id,resource_id:id,version};
+const finish=<S extends z.ZodRawShape>(shape:S)=>z.object({...common,...shape}).strict();
+export const packageGrantPolicyContentSchema=z.object({name:z.string().trim().min(1).max(200),eligible_package_contract_version_ids:z.array(id).min(1).max(100).refine(ids=>new Set(ids).size===ids.length),currency:z.literal('EGP'),valuation_rule:z.enum(['zero_value','reviewed_exact_capped_subsidy']),maximum_credit_quanta_per_grant:quantity,maximum_carrying_value_minor_per_grant:amount}).strict().refine(row=>row.valuation_rule!=='zero_value'||row.maximum_carrying_value_minor_per_grant===0);
+export const packageCommands={
+ purchase_package:{input:z.object({p_learner_id:id,p_package_contract_version_id:id,p_accepted_terms_hash:hash,p_idempotency_key:key}).strict(),output:finish({package_purchase_id:id,charge_id:id})},
+ approve_package_grant:{input:z.object({p_package_id:id,p_credit_quanta:quantity,p_carrying_value_minor:amount,p_currency:z.literal('EGP'),p_grant_kind:z.enum(['complimentary','approved_credit']),p_grant_policy_version_id:id.nullable(),p_source_credit_id:id.nullable(),p_reason:reason,p_evidence_file_id:id.nullable(),...write}).strict().refine(row=>row.p_grant_kind==='approved_credit'?row.p_source_credit_id!==null:row.p_source_credit_id===null).refine(row=>row.p_carrying_value_minor===0||row.p_grant_kind!=='complimentary'||row.p_grant_policy_version_id!==null),output:finish({lot_id:id,grant_movement_id:id})},
+ reserve_package_credit:{input:z.object({p_package_id:id,p_enrollment_id:id,p_credit_quanta:quantity,p_coverage_proposal_id:id.nullable(),...write}).strict(),output:finish({reservation_id:id,reserved_credit_quanta:quantity,carrying_value_minor:amount,top_up_minor:amount.nullable()})},
+ release_package_reservation:{input:z.object({p_reservation_id:id,p_reason:reason,...write}).strict(),output:finish({released_credit_quanta:amount,released_value_minor:amount,movement_ids:z.array(id)})},
+ renew_package:{input:z.object({p_package_id:id,p_new_contract_version_id:id,p_transfer_credit_quanta:amount,p_accepted_terms_hash:hash,p_conversion_proposal_id:id.nullable(),...write}).strict(),output:finish({successor_package_id:id,transfer_ids:z.array(id),charge_id:id})},
+ transfer_package_credit:{input:z.object({p_package_id:id,p_target_package_id:id,p_credit_quanta:quantity,p_conversion_proposal_id:id.nullable(),p_reason:reason,p_expected_target_version:version,...write}).strict(),output:finish({transfer_id:id,transferred_credit_quanta:quantity,carrying_value_minor:amount,target_package_version:version})},
+ restore_package_credit:{input:z.object({p_consumption_id:id,p_credit_quanta:quantity,p_remedy_id:id,p_reason:reason,...write}).strict(),output:finish({movement_id:id,restored_credit_quanta:quantity})},
+ create_package_grant_policy:{input:z.object({p_content:packageGrantPolicyContentSchema,p_idempotency_key:key}).strict(),output:finish({grant_policy_version_id:id,validation_errors:z.array(z.string())})},
+ approve_package_grant_policy:{input:z.object({p_grant_policy_version_id:id,p_effective_at:z.iso.datetime({offset:true}),p_approval_note:reason,...write}).strict(),output:finish({state:z.literal('approved')})},
+} as const;
+export type PackageCommandName=keyof typeof packageCommands;
+export async function invokePackageCommandWithStatus<N extends PackageCommandName>(client:PackageRpcClient,name:N,args:Record<string,unknown>){
+ if(!Object.hasOwn(packageCommands,name))throw new PackageRpcError('VALIDATION_ERROR');const definition=packageCommands[name];const input=definition.input.safeParse(args);if(!input.success)throw new PackageRpcError('VALIDATION_ERROR');
+ const response=await packageRpc(client,name,input.data),output=definition.output.safeParse(response.data);if(!output.success||![200,201,202].includes(response.status??0))throw new PackageRpcError('DEPENDENCY_UNAVAILABLE');return{data:output.data as z.output<(typeof packageCommands)[N]['output']>,status:response.status as 200|201|202};
+}

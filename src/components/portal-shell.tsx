@@ -6,6 +6,7 @@ import type { Account } from '@/server/auth';
 import styles from './auth.module.css';
 import { catalogCopy } from '@/locales/catalog';
 import { bookingCopy } from '@/locales/booking';
+import { packageCopy } from '@/locales/packages';
 import { bookingStaffCopy } from '@/locales/booking-staff';
 
 export function PortalShell({ kind, account, children, title, description, activePath, showAccount = true }: { kind: PortalKind; account: Account; children?: ReactNode; title?: string; description?: string; activePath?: string; showAccount?: boolean }) {
@@ -31,6 +32,7 @@ export function PortalShell({ kind, account, children, title, description, activ
         {kind === 'admin' && <Link href="/admin/schedule" aria-current={activePath === '/admin/schedule' ? 'page' : undefined}>{bookingStaffCopy.adminNav}</Link>}
         {kind === 'tutor' && <Link href="/tutor/schedule" aria-current={activePath === '/tutor/schedule' ? 'page' : undefined}>{bookingStaffCopy.tutorNav}</Link>}
         {kind === 'learn' && <Link href="/learn/bookings" aria-current={activePath === '/learn/bookings' ? 'page' : undefined}>{bookingCopy.nav}</Link>}
+        {(kind === 'learn' || kind === 'admin') && <Link href={`/${kind}/packages`} aria-current={activePath === `/${kind}/packages` ? 'page' : undefined}>{packageCopy.nav}</Link>}
         {kind === 'learn' && <Link href="/learn#learners">{copy.portal.learnerTitle}</Link>}
         {kind === 'learn' && <Link href="/apply-to-teach">{identityCopy.application.nav}</Link>}
         {authorizedWorkspaces.filter(workspace => workspace !== kind).map(workspace => <Link key={workspace} href={`/${workspace}`}>{copy.portal[workspace].workspace}</Link>)}

@@ -7,6 +7,7 @@ import { bookingCopy } from '@/locales/booking';
 import { IdentityForm, TextField } from '../identity-form';
 import { CustomerTerms } from './customer-proposals';
 import { CairoInput, Check, ReadState, Select, SessionTime, instantField, money, useBookingRecord } from './shared';
+import { PackageProposalReview } from '../packages/package-proposals';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
 
@@ -19,6 +20,7 @@ function TeachingTerms({ terms }: { terms: TutorProposalTerms }) {
 export function StaffProposal({ id, kind, view, names = {}, onSaved }: { id: string; kind: 'operation' | 'amendment'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
   const decisionId = useId();
   const route = kind === 'amendment' ? 'amendments' : 'operation-proposals'; const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=${view}`);
+  if (record.data?.kind === 'package_coverage' || record.data?.kind === 'package_conversion') return view === 'admin' ? <PackageProposalReview id={id} learnerId={record.data.terms.learner_id} view="admin" onSaved={onSaved} /> : null;
   const proposal = record.data?.view === view ? record.data : undefined;
   function saved() { record.reload(); onSaved?.(); }
   return <details className={styles.detail}><summary>{copy.review}</summary><ReadState pending={!proposal} {...record} />{proposal && <div key={`${id}-${proposal.version}-${proposal.accepted_at}`}><p>{bookingCopy.states[proposal.state] || proposal.state}</p>{proposal.view === 'tutor' && <><TeachingTerms terms={proposal.terms} />{proposal.accepted_at ? <p className={formStyles.saved}>{copy.acceptedSaved}</p> : ['proposed', 'accepted'].includes(proposal.state) && <IdentityForm action={`${route}/${id}/accept`} submitLabel={copy.accept} successMessage={copy.acceptedSaved} disabled={!proposal.can_accept} resettable={false} onSaved={saved} payload={() => ({ terms_hash: proposal.terms_hash, expected_version: proposal.version })}><Check name="teaching_consent" label={copy.acceptConsent} /></IdentityForm>}{['proposed', 'accepted'].includes(proposal.state) && <IdentityForm action={`${route}/${id}/decline`} submitLabel={bookingCopy.decline} successMessage={bookingCopy.declined} resettable={false} onSaved={saved} payload={form => ({ reason: String(form.get('reason')).trim(), expected_version: proposal.version })}><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>}</>}

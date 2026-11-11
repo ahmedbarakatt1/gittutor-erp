@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { assertLocalSupabase, type LocalSupabase } from '../helpers/supabase';
-import { assertAllowedDefiner, assertEnvironmentFileWritable, assertMigrationMarker } from '../../tools/supabase-local';
+import { assertAllowedDefiner, assertEnvironmentFileWritable, assertMigrationMarker, assertPackageWorkerBoundary } from '../../tools/supabase-local';
 
 const config: LocalSupabase = {
   marker: 'git-tutor-supabase-local-v1', url: 'http://127.0.0.1:54321',
@@ -52,4 +52,17 @@ test('the managed Auth exception permits only exact private read bridges with re
     { prosrc: 'delete from auth.users returning true' }, { provolatile: 'v' },
     { rolname: 'git_tutor_worker' }, { proconfig: ['search_path=public'] }, { result: 'text' },
   ]) expect(() => assertAllowedDefiner({ ...bridge, ...change })).toThrow('SUPABASE_DEFINER_INVALID');
+});
+
+test('the package worker can execute only its exact due-processing entry point', () => {
+  const allowed = { nspname: 'app_private', proname: 'process_package_due', signature: 'app_private.process_package_due(uuid,text)',
+    rolname: 'git_tutor_commands', prosecdef: true, worker: true, executors: ['git_tutor_commands', 'git_tutor_worker'] };
+  expect(() => assertPackageWorkerBoundary(allowed)).not.toThrow();
+  for (const change of [
+    { nspname: 'api' }, { signature: 'app_private.process_package_due(uuid,text,jsonb)' },
+    { rolname: 'postgres' }, { worker: false }, { prosecdef: false },
+    { executors: ['git_tutor_commands', 'git_tutor_worker', 'authenticated'] },
+    { proname: 'package_append_movement' }, { nspname: 'finance_private', proname: 'finance_post_balanced' },
+  ]) expect(() => assertPackageWorkerBoundary({ ...allowed, ...change })).toThrow('SUPABASE_PACKAGE_WORKER_BOUNDARY_INVALID');
+  expect(() => assertPackageWorkerBoundary({ ...allowed, proname: 'package_append_movement', worker: false })).not.toThrow();
 });

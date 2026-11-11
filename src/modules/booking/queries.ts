@@ -3,6 +3,7 @@ import { publicPolicySummarySchema } from '../catalog/queries';
 import { bookingRpc, BookingRpcError, enrollmentStateSchema, proposalStateSchema, waitlistStateSchema, type BookingRpcClient } from './commands';
 import { datedExceptionSchema, weeklyIntervalSchema } from './scheduling';
 import { meetingStatusSchema, occurrenceStateSchema, occurrenceSummarySchema, publicOccurrenceSchema } from './public-occurrence';
+import { packageProposalSchema } from '../packages/proposal-contract';
 
 const id=z.uuid(),version=z.number().int().positive().max(2147483647),minor=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),integer=z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER);
 const instant=z.iso.datetime({offset:true}),hash=z.string().regex(/^[a-f0-9]{64}$/),target=z.union([z.literal(2),z.literal(3),z.literal(4)]).nullable();
@@ -37,7 +38,8 @@ function scopedProposal<S extends z.ZodRawShape>(base:S){return z.discriminatedU
   z.object({...base,view:z.literal('tutor'),terms:tutorProposalTerms}).strict(),
   z.object({...base,view:z.literal('admin'),terms:z.object({customers:z.array(customerProposalTermsSchema),tutor:tutorProposalTerms.nullable()}).strict(),required_acceptances:acceptances}).strict(),
 ]);}
-export const operationProposalSchema=scopedProposal(proposalBase);
+export const bookingOperationProposalSchema=scopedProposal(proposalBase);
+export const operationProposalSchema=z.union([bookingOperationProposalSchema,packageProposalSchema]);
 const {proposal_id:unused,...amendmentBase}=proposalBase;void unused;
 const groupViews=scopedProposal({...amendmentBase,amendment_id:id,kind:z.literal('group_amendment'),target_type:z.literal('occurrence'),occurrence_id:id,replacement_policy_version_id:id});
 export const groupAmendmentSchema=z.discriminatedUnion('view',[groupViews.options[0],groupViews.options[1],groupViews.options[2].extend({add_learner_ids:z.array(id),remove_enrollment_ids:z.array(id)})]);

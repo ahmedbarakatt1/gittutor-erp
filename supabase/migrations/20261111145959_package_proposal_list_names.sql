@@ -1,0 +1,11 @@
+create or replace function api.list_package_operation_proposals(p_learner_id uuid default null,p_state text default null,p_cursor text default null,p_limit integer default 25) returns jsonb language plpgsql security definer set search_path='' as $$
+declare actor uuid:=app_private.require_actor();is_admin boolean:=app_private.has_role(actor,'admin');row record;items jsonb:='[]';next_cursor text;cut_time timestamptz;cut_id uuid;count integer:=0;dto jsonb;begin
+ if p_limit is null or p_limit not between 1 and 100 or(p_state is not null and p_state not in('proposed','accepted','approved','committed','declined','expired')) then raise exception 'VALIDATION_ERROR';end if;
+ if p_learner_id is not null then perform app_private.package_assert_scope(actor,p_learner_id,'payments',true);end if;
+ if p_cursor is not null then begin cut_time:=split_part(p_cursor,'|',1)::timestamptz;cut_id:=split_part(p_cursor,'|',2)::uuid;exception when others then raise exception 'VALIDATION_ERROR';end;end if;
+ for row in select p.*,t.learner_id,person.display_name from app_private.operation_proposals p join app_private.package_operation_terms t on t.proposal_id=p.id join app_private.learners l on l.id=t.learner_id join app_private.people person on person.id=l.person_id where(p_learner_id is null or t.learner_id=p_learner_id) and(p_state is null or p.state=p_state) and(is_admin or app_private.package_proposal_can_access(actor,t.learner_id,p.kind)) and(cut_time is null or(p.created_at,p.id)<(cut_time,cut_id)) order by p.created_at desc,p.id desc limit p_limit+1 loop
+  count:=count+1;if count>p_limit then exit;end if;dto:=app_private.package_proposal_dto(actor,row.id,case when is_admin then 'admin' else 'customer' end);
+  items:=items||jsonb_build_array(jsonb_build_object('proposal_id',row.id,'kind',row.kind,'learner',jsonb_build_object('learner_id',row.learner_id,'display_name',row.display_name),'target_type',row.target_type,'target_id',row.target_id,'state',row.state,'version',row.version,'expires_at',row.expires_at,'can_accept',dto->'can_accept'));next_cursor:=row.created_at::text||'|'||row.id;
+ end loop;return jsonb_build_object('items',items,'next_cursor',case when count>p_limit then next_cursor else null end);
+end $$;
+notify pgrst,'reload schema';

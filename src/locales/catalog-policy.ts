@@ -36,6 +36,8 @@ export const policyCopy = {
     eligibleOffers: 'Eligible offers', eligibleHint: 'Select actual saved offers. Draft offers can be selected before publication.',
     grant: 'Included sessions', duration: 'Minutes per included session', value: 'Package purchase price (EGP)',
     formats: 'Eligible formats', coverage: 'How coverage works', coverageOptions: { named_entitlement_covers_eligible_occurrence: 'Included sessions cover eligible teaching', allocated_value_with_explicit_top_up: 'Apply package value with an accepted top-up' },
+    activation: 'When purchased credits become usable', activationOptions: { full_settled_charge: 'After the full purchase charge has settled' },
+    expiryClock: 'How expiry days are counted', expiryClockOptions: { elapsed_24_hour_days: 'Elapsed periods of 24 hours' },
     expiry: 'Package expiry', expiryOptions: { none: 'No expiry', days_from_grant: 'Days after the package is granted' }, days: 'Days until expiry',
     rules: 'Expired value requires a reviewed contractual resolution. Restored sessions keep their original expiry. Renewals transfer only available sessions and their actual remaining value. Partial use requires an exact reviewed adjustment; refunds cannot restore the same value twice.',
     fundingOptions: { verified_payment_allocation: 'Verified incoming payment', reserved_named_package_entitlement: 'Reserved included sessions', reserved_eligible_package_value: 'Reserved eligible package value' },

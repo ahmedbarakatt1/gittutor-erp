@@ -9,6 +9,7 @@ import { usePagedRecords } from '../identity-workspaces';
 import { OfferTerms } from '../catalog/offer-terms';
 import { Check, ReadState, Select, SessionTime, CairoTimestamp, money, useBookingRecord } from './shared';
 import { CustomerChangeRequest, CustomerProposal } from './customer-proposals';
+import { BookingPackageCoverage } from '../packages/booking-coverage';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
 
@@ -52,6 +53,7 @@ export function CustomerBookingDetail({ enrollmentId }: { enrollmentId: string }
       <section className={styles.section} aria-labelledby="quote-heading"><h2 id="quote-heading">{item.is_provisional ? copy.provisionalQuote : copy.quote}</h2><p className={styles.price}>{money(item.quote.customer_price_minor)}</p><p>{item.is_provisional ? copy.provisionalTuition : copy.tuition}</p><dl className={styles.facts}><div><dt>{copy.deposit}</dt><dd>{money(item.funding.required_for_confirmation_minor)}</dd></div><div><dt>{copy.quoteExpires}</dt><dd><CairoTimestamp value={item.quote.expires_at} /></dd></div></dl>
         {item.is_provisional ? <p className={styles.notice}>{copy.provisionalDescription}</p> : item.quote.accepted_at ? <p className={formStyles.saved} role="status">{copy.accepted}: <CairoTimestamp value={item.quote.accepted_at} /></p> : item.quote.is_current && item.state === 'held' ? <IdentityForm action={`quotes/${item.quote.quote_id}/accept`} payload={() => ({ quote_hash: item.quote.quote_hash, expected_version: item.quote.version })} submitLabel={copy.accept} successMessage={copy.acceptSaved} resettable={false} onSaved={record.reload}><Check name="quote_consent" label={copy.acceptConsent} /></IdentityForm> : <p>{copy.expired}</p>}
       </section></div><section className={styles.notice} aria-labelledby="confirmation-heading"><h3 id="confirmation-heading">{copy.fundingTitle}</h3><p>{item.funding.integration_state === 'ready' ? copy.fundingReady : copy.fundingPending}</p><button type="button" className={formStyles.primary} disabled>{copy.confirm}</button></section>
+      {!item.is_provisional && ['held', 'confirmed'].includes(item.state) && <BookingPackageCoverage enrollmentId={item.enrollment_id} />}
       <OfferTerms terms={item.quote.customer_policy} policyId={item.quote.policy_version_id} />
       <section className={styles.section}><h2>{copy.changes}</h2>{item.pending_proposals.length ? item.pending_proposals.map(ref => <CustomerProposal key={ref.proposal_id} id={ref.proposal_id} kind={ref.kind} learnerId={item.learner.learner_id} />) : <p>{copy.changesEmpty}</p>}</section>
       {!item.is_provisional && <CustomerChangeRequest enrollment={item} />}

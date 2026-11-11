@@ -97,10 +97,13 @@ export async function seedCatalog() {
     for(const subject of catalogSubjects) records.push({label:`${subject.label}_private`,scope:'private',subjectId:fixtureId(`subject_${subject.label}`),policyId:catalogFixtureIds.private_policy,offerId:fixtureId(`fixture_${subject.label}_private_60_minute_offer`),pricingId:catalogFixtureIds.private_pricing,content:privatePolicy,target:null,capacity:1});
     for(const record of records) {
       const {policyId,offerId,pricingId,content,scope,label,target,capacity,subjectId}=record;
-      const valid=await database.query('select app_private.catalog_policy_errors($1,$2,true,$3) as errors',[content,scope,policyId]);
-      if(valid.rows[0].errors.length) throw new Error('CATALOG_FIXTURE_POLICY_INVALID');
       const hash=(await database.query('select app_private.catalog_hash($1) as hash',[content])).rows[0].hash;
-      const existing=await database.query('select environment_scope,is_synthetic,source_manifest_version,content_hash from app_private.policy_versions where id=$1',[policyId]);
+      const existing=await database.query('select environment_scope,is_synthetic,source_manifest_version,content_hash,status from app_private.policy_versions where id=$1',[policyId]);
+      // Published fixture content is immutable historical evidence. New drafts must pass today's complete gate.
+      if (!existing.rowCount || existing.rows[0].status !== 'published') {
+        const valid=await database.query('select app_private.catalog_policy_errors($1,$2,true,$3) as errors',[content,scope,policyId]);
+        if(valid.rows[0].errors.length) throw new Error('CATALOG_FIXTURE_POLICY_INVALID');
+      }
       if(existing.rowCount) {
         const row=existing.rows[0]; if(row.environment_scope!=='development_test'||!row.is_synthetic||row.source_manifest_version!==sourceVersion||row.content_hash!==hash) throw new Error('CATALOG_SEED_POLICY_CONFLICT');
       } else {

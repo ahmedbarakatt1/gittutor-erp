@@ -2,7 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { AuthUnavailableError, serverSupabase } from "./supabase";
-import { bookingReturnPath } from "@/modules/identity/return-path";
+import { customerReturnPath } from "@/modules/identity/return-path";
 export { AuthUnavailableError } from "./supabase";
 
 export const accountSchema = z.object({
@@ -26,7 +26,7 @@ export async function getCurrentAccount(): Promise<Account | null> {
 }
 
 export async function requireAccount(role?: string, returnTo?: string): Promise<Account> {
-  const returnPath = bookingReturnPath(returnTo);
+  const returnPath = customerReturnPath(returnTo);
   const loginPath = (reason?: string) => {
     const query = new URLSearchParams();
     if (reason) query.set('reason', reason);

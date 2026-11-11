@@ -18,7 +18,7 @@ export const policyRequiredGroup = ['group_target_size','group_capacity','group_
   'amendment_acceptance_minutes','latest_amendment_minutes_before_start','post_confirmation_dropout_price_guarantee','below_minimum_group_action'] as const;
 export const packageRequired = ['package_policy_version_id','eligible_offer_ids','credit_quanta_per_session','grant_credit_quanta','base_duration_minutes',
   'eligible_formats','purchase_value_minor','currency','coverage_rule','expiry_mode','expired_value_accounting_rule','restoration_expiry_rule','carryover_rule',
-  'rounding_rule','partial_consumption_rule','refund_remedy_rule'] as const;
+  'rounding_rule','partial_consumption_rule','refund_remedy_rule','purchase_activation_rule','expiry_clock'] as const;
 const feeRequired = ['currency','fee_min_minor','fee_max_minor','exact_occurrence_approval_required'];
 const present = (value: unknown) => value !== null && value !== undefined;
 const object = (value: unknown): JsonObject => typeof value === 'object' && value !== null && !Array.isArray(value) ? value as JsonObject : {};

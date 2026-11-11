@@ -12,11 +12,27 @@ import {
   listAdminFeeAgreements, listAdminOccurrences, listBookingLearners, listMyBookingLearners, listMyEnrollments,
   listMyWaitlist, listOfferOccurrences, listTutorFeeAgreements, listTutorOccurrences,
 } from "@/modules/booking/queries";
+import { invokePackageCommandWithStatus, type PackageCommandName } from "@/modules/packages/commands";
+import {
+  getMyPackage, getPackageContract, getPackageCoverageOptions, getPackageReconciliation,
+  listAdminPackages, listMyPackageLearners, listMyPackages, listPackageContracts, listPackageCoverage,
+  listPackageEnrollments, listPackageGrantPolicies, listPackageLineage, listPackageLots,
+  listPackageMovements, listPackageOperationProposals, listPackageRenewals,
+} from "@/modules/packages/queries";
 
 type CommandRoute = { pattern: RegExp; fields: string[]; pathArgument?: string } & (
-  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName }
+  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName }
 );
 const commands: CommandRoute[] = [
+  { family: "packages", pattern: /^packages$/, rpc: "purchase_package", fields: ["learner_id", "package_contract_version_id", "accepted_terms_hash"] },
+  { family: "packages", pattern: /^packages\/([^/]+)\/complimentary-grants$/, rpc: "approve_package_grant", pathArgument: "package_id", fields: ["credit_quanta", "carrying_value_minor", "currency", "grant_kind", "grant_policy_version_id", "source_credit_id", "reason", "evidence_file_id", "expected_version"] },
+  { family: "packages", pattern: /^packages\/([^/]+)\/reserve$/, rpc: "reserve_package_credit", pathArgument: "package_id", fields: ["enrollment_id", "credit_quanta", "coverage_proposal_id", "expected_version"] },
+  { family: "packages", pattern: /^package-reservations\/([^/]+)\/release$/, rpc: "release_package_reservation", pathArgument: "reservation_id", fields: ["reason", "expected_version"] },
+  { family: "packages", pattern: /^packages\/([^/]+)\/renew$/, rpc: "renew_package", pathArgument: "package_id", fields: ["new_contract_version_id", "transfer_credit_quanta", "accepted_terms_hash", "conversion_proposal_id", "expected_version"] },
+  { family: "packages", pattern: /^packages\/([^/]+)\/transfers$/, rpc: "transfer_package_credit", pathArgument: "package_id", fields: ["target_package_id", "credit_quanta", "conversion_proposal_id", "reason", "expected_version", "expected_target_version"] },
+  { family: "packages", pattern: /^package-consumptions\/([^/]+)\/restore$/, rpc: "restore_package_credit", pathArgument: "consumption_id", fields: ["credit_quanta", "remedy_id", "reason", "expected_version"] },
+  { family: "packages", pattern: /^package-grant-policies$/, rpc: "create_package_grant_policy", fields: ["content"] },
+  { family: "packages", pattern: /^package-grant-policies\/([^/]+)\/approve$/, rpc: "approve_package_grant_policy", pathArgument: "grant_policy_version_id", fields: ["effective_at", "approval_note", "expected_version"] },
   { pattern: /^guardian-invitations$/, rpc: "create_guardian_invitation", fields: ["contact_id", "scopes", "expires_at"] },
   { pattern: /^guardian-invitations\/([^/]+)\/accept$/, rpc: "accept_guardian_invitation", pathArgument: "invitation_id", fields: ["single_use_token", "expected_version"] },
   { pattern: /^guardian-links\/([^/]+)\/revoke$/, rpc: "revoke_guardian_link", pathArgument: "guardian_link_id", fields: ["reason", "expected_version"] },
@@ -77,7 +93,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const args: Record<string, unknown> = { p_idempotency_key: key };
     for (const [field, value] of Object.entries(body)) args[`p_${field}`] = value;
     if (route.pathArgument) args[`p_${route.pathArgument}`] = route.pattern.exec(path)![1];
-    const result = route.family === "booking"
+    const result = route.family === "packages"
+      ? await invokePackageCommandWithStatus(context.client, route.rpc, args)
+      : route.family === "booking"
       ? await invokeBookingCommandWithStatus(context.client, route.rpc, args)
       : route.family === "catalog"
       ? await invokeCatalogCommandWithStatus(context.client, route.rpc, args)
@@ -110,14 +128,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       "tutor/fee-agreements": ["from", "to", "cursor", "limit"],
       "tutor/occurrences": ["occurrence_id", "from", "to", "state", "cursor", "limit"],
       occurrences: ["occurrence_id", "from", "to", "state", "format", "tutor_id", "cursor", "limit"],
+      "me/package-learners": ["cursor", "limit"],
+      "me/package-contracts": ["learner_id", "offer_id", "cursor", "limit"],
+      "me/packages": ["learner_id", "cursor", "limit"],
+      "admin/packages": ["learner_id", "purchase_state", "cursor", "limit"],
+      "package-grant-policies": ["status", "cursor", "limit"],
+      "package-enrollments": ["learner_id", "state", "cursor", "limit"],
+      "package-proposals": ["learner_id", "state", "cursor", "limit"],
     };
     const dynamicQueryFields = path.length === 3 && path[0] === "occurrences" && path[2] === "fee-agreements"
       ? ["cursor", "limit"] : path.length === 2 && ["amendments", "operation-proposals"].includes(path[0])
-        ? ["view", "learner_id"] : [];
+        ? ["view", "learner_id"]
+        : path.length === 2 && path[0] === "package-contracts" ? ["learner_id"]
+          : path.length === 3 && path[0] === "enrollments" && path[2] === "package-options" ? ["package_id", "credit_quanta", "cursor", "limit"]
+            : path.length === 3 && path[0] === "packages" && ["lots", "movements", "coverage", "lineage", "renewals"].includes(path[2]) ? ["cursor", "limit"] : [];
     const filters = request.nextUrl.searchParams;
     if (Array.from(filters.keys()).some(key => !(queryFields[route] || dynamicQueryFields).includes(key)) || new Set(filters.keys()).size !== filters.size) throw new DomainError("VALIDATION_ERROR");
     const pageOptions = { cursor: filters.get("cursor"), limit: filters.has("limit") ? Number(filters.get("limit")) : 25 };
     const options: Record<string, unknown> = { ...Object.fromEntries(filters), ...pageOptions };
+    if (filters.has("credit_quanta")) options.credit_quanta = Number(filters.get("credit_quanta"));
     if (filters.has("active")) {
       if (!["true", "false"].includes(filters.get("active")!)) throw new DomainError("VALIDATION_ERROR");
       options.active = filters.get("active") === "true";
@@ -133,7 +162,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { data, error } = await context.client.auth.getClaims();
     if (error || !data?.claims.sub) throw new DomainError("AUTH_REQUIRED");
     let result: unknown;
-    if (path.join("/") === "tutor/profile") result = await getTutorProfile(context.client);
+    if (route === "me/package-learners") result = await listMyPackageLearners(context.client, pageOptions);
+    else if (route === "me/package-contracts") result = await listPackageContracts(context.client, { ...options, learner_id: filters.get("learner_id") || "" });
+    else if (route === "me/packages") result = await listMyPackages(context.client, options);
+    else if (route === "admin/packages") result = await listAdminPackages(context.client, options);
+    else if (route === "package-grant-policies") result = await listPackageGrantPolicies(context.client, options);
+    else if (route === "package-enrollments") result = await listPackageEnrollments(context.client, { ...options, learner_id: filters.get("learner_id") || "" });
+    else if (route === "package-proposals") result = await listPackageOperationProposals(context.client, options);
+    else if (path.length === 2 && path[0] === "package-contracts") result = await getPackageContract(context.client, path[1], filters.get("learner_id") || "");
+    else if (path.length === 2 && path[0] === "packages") result = await getMyPackage(context.client, path[1]);
+    else if (path.length === 3 && path[0] === "packages" && path[2] === "lots") result = await listPackageLots(context.client, path[1], pageOptions);
+    else if (path.length === 3 && path[0] === "packages" && path[2] === "movements") result = await listPackageMovements(context.client, path[1], pageOptions);
+    else if (path.length === 3 && path[0] === "packages" && path[2] === "coverage") result = await listPackageCoverage(context.client, path[1], pageOptions);
+    else if (path.length === 3 && path[0] === "packages" && path[2] === "lineage") result = await listPackageLineage(context.client, path[1], pageOptions);
+    else if (path.length === 3 && path[0] === "packages" && path[2] === "renewals") result = await listPackageRenewals(context.client, path[1], pageOptions);
+    else if (path.length === 3 && path[0] === "packages" && path[2] === "reconciliation") result = await getPackageReconciliation(context.client, path[1]);
+    else if (path.length === 3 && path[0] === "enrollments" && path[2] === "package-options") result = await getPackageCoverageOptions(context.client, path[1], options);
+    else if (path.join("/") === "tutor/profile") result = await getTutorProfile(context.client);
     else if (path.join("/") === "me/contacts") result = await getMyVerifiedContacts(context.client);
     else if (path.join("/") === "me/application-subjects") result = await getApplicationSubjects(context.client);
     else if (path.join("/") === "tutor-applications") result = await getTutorApplications(context.client, pageOptions);
