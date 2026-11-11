@@ -1,5 +1,20 @@
 # Implementation status
 
+## Current feature advance — T07, 11 November
+
+Latest bounded progress: T07 actual materials/meeting browser walkthrough passed **2/2** desktop/mobile,37.5s (`.local/t07-materials-browser-green.log`). Root viewed desktop/mobile materials and mobile meeting screenshots. The first browser failure exposed missing private Next runtime configuration; guarded local setup now supplies missing Storage/worker settings without changing existing values or exposing secrets. A later browser-only wait on unread successful PUT response JSON and an ambiguous withdrawal locator were corrected; actual byte checksum and access assertions stayed intact. Explicit scanner-outage retry passed **1/1** after additive migration `20261111202319_explicit_file_scan_retry.sql`. Unavailability/selected future-series foundations passed focused **2/2** (`.local/t07-operations-first.log`); controlled reassignment is still being implemented.
+
+T08 is actively implementing factual attendance, controlled completion, immutable tutor earnings, payout control and finance. T09 now has a locally exercised routing/delivery foundation and portal inbox/admin screens; see [notification evidence](T09-NOTIFICATION-EVIDENCE.md). Its actual routing/lost-acknowledgement/callback sequence passed **2/2**, with **3/3** adapter/signature/template unit checks and successful no-jobs worker startup. T09 complete matrix/reminder/browser checks remain open. T10–T13 are still pending; these are unfinished local work, not all external dependencies.
+
+The payment checkpoint is saved in commit `b87816a`; its combined regression remains pending below. Implementation has advanced to actual private files, material publication, calendar provisioning, meeting access and the next operational features. Original acceptance IDs remain unchanged until their complete owning checks execute.
+
+- Private Storage and content validation passed **8/8** focused checks (4 Auth/Storage and 4 byte/archive checks), `.local/t07-files-storage-first.log`: concurrent immutable upload adoption, scan lost-acknowledgement recovery, peer denial, guardian materials scope, tutor revocation, explicit handout publication/withdrawal, stored receipt submission and quarantine. Browser verification is in progress.
+- Separate provider-token AES-GCM encryption/rotation, admin OAuth state/PKCE, fixed callback and Google worker refresh wiring are implemented. `pnpm exec vitest run tests/unit/google-oauth.test.ts tests/unit/provider-tokens.test.ts tests/unit/config.test.ts` passed **15/15** (`.local/t07-oauth-green.log`). Live Google OAuth/Meet admission remains unexecuted and credential-dependent.
+- Calendar actual Auth/SQL/worker checks passed **3/3**,5.07s (`.local/t07-calendar-worker-first.log`): funded confirmed booking, simulated timeout recovery, duplicate job, current-role access and reschedule fencing. Fake meetings are explicitly simulated.
+- Added `files.scan` and ClamD TCP INSTREAM adapters with bounded streams/replies, hash verification and signature-age checks. `pnpm exec vitest run tests/unit/file-scan.test.ts` first failed on absent implementation then passed **2/2**,330ms (`.local/t07-scan-red.log`, `.local/t07-scan-green.log`), using a local protocol stub. This is not a live malware-scanner test. Private-network daemon/signature operations remain an external deployment dependency. Protocol: [official ClamD documentation](https://docs.clamav.net/manual/Usage/ClamdProtocol.html).
+- Root scoped ESLint passed (`.local/t07-root-lint.log`). The last whole `pnpm typecheck` failed only on the archive fixture union in `tests/unit/files-validation.test.ts` (`.local/t07-root-types.log`); its owner has corrected that typing, with a whole rerun pending. No whole-workspace success is inferred from scoped results.
+
+
 ## Current handoff state
 
 Implementation started 2026-11-11. T01–T03 are locally verified. T04 booking and T05 package entitlement passed their independent foundation checks and are `awaiting_T06_integration`. T06 payment reconciliation and financial integration is in progress. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its complete owning checks and later-domain prerequisites.
@@ -75,8 +90,8 @@ Final root `pnpm db:verify`, pack verification and evidence validation exited0 (
 | T05 | Package entitlement and renewals | `awaiting_T06_integration` | `pnpm check` exit 0 on Node 24.22.1: lint, types, 239 unit, 141 integration, 96 browser checks and production build; `docs/evidence/t05-check.log` |
 | T06 | Receipt review, allocations and refunds | In progress | Focused source, allocation, package funding, encryption/transport and manual-parser checks executed below; full financial/concurrency checkpoint remains open |
 | T07 | Files, calendar and meeting access | In progress | User-directed advance; private uploads/scanning, calendar adapters and portal UI being implemented; checkpoint regression remains pending |
-| T08 | Completion, tutor earnings, payouts and finance | Planned | Pending implementation |
-| T09 | Operational notifications | Planned | Pending implementation |
+| T08 | Completion, tutor earnings, payouts and finance | In progress | Actual attendance/completion and earnings implementation; payout lane follows controlled reassignment |
+| T09 | Operational notifications | In progress | Scoped routing/delivery and local inbox implemented; focused2/2 integration and3/3 unit checks passed; matrix/reminder/browser work pending |
 | T10 | Customer records, follow-ups and exports | Planned | Pending implementation |
 | T11 | Support inbox and WhatsApp | Planned | Pending implementation |
 | T12 | Campaign, student and team analytics | Planned | Pending implementation |

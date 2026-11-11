@@ -26,6 +26,12 @@ function isBrowserKey(value: string): boolean {
   } catch { return false; }
 }
 
+function scannerEndpoint(value: string): string {
+  const endpoint = new URL(value);
+  if (endpoint.protocol !== 'tcp:' || !endpoint.hostname || !endpoint.port || endpoint.username || endpoint.password || endpoint.search || endpoint.hash || (endpoint.pathname && endpoint.pathname !== '/')) throw new Error('Invalid configuration: FILE_SCAN_URL');
+  return endpoint.toString();
+}
+
 function privateEncryptionKeys(raw: Env) {
   const key = raw.SECRET_ENCRYPTION_KEY?.trim() || null;
   const keyId = raw.SECRET_ENCRYPTION_KEY_ID?.trim() || 'v1';
@@ -65,16 +71,24 @@ export function parseServerConfig(raw: Env) {
   if (publishableKey && !isBrowserKey(publishableKey)) throw new Error("Invalid public Supabase key classification");
   const required: string[] = [];
   if (!isolated) required.push("APP_BASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "WORKER_DATABASE_URL", "SUPABASE_SECRET_KEY", "SECRET_ENCRYPTION_KEY");
-  if (providers.email === "ses") required.push("AWS_REGION", "EMAIL_FROM", "EMAIL_SNS_TOPIC_ARN");
-  if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_CALENDAR_ID");
+  if (providers.email === "ses") required.push("AWS_REGION", "EMAIL_FROM", "EMAIL_SNS_TOPIC_ARN", "EMAIL_CONFIGURATION_SET");
+  if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_CALENDAR_ID", "SECRET_ENCRYPTION_KEY");
   if (providers.whatsapp === "cloud") required.push("WHATSAPP_BUSINESS_ACCOUNT_ID", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN");
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
   const missing = required.filter(key => !raw[key]?.trim());
   if (missing.length) throw new Error(`Missing configuration keys: ${missing.join(", ")}`);
   const encryption = privateEncryptionKeys(raw);
+  const appBaseUrl = absoluteUrl(raw.APP_BASE_URL || "http://localhost:3000", "APP_BASE_URL", !isolated);
+  const google = providers.calendar === 'google' ? {
+    client_id: raw.GOOGLE_OAUTH_CLIENT_ID!.trim(), client_secret: raw.GOOGLE_OAUTH_CLIENT_SECRET!.trim(),
+    redirect_uri: absoluteUrl(raw.GOOGLE_OAUTH_REDIRECT_URI!.trim(), 'GOOGLE_OAUTH_REDIRECT_URI', !isolated), calendar_id: raw.GOOGLE_CALENDAR_ID!.trim(),
+  } : null;
+  const email = providers.email === 'ses' ? { region: raw.AWS_REGION!.trim(), from: raw.EMAIL_FROM!.trim(), topic_arn: raw.EMAIL_SNS_TOPIC_ARN!.trim(), configuration_set: raw.EMAIL_CONFIGURATION_SET!.trim() } : null;
+  if (email && (!/^[a-z]{2}(?:-[a-z]+)+-\d$/.test(email.region) || !/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(email.from) || !new RegExp(`^arn:aws:sns:${email.region}:\\d{12}:[A-Za-z0-9_-]{1,256}$`).test(email.topic_arn) || !/^[A-Za-z0-9_-]{1,64}$/.test(email.configuration_set))) throw new Error('Invalid email configuration');
+  if (google && (new URL(google.redirect_uri).origin !== new URL(appBaseUrl).origin || new URL(google.redirect_uri).pathname !== '/api/calendar/google/callback' || new URL(google.redirect_uri).search || new URL(google.redirect_uri).hash)) throw new Error('Invalid configuration: GOOGLE_OAUTH_REDIRECT_URI');
   return {
     environment, isolated, providers,
-    app_base_url: absoluteUrl(raw.APP_BASE_URL || "http://localhost:3000", "APP_BASE_URL", !isolated),
+    app_base_url: appBaseUrl,
     supabase_url: supabaseUrl ? absoluteUrl(supabaseUrl, "NEXT_PUBLIC_SUPABASE_URL", !isolated) : null,
     supabase_publishable_key: publishableKey,
     worker_database_url: raw.WORKER_DATABASE_URL || null,
@@ -82,6 +96,8 @@ export function parseServerConfig(raw: Env) {
     secret_encryption_key: encryption.key,
     secret_encryption_key_id: encryption.keyId,
     secret_encryption_previous_keys: encryption.previous,
+    google, email,
+    file_scan_url: providers.file_scan === 'clamav' ? scannerEndpoint(raw.FILE_SCAN_URL!.trim()) : null,
   };
 }
 

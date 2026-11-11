@@ -96,6 +96,22 @@ export function assertPaymentWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
   } else if (fn.worker && (fn.nspname === 'finance_private' || /refund_destination|statement_import|destination_validation_artifact/.test(fn.proname))) throw new Error('SUPABASE_PAYMENT_WORKER_BOUNDARY_INVALID');
 }
 
+const integrationWorkerSignatures: Record<string, string> = {
+  prepare_file_content: 'uuid,uuid', record_file_object: 'uuid,uuid,uuid,jsonb', prepare_file_download: 'uuid,uuid',
+  prepare_file_scan: 'uuid,uuid,uuid', finalize_file_scan: 'uuid,integer,uuid,uuid,jsonb',
+  record_calendar_connection: 'uuid,uuid,uuid,text,text,jsonb,text', prepare_calendar_sync: 'uuid,uuid,uuid',
+  get_calendar_credentials: 'uuid,integer,uuid,uuid', finalize_calendar_sync: 'uuid,integer,uuid,integer,integer,uuid,uuid,jsonb',
+  rotate_calendar_credentials: 'uuid,integer,uuid,uuid,jsonb,text,uuid,uuid',
+  route_notification_event: 'uuid,uuid', prepare_notification_delivery: 'uuid,uuid,uuid',
+  finalize_notification_delivery: 'uuid,uuid,uuid,uuid,jsonb', record_email_callback: 'uuid,text,uuid,text,timestamp with time zone',
+};
+export function assertIntegrationWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' | 'nspname' | 'signature' | 'rolname' | 'prosecdef' | 'executors'> & { worker: boolean }) {
+  const signature = integrationWorkerSignatures[fn.proname];
+  if (signature) {
+    if (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef || fn.signature !== `app_private.${fn.proname}(${signature})` || fn.rolname !== 'git_tutor_commands' || [...fn.executors].sort().join(',') !== 'git_tutor_commands,git_tutor_worker') throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
+  } else if (fn.worker && /^(file_|calendar_|notification_)/.test(fn.proname)) throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
+}
+
 async function verifyProjectContainer() {
   const labels = JSON.parse((await execute('docker', ['inspect', 'supabase_db_GitTutor_System', '--format', '{{json .Config.Labels}}'])).stdout) as Record<string, string>;
   const ports = JSON.parse((await execute('docker', ['inspect', 'supabase_db_GitTutor_System', '--format', '{{json .NetworkSettings.Ports}}'])).stdout) as Record<string, { HostIp: string; HostPort: string }[]>;
@@ -192,13 +208,25 @@ async function applyMigrations(foundationOnly = false, migrationWorkspace?: stri
   }
 }
 
+export function withLocalPrivateSettings(content: string, config: LocalSupabase): string {
+  assertLocalSupabase(config); assertEnvironmentFileWritable(content);
+  if (!config.worker_database_url) throw new Error('LOCAL_WORKER_CONFIGURATION_REQUIRED');
+  const worker = new URL(config.worker_database_url);
+  if (worker.hostname !== '127.0.0.1' || worker.port !== '54322' || worker.pathname !== '/postgres' || worker.username !== 'git_tutor_worker') throw new Error('LOCAL_WORKER_CONFIGURATION_REQUIRED');
+  let result = content;
+  for (const [key,value] of [['WORKER_DATABASE_URL',config.worker_database_url],['SUPABASE_SECRET_KEY',config.secret_key]]) {
+    if (!new RegExp(`^[\\t ]*(?:export[\\t ]+)?${key}[\\t ]*=`, 'm').test(result)) result += `${result.endsWith('\n')?'':'\n'}${key}=${JSON.stringify(value)}\n`;
+  }
+  return result;
+}
+
 async function publicEnvironment(config: LocalSupabase) {
   let existing = '';
   try { existing = await readFile('.env.local', 'utf8'); } catch { /* New local configuration. */ }
   assertEnvironmentFileWritable(existing);
   const lines = existing.split(/\r?\n/).filter(line => line && !/^(APP_ENV|APP_BASE_URL|NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)=/.test(line));
   lines.push('APP_ENV=development', 'APP_BASE_URL=http://127.0.0.1:3000', `NEXT_PUBLIC_SUPABASE_URL=${config.url}`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${config.publishable_key}`);
-  await writeFile('.env.local', withLocalEncryptionKey(`${lines.join('\n')}\n`), { mode: 0o600 });
+  await writeFile('.env.local', withLocalPrivateSettings(withLocalEncryptionKey(`${lines.join('\n')}\n`), config), { mode: 0o600 });
 }
 
 async function copyLocalConfiguration() {
@@ -383,6 +411,7 @@ async function verify() {
       if (fn.proname === 'process_occurrence_booking_due' && (fn.nspname !== 'app_private' || !fn.worker || fn.signature !== 'app_private.process_occurrence_booking_due(uuid,text)' || fn.rolname !== 'git_tutor_commands' || fn.executors.some((role: string) => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID');
       assertPackageWorkerBoundary(fn);
       assertPaymentWorkerBoundary(fn);
+      assertIntegrationWorkerBoundary(fn);
       assertAllowedDefiner(fn);
     }
     console.log(`Real Supabase verification passed: ${files.length} migrations, ${tables.rowCount} private RLS tables, ${functions.rowCount} function boundaries.`);
