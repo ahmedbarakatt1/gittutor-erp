@@ -4,11 +4,12 @@ import {policyFixture} from '../unit/policy-vectors';
 import {catalogFixtureIds} from '../../tools/catalog-seed';
 import {fixtureId} from '../../tools/db-seed';
 
-export async function packageFixture(options:{coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up'}={}){
+export async function packageFixture(options:{coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up';cancellationRefundBasisPoints?:number}={}){
  const booking=await bookingFixture();
  await booking.availability();
  const content=policyFixture('group');
  Object.assign(content,{group_target_size:2,group_minimum_size:2,group_capacity:4,customer_pricing_version:catalogFixtureIds.group_pricing,compensation_policy_version:catalogFixtureIds.group_pricing});
+ if(options.cancellationRefundBasisPoints!==undefined)content.customer_cancellation_windows=[{minimum_minutes_before_start:0,maximum_minutes_before_start_exclusive:null,refund_basis_points:options.cancellationRefundBasisPoints}];
  const pack=content.package_contract as Record<string,unknown>;
  Object.assign(pack,{package_policy_version_id:null,eligible_offer_ids:null,grant_credit_quanta:3000,purchase_value_minor:150000,expiry_mode:'days_from_grant',expiry_days:90});
  if(options.coverageRule){pack.coverage_rule=options.coverageRule;content.confirmation_funding_sources=options.coverageRule==='named_entitlement_covers_eligible_occurrence'?['verified_payment_allocation','reserved_named_package_entitlement']:['verified_payment_allocation','reserved_eligible_package_value'];}

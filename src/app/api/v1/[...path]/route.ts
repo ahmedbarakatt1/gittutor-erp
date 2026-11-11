@@ -73,7 +73,7 @@ const commands: CommandRoute[] = [
   { family: "booking", pattern: /^operation-proposals$/, rpc: "create_operation_proposal", fields: ["kind", "target_id", "requested_terms", "reason", "expected_version"] },
   { family: "booking", pattern: /^operation-proposals\/([^/]+)\/accept$/, rpc: "accept_operation_proposal", pathArgument: "proposal_id", fields: ["terms_hash", "expected_version"] },
   { family: "booking", pattern: /^operation-proposals\/([^/]+)\/decline$/, rpc: "decline_operation_proposal", pathArgument: "proposal_id", fields: ["reason", "expected_version"] },
-  { family: "booking", pattern: /^operation-proposals\/([^/]+)\/revise-cancellation$/, rpc: "revise_cancellation_proposal", pathArgument: "proposal_id", fields: ["tutor_compensation_minor", "reason", "expected_version"] },
+  { family: "booking", pattern: /^operation-proposals\/([^/]+)\/revise-cancellation$/, rpc: "revise_cancellation_proposal", pathArgument: "proposal_id", fields: ["tutor_compensation_minor", "package_dispositions", "reason", "expected_version"] },
   { family: "booking", pattern: /^operation-proposals\/([^/]+)\/approve$/, rpc: "approve_operation_proposal", pathArgument: "proposal_id", fields: ["terms_hash", "decision", "reason", "expected_version"] },
   { family: "booking", pattern: /^enrollments\/([^/]+)\/cancel$/, rpc: "cancel_enrollment", pathArgument: "enrollment_id", fields: ["reason", "remedy_proposal_id", "expected_version"] },
   { family: "booking", pattern: /^occurrences\/([^/]+)\/reschedule$/, rpc: "reschedule_occurrence", pathArgument: "occurrence_id", fields: ["start_at", "end_at", "time_zone", "reason", "accepted_proposal_id", "expected_version"] },

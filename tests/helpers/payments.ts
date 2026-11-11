@@ -3,7 +3,7 @@ import { packageFixture } from './packages';
 import { authClient } from './supabase';
 
 /** Guarded synthetic metadata only. These rows do not attest uploaded bytes or a live scanner. */
-export async function paymentFixture(options: { charge?: 'package' | 'enrollment'; coverageRule?: 'named_entitlement_covers_eligible_occurrence' | 'allocated_value_with_explicit_top_up' } = {}) {
+export async function paymentFixture(options: { charge?: 'package' | 'enrollment'; coverageRule?: 'named_entitlement_covers_eligible_occurrence' | 'allocated_value_with_explicit_top_up'; cancellationRefundBasisPoints?: number } = {}) {
   const f = await packageFixture(options), reviewer = await authClient('cs_a');
   const adminId = (await f.admin.auth.getUser()).data.user!.id;
   const learnerAccountId = (await f.learner.auth.getUser()).data.user!.id;

@@ -15,7 +15,17 @@ import formStyles from '../auth.module.css';
 
 export function CustomerTerms({ terms }: { terms: CustomerProposalTerms }) {
   const headingId = useId();
-  return <><dl className={styles.facts}><div><dt>{copy.oldTime}</dt><dd><SessionTime start={terms.old_start_at} end={terms.old_end_at} /></dd></div><div><dt>{copy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div><div><dt>{copy.oldTuition}</dt><dd>{money(terms.old_customer_price_minor)}</dd></div><div><dt>{copy.newTuition}</dt><dd>{money(terms.customer_price_minor)}</dd></div><div><dt>{copy.adjustment}</dt><dd>{money(terms.customer_adjustment_minor)}</dd></div>{terms.remedy !== 'none' && <div><dt>{copy.remedy}</dt><dd>{copy.remedies[terms.remedy]} · {terms.remedy_amount_minor === null ? copy.unknownMoney : money(terms.remedy_amount_minor)}</dd></div>}{terms.restored_credit_quanta !== null && terms.restored_credit_quanta > 0 && <div><dt>{copy.restoredCredits}</dt><dd>{formatCreditQuanta(terms.restored_credit_quanta)}</dd></div>}{terms.released_credit_quanta > 0 && <div><dt>{copy.releasedCredits}</dt><dd>{formatCreditQuanta(terms.released_credit_quanta)}</dd></div>}</dl><OfferTerms terms={terms.customer_policy} policyId={terms.policy_version_id} headingId={headingId} /></>;
+  return <><dl className={styles.facts}>
+    <div><dt>{copy.oldTime}</dt><dd><SessionTime start={terms.old_start_at} end={terms.old_end_at} /></dd></div>
+    <div><dt>{copy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div>
+    <div><dt>{copy.oldTuition}</dt><dd>{money(terms.old_customer_price_minor)}</dd></div>
+    <div><dt>{copy.newTuition}</dt><dd>{money(terms.customer_price_minor)}</dd></div>
+    <div><dt>{copy.adjustment}</dt><dd>{money(terms.customer_adjustment_minor)}</dd></div>
+    {terms.remedy !== 'none' && <div><dt>{copy.remedy}</dt><dd>{copy.remedies[terms.remedy]} · {terms.remedy_amount_minor === null ? copy.unknownMoney : money(terms.remedy_amount_minor)}</dd></div>}
+    {terms.restored_credit_quanta !== null && terms.restored_credit_quanta > 0 && <div><dt>{copy.restoredCredits}</dt><dd>{formatCreditQuanta(terms.restored_credit_quanta)}</dd></div>}
+    {terms.released_credit_quanta > 0 && <><div><dt>{copy.releasedCredits}</dt><dd>{formatCreditQuanta(terms.released_credit_quanta)}</dd></div>{terms.released_value_minor !== null && <div><dt>{copy.releasedCreditValue}</dt><dd>{money(terms.released_value_minor)}</dd></div>}</>}
+    {terms.extinguished_credit_quanta > 0 && <><div><dt>{copy.extinguishedCredits}</dt><dd>{formatCreditQuanta(terms.extinguished_credit_quanta)}</dd></div><div><dt>{copy.extinguishedCreditValue}</dt><dd>{money(terms.extinguished_value_minor)}</dd></div></>}
+  </dl>{terms.extinguished_credit_quanta > 0 && <p className={styles.notice}>{copy.cancellationCreditNotice}</p>}<OfferTerms terms={terms.customer_policy} policyId={terms.policy_version_id} headingId={headingId} /></>;
 }
 
 export function CustomerProposal({ id: initialId, learnerId, kind = 'operation' }: { id: string; learnerId: string; kind?: 'operation' | 'amendment' }) {

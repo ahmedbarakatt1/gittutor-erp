@@ -251,6 +251,52 @@ test('cancellation review replaces terms and requires fresh private and customer
   } finally { await Promise.all(contexts.map(context => context.close())); await f.close(); }
 });
 
+test('reserved cancellation shows exact returned and retained credits before customer consent', async ({ browser }, info) => {
+  test.setTimeout(180_000);
+  const f = await paymentFixture({ cancellationRefundBasisPoints: 5000 });
+  const contexts = await Promise.all(Array.from({ length: 2 }, () => browser.newContext({ baseURL, viewport: info.project.use.viewport })));
+  try {
+    const grant = await f.grantPolicy(50001);
+    await f.grant(f.purchaseId, grant, 50001, 1000);
+    const held = await f.hold();
+    await f.rpc('approve_tutor_fee', { p_occurrence_id: held.occurrenceId, p_tutor_id: f.tutorId, p_fee_minor: 45000, p_currency: 'EGP', p_duration_minutes: 60, p_compensation_policy_version_id: catalogFixtureIds.group_pricing, p_target_tier: 2, p_purpose: 'initial', p_reason: 'Synthetic package cancellation agreement', p_expected_version: 1, p_idempotency_key: randomUUID() });
+    await f.rpc('reserve_package_credit', { p_package_id: f.purchaseId, p_enrollment_id: held.enrollmentId, p_credit_quanta: 1000, p_coverage_proposal_id: null, p_expected_version: 2, p_idempotency_key: randomUUID() }, f.learner);
+    const enrollment = await f.rpc('get_enrollment', { p_enrollment_id: held.enrollmentId }, f.learner);
+    const original = await f.rpc('create_operation_proposal', { p_kind: 'cancellation_remedy', p_target_id: held.enrollmentId, p_requested_terms: { target_type: 'enrollment', remedy: 'policy_default', expires_at: new Date(Date.now() + 600000).toISOString() }, p_reason: 'Review partial return of reserved credits', p_expected_version: enrollment.version, p_idempotency_key: randomUUID() }, f.learner);
+    const [operator, customer] = await Promise.all(contexts.map(context => context.newPage()));
+    const errors: string[] = []; for (const page of [operator, customer]) page.on('pageerror', error => errors.push(error.message));
+    await login(operator, 'admin_a'); await operator.goto(`/admin/schedule?occurrence=${held.occurrenceId}`);
+    await operator.getByText('Review proposed terms', { exact: true }).click();
+    await operator.locator('summary').filter({ hasText: /^Review cancellation compensation$/ }).click();
+    const review = operator.getByRole('form', { name: 'Save exact cancellation review', exact: true });
+    await review.getByLabel('Reviewed cancellation compensation (EGP)', { exact: true }).fill('100');
+    await review.getByLabel(/^Credits to return ·/).fill('0.5');
+    await review.getByLabel('Reason for this request', { exact: true }).fill('Return half the reserved credits and retain half under the reviewed policy.');
+    const revised = await submit(operator, review, `operation-proposals/${original.proposal_id}/revise-cancellation`, 201);
+    await login(customer, 'learner_a'); await customer.goto(`/learn/bookings/${held.enrollmentId}`);
+    const proposal = customer.locator(`[data-proposal-id="${revised.proposal_id}"]`);
+    await proposal.locator('summary').first().click();
+    await expect(proposal.locator('div').filter({ has: customer.locator('dt').getByText('Unused teaching credits to return', { exact: true }) }).last()).toContainText('0.5');
+    await expect(proposal.getByText('Teaching credits retained for cancellation', { exact: true })).toBeVisible();
+    await expect(proposal.getByText('EGP 250.00', { exact: true })).toBeVisible();
+    await expect(proposal.getByText('EGP 250.01', { exact: true })).toBeVisible();
+    await expect(proposal.getByText('Credits retained for cancellation will no longer be available for lessons. Returned credits keep their original expiry.', { exact: true })).toBeVisible();
+    const response = await contexts[1].request.get(`/api/v1/operation-proposals/${revised.proposal_id}?view=customer&learner_id=${f.learnerId}`);
+    expect(response.status()).toBe(200); const dto = (await response.json()).data;
+    expect(dto.terms).toMatchObject({ old_customer_price_minor: 0, customer_price_minor: 0, customer_adjustment_minor: 0, released_credit_quanta: 500, released_value_minor: 25000, extinguished_credit_quanta: 500, extinguished_value_minor: 25001 });
+    expect(JSON.stringify(dto)).not.toMatch(confidential);
+    expect(await customer.locator('body').innerText()).not.toMatch(/compensation|Current agreement ceiling|EGP 100\.00/);
+    await expect(customer.getByText('Reserved package credits count toward funding. Check the related reservation for its confirmation status.', { exact: true })).toBeVisible();
+    await expect(customer.getByText('Session funding and confirmation remain unavailable until payment integration is complete.', { exact: true })).toHaveCount(0);
+    await mkdir('.local/screenshots', { recursive: true });
+    await proposal.screenshot({ path: `.local/screenshots/t06-partial-cancellation-${info.project.name}.png` });
+    const consent = proposal.getByRole('form', { name: 'Accept these proposed terms', exact: true });
+    await consent.getByLabel('I accept the displayed change for this learner.').check();
+    await submit(customer, consent, `operation-proposals/${revised.proposal_id}/accept`);
+    expect(errors).toEqual([]);
+  } finally { await Promise.all(contexts.map(context => context.close())); await f.close(); }
+});
+
 test('accepted future tuition uses an exact payment target and commits only after both existing learners are funded', async ({ browser }, info) => {
   test.setTimeout(180_000);
   const { f, account, first, second, proposed } = await fundedAmendmentFixture();

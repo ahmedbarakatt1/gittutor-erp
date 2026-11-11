@@ -1,0 +1,39 @@
+create or replace function api.revise_cancellation_proposal(p_proposal_id uuid,p_tutor_compensation_minor bigint,p_reason text,p_expected_version integer,p_idempotency_key text,p_package_dispositions jsonb default null) returns jsonb language plpgsql security definer set search_path='' as $$
+declare actor uuid:=app_private.require_actor();context jsonb;old app_private.operation_proposals%rowtype;p app_private.operation_proposals%rowtype;o app_private.occurrences%rowtype;fee finance_private.tutor_fee_agreements%rowtype;ct app_private.operation_customer_terms%rowtype;e app_private.enrollments%rowtype;q app_private.quotes%rowtype;snapshot jsonb;terms jsonb;teacher jsonb;expiry timestamptz;compensation uuid:=gen_random_uuid();snapshots jsonb:='{}';disposition jsonb;begin
+ perform app_private.require_role(actor,'admin');select * into old from app_private.operation_proposals where id=p_proposal_id;
+ if old.id is null or old.kind<>'cancellation_remedy' then raise exception 'NOT_FOUND';end if;
+ if p_package_dispositions is not null and(jsonb_typeof(p_package_dispositions) is distinct from 'array' or jsonb_array_length(p_package_dispositions)>4) then raise exception 'VALIDATION_ERROR';end if;
+ context:=app_private.booking_begin(actor,'revise_cancellation_proposal',jsonb_build_object('proposal_id',p_proposal_id,'tutor_compensation_minor',p_tutor_compensation_minor,'reason',p_reason,'expected_version',p_expected_version)||case when p_package_dispositions is null then '{}'::jsonb else jsonb_build_object('package_dispositions',p_package_dispositions) end,p_idempotency_key);if context->'replay_result'<>'null'::jsonb then return context->'replay_result';end if;
+ perform app_private.booking_lock_occurrence_finances(array[old.occurrence_id]);select * into old from app_private.operation_proposals where id=old.id for update;select * into o from app_private.occurrences where id=old.occurrence_id;
+ if old.version is distinct from p_expected_version or not coalesce(app_private.booking_proposal_fresh(old.id),false) then raise exception 'VERSION_CONFLICT';end if;
+ if length(btrim(p_reason)) not between 1 and 2000 or p_reason is null then raise exception 'VALIDATION_ERROR';end if;
+ select * into fee from finance_private.tutor_fee_agreements where id=o.current_fee_agreement_id;
+ if p_tutor_compensation_minor is null or p_tutor_compensation_minor<0 or p_tutor_compensation_minor>coalesce(fee.fee_minor,0) then raise exception 'AMOUNT_OUT_OF_RANGE';end if;
+ if fee.id is not null then perform app_private.require_role(fee.approved_by,'admin');end if;
+ if app_private.policy_content(old.policy_version_id)->>'tutor_cancellation_compensation_rule'<>'reviewed_exact_adjustment' then raise exception 'POLICY_INCOMPLETE';end if;
+ if p_package_dispositions is not null then
+  if(select count(*) from jsonb_array_elements(p_package_dispositions))<>(select count(distinct value->>'enrollment_id') from jsonb_array_elements(p_package_dispositions)) or exists(select 1 from jsonb_array_elements(p_package_dispositions) x where not exists(select 1 from app_private.operation_customer_terms c where c.proposal_id=old.id and c.enrollment_id=(x.value->>'enrollment_id')::uuid)) then raise exception 'VALIDATION_ERROR';end if;
+ end if;
+ expiry:=old.expires_at;
+ for ct in select * from app_private.operation_customer_terms where proposal_id=old.id order by enrollment_id loop
+  select value into disposition from jsonb_array_elements(p_package_dispositions) where(value->>'enrollment_id')::uuid=ct.enrollment_id;
+  snapshot:=finance_private.finance_cancellation_snapshot(ct.enrollment_id,old.requested_terms->>'remedy',old.target_type='occurrence',disposition);snapshots:=snapshots||jsonb_build_object(ct.enrollment_id::text,snapshot);expiry:=least(expiry,(snapshot->>'window_expires_at')::timestamptz);
+ end loop;
+ if expiry<=now() then raise exception 'WINDOW_CLOSED';end if;
+ insert into app_private.operation_proposals(kind,target_type,target_id,occurrence_id,base_target_version,base_occurrence_version,base_roster_hash,policy_version_id,requested_terms,expires_at,created_by,reason) values(old.kind,old.target_type,old.target_id,o.id,old.base_target_version,o.version,app_private.booking_roster_fingerprint(o.id),old.policy_version_id,old.requested_terms,expiry,actor,p_reason) returning * into p;
+ for ct in select * from app_private.operation_customer_terms where proposal_id=old.id order by enrollment_id loop
+  snapshot:=snapshots->ct.enrollment_id::text;select * into e from app_private.enrollments where id=ct.enrollment_id;select * into q from app_private.quotes where id=e.current_quote_id;
+  terms:=app_private.booking_proposal_customer_json(e.id,q.policy_version_id,o.start_at,o.end_at,(snapshot->>'retained_net_minor')::bigint,snapshot->>'remedy');
+  terms:=terms||jsonb_build_object('old_customer_price_minor',(snapshot->'charge_balance'->>'commercial_net_minor')::bigint,'customer_adjustment_minor',(snapshot->>'retained_net_minor')::bigint-(snapshot->'charge_balance'->>'commercial_net_minor')::bigint,'remedy_amount_minor',(snapshot->>'release_cash_minor')::bigint,'restored_credit_quanta',0,'released_credit_quanta',(snapshot->>'released_credit_quanta')::bigint);
+  if snapshot?'package_disposition' then terms:=terms||jsonb_build_object('released_value_minor',snapshot->'package_disposition'->'released_value_minor','extinguished_credit_quanta',snapshot->'package_disposition'->'extinguished_credit_quanta','extinguished_value_minor',snapshot->'package_disposition'->'extinguished_value_minor');end if;
+  insert into app_private.operation_customer_terms(proposal_id,learner_id,enrollment_id,source_quote_id,terms,terms_hash,financial_terms_ready) values(p.id,e.learner_id,e.id,q.id,terms,app_private.booking_proposal_hash(p.id,'learner',e.learner_id,terms,p.expires_at,p.base_target_version),true);
+  insert into finance_private.cancellation_customer_finances(proposal_id,enrollment_id,charge_id,snapshot,snapshot_hash) values(p.id,e.id,(snapshot->>'charge_id')::uuid,snapshot,app_private.catalog_hash(snapshot));
+ end loop;
+ insert into finance_private.cancellation_compensation_terms(id,proposal_id,occurrence_id,tutor_id,base_fee_agreement_id,amount_minor,reviewed_by,command_id) values(compensation,p.id,o.id,o.tutor_id,fee.id,p_tutor_compensation_minor,actor,(context->>'command_id')::uuid);
+ teacher:=app_private.booking_proposal_tutor_json(o.id,fee.id,o.start_at,o.end_at,o.target_tier)||jsonb_build_object('fee_agreement_id',null,'fee_minor',p_tutor_compensation_minor,'fee_agreement_state','reviewed_cancellation','cancellation_compensation_id',compensation);
+ insert into finance_private.operation_tutor_terms(proposal_id,tutor_id,terms,terms_hash) values(p.id,o.tutor_id,teacher,app_private.booking_proposal_hash(p.id,'tutor',o.tutor_id,teacher,p.expires_at,p.base_target_version));
+ update app_private.operation_proposals set state='declined',version=version+1,invalidated_reason='superseded_by_review',updated_at=now() where id=old.id;
+ insert into app_private.operation_proposal_supersessions(previous_proposal_id,replacement_proposal_id,actor_account_id,command_id) values(old.id,p.id,actor,(context->>'command_id')::uuid);
+ perform app_private.booking_enqueue_due(o.id,p.expires_at);perform set_config('response.status','201',true);
+ return app_private.booking_finish(context,p.id,p.version,jsonb_build_object('proposal_id',p.id,'terms_hash',app_private.booking_proposal_admin_hash(p.id),'expires_at',p.expires_at,'required_actions','["review_terms"]'::jsonb,'replaces_proposal_id',old.id),'cancellation_proposal_reviewed',jsonb_build_object('proposal_id',p.id,'replaces_proposal_id',old.id,'occurrence_id',o.id));
+end $$;

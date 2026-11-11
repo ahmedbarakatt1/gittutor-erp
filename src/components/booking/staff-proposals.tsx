@@ -10,6 +10,7 @@ import { CustomerTerms } from './customer-proposals';
 import { CairoInput, Check, ReadState, Select, SessionTime, instantField, money, moneyField, useBookingRecord } from './shared';
 import { AmountField } from '../payments/shared';
 import { PackageProposalReview } from '../packages/package-proposals';
+import { CreditField, creditField, credits } from '../packages/shared';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
 
@@ -40,11 +41,18 @@ function CancellationReview({ proposal, onSaved }: { proposal: Extract<Operation
   const current = useBookingRecord<{ items: AdminOccurrence[]; next_cursor: string | null }>(`occurrences?occurrence_id=${occurrenceId}`);
   const occurrence = current.data?.items.find(row => row.occurrence.occurrence_id === occurrenceId);
   const maximum = occurrence?.fee_agreement?.fee_minor ?? 0;
+  const reserved = occurrence?.roster.filter(row => proposal.terms.customers.some(terms => terms.enrollment_id === row.enrollment_id) && (row.funding.reserved_credit_quanta ?? 0) > 0) ?? [];
   return <details className={styles.private}><summary>{copy.reviewCancellation}</summary><p>{copy.reviewCancellationDescription}</p><ReadState pending={!current.data} {...current} />{occurrence && <><p>{copy.cancellationMaximum}: <bdi>{money(maximum)}</bdi></p><IdentityForm action={`operation-proposals/${proposal.proposal_id}/revise-cancellation`} submitLabel={copy.saveCancellationReview} successMessage={copy.cancellationReviewed} resettable={false} onSaved={onSaved} payload={form => {
     const tutor_compensation_minor = moneyField(form, 'compensation');
     if (tutor_compensation_minor > maximum) throw new Error('AMOUNT_OUT_OF_RANGE');
-    return { tutor_compensation_minor, reason: String(form.get('reason')).trim(), expected_version: proposal.version };
-  }}><AmountField name="compensation" label={copy.cancellationCompensation} max={maximum} allowZero /><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm></>}</details>;
+    const package_dispositions = reserved.map(row => {
+      const released_credit_quanta = creditField(form, `release_${row.enrollment_id}`);
+      const extinguished_credit_quanta = row.funding.reserved_credit_quanta! - released_credit_quanta;
+      if (extinguished_credit_quanta < 0) throw new Error('INVALID_CREDIT_QUANTITY');
+      return { enrollment_id: row.enrollment_id, released_credit_quanta, extinguished_credit_quanta };
+    });
+    return { tutor_compensation_minor, ...(package_dispositions.length ? { package_dispositions } : {}), reason: String(form.get('reason')).trim(), expected_version: proposal.version };
+  }}><AmountField name="compensation" label={copy.cancellationCompensation} max={maximum} allowZero />{reserved.length > 0 && <fieldset className={styles.section}><legend>{copy.cancellationPackageDisposition}</legend><p>{copy.cancellationPackageDescription}</p>{reserved.map(row => <div key={row.enrollment_id}><h4>{row.display_name}</h4><p>{copy.cancellationReservedCredits}: {credits(row.funding.reserved_credit_quanta!)}</p><CreditField name={`release_${row.enrollment_id}`} label={`${copy.cancellationCreditsToReturn} · ${row.display_name}`} max={row.funding.reserved_credit_quanta!} allowZero /></div>)}</fieldset>}<TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm></>}</details>;
 }
 
 export function CreateOperationProposal({ occurrence, view = 'admin', onSaved }: { occurrence: AdminOccurrence['occurrence']; view?: 'admin' | 'tutor'; onSaved?: () => void }) {
