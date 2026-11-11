@@ -1,0 +1,44 @@
+{
+  "session": "git-tutor-ui",
+  "runtime": "Node24.22.1",
+  "checks": [
+    {
+      "width": 1440,
+      "overflow": false,
+      "subjectHeadings": [
+        "Computer Science",
+        "Engineering",
+        "Business",
+        "Business Intelligence"
+      ],
+      "bodyFont": "18px"
+    },
+    {
+      "width": 360,
+      "overflow": false,
+      "subjectHeadings": [
+        "Computer Science",
+        "Engineering",
+        "Business",
+        "Business Intelligence"
+      ],
+      "bodyFont": "16px"
+    },
+    {
+      "width": 360,
+      "direction": "rtl",
+      "overflow": false
+    }
+  ],
+  "focus": {
+    "outline": "solid",
+    "width": "3px"
+  },
+  "consoleErrors": [],
+  "warnings": [],
+  "failedResponses": [],
+  "limitations": [
+    "Development Next.js compiling indicator appears in the first screenshots while parallel route implementation was active.",
+    "All-offer development fixture isolation is a separate unresolved release concern; Subjects discovery no longer uses fixture counts or presents course scenarios as brand areas."
+  ]
+}

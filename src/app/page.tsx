@@ -2,6 +2,7 @@ import { StudyExample } from '@/components/study-example';
 import { GizaAccent } from '@/components/giza-accent';
 import { en as copy } from '@/locales/en';
 import Link from 'next/link';
+import { PublicContactLinks } from '@/components/public-contact';
 
 function Wordmark() {
   return <span className="wordmark"><span className="wordmark-git">Git</span><span>Tutor<span className="wordmark-period">.</span></span></span>;
@@ -107,7 +108,7 @@ export default function HomePage() {
 
       <footer className="site-footer container">
         <div className="footer-invitation"><div><h2>{copy.footer.title}</h2><p>{copy.footer.body}</p><Link className="button button-primary" href="/subjects">{copy.navigation.explore}</Link></div><GizaAccent /></div>
-        <div className="footer-bottom"><Wordmark /><p>{copy.footer.support}</p><Link href="/apply-to-teach">{copy.navigation.teach}</Link><a href="#top">{copy.footer.back}</a></div>
+        <div className="footer-bottom"><Wordmark /><PublicContactLinks /><Link href="/apply-to-teach">{copy.navigation.teach}</Link><a href="#top">{copy.footer.back}</a></div>
       </footer>
     </>
   );

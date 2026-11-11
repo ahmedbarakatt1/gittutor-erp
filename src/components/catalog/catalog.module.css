@@ -11,6 +11,7 @@
 .intro p { margin-block-start: 24px; max-inline-size: 62ch; color: var(--muted); font-size: 18px; }
 .footer { border-block-start: 1px solid var(--border); padding: 32px 40px; max-inline-size: 1160px; margin-inline: auto; display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .footer p { font-size: 16px; color: var(--muted); }
+.footer > div { display: grid; gap: 18px; }
 .filter { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 20px; padding-block: 24px; border-block: 1px solid var(--border); }
 .filter label { display: block; font-size: 14px; font-weight: 700; margin-block-end: 8px; }
 .filter select { inline-size: 100%; min-block-size: 48px; padding: 12px; background: white; border: 1px solid #85877e; border-radius: 6px; font-size: 16px; }
@@ -40,11 +41,22 @@
 .empty { padding: 40px 0; max-inline-size: 65ch; }
 .empty h2 { font-size: 1.7rem; }
 .empty p { margin-block: 16px 24px; color: var(--muted); }
-.subjectList { list-style: none; padding: 0; }
-.subject { padding-block: 32px; border-block-start: 1px solid var(--border); display: grid; grid-template-columns: 1fr 210px; align-items: baseline; gap: 24px; }
-.subject h2 { font-size: 2rem; letter-spacing: -.03em; }
-.subject p { margin-block-start: 12px; color: var(--muted); }
-.subject > a { justify-self: end; }
+.subjectIntro { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; max-inline-size: none; align-items: end; padding-block: 14px 64px; }
+.subjectIntro h1 { max-inline-size: 12ch; }
+.subjectIntro p { margin-block-start: 0; padding-block-end: 5px; max-inline-size: 38ch; font-size: 18px; }
+.subjectList { list-style: none; padding: 0; border-block-end: 1px solid var(--border); }
+.subject { padding-block: 35px; border-block-start: 1px solid var(--border); display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr) 32px; align-items: center; gap: 40px; text-decoration: none; }
+.subject h2 { font-size: clamp(1.65rem,3vw,2.25rem); line-height: 1.15; letter-spacing: -.03em; }
+.subject p { color: var(--muted); font-size: 16px; }
+.subjectTopics { margin-block-start: 14px; max-inline-size: 36ch; line-height: 1.65; }
+.subjectDescription > p { max-inline-size: 32ch; line-height: 1.65; }
+.subjectAction { display: inline-block; font-size: 15px; font-weight: 700; margin-block-start: 16px; text-decoration: underline; text-underline-offset: 5px; }
+.subjectArrow { inline-size: 32px; block-size: 32px; fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.subject:hover h2, .subject:hover .subjectAction { color: var(--brand-hover); }
+.subject:hover .subjectArrow { stroke: var(--brand-hover); }
+.subject:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
+.allCourses { margin-block-start: 24px; }
+:global([dir=rtl]) .subjectArrow { transform: rotate(180deg); }
 .breadcrumb { margin-block-end: 35px; }
 .detail { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: start; }
 .detail h1 { font-size: clamp(2.4rem, 4.5vw, 4rem); line-height: 1.1; letter-spacing: -.04em; }
@@ -104,9 +116,14 @@
   .offer { grid-template-columns: 1fr; gap: 22px; }
   .offerPrice { text-align: start; }
   .offerPrice strong { font-size: 1.5rem; }
-  .subject { grid-template-columns: 1fr; gap: 18px; }
-  .subject > a { justify-self: start; }
-  .subject h2 { font-size: 1.65rem; }
+  .subjectIntro { grid-template-columns: 1fr; gap: 24px; padding-block: 10px 36px; }
+  .subjectIntro p { margin-block-start: 0; }
+  .subject { grid-template-columns: minmax(0,1fr) 28px; gap: 18px; padding-block: 28px; }
+  .subject h2 { font-size: 1.8rem; }
+  .subjectName { grid-column: 1 / -1; }
+  .subjectDescription > p { max-inline-size: none; }
+  .subjectArrow { inline-size: 28px; block-size: 28px; align-self: end; margin-block-end: 3px; }
+  .subjectTopics { margin-block-start: 12px; }
   .footer { padding: 28px 22px; }
   .detail { grid-template-columns: 1fr; gap: 36px; }
   .booking { grid-row: 1; }

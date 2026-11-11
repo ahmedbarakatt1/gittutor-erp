@@ -1,0 +1,27 @@
+async (page) => {
+  const errors = [], warnings = [], failures = [];
+  page.on('pageerror', error => errors.push(error.message.replace(/https?:\/\/\S+/g, '[url]')));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); if (message.type() === 'warning') warnings.push(message.text().replace(/https?:\/\/\S+/g, '[url]')); });
+  page.on('response', response => { if (response.status() >= 400) failures.push({path: new URL(response.url()).pathname, status: response.status()}); });
+  await page.context().clearCookies();
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('http://127.0.0.1:3000/subjects');
+  await page.getByRole('link',{name:'Explore Computer Science',exact:true}).waitFor();
+  await page.screenshot({path:'.impeccable/review/subjects-brand-desktop.png',fullPage:true});
+  const checks=[];
+  for (const width of [1440,360]) {
+    await page.setViewportSize({width,height:900});
+    checks.push(await page.evaluate(() => ({width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,subjectHeadings:[...document.querySelectorAll('main ul h2')].map(n=>n.textContent),bodyFont:getComputedStyle(document.querySelector('main p')).fontSize})));
+    if(width===360) await page.screenshot({path:'.impeccable/review/subjects-brand-mobile.png',fullPage:true});
+  }
+  await page.getByRole('link',{name:'Explore Computer Science',exact:true}).focus();
+  const focus=await page.evaluate(()=>({outline:getComputedStyle(document.activeElement).outlineStyle,width:getComputedStyle(document.activeElement).outlineWidth}));
+  await page.evaluate(()=>document.documentElement.dir='rtl');
+  await page.screenshot({path:'.impeccable/review/subjects-brand-rtl.png',fullPage:true});
+  checks.push(await page.evaluate(()=>({width:innerWidth,direction:'rtl',overflow:document.documentElement.scrollWidth>innerWidth})));
+  await page.evaluate(()=>document.documentElement.dir='ltr');
+  await page.goto('http://127.0.0.1:3000/');
+  await page.getByRole('contentinfo').getByRole('link',{name:'Instagram',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:'.impeccable/review/public-contact-mobile.png'});
+  return {checks,focus,consoleErrors:errors,warnings,failedResponses:failures};
+}

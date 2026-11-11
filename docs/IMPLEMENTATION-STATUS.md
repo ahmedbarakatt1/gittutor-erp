@@ -2,7 +2,7 @@
 
 ## Current handoff state
 
-Implementation started 2026-11-11. T01–T03 are locally verified. T04 booking and T05 package entitlement passed their independent foundation checks and are `awaiting_T06_integration`. T06 is next. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its complete owning checks and later-domain prerequisites.
+Implementation started 2026-11-11. T01–T03 are locally verified. T04 booking and T05 package entitlement passed their independent foundation checks and are `awaiting_T06_integration`. T06 payment reconciliation and financial integration is in progress. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its complete owning checks and later-domain prerequisites.
 
 ## Task progress
 
@@ -13,7 +13,7 @@ Implementation started 2026-11-11. T01–T03 are locally verified. T04 booking a
 | T03 | Catalog, confidential pricing and policy publication | Locally verified | `pnpm check` exit 0: lint, types, 174 unit, 56 integration, 50 browser checks and production build; `docs/evidence/t03-check.log` |
 | T04 | Booking, formation and concurrency | `awaiting_T06_integration` | `pnpm check` exit 0 on Node 24.22.1: lint, types, 194 unit, 100 integration, 74 browser checks and production build; `docs/evidence/t04-check.log` |
 | T05 | Package entitlement and renewals | `awaiting_T06_integration` | `pnpm check` exit 0 on Node 24.22.1: lint, types, 239 unit, 141 integration, 96 browser checks and production build; `docs/evidence/t05-check.log` |
-| T06 | Receipt review, allocations and refunds | Planned | Pending implementation |
+| T06 | Receipt review, allocations and refunds | In progress | Financial/source/consent/encryption contracts reviewed; implementation starting after T05 commit; no T06 execution result claimed |
 | T07 | Files, calendar and meeting access | Planned | Pending implementation |
 | T08 | Completion, tutor earnings, payouts and finance | Planned | Pending implementation |
 | T09 | Operational notifications | Planned | Pending implementation |
@@ -142,6 +142,8 @@ Final consolidated `pnpm check`: **exit 0** on pinned Node 24.22.1; lint/types c
 
 ### T05 executed checks (2026-11-11, isolated local Supabase)
 
+Scoped package milestone commit: `ef41bfc24d36decbf4165749d0a03bd04785cb5c`.
+
 Final consolidated `pnpm check`: **exit 0** on pinned Node 24.22.1; lint/types clean, **239 unit**, **141 real database integration**, and **96 browser** checks passed, followed by the optimized production build. Browser tests used two workers and zero retries. Preserved output: `docs/evidence/t05-check.log`. T05 is **awaiting_T06_integration**; purchased activation, settled funding, approved-credit grants and shared cash remedies remain gated. The earlier failed checks and their fixes are retained below.
 
 - Package sign-in continuation security checks first failed because the helper was absent, then `pnpm exec vitest run tests/unit/customer-return-path.test.ts tests/unit/booking-return-path.test.ts` passed 4/4 on pinned Node 24.22.1. Only package index selections and exact package-detail UUID paths are added to the existing booking allowlist. External destinations, arbitrary actions, privilege fields, duplicate/unknown filters and malformed paths are rejected. `.local/t05-return-path-red.log`, `.local/t05-return-path-green.log`.
@@ -169,6 +171,21 @@ Final consolidated `pnpm check`: **exit 0** on pinned Node 24.22.1; lint/types c
 - `pnpm test:e2e tests/e2e/packages.spec.ts --grep "reviewed duration|named coverage, release|interrupted purchase" --output=.local/test-results-t05-package-no-expiry-green` passed 6/6 desktop/mobile after the projection fix, with unchanged assertions and zero retries. Read-only independent review found no significant issue in the guarded bootstrap/append orchestration, restricted package worker, package HTTP routes, sign-in return-path allowlist or exact formatting/parsing. The complete fresh-stack rehearsal remains explicitly pending T13.
 
 ## Continuation
+
+### T06 initial execution evidence
+
+- Payment command transport contracts first failed to load the absent module, then 4 unit checks passed. They reject caller-supplied settlement, scan/actor/payer authority, invalid money, duplicate or unbounded allocation targets and unsafe output fields. `.local/t06-payment-contracts-red.log`, `.local/t06-payment-contracts-green.log`.
+- Private identifier encryption first failed to load the absent module, then the combined crypto/payment command run passed 10/10 on Node 24.22.1. Checks cover fresh AES-GCM nonces, exact owner/refund/destination/channel/purpose binding, tampered/noncanonical envelopes, key rotation, canonical masking and safe configuration errors. `.local/t06-identifier-crypto-red.log`, `.local/t06-identifier-crypto-green.log`. These are encryption-core checks; authenticated SQL artifact/replay integration is not yet verified.
+- Actual HTTP mutation regression initially returned missing-route 404, then the focused desktop check passed 1/1 after route allowlists were wired. Forged actor/settlement/scan/payer fields, absent operation keys, foreign origins and destination verification assertions are rejected. `.local/t06-payment-http-red.log`, `.local/t06-payment-http-validation-green.log`. Destination encryption/artifact HTTP execution remains explicitly unavailable until its complete server integration is installed.
+- Exact payment/refund sign-in continuation failed before its allowlist was added, then 6/6 combined booking/package/payment return-path checks passed (`.local/t06-payment-return-red.log`, `.local/t06-payment-return-green.log`). No arbitrary query, approval action or external redirect is accepted.
+
+### User review and public presentation correction
+
+The user supplied public phone/WhatsApp `+20 15 08823452` and [@gittutor](https://www.instagram.com/gittutor/) as the brand reference. The public profile and post grid were actually inspected in the browser on 2026-11-11; web fetch was throttled. Its bio confirms Computer Science, Engineering, Business/Business Intelligence and the same WhatsApp destination. The user clarified that supplied scenario data explains business logic and must not drive the public design. The original Subjects page aggregated every retained test offer: an executed public-only diagnostic counted 514 offers across five source subjects (490 Calculus, 21 Business).
+
+The public discovery page now presents the four brand study areas with course descriptions, actual canonical subject links, a separate all-courses route and WhatsApp help. Phone, WhatsApp and Instagram destinations are centralized and shown in both public footers. The page uses the observed cream/red/ink palette with a restrained yellow help panel. Scoped ESLint passed; `pnpm exec playwright test tests/e2e/subjects.spec.ts --output=.local/test-results-subjects-brand` passed 2/2 desktop/mobile. Official Playwright CLI desktop1440/mobile360/RTL checks observed no horizontal overflow, console warnings/errors, page exceptions or HTTP failures, and a visible solid3px keyboard outline. Root reviewed the actual desktop/mobile screenshots. Detailed provenance, images and inspection report are in `docs/DESIGN-REVIEW.md`. No live messages or calls were sent. Approved/source/test records remain preserved. Full development-preview versus acceptance-fixture data isolation remains a release task; this presentation fix is not evidence that it is complete.
+
+T06 starts from [the financial integration contract](T06-FINANCIAL-CONTRACT.md) and [private identifier boundary](T06-PRIVATE-IDENTIFIERS.md). Settlement, independently verified actual payer, current customer proof/target authorization, payer intent, allocations and confirmation remain separate facts. Conditional amendment charges/reservations avoid prematurely changing accepted debt; source reversals retain immutable history and restrict affected cash-backed entitlement ancestry. Refund approval reserves actual owner-specific cash and the shared original benefit. Server encryption preserves full-request idempotency with private authenticated prior-request lookup, and approval artifacts distinguish exact completed replay from new versioned decisions. These are reviewed design decisions, not executed acceptance results.
 
 T05 implementation decisions: create a real issued package charge and balanced non-cash journal at purchase, with zero purchased usable entitlement until the explicit `full_settled_charge` activation rule is satisfied by T06. An independently approved complimentary grant creates a separately identified bonus lot and does not pay or waive purchase debt. Positive bonus carrying value requires an approved capped subsidy policy. Expiry uses the explicitly saved `elapsed_24_hour_days` clock, exact UTC instants and Cairo display/business dates. Existing approved policies are immutable; new complete contracts add these fields. Private movement-kernel fixtures test conservation without claiming qualified delivery or cash remedies. Full named entitlement creates no additional tuition debt from its historical discount; partial named coverage requires reviewed remaining-service terms and learner consent. The independent consolidated milestone passes; the financial integration exclusions remain.
 

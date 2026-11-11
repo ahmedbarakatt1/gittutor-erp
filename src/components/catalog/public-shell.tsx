@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { formatMinorUnits } from '@/modules/shared/format';
 import { catalogCopy as copy } from '@/locales/catalog';
 import styles from './catalog.module.css';
+import { PublicContactLinks } from '../public-contact';
 
 export function PublicShell({ children, active }: { children: ReactNode; active?: 'subjects' | 'offers' }) {
   return <div className={styles.shell}>
@@ -13,7 +14,7 @@ export function PublicShell({ children, active }: { children: ReactNode; active?
       <Link href="/login">{copy.account}</Link>
     </nav></header>
     <main id="main" className={styles.main}>{children}</main>
-    <footer className={styles.footer}><p>{copy.footer}</p><Link className={styles.textLink} href="/apply-to-teach">{copy.teach}</Link></footer>
+    <footer className={styles.footer}><div><p>{copy.footer}</p><PublicContactLinks /></div><Link className={styles.textLink} href="/apply-to-teach">{copy.teach}</Link></footer>
   </div>;
 }
 

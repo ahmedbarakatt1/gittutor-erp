@@ -90,7 +90,7 @@ export const en = {
     body: 'Start with what you want to understand.',
     back: 'Back to top',
     copyright: 'Git Tutor',
-    support: 'Support details will be available when the service channels are configured.',
+    support: 'Talk to Git Tutor on WhatsApp or by phone.',
   },
 };
 

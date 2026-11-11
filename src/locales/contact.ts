@@ -1,0 +1,13 @@
+export const publicContact = {
+  phoneDisplay: '+20 15 08823452',
+  phoneHref: 'tel:+201508823452',
+  whatsappHref: 'https://wa.me/201508823452',
+  instagramHref: 'https://www.instagram.com/gittutor/',
+  label: 'Contact Git Tutor',
+  whatsapp: 'WhatsApp',
+  instagram: 'Instagram',
+  call: 'Call us',
+  courseHelpTitle: 'Not sure where your course fits?',
+  courseHelpBody: 'Send us the course name and the topic you’re working on. We’ll help you find your next step.',
+  courseHelpAction: 'Ask us on WhatsApp',
+};
