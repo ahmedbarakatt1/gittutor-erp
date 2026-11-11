@@ -3,6 +3,7 @@ import { createDatabasePool, databaseUrl } from '../server/database';
 import { integrationStates, parseServerConfig } from '../server/config';
 import { claimJobs, failJob } from './claims';
 import { executeLeasedJob, type JobHandler } from './execute';
+import { staffInvitationHandler } from './auth-invitations';
 
 const configuration = parseServerConfig(process.env);
 const pool = createDatabasePool(databaseUrl('worker'));
@@ -12,6 +13,7 @@ process.on('SIGTERM', () => { stopping = true; });
 
 /** Later domain tasks register handlers; unknown work is never reported as delivered. */
 const handlers: Record<string, JobHandler> = {
+  'identity.staff_invitation': staffInvitationHandler(pool),
   'foundation.healthcheck': {
     execute: async job => `fake:healthcheck:${job.event_id}`,
     reconcile: async () => ({ outcome: 'not_sent' }), // Pure local healthcheck has no external side effect.

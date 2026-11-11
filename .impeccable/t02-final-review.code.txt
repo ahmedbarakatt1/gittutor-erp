@@ -1,0 +1,44 @@
+async (page) => {
+  const findings = [];
+  let consoleErrors = [];
+  let warnings = [];
+  let failedRequests = [];
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); if (message.type() === 'warning') warnings.push(message.text()); });
+  page.on('pageerror', error => consoleErrors.push(error.message));
+  page.on('response', response => { if (response.status() >= 400) failedRequests.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('http://127.0.0.1:3000/login');
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: '.impeccable/review/auth-login-desktop.png', fullPage: true, caret: 'initial' });
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.screenshot({ path: '.impeccable/review/auth-login-mobile.png', fullPage: true, caret: 'initial' });
+  for (const view of [
+    { actor: 'learner_a', route: 'learn', ready: 'Your verified contacts', label: 'customer' },
+    { actor: 'tutor_a', route: 'tutor', ready: 'Your teaching profile', label: 'tutor' },
+    { actor: 'cs_a', route: 'service', ready: 'Customer service', label: 'service' },
+    { actor: 'admin_a', route: 'admin', ready: 'Tutor applications', label: 'admin' }
+  ]) {
+    consoleErrors = []; warnings = []; failedRequests = [];
+    await page.context().setStorageState('.local/ui-review/desktop-' + view.actor + '.json');
+    await page.goto('http://127.0.0.1:3000/' + view.route);
+    await page.getByRole('heading', { name: view.ready, exact: true }).waitFor();
+    if (view.route === 'tutor') await page.getByRole('button', { name: 'Save profile', exact: true }).waitFor();
+    if (view.route === 'admin') {
+      await page.getByRole('button', { name: 'Refresh applications', exact: true }).waitFor();
+      await page.getByRole('button', { name: 'Refresh staff roles', exact: true }).waitFor();
+    }
+    await page.evaluate(() => document.fonts.ready);
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.screenshot({ path: '.impeccable/review/t02-' + view.label + '-desktop.png', fullPage: true, caret: 'initial' });
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.screenshot({ path: '.impeccable/review/t02-' + view.label + '-mobile.png', fullPage: true, caret: 'initial' });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    if (view.route === 'learn') {
+      await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+      await page.screenshot({ path: '.impeccable/review/t02-customer-rtl.png', fullPage: true, caret: 'initial' });
+      await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+    }
+    findings.push({ role: view.label, overflow360: overflow, consoleErrors, warnings, failedRequests });
+  }
+  return findings;
+}

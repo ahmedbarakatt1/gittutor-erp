@@ -64,6 +64,21 @@ Customer/public DTOs exclude tutor fees/ranges, margin, payout destinations, int
 
 ## Identity, catalog and booking commands
 
+### T02 onboarding read additions
+
+The onboarding commands require verified contact, subject and current relationship identities. The implementation adds authenticated, allowlisted reads so the UI can supply existing contract inputs and version checks without exposing unrelated records or requiring users to enter concurrency versions:
+
+- `GET /me/contacts` → `api.get_my_verified_contacts()`: own verified contacts only; `items[{contact_id,channel,masked_destination,verified}]`, `next_cursor:null`. A contact reference can be shared with a learner for an invitation; it grants no authority without recipient acceptance.
+- `GET /me/application-subjects` → `api.list_application_subjects()`: verified non-anonymous accounts only; `items[{subject_id,title}]`, `next_cursor:null`. Minimal validated subject records support tutor onboarding; T03 owns the public catalog projection. No additional anonymous RPC grant is introduced.
+- `GET /tutor-applications` → `api.get_tutor_applications(cursor,limit)`: the applicant's own records, or pending records for a current admin; fields are application/applicant IDs, submitted display name/bio/subject IDs, state, version and creation time.
+- `GET /staff-invitations` → `api.list_staff_invitations(cursor,limit)`: current admin only; invitation ID, masked email, role, business/delivery states, version, creation time and safe delivery error code. Both queues have stable `(created_at,id)` pagination, default 25 and maximum 100.
+- `GET /me/guardian-links` → `api.get_my_guardian_links(cursor,limit)`: active links for the actor's own learner or where the actor is the guardian; `guardian_link_id,learner_id,learner_name,guardian_masked_contact,scopes,version,can_revoke`. The own-learner side can revoke; unrelated links are absent. Current versions populate the command automatically.
+- `GET /staff-role-grants` → `api.list_staff_role_grants(cursor,limit)`: current admin only; active `role_grant_id,account_id,display_name,masked_email,role,version`. These relationship lists use stable `(created_at,id)` pagination, default 25 and maximum 100. Neither list returns full contact destinations or internal notes.
+
+Prospective staff invitations extend the existing-account role-grant command with `POST /staff-invitations` (`email,role,reason,expires_at`, admin) and `POST /staff-invitations/{id}/accept` (`expected_version`, verified intended recipient). Creation commits its audit and outbox before the worker invokes Supabase Auth. Auth owns its single-use email token; delivery and explicit acceptance do not trust client metadata for privileges. Acceptance rechecks the exact verified recipient, delivered Auth identity, invitation state/expiry and currently active approving admin before the role grant. Existing accounts use the original role-grant command. The invitation worker reconciles uncertain dispatch before attempting another email.
+
+Authentication transport lives at `/api/auth/login`, `/signup`, `/logout` and `/password`; it uses verified Supabase sessions and strict input fields, cookie-origin protection, private responses and server-owned redirects. The password endpoint is for a currently verified account (including first-time invited staff). These Auth token operations are separate from business-command idempotency; Supabase owns their token lifecycle. `/auth/callback` accepts only known email verification types or PKCE authorization codes and never accepts an arbitrary destination URL.
+
 Each POST maps to the named `api` RPC. Required common headers and version fields above apply.
 
 | POST route | RPC and scope | Input allowlist beyond path/version | Result beyond C |

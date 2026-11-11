@@ -2,14 +2,14 @@
 
 ## Current handoff state
 
-Implementation started 2026-11-11. T01's local foundation is verified; T02 begins next. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its owning checks and later-domain prerequisites.
+Implementation started 2026-11-11. T01 foundation and T02 identity/portal milestones are locally verified; T03 catalog and policy publication begins next. No full acceptance case is marked passed without linked execution evidence; the original acceptance catalogue remains unrun pending its owning checks and later-domain prerequisites.
 
 ## Task progress
 
 | Task | Deliverable | Status | Evidence |
 |---|---|---|---|
 | T01 | Repository foundation and test environment | Locally verified | `pnpm check` exit 0: lint, types, 46 unit, 14 integration, 10 browser tests, production build |
-| T02 | Identity, roles and guardian scope | Starting | Real local Supabase stack downloading; auth preflight documented |
+| T02 | Identity, roles and guardian scope | Locally verified | `pnpm check` exit 0: lint, types, 58 unit, 38 real database integration, 38 browser checks and production build; `docs/evidence/t02-check.log` |
 | T03 | Catalog, confidential pricing and policy publication | Planned | Pending implementation |
 | T04 | Booking, formation and concurrency | Planned | Pending implementation |
 | T05 | Package entitlement and renewals | Planned | Pending implementation |
@@ -38,6 +38,8 @@ T01 provides the durable outbox and worker claim primitive. T04 and T05 may ente
 
 ### T01 executed checks (2026-11-11, isolated development/test)
 
+Scoped foundation commit: `ec6d91a74a046c71d382fcb8498a462a1aaf11db`.
+
 | Command | Observed result | Artifact |
 |---|---|---|
 | `pnpm install` | Initial attempt failed on large package download timeout; longer timeout and reduced fetch concurrency succeeded | `install.log`, `install-retry.log` (local) |
@@ -58,7 +60,31 @@ Fresh review identified public-key classification, uncertain provider redispatch
 
 No full acceptance status has been upgraded: GT-1601 has executed responsive/RTL browser checks but later public/portal routes remain to be built; GT-1603 has validator test coverage but its complete linked evidence is not yet recorded; GT-1604's full ledger seed depends on later financial modules; GT-1605 has scratch migration/privilege coverage. The catalogue remains 147 `not_run`, and feature-level results above must not be confused with full-product acceptance.
 
-## Decisions and dependencies
+## T02 identity and local Auth
+
+### T02 executed checks (2026-11-11, isolated local Supabase)
+
+Final consolidated `pnpm check`: **exit 0**, lint/types clean, **58 unit**, **38 real database integration**, **38 browser** checks passed, optimized production build succeeded. Browser checks ran with 6 workers and included the delayed-script regression. Preserved result: `docs/evidence/t02-check.log`. Supabase, both native baselines and synthetic seed repetition were separately verified as described below.
+
+- `pnpm exec vitest run tests/integration/identity.test.ts`: initial missing-RPC RED, then 11 core checks passed. Extended direct-RPC, concurrency, queue scope and transport checks exposed two defects, fixed in additive migrations; latest executed run passed 23 checks including scoped management reads (`.local/t02-identity-final.log`).
+- `pnpm exec vitest run tests/integration/staff-invitation-worker.test.ts`: 1 passed against real local Supabase Auth and Mailpit. A crash after the provider accepted the email was reclaimed and reconciled without a second email, Auth user or role grant. This check first ran after implementation and is regression evidence, not claimed RED evidence.
+- `pnpm exec vitest run tests/unit/http.test.ts`: latest 7 passed. Host normalization and PKCE-hash regressions each failed before their fix; captured in `.local/t02-callback-host-{red,green}.log` and `.local/t02-callback-pkce-{red,green}.log`. Strict inputs, safe errors, cookie mutation origins and redirect host restrictions are covered.
+- `pnpm exec playwright test tests/e2e/email-verification.spec.ts --workers=1`: 4 passed across desktop/mobile with actual Auth and Mailpit. Signup verification preserves ordinary customer access; staff verification/password setup still requires explicit invitation acceptance before the Operations link appears. All four verify `Referrer-Policy: no-referrer` on the token-bearing callback.
+- Email browser RED exposed Next.js's normalized internal `localhost` URL and Supabase's legitimate `pkce_` hash prefix. Callback now validates the browser Host against approved origins and preserves the prefix for provider verification. Role-browser execution also found an incorrect test expectation (private object denial is scoped 404), creation status changes and cold-navigation/concurrent-run artifact interference. Failed runs remain documented separately; see `docs/T02-AUTH-PREFLIGHT.md`.
+- A separate agent reviewed root Auth, HTTP and worker boundaries and found no new important issue. Current-session database checks, strict DTOs, allowed redirect origins and reconciliation-before-resend were inspected.
+- CLI migrations added: `20261111105723_identity.sql`, `20261111112214_identity_auth_bridge.sql`, `20261111112624_identity_review_transport.sql`, `20261111113232_identity_management_reads.sql`. Applied migrations remain unchanged; corrections are additive.
+- `pnpm db:verify`: exit 0; native baseline 7 RLS tables/5 functions and real Supabase 5 migrations/19 private RLS tables/37 function boundaries. `pnpm seed:synthetic`: repeat run exit 0; 12 deterministic actual Auth users and two scoped guardian links, without a data reset (`.local/t02-db-verify-final.log`, `.local/t02-seed-repeat.log`).
+- UI review replaced manual concurrency-version fields with actual scoped relationship/role selection. Subsequent review fixes cover refreshed post-acceptance navigation, discarded stale pagination responses and approval choices limited to submitted subjects. Focused actual browser checks and the final consolidated run pass. Final CLI inspection of all four portals at desktop and 360px reports zero overflow, console errors/warnings or failing HTTP responses; see `docs/DESIGN-REVIEW.md` and `.impeccable/review/t02-inspection.json`.
+- First consolidated `pnpm check`: lint/types passed, 58 unit and 38 integration checks passed, 35/36 browser checks passed, then exit 1 before build. The desktop invitation acceptance navigated to the same page without committing its command; the database still showed `pending`, `accepted_at:null`, version 1. A delayed-script regression reproduced enabled controls before hydration. Shared auth/identity/sign-out controls now remain disabled until their handlers are ready; the focused regression passed 2/2 and the subsequent consolidated run passed all 38 browser checks. Failure evidence remains in `docs/evidence/t02-check-first-failed.log`.
+
+### Decisions and dependencies
+
+- T02: Docker was recovered by preserving its stale one-socket runtime directory and recreating the runtime directory; existing unrelated container configuration and volumes were preserved. Project-local Supabase is now running with ports bound to loopback, PostgreSQL 17.11, actual Auth/PostgREST/Storage/Mailpit and a persisted disposable-test marker. Local secrets are confined to ignored `.local/supabase.json`; web environment contains public Supabase configuration only.
+- T02: actual Supabase exposed a migration-owner privilege difference masked by native superuser tests. A reproducible local preflight grants the required migration ownership permissions before applying the unchanged T01 migration through the CLI. Native migration checks retain an explicit T01-only baseline; identity tests use real Auth, never a fabricated auth schema. See `docs/T02-AUTH-PREFLIGHT.md`.
+- T02: add own verified-contact and authenticated application-subject reads to support the specified command inputs in usable forms; keep the two-only anonymous RPC rule unchanged. Exact projections are recorded in the API contract.
+- T02: actual Supabase prevents a custom role from receiving Auth-schema usage. Four narrowly scoped, private, read-only Auth bridge functions use the documented `postgres` owner exception. Exposed business functions retain dedicated NOLOGIN/NOBYPASSRLS ownership. The verifier checks each exact exception's signature, body, result, volatility and EXECUTE ACL; all other owner constraints remain enforced.
+- T02: setup scripts now pair the isolated T01 native baseline with full real-Supabase migrations, verification and synthetic Auth seeding. Local Auth email is captured by Mailpit; invitation activation remains an explicit verified-recipient command after delivery.
+- T02: guardian invitation and relationship business notices are durably queued. Their routed email delivery belongs to T09; only Auth-owned verification/invitation delivery is implemented here. No full cross-domain acceptance case is claimed from these identity checks.
 
 - Ruling: execute the supplied design and ordered plan without a second design-approval round; the user explicitly authorized autonomous routine implementation. Cost if wrong: UI refinement may be needed; no live offer is published.
 - Ruling: use the existing PostgreSQL binary for isolated real transaction tests while Docker is unavailable. Cost if wrong: Supabase-specific integration differences remain release blockers until the local/full staging stack is exercised.
@@ -67,4 +93,4 @@ No full acceptance status has been upgraded: GT-1601 has executed responsive/RTL
 
 ## Continuation
 
-The first incomplete task is T02. T01 foundation passes its local checks. Continue actual Supabase Auth/session/role implementation, then T03. Preserve the T04–T06 integration barrier and execute each owning suite before marking it verified.
+The first incomplete task is T03. T01 and T02 pass their local milestone checks. Continue catalog, confidential pricing and policy publication. Preserve the T04–T06 integration barrier and execute each owning suite before marking it verified.

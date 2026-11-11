@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-11",
+  "tool": "@playwright/cli 0.1.24",
+  "session": "git-tutor-ui",
+  "browser": "msedge",
+  "script": ".impeccable/t02-final-review.code.txt",
+  "viewports": [1440, 360],
+  "authenticated_with": "actual local Auth browser sessions; private storage state excluded from artifacts",
+  "roles": [
+    { "role": "customer", "overflow360": false, "consoleErrors": 0, "warnings": 0, "failedHttpResponses": 0 },
+    { "role": "tutor", "overflow360": false, "consoleErrors": 0, "warnings": 0, "failedHttpResponses": 0 },
+    { "role": "customer_service", "overflow360": false, "consoleErrors": 0, "warnings": 0, "failedHttpResponses": 0 },
+    { "role": "admin", "overflow360": false, "consoleErrors": 0, "warnings": 0, "failedHttpResponses": 0 }
+  ],
+  "customerRtlCaptured": true,
+  "fullReleaseAcceptance": false,
+  "liveProviderReadiness": false
+}

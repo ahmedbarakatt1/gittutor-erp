@@ -1,0 +1,123 @@
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  6 passed (6)
+      Tests  58 passed (58)
+   Start at  13:47:33
+   Duration  1.94s (tests 48%, import 41%, transform 6%, worker 5%)
+
+    Isolate  6 workers spawned · ~184ms startup each (spawn + environment, per file)
+             at least ~922ms faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  5 passed (5)
+      Tests  38 passed (38)
+   Start at  13:47:36
+   Duration  8.11s (tests 91%, import 8%, transform 1%, worker 1%)
+
+    Isolate  5 workers spawned · ~203ms startup each (spawn + environment, per file)
+             at least ~811ms faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 36 tests using 6 workers
+
+(node:37828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17576) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8912) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24480) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31836) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 [desktop] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (286ms)
+  ok  3 [mobile] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (343ms)
+  ok  6 [desktop] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (408ms)
+  ok  8 [mobile] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (280ms)
+(node:7876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (4.6s)
+  ok  9 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (3.4s)
+  ok 11 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (2.9s)
+  ok  7 [desktop] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (8.4s)
+  ok  4 [desktop] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (8.9s)
+  ok 12 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (3.1s)
+  ok  5 [mobile] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (9.1s)
+  ok 13 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (2.4s)
+  ok 14 [desktop] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (2.4s)
+  ok 18 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (2.7s)
+  ok 16 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (3.1s)
+  ok 10 [mobile] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (9.3s)
+  ok 17 [mobile] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (3.7s)
+  ok 21 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (2.9s)
+  ok 20 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (5.1s)
+  ok 24 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (4.5s)
+  x  15 [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (12.4s)
+  ok 22 [mobile] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (9.5s)
+  ok 19 [desktop] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (19.8s)
+  ok 23 [mobile] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (18.6s)
+  ok 25 [desktop] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (5.2s)
+  ok 26 [mobile] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (5.2s)
+  ok 27 [desktop] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (2.8s)
+  ok 28 [mobile] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (4.0s)
+  ok 29 [desktop] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (9.5s)
+  ok 30 [mobile] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (8.6s)
+  ok 31 [desktop] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (12.3s)
+  ok 32 [mobile] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (12.4s)
+  ok 33 [desktop] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (3.8s)
+  ok 34 [mobile] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (5.7s)
+  ok 35 [desktop] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (10.0s)
+  ok 36 [mobile] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (10.5s)
+
+
+  1) [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('form', { name: 'Accept staff invitation', exact: true }).getByRole('status')
+    Expected substring: "Staff invitation accepted"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('form', { name: 'Accept staff invitation', exact: true }).getByRole('status') with timeout 5000ms
+      - waiting for getByRole('form', { name: 'Accept staff invitation', exact: true }).getByRole('status')
+        - waiting for "http://127.0.0.1:3000/learn?staff_invitation_id=01b0a312-0151-4769-b1c0-0483749abf79" navigation to finish...
+        - navigated to "http://127.0.0.1:3000/learn?staff_invitation_id=01b0a312-0151-4769-b1c0-0483749abf79"
+
+
+      128 |     await expect(accept.getByLabel('Staff invitation reference', { exact: true })).toHaveValue(id);
+      129 |     await accept.getByRole('button', { name: 'Accept staff invitation', exact: true }).click();
+    > 130 |     await expect(accept.getByRole('status')).toContainText('Staff invitation accepted');
+          |                                              ^
+      131 |     const after = await page.request.get('/api/v1/me');
+      132 |     expect(after.status()).toBe(200);
+      133 |     const { data } = await after.json();
+        at D:\GitTutor System\tests\e2e\email-verification.spec.ts:130:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\email-verification-staff-r-9c438-accepts-before-staff-access-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\email-verification-staff-r-9c438-accepts-before-staff-access-desktop\error-context.md
+
+  1 failed
+    [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access
+  35 passed (1.4m)
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

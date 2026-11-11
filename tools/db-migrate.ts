@@ -1,9 +1,12 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Client } from 'pg';
 import { assertIsolatedTarget, localDatabaseUrl } from '../tests/helpers/environment';
+
+// Auth-dependent migrations execute only through the real local Supabase CLI.
+export const NATIVE_BASELINE_MIGRATIONS = ['20261111103635_foundation_outbox.sql'] as const;
 
 export async function migrate(connectionString: string, environment = process.env.APP_ENV ?? 'development') {
   assertIsolatedTarget({ connectionString, environment });
@@ -30,7 +33,7 @@ export async function migrate(connectionString: string, environment = process.en
     }
     await client.query('create schema if not exists git_tutor_migrations');
     await client.query('create table if not exists git_tutor_migrations.applied_migrations (version text primary key, checksum text not null, applied_at timestamptz not null default now())');
-    const files = (await readdir(resolve('supabase/migrations'))).filter(name => /^\d+_.+\.sql$/.test(name)).sort();
+    const files = NATIVE_BASELINE_MIGRATIONS;
     for (const file of files) {
       const sql = await readFile(resolve('supabase/migrations', file), 'utf8');
       const checksum = createHash('sha256').update(sql).digest('hex');

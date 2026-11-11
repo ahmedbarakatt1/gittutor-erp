@@ -1,9 +1,10 @@
 import { Client } from 'pg';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { assertIsolatedTarget, localDatabaseUrl } from '../tests/helpers/environment';
+import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
 
 export async function verifyDatabaseBoundary(connectionString: string) {
 assertIsolatedTarget({ connectionString, environment: process.env.APP_ENV || 'test' });
@@ -24,7 +25,7 @@ try {
     if (!(await client.query('select to_regprocedure($1) as oid', [`app_private.${fn}`])).rows[0].oid) failures.push(`Missing function: ${fn}`);
   }
   if (failures.length) throw new Error(`DATABASE_FOUNDATION_MISSING: ${failures.join('; ')}`);
-  const migrations = (await readdir('supabase/migrations')).filter(name => /^\d+_.+\.sql$/.test(name)).sort();
+  const migrations = NATIVE_BASELINE_MIGRATIONS;
   if (!migrations.length) throw new Error('DATABASE_FOUNDATION_MISSING: no versioned migrations');
   for (const migration of migrations) {
     const row = (await client.query('select checksum from git_tutor_migrations.applied_migrations where version=$1', [migration])).rows[0];

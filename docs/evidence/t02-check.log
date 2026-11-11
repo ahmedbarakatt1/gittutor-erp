@@ -1,0 +1,126 @@
+$ pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e && pnpm build
+$ eslint .
+$ tsc --noEmit
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  6 passed (6)
+      Tests  58 passed (58)
+   Start at  13:56:35
+   Duration  2.72s (tests 54%, import 35%, transform 6%, worker 5%)
+
+    Isolate  6 workers spawned · ~270ms startup each (spawn + environment, per file)
+             at least ~1.35s faster with isolate: false — reuses workers across files instead of one per file
+
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  5 passed (5)
+      Tests  38 passed (38)
+   Start at  13:56:40
+   Duration  9.32s (tests 91%, import 8%, transform 1%)
+
+    Isolate  5 workers spawned · ~262ms startup each (spawn + environment, per file)
+             at least ~1.05s faster with isolate: false — reuses workers across files instead of one per file
+
+$ playwright test
+
+Running 38 tests using 6 workers
+
+(node:29644) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:15592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 [mobile] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (582ms)
+  ok  3 [desktop] › tests\e2e\auth-input.spec.ts:3:1 › auth transport rejects privilege injection and foreign origins without creating an account (900ms)
+  ok  6 [mobile] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (1.5s)
+  ok  8 [desktop] › tests\e2e\auth-input.spec.ts:14:1 › logged-out API and oversized auth requests fail safely (1.3s)
+(node:14760) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (6.3s)
+  ok  9 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (6.0s)
+  ok 11 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (4.5s)
+  ok 12 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (4.7s)
+  ok 13 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (3.5s)
+  ok  5 [desktop] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (13.2s)
+  ok  7 [mobile] › tests\e2e\role-access.spec.ts:44:1 › signed-out direct portal URLs require sign-in (13.1s)
+  ok  4 [desktop] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (14.6s)
+  ok 14 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (4.0s)
+  ok 10 [mobile] › tests\e2e\email-verification.spec.ts:52:1 › signup email confirms the actual Auth account and retains ordinary customer access (11.9s)
+  ok 15 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (3.4s)
+  ok 16 [desktop] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (3.9s)
+  ok 17 [mobile] › tests\e2e\role-access.spec.ts:55:1 › form validation is associated with controls and preserves entered email (4.0s)
+  ok 19 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (3.3s)
+  ok 21 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (5.5s)
+  ok 24 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (6.7s)
+  ok 18 [desktop] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (12.5s)
+  ok 20 [mobile] › tests\e2e\email-verification.spec.ts:85:1 › staff recipient follows real invitation mail, sets a password and explicitly accepts before staff access (12.4s)
+  ok 22 [desktop] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (23.9s)
+  ok 23 [mobile] › tests\e2e\role-access.spec.ts:66:1 › real independent sessions enter only their assigned staff portal (24.3s)
+  ok 25 [desktop] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (6.9s)
+  ok 26 [mobile] › tests\e2e\role-access.spec.ts:96:1 › a learner cannot self-assign staff access or open tutor and service URLs (7.1s)
+  ok 27 [desktop] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (2.7s)
+  ok 28 [mobile] › tests\e2e\role-access.spec.ts:113:1 › guardian account shows exactly its current authorized learner scope (3.0s)
+  ok 29 [desktop] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (7.0s)
+  ok 30 [mobile] › tests\e2e\role-access.spec.ts:131:1 › logout denies a stale tab and replay of the pre-logout session cookie (6.3s)
+  ok 31 [desktop] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (10.0s)
+  ok 32 [mobile] › tests\e2e\role-access.spec.ts:154:1 › GT-1607 tutor application retries one saved command and requires actual admin review (9.6s)
+  ok 33 [desktop] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (2.6s)
+  ok 34 [mobile] › tests\e2e\role-access.spec.ts:223:1 › refresh discards a delayed older application page while fresh pagination still works (5.6s)
+  ok 35 [desktop] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (10.4s)
+  ok 36 [mobile] › tests\e2e\role-access.spec.ts:283:1 › guardian invitation, acceptance and revocation update a separate live browser session (11.2s)
+  ok 37 [desktop] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (8.0s)
+  ok 38 [mobile] › tests\e2e\role-access.spec.ts:349:1 › authentication and staff acceptance controls wait for hydration with delayed scripts (7.0s)
+
+  38 passed (1.6m)
+$ next build
+▲ Next.js 16.4.6 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 187ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.3s
+  Running TypeScript ...
+  Finished TypeScript in 9.0s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/14) ...
+  Generating static pages using 11 workers (3/14)
+  Generating static pages using 11 workers (6/14)
+  Generating static pages using 11 workers (10/14)
+✓ Generating static pages using 11 workers (14/14) in 645ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /api/auth/[action]
+├ ƒ /api/v1/[...path]
+├ ƒ /api/v1/me
+├ ƒ /apply-to-teach
+├ ƒ /auth/callback
+├ ƒ /auth/set-password
+├ ○ /auth/verify
+├ ƒ /learn
+├ ƒ /login
+├ ƒ /service
+├ ○ /signup
+└ ƒ /tutor
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

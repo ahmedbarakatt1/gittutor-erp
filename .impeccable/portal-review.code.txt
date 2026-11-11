@@ -1,0 +1,9 @@
+async (page) => {
+  await page.goto('http://127.0.0.1:3000/admin');
+  await page.getByRole('heading', { name: 'Staff access', exact: true }).waitFor();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: '.impeccable/review/t02-admin-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.screenshot({ path: '.impeccable/review/t02-admin-mobile.png', fullPage: true });
+  return { overflow: await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), heading: await page.getByRole('heading', { level: 1 }).textContent() };
+}

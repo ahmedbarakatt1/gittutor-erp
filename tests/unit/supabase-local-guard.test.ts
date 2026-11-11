@@ -1,0 +1,55 @@
+import { afterEach, expect, test, vi } from 'vitest';
+import { assertLocalSupabase, type LocalSupabase } from '../helpers/supabase';
+import { assertAllowedDefiner, assertEnvironmentFileWritable, assertMigrationMarker } from '../../tools/supabase-local';
+
+const config: LocalSupabase = {
+  marker: 'git-tutor-supabase-local-v1', url: 'http://127.0.0.1:54321',
+  publishable_key: 'synthetic-public', secret_key: 'synthetic-secret',
+  database_url: 'postgresql://local:synthetic@127.0.0.1:54322/postgres',
+  actors: { learner: { id: '10000000-0000-4000-8000-000000000001', email: 'learner@example.test', password: 'synthetic' } },
+};
+afterEach(() => vi.unstubAllEnvs());
+
+test('the Supabase fixture helper rejects any remote or non-project database target', () => {
+  expect(() => assertLocalSupabase({ ...config, url: 'https://example.supabase.co' })).toThrow('LOCAL_SUPABASE_REQUIRED');
+  expect(() => assertLocalSupabase({ ...config, database_url: 'postgresql://local:synthetic@127.0.0.1:55432/gittutor_dev' })).toThrow('LOCAL_SUPABASE_REQUIRED');
+  expect(() => assertLocalSupabase({ ...config, database_url: 'https://127.0.0.1:54322/postgres' })).toThrow('LOCAL_SUPABASE_REQUIRED');
+});
+
+test('Supabase fixture helpers refuse production environments and non-synthetic identities', () => {
+  vi.stubEnv('APP_ENV', 'production');
+  expect(() => assertLocalSupabase(config)).toThrow('LOCAL_SUPABASE_REQUIRED');
+  vi.stubEnv('APP_ENV', 'test');
+  expect(() => assertLocalSupabase({ ...config, actors: { learner: { ...config.actors.learner, email: 'real@example.com' } } })).toThrow('LOCAL_SUPABASE_REQUIRED');
+});
+
+test('owner grants and migrations require a current test marker or verified empty bootstrap', () => {
+  expect(() => assertMigrationMarker({ environment: 'production', fixture_marker: config.marker }, true)).toThrow('LOCAL_SUPABASE_REQUIRED');
+  expect(() => assertMigrationMarker({ environment: 'test', fixture_marker: 'another-project' }, false)).toThrow('LOCAL_SUPABASE_REQUIRED');
+  expect(() => assertMigrationMarker(undefined, false)).toThrow('LOCAL_SUPABASE_REQUIRED');
+  expect(() => assertMigrationMarker(undefined, true)).not.toThrow();
+  expect(() => assertMigrationMarker({ environment: 'test', fixture_marker: config.marker }, false)).not.toThrow();
+});
+
+test('local setup never overwrites an environment file designated production or staging', () => {
+  for (const content of ['APP_ENV=production\n', 'export APP_ENV="staging"\n', " APP_ENV = 'production'\n", 'APP_ENV=development\nAPP_ENV=production\n']) {
+    expect(() => assertEnvironmentFileWritable(content)).toThrow('ENVIRONMENT_FILE_IS_NOT_LOCAL');
+  }
+  expect(() => assertEnvironmentFileWritable('APP_ENV=development\n')).not.toThrow();
+});
+
+test('the managed Auth exception permits only exact private read bridges with restricted execution', () => {
+  const bridge = {
+    proname: 'auth_email_exists', nspname: 'app_private', signature: 'app_private.auth_email_exists(text)',
+    result: 'boolean', prosecdef: true, proconfig: ['search_path=""'], rolname: 'postgres', rolcanlogin: true, rolbypassrls: true,
+    provolatile: 's', lanname: 'sql', executors: ['git_tutor_commands', 'postgres'],
+    prosrc: 'select exists(select 1 from auth.users where lower(email)=lower(p_email))',
+  };
+  expect(() => assertAllowedDefiner(bridge)).not.toThrow();
+  for (const change of [
+    { nspname: 'api' }, { signature: 'app_private.auth_email_exists(text,text)' },
+    { executors: ['git_tutor_commands', 'postgres', 'authenticated'] },
+    { prosrc: 'delete from auth.users returning true' }, { provolatile: 'v' },
+    { rolname: 'git_tutor_worker' }, { proconfig: ['search_path=public'] }, { result: 'text' },
+  ]) expect(() => assertAllowedDefiner({ ...bridge, ...change })).toThrow('SUPABASE_DEFINER_INVALID');
+});

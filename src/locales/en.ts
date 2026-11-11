@@ -14,6 +14,8 @@ export const en = {
     how: 'How it works',
     faq: 'Questions',
     explore: 'Explore subjects',
+    account: 'My account',
+    teach: 'Teach with us',
   },
   hero: {
     title: 'Bring the slide you are stuck on.',

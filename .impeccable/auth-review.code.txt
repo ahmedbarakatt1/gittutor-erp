@@ -1,0 +1,13 @@
+async (page) => {
+  await page.goto('http://127.0.0.1:3000/login');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: '.impeccable/review/auth-login-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.screenshot({ path: '.impeccable/review/auth-login-mobile.png', fullPage: true });
+  await page.goto('http://127.0.0.1:3000/signup');
+  await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await page.screenshot({ path: '.impeccable/review/auth-validation-mobile.png', fullPage: true });
+  await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+  await page.screenshot({ path: '.impeccable/review/auth-validation-rtl.png', fullPage: true });
+  return { overflow: await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), focused: await page.locator(':focus').getAttribute('name') };
+}

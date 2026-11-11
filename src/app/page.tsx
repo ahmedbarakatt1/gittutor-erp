@@ -18,6 +18,7 @@ export default function HomePage() {
           <a href="#formats">{copy.navigation.formats}</a>
           <a href="#how-it-works">{copy.navigation.how}</a>
           <a href="#questions">{copy.navigation.faq}</a>
+          <a href="/login">{copy.navigation.account}</a>
         </nav>
       </header>
 
@@ -104,7 +105,7 @@ export default function HomePage() {
 
       <footer className="site-footer container">
         <div className="footer-invitation"><div><h2>{copy.footer.title}</h2><p>{copy.footer.body}</p><a className="button button-primary" href="#subjects">{copy.navigation.explore}</a></div><GizaAccent /></div>
-        <div className="footer-bottom"><Wordmark /><p>{copy.footer.support}</p><a href="#top">{copy.footer.back}</a></div>
+        <div className="footer-bottom"><Wordmark /><p>{copy.footer.support}</p><a href="/apply-to-teach">{copy.navigation.teach}</a><a href="#top">{copy.footer.back}</a></div>
       </footer>
     </>
   );

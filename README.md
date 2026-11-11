@@ -2,7 +2,7 @@
 
 ## Run the local implementation
 
-The application is being built from the pack below; current scope and verified checks are recorded in [implementation status](docs/IMPLEMENTATION-STATUS.md). Use the pinned Node runtime from `.node-version` and pnpm 11.25.0.
+The application is being built from the pack below; current scope and verified checks are recorded in [implementation status](docs/IMPLEMENTATION-STATUS.md). Use the pinned Node runtime from `.node-version`, pnpm 11.25.0, Docker Desktop with its Linux engine running, and PostgreSQL 17 binaries for the isolated foundation tests.
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -12,11 +12,13 @@ pnpm seed:synthetic
 pnpm dev
 ```
 
-Open `http://localhost:3000`. The native database bootstrap currently uses PostgreSQL 17 on Windows and creates its own loopback cluster on port 55432. Generated local credentials and database files live only in ignored `.local/`. `gittutor_dev` and `gittutor_test` are separate disposable databases; integration checks refuse the development database. See [database setup evidence](docs/T01-DATABASE-EVIDENCE.md) for paths and environment limitations.
+Open `http://127.0.0.1:3000`. The local Supabase stack provides actual Auth, PostgreSQL, private Storage and a captured email inbox, bound to loopback ports 54321, 54322 and 54324. The bootstrap writes public web configuration to ignored `.env.local`; synthetic account credentials remain in ignored `.local/supabase.json`. Register a new account at `/signup` and open its verification email in the local inbox at `http://127.0.0.1:54324`. No external recipient is contacted.
+
+The separate native PostgreSQL foundation cluster uses port 55432 with disposable `gittutor_dev` and `gittutor_test` databases. Its migration runner covers T01 only; the same commands then apply and verify all domain migrations against actual Supabase. Integration checks require their persisted disposable-target marker and refuse the native development database. See [database setup evidence](docs/T01-DATABASE-EVIDENCE.md) and [Auth setup evidence](docs/T02-AUTH-PREFLIGHT.md). Restarts preserve local volumes; `pnpm supabase:restart` reloads Auth templates and configuration without resetting data.
 
 Run the worker separately with `pnpm worker:dev`. Run `pnpm check` for static, unit, database, browser and build checks after `pnpm exec playwright install chromium`. Use `pnpm db:verify` for required migration objects and privilege checks. `pnpm exec tsx tools/validate-evidence.ts` validates acceptance evidence without changing case statuses.
 
-Provider modes default to fake/manual in isolated development. Copy `.env.example` to `.env.local` when configuring Supabase and integrations. Production startup requires an explicit `APP_ENV` and complete live configuration; the current local implementation is not a live-release approval.
+Provider modes default to fake/manual in isolated development. The bootstrap configures local Supabase automatically; use `.env.example` as the key reference for other environments. Production startup requires an explicit `APP_ENV` and complete live configuration; the current local implementation is not a live-release approval.
 
 Prepared by Hossam Nabil Elsabbagh. Revision 1, 11 November 2026.
 

@@ -74,3 +74,56 @@ python C:\Users\barak\.codex\skills\img2threejs\forge\stage4_review\diagnose_ren
 ```
 
 Measured silhouette IoU 0.299 (required 0.85), aspect-ratio delta 0.3451 (limit 0.05), scale delta 0.4595 (limit 0.08); a map-stripped comparison render was also absent. The photo has scenery and a different camera/framing from the bounded stylized miniature. These failures are retained; no staged pipeline completion, fabricated review score or full reference match is recorded. The state deliberately remains active. Final mesh self-intersection, attachment-anchor, part-coverage and complete staged emission gates have not been executed. The accent has bounded application-render evidence, while those skill-specific quality gates remain open.
+
+## T02 identity and portal review — 2026-11-11
+
+The identity surfaces extend the existing red/ink/ivory world. Impeccable Operate guidance governs forms and staff workspaces; Taste remains the public art-direction reference rather than an instruction to decorate operational pages. Customer accounts use larger headings and more breathing room. Staff pages use a compact header, fixed type sizes, a persistent task navigation area, and dense reference labels. All displayed accounts, contacts, subjects, applications and permissions come from verified local Auth and scoped database reads. Unimplemented operational areas state their concrete prerequisites instead of showing activity or invented totals.
+
+Implemented surfaces: sign-in, signup, email verification, authenticated password setup, public tutor-application entry, student/guardian account, tutor private-profile editing, customer-service account, and administration. Guardian invitations select explicit permissions; acceptance and revocation use real records. Admin application review shows the submitted biography and only submitted active subject choices. Role grants, invitations and current-role revocation use the authorized commands. A newly accepted staff role exposes its real workspace link after the server account refresh.
+
+### Review findings resolved
+
+- Removed manual record-version inputs. Invitation acceptance carries its fixed pending version internally; guardian and staff revocation select a current scoped record and use its saved version.
+- Added cursor pagination and cancellation/generation checks. A response from an older page cannot append after refresh.
+- Limited approval subject choices to the applicant's submitted active subjects.
+- Refreshed verified account permissions after staff acceptance and exposed only currently authorized workspace links.
+- Retained submitted fields and one logical command key across interrupted retries. Tab storage contains only a payload digest and random idempotency key, never form fields or invitation codes.
+- Used fresh same-origin document navigation after authentication changes to discard cached account views. Forms retain POST semantics, and JavaScript-owned form controls and sign-out remain disabled until their client handlers are attached. Native navigation remains available.
+- Kept form controls native, labeled and keyboard operable; field validation associates its error with the control. All four portal captures fit 360px without horizontal overflow.
+
+The first CLI admin capture was taken before hydration finished. Playwright's default screenshot caret-hiding mutation caused a hydration warning. The final capture waits for client-loaded account data and uses `caret: 'initial'`. A clean named session then reported no application console errors or warnings. This was corrected in the inspection method rather than hidden with hydration suppression.
+
+### Executed verification
+
+- `pnpm typecheck`: exit 0 after the final functional changes.
+- Scoped ESLint across the auth/identity components, portal pages and `tests/e2e/role-access.spec.ts`: exit 0, no warnings.
+- Impeccable source detector: `detect --json src/components/identity-form.tsx src/components/identity-workspaces.tsx src/components/portal-shell.tsx src/components/auth.module.css`: exit 0, result `[]`.
+- Initial focused form validation: 2 passed, desktop/mobile, 8.6s.
+- First complete role run: 10 passed / 6 failed. Two failures were trace-file deletion from overlapping Playwright runners, two were a 5-second sign-in assertion timing out during cold rendering, and two expected 403 where private object access correctly returned 404. Separate output directories, response-aware sign-in waits, and exact contract assertions resolved these issues.
+- The subsequent role run: 14 passed / 2 failed in 1.1m. Its only failures expected HTTP 200 for invitation creation after the transport contract correctly changed to HTTP 201.
+- `pnpm test:e2e tests/e2e/role-access.spec.ts -g 'guardian invitation, acceptance' --output=.local/test-results-guardian`: 2 passed in 22.2s, exit 0. This exercised real invitation creation, acceptance in a separate authenticated browser, authorized learner access, selection of the saved guardian link, revocation and immediate denial in the existing guardian session. The token came from that disposable fixture's durable outbox; this is not guardian email-delivery evidence.
+- Focused tutor-application review: 2 passed, including a real committed POST whose response was interrupted, a retry using the same key, exactly one saved application, denied self-approval, administrator review, approved-subject subset, and current-session access to the tutor portal.
+- The first pagination regression fixture did not produce an admin next page because the query correctly excludes other applicants' reviewed history. The test fixture was corrected to use an isolated administrator's own history; no existing records were reset.
+- `pnpm test:e2e tests/e2e/role-access.spec.ts -g 'refresh discards' --output=.local/test-results-pagination`: 2 passed in 6.4s, exit 0. It delays an actual page-two response, refreshes page one, proves the older result does not append, then proves fresh pagination works. Only newly created fixture rows are removed afterward.
+- The database agent executed actual Mailpit signup verification and staff invitation/password/acceptance journeys: 4 passed in 14.2s, including the newly authorized Operations navigation link. This is local Auth/Mailpit evidence, not live SMTP readiness.
+- The coordinating agent's first consolidated `pnpm check` passed 58 unit checks, 38 integration checks and 35 browser checks, but failed one desktop staff-acceptance journey. Database inspection confirmed its invitation remained pending: an enabled server-rendered button allowed a native POST before hydration. This failed run remains recorded; it is not a release pass.
+- `pnpm test:e2e tests/e2e/role-access.spec.ts -g 'controls wait for hydration' --project=desktop --output=.local/test-results-hydration-red`: failed as intended before the fix. With Next.js JavaScript chunks deliberately held, the Sign in button was enabled. The failure evidence is retained in that output directory.
+- Added the shared `useHydrated` hook using React's server/client external-store snapshots. Auth, signup, password setup and identity fieldsets/buttons, plus sign-out, remain disabled until hydration. Submit handlers also reject premature/repeated entry.
+- `pnpm test:e2e tests/e2e/role-access.spec.ts -g 'controls wait for hydration' --output=.local/test-results-hydration-green`: **2 passed in 14.6s**, exit 0. Each desktop/mobile case delays scripts for login, signup, password setup and staff acceptance, checks disabled fields/buttons and sign-out, releases scripts and checks that the controls become enabled. Subsequent `pnpm typecheck` and scoped ESLint for the changed components/hook/test both exited 0.
+
+The coordinating agent records the consolidated `pnpm check` result in `docs/IMPLEMENTATION-STATUS.md`; the individual results above do not substitute for that full run. Full booking, file, export, refund and financial acceptance cases remain with their owning milestones. No full GT-1601 or live-provider approval is inferred from these identity checks.
+
+### Final CLI inspection
+
+Official Playwright CLI 0.1.24, fresh named `git-tutor-ui` session using Edge. `.impeccable/t02-final-review.code.txt` loads genuine browser states created by actual test sign-ins from ignored `.local/ui-review/`; no authentication mock or role switcher is used. Credentials and cookies are excluded from inspection reports.
+
+All four portals at desktop 1440px and mobile 360px: **no horizontal overflow, zero console errors, zero console warnings, and zero HTTP responses at or above 400** during the final capture. Customer RTL was additionally captured. Auth and portal screenshots were visually inspected for layout, form labels, readable references, real empty states, and consistent action hierarchy. Screenshots contain Next.js's normal development indicator; the previous red issue indicator is absent. These hydrated-state captures preceded the hydration-control guard; that guard changes only the transient pre-hydration/pending control state, which is covered by the delayed-script regression above.
+
+Final artifacts (old admin captures overwritten with the current version-free controls):
+
+- `.impeccable/review/auth-login-desktop.png` and `auth-login-mobile.png`.
+- `.impeccable/review/t02-customer-desktop.png`, `t02-customer-mobile.png`, `t02-customer-rtl.png`.
+- `.impeccable/review/t02-tutor-desktop.png` and `t02-tutor-mobile.png`.
+- `.impeccable/review/t02-service-desktop.png` and `t02-service-mobile.png`.
+- `.impeccable/review/t02-admin-desktop.png` and `t02-admin-mobile.png`.
+- `.impeccable/review/t02-inspection.json` (sanitized outcome summary).
