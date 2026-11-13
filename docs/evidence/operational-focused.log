@@ -1,0 +1,11 @@
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  4 passed (4)
+      Tests  21 passed (21)
+   Start at  20:44:56
+   Duration  2.59s (tests 57%, import 36%, transform 6%, worker 1%)
+
+    Isolate  4 workers spawned · ~203ms startup each (spawn + environment, per file)
+             at least ~610ms faster with isolate: false — reuses workers across files instead of one per file

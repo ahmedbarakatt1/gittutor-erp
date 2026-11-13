@@ -4,6 +4,8 @@ The user's explicit request to feed `Git Tutor Workflow.xlsx` into the website a
 
 ## What is available
 
+The later operational integration now also presents this history in the ordinary role-scoped dashboards, schedule, CRM, packages, payment review, finance and payroll. Five learners,11 tutors and18 courses are canonical records in a separate private preview backend; ordinary commands power new activity. See [operational plan](OPERATIONAL-DATA-PLAN.md), [current results](IMPLEMENTATION-STATUS.md) and [preview launch](ONLINE-PREVIEW.md). The source archive below remains available for full reconciliation. Reported history does not fabricate settled funds or earned service. Shared demo credentials cannot access the new backend. Owner-only mapping review resolves ambiguous links explicitly; tutor fees stay outside customer/service projections.
+
 `/admin/workflow` presents the imported records in seven searchable sections with reported-status and review filters, twelve-row pagination, newest dated sessions first, and complete source-row details. Money is stored in integer minor units and displayed in EGP. Literal names, notes, contacts, nulls and source labels are retained. A separate private owner account opens this view after sign-in; `/admin/access` preserves access to staff and tutor-application administration.
 
 | Source records | Imported count |

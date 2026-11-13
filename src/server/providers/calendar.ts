@@ -1,14 +1,15 @@
 import { mkdir,readFile,writeFile,rename } from 'node:fs/promises';
 import { resolve,join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { assertFakeProviderIsolation,isSafeFakeRecipient } from './fake-recipient';
 export type CalendarDesired = { occurrence_id:string; occurrence_version:number; connection_id:string; connection_version:number; credential_version:string|null; calendar_id:string; provider_event_id:string; meeting_generation:number; conference_request_id:string; action:'upsert'|'cancel'; start_at:string; end_at:string; tutor_email:string; title:string };
 export type CalendarObservation = { outcome:'absent'|'pending'|'ready'|'failed'|'unknown'|'revoked'; provider_event_id:string; etag:string|null; join_url:string|null; safe_error_code:string|null; observed_at:string; matches_desired:boolean };
 export type CalendarAdapter = { reconcile(desired:CalendarDesired):Promise<CalendarObservation>; apply(desired:CalendarDesired):Promise<CalendarObservation> };
 function observation(d:CalendarDesired,outcome:CalendarObservation['outcome'],extra:Partial<CalendarObservation>={}):CalendarObservation{return {outcome,provider_event_id:d.provider_event_id,etag:null,join_url:null,safe_error_code:null,observed_at:new Date().toISOString(),matches_desired:false,...extra};}
 export function createFakeCalendarAdapter(directory:string,scenario:'success'|'pending'|'timeout_after_success'|'permanent_failure'='success'):CalendarAdapter {
-  if(!['development','test'].includes(process.env.APP_ENV??'development'))throw new Error('FAKE_CALENDAR_REQUIRES_ISOLATION');
+  assertFakeProviderIsolation('FAKE_CALENDAR_REQUIRES_ISOLATION');
   const root=resolve(directory);
-  function path(d:CalendarDesired){if(!/^gt[a-f0-9]{32}$/.test(d.provider_event_id)||!d.tutor_email.endsWith('@example.test'))throw new Error('SYNTHETIC_CALENDAR_REQUIRED');return join(root,`${d.provider_event_id}.json`);}
+  function path(d:CalendarDesired){if(!/^gt[a-f0-9]{32}$/.test(d.provider_event_id)||!isSafeFakeRecipient(d.tutor_email))throw new Error('SYNTHETIC_CALENDAR_REQUIRED');return join(root,`${d.provider_event_id}.json`);}
   async function load(d:CalendarDesired):Promise<CalendarObservation|null>{try{return JSON.parse(await readFile(path(d),'utf8')) as CalendarObservation;}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return null;throw error;}}
   async function save(d:CalendarDesired,value:CalendarObservation){await mkdir(root,{recursive:true});const target=path(d),temporary=`${target}.${randomUUID()}.tmp`;await writeFile(temporary,JSON.stringify(value),{flag:'wx',mode:0o600});await rename(temporary,target);return value;}
   return {

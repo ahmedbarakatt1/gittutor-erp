@@ -1,0 +1,128 @@
+{
+  "started_at": "2026-11-13T19:01:09.486Z",
+  "environment": "isolated actual-data preview",
+  "base_url": "http://127.0.0.1:3000",
+  "checks": [
+    "four actual-data preview roles sign in",
+    "role-scoped operational projections and raw source archive denial",
+    "browser booking, exact quote consent, private receipt upload and scan, independent fake settlement/owner review, allocation and confirmation",
+    "fake meeting provisioning and exact authorized study-file download",
+    "eleven main admin screens at desktop/mobile; untouched personal practice session"
+  ],
+  "completed_at": "2026-11-13T19:01:49.103Z",
+  "outcome": "passed",
+  "layouts": [
+    {
+      "path": "/admin",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/schedule",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/customers",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/packages",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/payments",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/finance",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/pay",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/sessions",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/students",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/team",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin/campaigns",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/schedule",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/customers",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/packages",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/payments",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/finance",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/pay",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/sessions",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/students",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/team",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "path": "/admin/campaigns",
+      "width": 360,
+      "overflow": false
+    }
+  ],
+  "page_error_count": 0,
+  "console_error_count": 0
+}

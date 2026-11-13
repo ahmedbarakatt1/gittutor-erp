@@ -1,0 +1,16 @@
+{
+  "source_snapshot_unchanged": true,
+  "source_sha256_matches": true,
+  "all_139_source_links_unchanged": true,
+  "historical_transactions_inferred": false,
+  "future_personal_untouched": true,
+  "historical_personal_funded_not_started": true,
+  "corrected_private_fees_positive": true,
+  "verified_delivery_completed": true,
+  "original_earning_retained_with_one_adjustment": true,
+  "generated_fake_payout_settled": true,
+  "customer_denied_private_fee_evidence": true,
+  "customer_receipt_pdfs_exclude_fee_fields": true,
+  "importer_revision2_replay_passed": true,
+  "delivery_replay_passed": true
+}

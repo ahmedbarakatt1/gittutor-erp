@@ -35,14 +35,14 @@ export function PortalShell({ kind, account, children, title, description, activ
     </header>
     <div className={styles.portalLayout}>
       <nav className={styles.portalNav} aria-label={text.workspace}>
-        {kind==='admin'&&<Link href="/admin/workflow" aria-current={activePath==='/admin/workflow'?'page':undefined}>Actual records</Link>}
+        {kind === 'admin' && <Link href="/admin" aria-current={!activePath || activePath === '/admin' ? 'page' : undefined}>Dashboard</Link>}
         {kind==='admin'&&<Link href="/admin/access" aria-current={activePath==='/admin/access'?'page':undefined}>Staff and applications</Link>}
         {(kind==='admin'||kind==='service')&&<Link href={`/${kind}/customers`} aria-current={activePath===`/${kind}/customers`?'page':undefined}>Customers</Link>}
         {(kind==='admin'||kind==='service')&&<Link href={`/${kind}/support`} aria-current={activePath===`/${kind}/support`?'page':undefined}>Support inbox</Link>}
         {kind==='learn'&&<Link href="/learn/support" aria-current={activePath==='/learn/support'?'page':undefined}>Support</Link>}
         {kind!=='service'&&<Link href={`/${kind}/exports`} aria-current={activePath===`/${kind}/exports`?'page':undefined}>Your exports</Link>}
         {kind==='admin'&&<><Link href="/admin/sessions" aria-current={activePath==='/admin/sessions'?'page':undefined}>Session history</Link><Link href="/admin/campaigns" aria-current={activePath==='/admin/campaigns'?'page':undefined}>Campaigns</Link><Link href="/admin/students" aria-current={activePath==='/admin/students'?'page':undefined}>Student progression</Link><Link href="/admin/team" aria-current={activePath==='/admin/team'?'page':undefined}>Team</Link></>}
-        {(kind !== 'learn' || learnerWorkspace) && <Link href={`/${kind}`} aria-current={!activePath || activePath === `/${kind}` ? 'page' : undefined}>{copy.portal.account}</Link>}
+        {kind !== 'admin' && (kind !== 'learn' || learnerWorkspace) && <Link href={`/${kind}`} aria-current={!activePath || activePath === `/${kind}` ? 'page' : undefined}>{copy.portal.account}</Link>}
         {kind === 'admin' && <Link href="/admin/finance" aria-current={activePath === '/admin/finance' ? 'page' : undefined}>{financeCopy.nav}</Link>}
         {kind === 'admin' && <Link href="/admin/catalog" aria-current={activePath === '/admin/catalog' ? 'page' : undefined}>{catalogCopy.admin.nav}</Link>}
         {kind === 'admin' && <Link href="/admin/integrations" aria-current={activePath === '/admin/integrations' ? 'page' : undefined}>{meetingCopy.integrations}</Link>}
@@ -59,6 +59,7 @@ export function PortalShell({ kind, account, children, title, description, activ
         {(kind === 'learn' || kind === 'admin') && <Link href={`/${kind}/refunds`} aria-current={activePath === `/${kind}/refunds` ? 'page' : undefined}>{paymentCopy.refundsNav}</Link>}
         {kind === 'learn' && learnerWorkspace && <Link href="/learn#learners">{copy.portal.learnerTitle}</Link>}
         {kind === 'learn' && <Link href="/apply-to-teach">{identityCopy.application.nav}</Link>}
+        {kind==='admin'&&<Link href="/admin/workflow" aria-current={activePath==='/admin/workflow'?'page':undefined}>Source archive</Link>}
         {authorizedWorkspaces.filter(workspace => workspace !== kind).map(workspace => <Link key={workspace} href={`/${workspace}`}>{copy.portal[workspace].workspace}</Link>)}
       </nav>
       <main id="account" className={styles.portalMain}>

@@ -1,4 +1,21 @@
-# Shareable synthetic preview
+# Shareable preview
+
+## Actual-data preview after shutdown — build ready, launch pending
+
+The laptop shutdown stopped the prior server/tunnel. Docker recovered without a reset. The new tunnel is `https://ride-roof-ancient-asin.trycloudflare.com`; the optimized build and complete resumed local walkthrough passed. Online verification remains pending until the user-run server launch. The tunnel exposes only the application on3001. The actual-data backend is separate on loopback54331/54332; shared demo credentials and stress-test records are not copied. The fake-provider worker is running with all11 handlers.
+
+After the final build, the prepared launcher reads the ignored operational configuration, selects the pinned installed Node runtime without relying on `pnpm`, sets fake providers and uses the saved current public origin:
+
+```powershell
+Set-Location 'D:\GitTutor System'
+powershell -NoProfile -ExecutionPolicy Bypass -File '.\tools\Start-OperationalPreview.ps1'
+```
+
+Use `.local/operational-preview/START-HERE.md` for private role logins and the untouched future booking. `.local/operational-preview/DELIVERY-PRACTICE.md` contains the separately labelled tutor completion exercise. Keep these files private. Launch the fake worker with the same script and `-Mode worker`; it uses the operational database, not the previous demo backend. The script's `-Mode dev -BaseUrl http://127.0.0.1:3000 -Port 3000` starts a loopback development app for verification.
+
+The earlier automatic approval review rejected agent public-server launch with `blocked by policy`; the final user-run launch remains the handoff step. Do not treat the historical online results below as current availability. Permanent hosting and live integrations remain external dependencies. Captured email uses private preview aliases and local fake delivery; use prepared verified logins on other devices.
+
+## Prior synthetic preview evidence
 
 Requested preview: `https://polo-issn-transmission-connecticut.trycloudflare.com`.
 
