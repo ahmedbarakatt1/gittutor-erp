@@ -1,0 +1,17 @@
+export const deliveryCopy = {
+  title: 'Session delivery', intro: 'Record what happened, then submit the session for review. Scheduled time alone does not mark a session delivered.',
+  start: 'Record session start', started: 'The actual session start is recorded.', startAt: 'Actual start (Cairo time)', endAt: 'Actual end (Cairo time)',
+  attendance: 'Attendance', attendanceIntro: 'Record each learner separately. Participation is the actual number of seconds attended.', status: 'Attendance status', seconds: 'Seconds attended', reason: 'Reason or observation',
+  states: { unmarked: 'Not recorded', present: 'Attended', absent: 'Absent', excused: 'Excused', submitted: 'Awaiting approval', approved: 'Approved' } as Record<string, string>,
+  record: 'Save attendance', recorded: 'The attendance record is saved.', submit: 'Submit delivery for approval', submitted: 'The session has been submitted for approval.', topic: 'Topics covered and delivery notes',
+  exceptions: 'Reviewed delivery decisions', noExceptions: 'No reviewed delivery decisions are available for the current attendance record.', includeDecision: 'Include this reviewed decision',
+  approve: 'Approve session delivery', approved: 'The delivery was approved and its accounting was recorded.', approvalConfirm: 'I reviewed the actual attendance, delivery notes and required remedies.',
+  review: 'Review partial delivery', reviewIntro: 'Specify the exact retained tuition, package use and teaching fee for this attendance record. Unused value follows the selected remedy; a review does not approve completion by itself.',
+  retained: 'Tuition retained (EGP)', consumed: 'Session credits used', tutorFee: 'Total teaching fee for this delivery (EGP)', remedy: 'Remedy for unused value',
+  remedies: { none: 'No remedy', cash_refund: 'Refund to the original payer', monetary_account_credit: 'Monetary account credit', package_entitlement_restoration: 'Restore package entitlement' },
+  saveReview: 'Save reviewed delivery decision', reviewed: 'The delivery decision is saved for completion review.', reviewReason: 'Reason for this decision',
+  earning: 'Recorded teaching earning', privateNotice: 'Teaching fees and earnings are confidential to the tutor and authorized staff.',
+  amend: 'Correct approved delivery facts', amendIntro: 'Corrections append a new record. Original approval and financial history remain available.', correctedTopic: 'Corrected topics and delivery notes', correctionReason: 'Reason for correcting this record', corrected: 'The correction has been recorded.',
+  actions: { ATTENDANCE_REQUIRED: 'Record attendance for every learner before submitting.', COMPLETION_REQUIRED: 'The tutor must submit the completed session.', DELIVERY_EXCEPTION_REQUIRED: 'This delivery needs an exact reviewed decision before approval.', REMEDY_REQUIRED: 'Resolve the required learner remedy before approval.', RECONCILIATION_REQUIRED: 'Resolve the funding review before approving delivery.', SESSION_NOT_STARTED: 'Record the actual session start when teaching begins.', SESSION_NOT_ENDED: 'Record the completed delivery after the actual teaching period ends.' } as Record<string, string>,
+  remaining: 'A required delivery check is still outstanding. Refresh after the responsible team records its decision.', reviewEvidence: 'Evidence supporting this delivery decision', correctionEvidence: 'Evidence supporting this correction',
+};

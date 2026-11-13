@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { paymentRpc, PaymentRpcError, type PaymentRpcClient } from './commands';
+import { fileEvidenceActionSchema } from '../files/commands';
 
 const id = z.uuid(), version = z.number().int().positive().max(2147483647);
 const minor = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), signed = z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER);
@@ -159,6 +160,6 @@ const exceptionFilters = pageFilters.extend({ state: z.enum(['open', 'resolved']
 export const listFinancialExceptions = (client: PaymentRpcClient, options: z.input<typeof exceptionFilters> = {}) => read(client, 'list_financial_exceptions', page(financialExceptionSchema), parameters(exceptionFilters, options));
 const reversalFilters = z.object({ allocation_cursor: subcursor, limit }).strict();
 export const getTransferReversal = (client: PaymentRpcClient, reversalId: string, options: z.input<typeof reversalFilters> = {}) => read(client, 'get_transfer_reversal', transferReversalDetailSchema, { ...one(reversalId, 'reversal_id'), ...parameters(reversalFilters, options, false) });
-export const paymentEvidenceActionSchema = z.enum(['create_receiving_account', 'create_statement_import', 'record_manual_transfer', 'verify_transfer_settlement', 'bind_transfer_payer', 'propose_refund_destination', 'verify_refund_destination', 'record_transfer_reversal', 'reconcile_refund', 'record_refund_reversal', 'resolve_package_financing_hold']);
-const evidenceFilters = pageFilters.extend({ action: paymentEvidenceActionSchema, target_id: id.nullable() }).strict().refine(value => value.target_id !== null || value.action === 'create_receiving_account');
+export const paymentEvidenceActionSchema = fileEvidenceActionSchema;
+const evidenceFilters = pageFilters.extend({ action: paymentEvidenceActionSchema, target_id: id.nullable() }).strict().refine(value => value.target_id !== null || ['create_receiving_account','record_expense','analytics_evidence'].includes(value.action));
 export const listPaymentEvidence = (client: PaymentRpcClient, options: z.input<typeof evidenceFilters>) => read(client, 'list_payment_evidence', page(safeEvidenceSchema), parameters(evidenceFilters, options));

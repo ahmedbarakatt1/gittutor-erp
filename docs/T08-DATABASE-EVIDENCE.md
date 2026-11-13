@@ -1,0 +1,29 @@
+# T08 delivery and earning evidence
+
+This records executed delivery checks, separately from payroll, finance reports and the overall release gate. Live provider readiness is not implied.
+
+## Implemented boundary
+
+`20261111203133_completion_earning_sources.sql` adds immutable starts, attendance snapshots, submitted completions, approvals, enrollment/allocation delivery decisions, base tutor earnings and dated earning adjustments. Current assigned tutor/admin scope is checked before replay; all financial effects use the shared ordered financial graph. Future factual times and missing roster outcomes cannot be approved. The credited assignment, policy, quote and exact fee remain referenced by the approved source.
+
+`20261111204051_reviewed_delivery_adjustments.sql` adds explicit admin-reviewed partial/individual outcomes, current evidence and source-snapshot binding, factual amendments, and signed tutor earning adjustments. `20261111204440_delivery_variable_scope.sql` corrects ambiguous PL/pgSQL variable/column references additively. Its initial directive edit failed atomically during migration parsing; the unapplied file was corrected before successful application. Previously applied histories were not rewritten.
+
+A reviewed partial approval keeps the original agreed base earning and posts a linked adjustment to reach the exact reviewed tutor total. Customer charge reductions produce referenced original-payer credit and an authorized remedy source. Named package usage remains independent of cash tariff; value-mode package application is reduced to actual consumed carrying value before recognizing the separate cash tuition remainder. Qualifying package consumption requires an actual approved completion decision and an exact allocation decision. The original private conservation kernel remains inaccessible to browser roles.
+
+`completionFixture` inserts separate guarded synthetic historical scheduling/admission records; it never edits an existing immutable quote or inserts completion, consumption, earning or revenue qualification. Payment settlement uses genuine current Auth/RPCs. Package tests use an explicitly approved private package/bonus policy, actual bonus source and a separately declared historical reservation setup. The actual delivery commands then provide the qualification and accounting; this is not a deployed bypass or real historical customer migration.
+
+## Executed checks (Node 24.22.1)
+
+- `pnpm exec vitest run tests/integration/completion.test.ts`: RED 2/2 at absent `start_occurrence`, after actual fixture/funding setup (`.local/t08-completion-red.log`).
+- `pnpm exec vitest run tests/integration/completion.test.ts tests/unit/teaching-delivery.test.ts`: GREEN 4/4, 3.27s (`.local/t08-completion-first.log`). Future actual time rejection, start/attendance/submission/approval, one immutable 25000 base earning and 50000 delivered tuition, replay and learner denial passed. Unit checks independently cover factual bounds and cash/package recognition arithmetic.
+- `pnpm exec vitest run tests/integration/completion-review.test.ts`: RED 2/2 at absent review/amend RPCs (`.local/t08-completion-review-red.log`), then reached the variable ambiguity in the applied stage (`.local/t08-review-first.log`). After the additive correction, GREEN 2/2, 4.12s (`.local/t08-review-green.log`). A 30-minute reviewed lesson retains 25000 customer tuition, releases 25000 original-payer credit, preserves base earning 25000 and adds -12500. Missing/unmarked outcomes, wrong reviewed-decision IDs and future corrections are denied. Saved no-show policy retains the charge. Factual amendment and separate dated -5000 fee adjustment preserve originals and replay exactly.
+- `pnpm exec vitest run tests/integration/completion-packages.test.ts`: first 2/3 passed; the named partial fixture correctly failed because its newly enabled package policy omitted an allowed restoration remedy (`.local/t08-package-qualification-first.log`). The fixture policy was corrected before approval of new records. Final GREEN 3/3, 6.48s (`.local/t08-package-qualification-green.log`): zero-value complimentary 1000 quanta consumed once; named 50001 carrying value splits into 500 consumed quanta/25000 value and 500 released quanta/25001 value at the original expiry; value-mode partial recognizes 20000 package revenue plus 5000 cash revenue and releases 5000 payer-owned cash credit. No duplicate recognition on replay.
+- Scoped ESLint passed (`.local/t08-review-lint.log`). A whole-tree typecheck at this point reported only concurrently authored payout transport test narrowing errors (`.local/t08-review-types.log`); this is not recorded as a passing whole-tree check.
+
+The UI agent separately executed core completion desktop/mobile 2/2 in 28.7s (`.local/t08-completion-browser-first.log`), including privileged learner-read denial and customer DTO fee exclusion. That result covers full delivery, not every reviewed partial browser branch.
+
+## Explicit remaining gates
+
+Cancellation/reassignment obligation-to-earning commands, verified payout destinations/attempts/settlement/reversal and their source reconciliation are owned by the payroll slice. Pending obligation rows are not represented as posted earnings. Expenses and finance drilldowns are separately owned by root.
+
+The implemented factual amendment accepts topic/reason and equal-duration timing corrections while preserving original qualification. A correction that changes delivery qualification returns `POLICY_INCOMPLETE` until a new exact financial decision is supplied; it does not silently revise money. Broad independent completion-versus-correction races, automatic group duration-proration remainder cases and the full T13 release matrix remain unexecuted. No whole acceptance case is marked passed by this evidence file.

@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { StaffSessionMaterials } from '../files/materials';
+import { MeetingPanel } from '../teaching/meeting-panel';
+import { DeliveryPanel } from '../teaching/delivery-panel';
+import { ProposeTutorReassignment, TutorReassignments } from '../teaching/tutor-reassignment';
 import type { AdminOccurrence, FeeAgreement } from '@/modules/booking/queries';
 import type { AdminOffer, AdminPolicy, AdminPricing, AdminTutor } from '@/modules/catalog/queries';
 import { bookingStaffCopy as copy } from '@/locales/booking-staff';
@@ -39,6 +43,7 @@ function CreateSession({ offers, tutors, onSaved }: { offers: AdminOffer[]; tuto
 }
 
 function SessionOperations({ item, pricing, policies, onSaved }: { item: AdminOccurrence; pricing: Records<AdminPricing>; policies: Records<AdminPolicy>; onSaved: () => void }) {
+  const [reassignmentRevision, setReassignmentRevision] = useState(0);
   const occurrence = item.occurrence; const fees = usePagedRecords<FeeAgreement>(`occurrences/${occurrence.occurrence_id}/fee-agreements`);
   useEffect(() => {
     if (pricing.items && !pricing.items.some(record => record.pricing_version_id === occurrence.pricing_version_id) && pricing.cursor && !pricing.loadingMore && !pricing.failed) void pricing.loadMore();
@@ -46,7 +51,8 @@ function SessionOperations({ item, pricing, policies, onSaved }: { item: AdminOc
   const names = Object.fromEntries([...item.roster.map(learner => [learner.learner_id, learner.display_name]), [occurrence.tutor.tutor_id, occurrence.tutor.display_name]]);
   const activeRoster = item.roster.filter(learner => ['held', 'confirmed'].includes(learner.state));
   return <div className={styles.detail}>{item.formation_resolution && <section className={styles.notice}><h3>{copy.formationTitle}</h3><p>{copy.formationActions[item.formation_resolution.action]}</p></section>}<h3>{copy.roster}</h3><SessionTime start={occurrence.start_at} end={occurrence.end_at} />{item.roster.length ? <ul className={styles.list}>{item.roster.map(learner => <li key={learner.enrollment_id}><strong>{learner.display_name}</strong><p>{bookingCopy.states[learner.state] || learner.state} · {learner.quote_accepted_at ? copy.accepted : copy.awaitingQuote}</p>{learner.hold_expires_at && <p>{copy.heldUntil}: {cairoTime(learner.hold_expires_at)} {bookingCopy.timezone}</p>}{learner.provisional_amendment_id && <p>{copy.provisional}</p>}</li>)}</ul> : <p>{copy.noRoster}</p>}
-    <AdminConfirmation item={item} onSaved={onSaved} />
+    <DeliveryPanel occurrenceId={occurrence.occurrence_id} view="admin" /><MeetingPanel occurrenceId={occurrence.occurrence_id} view="admin" /><StaffSessionMaterials occurrenceId={occurrence.occurrence_id} roster={item.roster} />
+    <AdminConfirmation item={item} onSaved={onSaved} /><ProposeTutorReassignment item={item} onSaved={() => setReassignmentRevision(value => value + 1)} /><TutorReassignments occurrenceId={occurrence.occurrence_id} view="admin" revision={reassignmentRevision} onSaved={onSaved} />
     {['draft', 'forming', 'confirmed'].includes(occurrence.state) && <details className={styles.section}><summary>{copy.capacity}</summary><p>{copy.capacityHint}</p><IdentityForm action={`occurrences/${occurrence.occurrence_id}/capacity`} submitLabel={copy.saveCapacity} successMessage={copy.capacitySaved} resettable={false} onSaved={onSaved} payload={form => ({ capacity: Number(form.get('capacity')), reason: String(form.get('reason')).trim(), expected_version: occurrence.version })}><TextField name="capacity" label={copy.capacity} type="number" min={occurrence.target_tier || 1} defaultValue={occurrence.capacity} /><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm></details>}
     <section className={styles.private}><h3>{copy.privateTerms}</h3><p>{copy.privateNotice}</p>{item.fee_agreement ? <p>{copy.approvedFee}: <strong>{money(item.fee_agreement.fee_minor)}</strong></p> : <p>{copy.feePending}</p>}<ReadState pending={pricing.items === null} {...pricing} /><ExactFeeForm key={`${occurrence.occurrence_id}-${occurrence.version}`} item={item} pricing={pricing.items || []} onSaved={() => { fees.reload(); onSaved(); }} /><h3>{copy.feeHistory}</h3><ReadState pending={fees.items === null} {...fees} /><ul className={styles.list}>{fees.items?.map(fee => <li key={fee.fee_agreement_id}>{money(fee.fee_minor)} · {fee.target_tier || 1} · {fee.is_current ? copy.active : copy.proposedFee}<p className={styles.reference}>{fee.fee_agreement_id.slice(0, 8)}</p></li>)}</ul></section>
     {occurrence.format === 'group' && <GroupAmendmentForm item={item} policies={policies} agreements={fees.items || []} onSaved={onSaved} />}

@@ -1,6 +1,6 @@
 /** Format scaled integer units without rounding a large monetary/entitlement value through division. */
-function formatScaled(value: number, scaleDigits: number, locale: string, options: Intl.NumberFormatOptions, trimFraction: boolean) {
-  if (!Number.isSafeInteger(value)) throw new Error('SAFE_INTEGER_REQUIRED');
+function formatScaled(value: number|string, scaleDigits: number, locale: string, options: Intl.NumberFormatOptions, trimFraction: boolean) {
+  if (typeof value==='number'?!Number.isSafeInteger(value):! /^-?(?:0|[1-9]\d{0,99})$/.test(value)) throw new Error('SAFE_INTEGER_REQUIRED');
   const exact = BigInt(value);
   const scale = 10n ** BigInt(scaleDigits);
   const whole = exact / scale;
@@ -17,6 +17,11 @@ function formatScaled(value: number, scaleDigits: number, locale: string, option
 
 export function formatMinorUnits(value: number, currency = 'EGP', locale = 'en-EG', trimWhole = false) {
   return formatScaled(value, 2, locale, { style: 'currency', currency }, trimWhole && value % 100 === 0);
+}
+
+/** Reports can aggregate more than one safe-sized posting; keep all integer digits. */
+export function formatFinanceAmount(value:number|string,locale='en-EG') {
+  return formatScaled(value,2,locale,{style:'currency',currency:'EGP'},false);
 }
 
 export function formatCreditQuanta(value: number, locale = 'en-EG') {

@@ -1,4 +1,17 @@
+import { invokePayrollCommandWithStatus, type payrollCommands } from "@/modules/tutor_pay/payroll";
+import { payrollCommandRoutes, findPayrollReadRoute } from "@/server/payroll-http";
+import { payoutDestinationServer } from "@/server/payout-destination-server";
+import { invokeFinanceCommand, type financeCommands } from "@/modules/analytics/finance";
+import { financeCommandRoutes, findFinanceReadRoute } from "@/server/finance-http";
+import { invokeTeachingCommandWithStatus as invokeTeachingOperation, type teachingCommands as teachingOperations } from "@/modules/teaching/operations";
+import { teachingOperationRoutes, findTeachingOperationReadRoute } from "@/server/teaching-operations-http";
+import { invokeTeachingCommandWithStatus as invokeDeliveryCommand, type TeachingCommandName as DeliveryCommandName } from "@/modules/teaching/commands";
+import { deliveryCommandRoutes, findDeliveryReadRoute } from "@/server/delivery-http";
 import { randomUUID } from "node:crypto";
+import { invokeMeetingCommandWithStatus, type meetingCommands } from "@/modules/teaching/meetings";
+import { meetingCommandRoutes, findMeetingReadRoute } from "@/server/meeting-http";
+import { invokeFileCommandWithStatus, type FileCommandName } from "@/modules/files/commands";
+import { fileCommandRoutes, findFileReadRoute } from "@/server/file-http";
 import { NextRequest, NextResponse } from "next/server";
 import { publicSupabase, requestSupabase } from "@/server/supabase";
 import { allowedOrigin, DomainError, readJson, safeError } from "@/server/http";
@@ -27,11 +40,17 @@ import {
 } from "@/modules/packages/queries";
 
 type CommandRoute = { pattern: RegExp; fields: string[]; pathArgument?: string } & (
-  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName } | { family: "enrollment-transfer"; rpc: EnrollmentTransferCommandName }
+  { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName } | { family: "enrollment-transfer"; rpc: EnrollmentTransferCommandName } | { family: "files"; rpc: FileCommandName } | { family: "meetings"; rpc: keyof typeof meetingCommands } | { family: "delivery"; rpc: DeliveryCommandName } | { family: "finance"; rpc: keyof typeof financeCommands } | { family: "payroll"; rpc: keyof typeof payrollCommands } | { family: "teaching-operations"; rpc: keyof typeof teachingOperations }
 );
 const commands: CommandRoute[] = [
   ...paymentCommandRoutes,
   ...enrollmentTransferCommandRoutes,
+  ...fileCommandRoutes,
+  ...meetingCommandRoutes,
+  ...deliveryCommandRoutes,
+  ...financeCommandRoutes,
+  ...payrollCommandRoutes,
+  ...teachingOperationRoutes,
   { family: "packages", pattern: /^packages$/, rpc: "purchase_package", fields: ["learner_id", "package_contract_version_id", "accepted_terms_hash"] },
   { family: "packages", pattern: /^packages\/([^/]+)\/complimentary-grants$/, rpc: "approve_package_grant", pathArgument: "package_id", fields: ["credit_quanta", "carrying_value_minor", "currency", "grant_kind", "grant_policy_version_id", "source_credit_id", "credit_conversion_intent_id", "reason", "evidence_file_id", "expected_version"] },
   { family: "packages", pattern: /^packages\/([^/]+)\/reserve$/, rpc: "reserve_package_credit", pathArgument: "package_id", fields: ["enrollment_id", "credit_quanta", "coverage_proposal_id", "expected_version"] },
@@ -92,7 +111,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const route = commands.find(item => item.pattern.test(path));
     const payerLookup = /^incoming-transfers\/([^/]+)\/payer-lookup$/.exec(path);
     const destinationReveal = /^refund-destinations\/([^/]+)\/reveal$/.exec(path);
-    if (!route && !payerLookup && !destinationReveal) throw new DomainError("NOT_FOUND");
+    const payoutReveal = /^payout-destinations\/([^/]+)\/reveal$/.exec(path);
+    if (!route && !payerLookup && !destinationReveal && !payoutReveal) throw new DomainError("NOT_FOUND");
     context = requestSupabase(request);
     if (!allowedOrigin(request.headers.get("origin"), context.config.app_base_url, context.config.isolated)) throw new DomainError("FORBIDDEN");
     const { data, error } = await context.client.auth.getClaims();
@@ -102,6 +122,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const body = await readJson(request);
       const result = await lookupTransferPayer(context.client, payerLookup[1], body as Parameters<typeof lookupTransferPayer>[2]);
       return context.finish(NextResponse.json({ data: result, request_id: requestId }));
+    }
+    if (payoutReveal) {
+      if (request.nextUrl.searchParams.size) throw new DomainError("VALIDATION_ERROR");
+      const body = await readJson(request);
+      if (body === null || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some(field => !["payout_attempt_id", "reason"].includes(field))) throw new DomainError("VALIDATION_ERROR");
+      const result = await payoutDestinationServer(context.client, data.claims, context.config).reveal({ ...body, destination_id: payoutReveal[1] });
+      return context.finish(NextResponse.json({ data: result, request_id: requestId }, { headers: { "Pragma": "no-cache" } }));
     }
     if (destinationReveal) {
       if (request.nextUrl.searchParams.size) throw new DomainError("VALIDATION_ERROR");
@@ -126,6 +153,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ? await invokePaymentCommandWithStatus(context.client, route.rpc, args)
       : route.family === "packages"
       ? await invokePackageCommandWithStatus(context.client, route.rpc, args)
+      : route.family === "teaching-operations"
+        ? await invokeTeachingOperation(context.client, route.rpc, args)
+      : route.family === "payroll" && route.rpc === "submit_payout_destination"
+        ? await payoutDestinationServer(context.client, data.claims, context.config).submit(args)
+      : route.family === "payroll" && route.rpc === "verify_payout_destination"
+        ? await payoutDestinationServer(context.client, data.claims, context.config).verify(args)
+      : route.family === "payroll"
+        ? await invokePayrollCommandWithStatus(context.client, route.rpc, args)
+      : route.family === "finance"
+        ? await invokeFinanceCommand(context.client, route.rpc, args)
+      : route.family === "delivery"
+        ? await invokeDeliveryCommand(context.client, route.rpc, args)
+      : route.family === "meetings"
+      ? await invokeMeetingCommandWithStatus(context.client, route.rpc, args)
+      : route.family === "files"
+      ? await invokeFileCommandWithStatus(context.client, route.rpc, args)
       : route.family === "enrollment-transfer"
       ? await invokeEnrollmentTransferCommand(context.client, route.rpc, args)
       : route.family === "booking"
@@ -147,7 +190,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const path = (await params).path;
     const route = path.join("/");
-    const paymentRead = findPaymentReadRoute(route) || findEnrollmentTransferReadRoute(route);
+    const paymentRead = findPaymentReadRoute(route) || findEnrollmentTransferReadRoute(route) || findFileReadRoute(route) || findMeetingReadRoute(route) || findPayrollReadRoute(route) || findFinanceReadRoute(route) || findDeliveryReadRoute(route) || findTeachingOperationReadRoute(route);
     if (paymentRead) {
       const filters = request.nextUrl.searchParams;
       if (Array.from(filters.keys()).some(key => !paymentRead.fields.includes(key)) || new Set(filters.keys()).size !== filters.size) throw new DomainError("VALIDATION_ERROR");

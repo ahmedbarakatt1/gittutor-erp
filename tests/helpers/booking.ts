@@ -62,7 +62,7 @@ export async function raceBookingCalls(calls:{client:ReturnType<typeof anonymous
       await barrier;
       if(!/^[a-z_]+$/.test(call.name)||Object.keys(call.args).some(key=>!/^p_[a-z_]+$/.test(key))) throw new Error('INVALID_TEST_RPC');
       const entries=Object.entries(call.args);
-      const jsonParameters=new Set(['p_weekly_intervals','p_dated_exceptions','p_requested_terms']);
+      const jsonParameters=new Set(['p_weekly_intervals','p_dated_exceptions','p_requested_terms','p_allocations']);
       const result=await database.query(`select api.${call.name}(${entries.map(([key],i)=>`${key} => $${i+1}`).join(',')}) as data`,entries.map(([key,value])=>jsonParameters.has(key)?JSON.stringify(value):value));
       await database.query('commit');
       return {data:result.rows[0].data,error:null};

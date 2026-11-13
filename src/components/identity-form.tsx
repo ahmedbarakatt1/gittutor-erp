@@ -80,9 +80,9 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
   </form>;
 }
 
-export function TextField({ name, label, hint, type = 'text', defaultValue, maxLength, min, pattern }: { name: string; label: string; hint?: string; type?: string; defaultValue?: string | number; maxLength?: number; min?: string | number; pattern?: string }) {
+export function TextField({ name, label, hint, type = 'text', defaultValue, maxLength, min, pattern, required = true, multiline = false }: { name: string; label: string; hint?: string; type?: string; defaultValue?: string | number; maxLength?: number; min?: string | number; pattern?: string; required?: boolean; multiline?: boolean }) {
   const id = useId();
-  return <div className={styles.field}><label htmlFor={id}>{label}</label><input id={id} name={name} type={type} required defaultValue={defaultValue} maxLength={maxLength} min={min} pattern={pattern} aria-describedby={hint ? `${id}-hint` : undefined} />{hint && <p className={styles.hint} id={`${id}-hint`}>{hint}</p>}</div>;
+  return <div className={styles.field}><label htmlFor={id}>{label}</label>{multiline ? <textarea id={id} name={name} required={required} defaultValue={defaultValue} maxLength={maxLength} rows={4} aria-describedby={hint ? `${id}-hint` : undefined} /> : <input id={id} name={name} type={type} required={required} defaultValue={defaultValue} maxLength={maxLength} min={min} pattern={pattern} aria-describedby={hint ? `${id}-hint` : undefined} />}{hint && <p className={styles.hint} id={`${id}-hint`}>{hint}</p>}</div>;
 }
 
 export const uuidPattern = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';

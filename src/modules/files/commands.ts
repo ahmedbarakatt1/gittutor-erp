@@ -3,7 +3,7 @@ import type { IdentityRpcClient } from '../identity/commands';
 export type FileRpcClient=IdentityRpcClient;
 export const publicFilePurposeSchema=z.enum(['private_preparation','shared_handout','receipt','statement_evidence','review_evidence']);
 export type PublicFilePurpose=z.infer<typeof publicFilePurposeSchema>;
-export const fileEvidenceActionSchema=z.enum(['submit_receipt','replace_receipt','create_statement_import','record_manual_transfer','verify_transfer_settlement','create_receiving_account','bind_transfer_payer','record_transfer_reversal','propose_refund_destination','verify_refund_destination','reconcile_refund','record_refund_reversal','resolve_package_financing_hold']);
+export const fileEvidenceActionSchema=z.enum(['submit_receipt','replace_receipt','create_statement_import','record_manual_transfer','verify_transfer_settlement','create_receiving_account','bind_transfer_payer','record_transfer_reversal','propose_refund_destination','verify_refund_destination','reconcile_refund','record_refund_reversal','resolve_package_financing_hold','review_delivery_exception','amend_completion','adjust_tutor_earning','record_expense','record_expense_settlement','cash_reconciliation','verify_payout_destination','reconcile_payout','record_payout_reversal','analytics_evidence']);
 export const fileFilenameSchema=z.string().min(1).max(255).refine(value=>value===value.trim()&&!/[\\/\x00-\x1f\x7f]/.test(value)&&!['.','..'].includes(value));
 const id=z.uuid(),version=z.number().int().positive().max(2147483647),hash=z.string().regex(/^[a-f0-9]{64}$/),key=z.string().min(1).max(200);
 const common={command_id:id,resource_id:id,version};
@@ -18,3 +18,4 @@ export class FileRpcError extends Error{constructor(public readonly code:string)
 export async function fileRpc(client:FileRpcClient,name:string,args?:Record<string,unknown>){const result=await client.rpc(name,args);if(result.error)throw new FileRpcError(codes.has(result.error.message)?result.error.message:'DEPENDENCY_UNAVAILABLE');return result;}
 export type FileCommandName=keyof typeof fileCommands;
 export async function invokeFileCommandWithStatus<N extends FileCommandName>(client:FileRpcClient,name:N,args:Record<string,unknown>){const definition=fileCommands[name];if(!definition)throw new FileRpcError('VALIDATION_ERROR');const input=definition.input.safeParse(args);if(!input.success)throw new FileRpcError('VALIDATION_ERROR');const result=await fileRpc(client,name,input.data),output=definition.output.safeParse(result.data);if(!output.success||![200,201,202].includes(result.status??0))throw new FileRpcError('DEPENDENCY_UNAVAILABLE');return{data:output.data as z.output<(typeof fileCommands)[N]['output']>,status:result.status as 200|201|202};}
+
