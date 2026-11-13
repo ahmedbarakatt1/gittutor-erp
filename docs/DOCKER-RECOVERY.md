@@ -1,5 +1,11 @@
 # Docker recovery — 13 November 2026
 
+## Recurrence after laptop shutdown, 20:24 Cairo
+
+The backend failed again with the same observed `userAnalyticsOtlpHttp.sock` error. Docker Desktop/backend and its WSL distribution were confirmed stopped. The exact runtime-only path was checked and renamed to `C:\Users\barak\AppData\Local\Docker\run.stale-20261113-202444`; an empty replacement was created. No data volume or disk was removed. Engine 27.3.1 recovered and the six existing Supabase services became healthy/running.
+
+Executed `pnpm exec tsx .local/docker-recovery-check.ts`: existing database readable with 148 migrations, 2519 accounts, 2086 occurrences, 6812 financial transactions and 356 stored objects. Actual sign-in/verified claims and Auth/Storage HTTP 200 checks passed. Those totals include the retained synthetic development history; the original database also holds the separately protected actual workbook snapshot. This is recovery evidence, not a new application acceptance result. The stopped application worker, web server and temporary tunnel require their own restart/check.
+
 Docker Desktop failed before starting its Linux engine because Windows could not access a stale Unix socket at `C:\Users\barak\AppData\Local\Docker\run\userAnalyticsOtlpHttp.sock`. The backend log reported `running OTel manager: removing stale socket ... The file cannot be accessed by the system`. Restarting the application with that file still in place reproduced the failure. This matches the stale socket failure discussed in [Docker's issue tracker](https://github.com/docker/desktop-feedback/issues/527).
 
 ## Repair performed
