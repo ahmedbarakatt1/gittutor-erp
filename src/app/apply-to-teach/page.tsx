@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand-logo';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AuthUnavailableError, getCurrentAccount } from '@/server/auth';
@@ -13,7 +14,7 @@ export default async function ApplyToTeachPage() {
   try { account = await getCurrentAccount(); }
   catch (error) { if (!(error instanceof AuthUnavailableError)) throw error; unavailable = true; }
   return <div className={styles.authPage}>
-    <Link className={styles.brand} href="/" aria-label={authCopy.home}><span>Git</span> Tutor.</Link>
+    <Link className={styles.brand} href="/" aria-label={authCopy.home}><BrandLogo /></Link>
     <main className={styles.applicationPage}>
       <h1>{copy.application.title}</h1><p className={styles.description}>{copy.application.description}</p>
       <p className={styles.description}>{copy.application.verification}</p>

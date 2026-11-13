@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand-logo';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatMinorUnits } from '@/modules/shared/format';
@@ -8,7 +9,7 @@ import { PublicContactLinks } from '../public-contact';
 export function PublicShell({ children, active }: { children: ReactNode; active?: 'subjects' | 'offers' }) {
   return <div className={styles.shell}>
     <a className="skip-link" href="#main">{copy.skip}</a>
-    <header className={styles.header}><Link className={styles.brand} href="/" aria-label={copy.home}><span>Git</span> Tutor.</Link><nav aria-label={copy.navigation}>
+    <header className={styles.header}><Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo /></Link><nav aria-label={copy.navigation}>
       <Link href="/subjects" aria-current={active === 'subjects' ? 'page' : undefined}>{copy.subjects}</Link>
       <Link href="/offers" aria-current={active === 'offers' ? 'page' : undefined}>{copy.offers}</Link>
       <Link href="/login">{copy.account}</Link>

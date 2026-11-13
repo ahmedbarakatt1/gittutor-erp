@@ -1,0 +1,166 @@
+{
+  "report": [
+    {
+      "route": "/",
+      "width": 1440,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 88
+        },
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 88
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-home-desktop.png"
+    },
+    {
+      "route": "/subjects",
+      "width": 1440,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 88
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-subjects-desktop.png"
+    },
+    {
+      "route": "/login",
+      "width": 1440,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 88
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-login-desktop.png"
+    },
+    {
+      "route": "/support",
+      "width": 1440,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 88
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-support-desktop.png"
+    },
+    {
+      "route": "/apply-to-teach",
+      "width": 1440,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 88
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-apply-to-teach-desktop.png"
+    },
+    {
+      "route": "/",
+      "width": 360,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 72
+        },
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 72
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-home-mobile.png"
+    },
+    {
+      "route": "/subjects",
+      "width": 360,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 72
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-subjects-mobile.png"
+    },
+    {
+      "route": "/login",
+      "width": 360,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 72
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-login-mobile.png"
+    },
+    {
+      "route": "/support",
+      "width": 360,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 72
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-support-mobile.png"
+    },
+    {
+      "route": "/apply-to-teach",
+      "width": 360,
+      "overflow": false,
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/git-tutor-instagram.jpg",
+          "width": 72
+        }
+      ],
+      "bodySize": 16,
+      "favicon": "/brand/git-tutor-instagram.jpg",
+      "screenshot": ".local/screenshots/brand-apply-to-teach-mobile.png"
+    }
+  ],
+  "errors": [],
+  "failed": []
+}

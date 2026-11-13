@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand-logo';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAccount } from '@/server/auth';
@@ -11,5 +12,5 @@ export default async function SetPasswordPage({ searchParams }: { searchParams: 
   await requireAccount();
   const requestedId = (await searchParams).staff_invitation_id;
   const invitationId = typeof requestedId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestedId) ? requestedId : undefined;
-  return <div className={styles.authPage}><Link className={styles.brand} href="/" aria-label={copy.home}><span>Git</span> Tutor.</Link><main className={styles.verification}><h1>{copy.passwordSetup.title}</h1><p className={styles.description}>{copy.passwordSetup.description}</p><SetPasswordForm staffInvitationId={invitationId} /></main></div>;
+  return <div className={styles.authPage}><Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo /></Link><main className={styles.verification}><h1>{copy.passwordSetup.title}</h1><p className={styles.description}>{copy.passwordSetup.description}</p><SetPasswordForm staffInvitationId={invitationId} /></main></div>;
 }

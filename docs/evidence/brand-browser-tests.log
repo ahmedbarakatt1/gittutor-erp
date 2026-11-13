@@ -1,0 +1,21 @@
+
+Running 12 tests using 1 worker
+
+(node:16668) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (7.3s)
+  ok  2 [desktop] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (5.7s)
+  ok  3 [desktop] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (7.3s)
+  ok  4 [desktop] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (2.1s)
+  ok  5 [desktop] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (2.6s)
+  ok  6 [desktop] › tests\e2e\subjects.spec.ts:3:1 › subject discovery uses the four study areas with real course links and supplied contact channels (10.2s)
+(node:23488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  7 [mobile] › tests\e2e\smoke.spec.ts:3:1 › public website shell explains the learning journey and safe group tuition (5.0s)
+  ok  8 [mobile] › tests\e2e\smoke.spec.ts:19:1 › study example and frequently asked questions work with native controls (2.2s)
+  ok  9 [mobile] › tests\e2e\smoke.spec.ts:29:1 › layout stays readable and within the viewport (1.8s)
+  ok 10 [mobile] › tests\e2e\smoke.spec.ts:42:1 › RTL layout retains visible navigation and bounded content (1.9s)
+  ok 11 [mobile] › tests\e2e\smoke.spec.ts:50:1 › decorative Giza accent loads only when approached (3.1s)
+  ok 12 [mobile] › tests\e2e\subjects.spec.ts:3:1 › subject discovery uses the four study areas with real course links and supplied contact channels (11.7s)
+
+  12 passed (1.1m)

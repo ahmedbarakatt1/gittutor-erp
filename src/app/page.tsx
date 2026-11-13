@@ -3,10 +3,7 @@ import { GizaAccent } from '@/components/giza-accent';
 import { en as copy } from '@/locales/en';
 import Link from 'next/link';
 import { PublicContactLinks } from '@/components/public-contact';
-
-function Wordmark() {
-  return <span className="wordmark"><span className="wordmark-git">Git</span><span>Tutor<span className="wordmark-period">.</span></span></span>;
-}
+import { BrandLogo } from '@/components/brand-logo';
 
 export default function HomePage() {
   const money = new Intl.NumberFormat(copy.locale, { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 });
@@ -14,7 +11,7 @@ export default function HomePage() {
     <>
       <a className="skip-link" href="#main">{copy.navigation.skip}</a>
       <header className="site-header container" id="top">
-        <a className="brand-link" href="#top" aria-label={copy.brand}><Wordmark /></a>
+        <a className="brand-link" href="#top" aria-label={copy.brand}><BrandLogo /></a>
         <nav aria-label={copy.navigation.label}>
           <Link href="/subjects">{copy.navigation.subjects}</Link>
           <a href="#formats">{copy.navigation.formats}</a>
@@ -109,7 +106,7 @@ export default function HomePage() {
 
       <footer className="site-footer container">
         <div className="footer-invitation"><div><h2>{copy.footer.title}</h2><p>{copy.footer.body}</p><Link className="button button-primary" href="/subjects">{copy.navigation.explore}</Link></div><GizaAccent /></div>
-        <div className="footer-bottom"><Wordmark /><PublicContactLinks /><Link href="/apply-to-teach">{copy.navigation.teach}</Link><a href="#top">{copy.footer.back}</a></div>
+        <div className="footer-bottom"><BrandLogo /><PublicContactLinks /><Link href="/apply-to-teach">{copy.navigation.teach}</Link><a href="#top">{copy.footer.back}</a></div>
       </footer>
     </>
   );

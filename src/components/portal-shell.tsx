@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand-logo';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SignOutButton } from './auth-form';
@@ -27,7 +28,7 @@ export function PortalShell({ kind, account, children, title, description, activ
     <a className="skip-link" href="#account">{copy.skip}</a>
     <header className={styles.portalHeader}>
       <div className={styles.portalIdentity}>
-        <Link className={styles.brand} href="/" aria-label={copy.home}><span>Git</span> Tutor.</Link>
+        <Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo compact /></Link>
         <span className={styles.workspaceName}>{text.workspace}</span>
       </div>
       <SignOutButton />

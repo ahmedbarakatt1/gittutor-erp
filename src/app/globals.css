@@ -36,15 +36,13 @@ ul, ol { padding: 0; margin: 0; }
 .skip-link { position: fixed; inset-block-start: 12px; inset-inline-start: 12px; transform: translateY(-180%); background: var(--ink); color: var(--surface); padding: 12px 20px; z-index: 10; }
 .skip-link:focus { transform: translateY(0); }
 .site-header { min-block-size: 110px; display: flex; justify-content: space-between; align-items: center; gap: 32px; }
-.brand-link { text-decoration: none; }
-.wordmark { display: inline-flex; align-items: baseline; gap: 6px; font-size: 30px; font-weight: 800; letter-spacing: -0.055em; line-height: 1; white-space: nowrap; }
-.wordmark-git, .wordmark-period { color: var(--brand); }
+.brand-link { display: inline-flex; flex-shrink: 0; text-decoration: none; }
 .site-header nav { display: flex; align-items: center; gap: 32px; }
 .site-header nav a { font-size: 15px; font-weight: 650; text-decoration: none; padding-block: 12px; }
 .site-header nav a:hover { color: var(--brand); }
 .hero { display: grid; grid-template-columns: 1.02fr 1fr; gap: 56px; align-items: center; padding-block: 54px 76px; min-block-size: 670px; }
 .hero h1 { font-size: clamp(3.25rem, 5.7vw, 5.25rem); max-inline-size: 10ch; }
-.hero h1 span { color: var(--brand); }
+.hero h1 span { color: var(--ink); background: var(--accent); box-decoration-break: clone; padding-inline: .08em; }
 .hero-lead { margin-block-start: 30px; max-inline-size: 34ch; font-size: 20px; line-height: 1.5; font-weight: 650; }
 .hero-body { color: var(--muted); max-inline-size: 43ch; margin-block-start: 12px; }
 .hero-actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-block-start: 30px; }
@@ -118,7 +116,6 @@ details[open] .disclosure-mark::after { transform: rotate(0); }
 .footer-invitation h2 { font-size: clamp(2.3rem, 4.5vw, 4rem); }
 .footer-invitation p { margin-block: 14px 26px; color: var(--muted); }
 .footer-bottom { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 40px; align-items: center; padding-block: 28px; border-block-start: 1px solid var(--border); }
-.footer-bottom .wordmark { font-size: 24px; }
 .footer-bottom p { font-size: 12px; color: var(--muted); max-inline-size: 48ch; }
 .footer-bottom > a { font-size: 13px; white-space: nowrap; }
 

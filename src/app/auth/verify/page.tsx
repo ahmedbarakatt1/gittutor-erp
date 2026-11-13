@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand-logo';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { authCopy as copy } from '@/locales/auth';
@@ -7,7 +8,7 @@ export const metadata: Metadata = { title: 'Verify your email | Git Tutor', robo
 
 export default function VerificationPage() {
   return <div className={styles.authPage}>
-    <Link href="/" className={styles.brand} aria-label={copy.home}><span>Git</span> Tutor.</Link>
+    <Link href="/" className={styles.brand} aria-label={copy.home}><BrandLogo /></Link>
     <main className={styles.verification}>
       <h1>{copy.verification.title}</h1>
       <p>{copy.verification.description}</p>
