@@ -6,6 +6,7 @@ import { retryFinancialConflict, settleEnrollment } from '../helpers/financial-b
 import { loadLocalSupabase } from '../helpers/supabase';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
 import { formatCairoInstant } from '@/modules/booking/scheduling';
+import type { EnrollmentTransferConsent } from '@/modules/booking/enrollment-transfers';
 
 test.use({ trace: 'off', screenshot: 'off' });
 const baseURL = 'http://127.0.0.1:3000';
@@ -52,6 +53,34 @@ async function openProposal(page: Page, id: string) {
   await expect(disclosure).toBeVisible();
   if (!(await disclosure.getAttribute('open') !== null)) await disclosure.locator(':scope > summary').click();
   return disclosure;
+}
+async function findPayerConsent(page: Page, proposalId: string): Promise<EnrollmentTransferConsent> {
+  const path = '/api/v1/me/enrollment-transfer-consents', cursors = new Set<string>();
+  const first = page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === 'GET');
+  await page.goto('/learn/payments');
+  let response = await first;
+  const region = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Requests to use your original funds', exact: true }) });
+  for (;;) {
+    expect(response.status()).toBe(200);
+    const records = (await response.json()).data as { items: EnrollmentTransferConsent[]; next_cursor: string | null };
+    expect(JSON.stringify(records.items)).not.toMatch(confidential);
+    expect(JSON.stringify(records.items)).not.toMatch(/learner_id|display_name|allocation_id/);
+    const consent = records.items.find(item => item.proposal_id === proposalId);
+    if (consent) {
+      await expect(region.locator(`a[href="/learn/payments/enrollment-transfer-consents/${consent.consent_id}"]`)).toBeVisible();
+      return consent;
+    }
+    const cursor = records.next_cursor;
+    expect(cursor, 'The exact original-payer consent must be discoverable through the real list').toBeTruthy();
+    expect(cursors.has(cursor!)).toBe(false); cursors.add(cursor!);
+    const next = page.waitForResponse(result => {
+      const url = new URL(result.url());
+      return url.pathname === path && url.searchParams.get('cursor') === cursor && result.request().method() === 'GET';
+    });
+    await region.getByRole('button', { name: 'Load more', exact: true }).click();
+    response = await next;
+    await expect(region.getByRole('button', { name: 'Loading more…', exact: true })).toHaveCount(0);
+  }
 }
 
 test('a session transfer preserves the funded source until exact learner, tutor and original-payer consent is applied', async ({ browser }, info) => {
@@ -105,9 +134,8 @@ test('a session transfer preserves the funded source until exact learner, tutor 
     await expect(customer.getByRole('button', { name: 'Accept this quote', exact: true })).toHaveCount(0);
     expect((await (await contexts[0].request.get(`/api/v1/enrollments/${reviewed.new_enrollment_id}`)).json()).data).toMatchObject({ state: 'held', transfer_link: { role: 'destination', proposal_id: reviewed.proposal_id }, funding: { conditional_transfer_proposal_id: reviewed.proposal_id, eligible: false } });
 
-    await login(payer, 'learner_a'); await payer.goto('/learn/payments');
-    const list = await contexts[3].request.get('/api/v1/me/enrollment-transfer-consents'); expect(list.status()).toBe(200);
-    const consent = (await list.json()).data.items.find((item: { proposal_id: string }) => item.proposal_id === reviewed.proposal_id);
+    await login(payer, 'learner_a');
+    const consent = await findPayerConsent(payer, reviewed.proposal_id);
     expect(consent).toMatchObject({ state: 'awaiting_acceptance', carryover_minor: 50000 }); expect(JSON.stringify(consent)).not.toMatch(confidential); expect(JSON.stringify(consent)).not.toMatch(/learner_id|display_name|allocation_id/);
     await payer.getByRole('link', { name: 'Authorize original funds for a replacement session', exact: true }).and(payer.locator(`[href="/learn/payments/enrollment-transfer-consents/${consent.consent_id}"]`)).click();
     const payerAccept = payer.getByRole('form', { name: 'Authorize this carryover', exact: true }); await payerAccept.getByLabel('I authorize these exact original funds for the displayed replacement booking.', { exact: true }).check();

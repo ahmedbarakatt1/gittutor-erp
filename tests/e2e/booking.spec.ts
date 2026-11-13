@@ -112,7 +112,9 @@ test('administrator schedules and approves exact teaching terms; guardian reserv
     expect(new Set(enrollmentIds).size).toBe(2); expect(downloaded.size).toBeGreaterThan(0);
     // Read each exact browser-observed asset URL through the same context before teardown.
     // DevTools response handles can disappear when a full-document navigation completes.
-    for (const url of downloaded) { const asset = await guardian.request.get(url); expect(asset.status()).toBe(200); expect(await asset.text()).not.toMatch(privateFields); }
+    const assetViolations: { asset: string; fields: string[] }[] = [];
+    for (const url of downloaded) { const asset = await guardian.request.get(url); expect(asset.status()).toBe(200); const fields = (await asset.text()).match(new RegExp(privateFields.source, 'g')); if (fields) assetViolations.push({ asset: new URL(url).pathname, fields: [...new Set(fields)] }); }
+    expect(assetViolations, 'Every actual customer-downloaded script must exclude confidential field definitions').toEqual([]);
     expect((await guardian.request.get(`/api/v1/occurrences/${occurrenceId}/fee-agreements`)).status()).toBe(403);
     const unrelated = await stranger.newPage(); await login(unrelated, 'learner_c'); for (const id of enrollmentIds) expect((await stranger.request.get(`/api/v1/enrollments/${id}`)).status()).toBe(404);
     const publicResponse = await browser.newContext({ baseURL }); try { const response = await publicResponse.request.get(`/api/v1/public/offers?offer_id=${catalogFixtureIds.group2_offer}`); expect(response.status()).toBe(200); expect(await response.text()).not.toMatch(privateFields); } finally { await publicResponse.close(); }
@@ -148,8 +150,11 @@ test('a group change collects separate learner and tutor consent while unfunded 
     await adminPage.goto(`/admin/schedule?occurrence=${occurrenceId}`); const feeForm = adminPage.getByRole('form', { name: 'Approve exact tutor fee', exact: true }); await feeForm.getByLabel('Group size for this agreement', { exact: true }).selectOption('3'); await feeForm.getByLabel('Exact tutor fee (EGP)', { exact: true }).fill((nextFee / 100).toFixed(2)); await feeForm.getByLabel('Fee approval reason', { exact: true }).fill('Synthetic proposed agreement'); const fee = await submit(adminPage, feeForm, `occurrences/${occurrenceId}/fee-agreements`, 201);
     await adminPage.getByText('Propose a group change', { exact: true }).click(); const form = adminPage.getByRole('form', { name: 'Create group-change proposal', exact: true }); await form.getByLabel('Proposed group size', { exact: true }).selectOption('3');
     await ensurePagedOption(adminPage, form.getByLabel('Approved terms for the proposed group', { exact: true }), form.locator('..'), '/api/v1/policies', catalogFixtureIds.group3_policy);
-    await form.getByLabel('Exact fee agreement for this change', { exact: true }).selectOption(String(fee.fee_agreement_id));
     await form.getByLabel('Find a learner', { exact: true }).fill('LearnerC'); await form.getByRole('button', { name: 'Search learners', exact: true }).click(); await form.getByRole('checkbox', { name: 'LearnerC', exact: true }).check();
+    // A roster edit invalidates the prior agreement selection. Review it after
+    // selecting the participants, as the real administrator must do.
+    await expect(form.getByLabel('Exact fee agreement for this change', { exact: true })).toHaveValue('');
+    await form.getByLabel('Exact fee agreement for this change', { exact: true }).selectOption(String(fee.fee_agreement_id));
     const expires = formatCairoInstant(new Date(Date.now() + 600_000).toISOString()); await form.getByLabel('Responses expire at', { exact: true }).fill(`${expires.local_date}T${expires.local_time}`); await form.getByLabel('Reason for this request', { exact: true }).fill('Synthetic group expansion'); const amendment = await submit(adminPage, form, `occurrences/${occurrenceId}/amendments`, 201); const amendmentId = String(amendment.amendment_id);
     await login(guardianPage, 'guardian_a');
     for (const id of seats) { await guardianPage.goto(`/learn/bookings/${id}`); await guardianPage.getByText('Review proposed change', { exact: true }).click(); const consent = guardianPage.getByRole('form', { name: 'Accept these proposed terms', exact: true }); await consent.getByLabel('I accept the displayed change for this learner.').check(); await submit(guardianPage, consent, `amendments/${amendmentId}/accept`); }

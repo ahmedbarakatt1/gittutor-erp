@@ -10,14 +10,13 @@ import { CairoInput, CairoTimestamp, Check, instantField, money, Select, Session
 import { AmountField, amountField, PaymentReadState, usePaymentClock, usePaymentList } from '../payments/shared';
 import styles from '../files/files.module.css';
 
-export function TutorReassignments({ occurrenceId, learnerId, view, revision = 0, onSaved }: { occurrenceId?: string; learnerId?: string; view: 'customer' | 'tutor' | 'admin'; revision?: number; onSaved?: () => void }) {
+export function TutorReassignments({ occurrenceId, learnerId, view, revision = 0, onSaved }: { occurrenceId?: string; learnerId?: string; view: 'tutor' | 'admin'; revision?: number; onSaved?: () => void }) {
   const path = `tutor-reassignments?view=${view}${occurrenceId ? `&occurrence_id=${occurrenceId}` : ''}${learnerId ? `&learner_id=${learnerId}` : ''}`;
   return <ReassignmentRecords key={`${path}-${revision}`} path={path} view={view} onSaved={onSaved} />;
 }
-function ReassignmentRecords({ path, view, onSaved }: { path: string; view: 'customer' | 'tutor' | 'admin'; onSaved?: () => void }) {
+function ReassignmentRecords({ path, view, onSaved }: { path: string; view: 'tutor' | 'admin'; onSaved?: () => void }) {
   const records = usePaymentList<TutorReassignment>(path), now = usePaymentClock();
   return <section className={styles.section}><h2>{copy.title}</h2><PaymentReadState pending={!records.items} {...records} />{records.items?.length === 0 && <p>{copy.noChanges}</p>}{records.items?.filter(item => item.view === view).map(item => <details className={styles.section} key={`${item.proposal_id}-${item.version}`} data-reassignment-id={item.proposal_id}><summary>{item.old_tutor.display_name} → {item.new_tutor.display_name} · {copy.state[item.state]}</summary><SessionTime start={item.start_at} end={item.end_at} /><p>{copy.from}: {item.old_tutor.display_name}</p><p>{copy.to}: {item.new_tutor.display_name}</p>{['proposed', 'accepted', 'approved'].includes(item.state) && <p>{copy.intro}</p>}<p>{copy.expires}: <CairoTimestamp value={item.expires_at} /></p>{item.required_actions.map(action => <p className={styles.notice} key={action}>{copy.actions[action]}</p>)}
-    {item.view === 'customer' && <><p>{copy.unchanged}</p><p>{copy.price}: <strong>{money(item.terms.customer_price_minor, item.terms.currency)}</strong></p></>}
     {item.view === 'tutor' && <TeachingTerms terms={item.terms} />}
     {item.view === 'admin' && <><h3>{copy.previous}</h3><TeachingTerms terms={item.terms.previous_tutor} /><h3>{copy.replacementRole}</h3><TeachingTerms terms={item.terms.replacement_tutor} /><h3>{copy.pending}</h3><ul>{item.required_acceptances.map(row => <li key={`${row.kind}-${row.participant_id}`}>{row.kind === 'learner' ? copy.learner : row.kind === 'previous_tutor' ? item.old_tutor.display_name : item.new_tutor.display_name}: {row.current && row.accepted_at ? copy.current : copy.missing}</li>)}</ul></>}
     {item.can_accept && <IdentityForm action={`tutor-reassignments/${item.proposal_id}/accept`} submitLabel={copy.accept} successMessage={copy.accepted} resettable={false} disabled={!now || now >= Date.parse(item.expires_at)} onSaved={() => { records.reload(); onSaved?.(); }} payload={() => ({ terms_hash: item.terms_hash, expected_version: item.version })}><Check name="consent" label={copy.consent} /></IdentityForm>}

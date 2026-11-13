@@ -1,6 +1,6 @@
 'use client';
 
-import { TutorReassignments } from '../teaching/tutor-reassignment';
+import { CustomerTutorReassignments } from '../teaching/customer-tutor-reassignment';
 
 import Link from 'next/link';
 import { SessionMaterials } from '../files/materials';
@@ -64,7 +64,7 @@ export function CustomerBookingDetail({ enrollmentId }: { enrollmentId: string }
       {!item.is_provisional && !pendingTransfer && ['held', 'confirmed'].includes(item.state) && <BookingPackageCoverage enrollmentId={item.enrollment_id} />}
       <OfferTerms terms={item.quote.customer_policy} policyId={item.quote.policy_version_id} />
       {item.occurrence.state === 'completed' && <LearningRecordPanel occurrenceId={item.occurrence.occurrence_id} learnerId={item.learner.learner_id} view="customer" />}
-      <TutorReassignments occurrenceId={item.occurrence.occurrence_id} learnerId={item.learner.learner_id} view="customer" /><section className={styles.section}><h2>{copy.changes}</h2>{item.pending_proposals.length ? item.pending_proposals.map(ref => <CustomerProposal key={ref.proposal_id} id={ref.proposal_id} kind={ref.kind} learnerId={item.learner.learner_id} />) : <p>{copy.changesEmpty}</p>}</section>
+      <CustomerTutorReassignments occurrenceId={item.occurrence.occurrence_id} learnerId={item.learner.learner_id} /><section className={styles.section}><h2>{copy.changes}</h2>{item.pending_proposals.length ? item.pending_proposals.map(ref => <CustomerProposal key={ref.proposal_id} id={ref.proposal_id} kind={ref.kind} learnerId={item.learner.learner_id} />) : <p>{copy.changesEmpty}</p>}</section>
       {item.transfer_link && !item.pending_proposals.some(ref => ref.proposal_id === item.transfer_link!.proposal_id) && <CustomerProposal id={item.transfer_link.proposal_id} kind="enrollment_transfer" learnerId={item.learner.learner_id} />}
       {!item.is_provisional && !pendingTransfer && (!item.transfer_link || ['closed', 'committed'].includes(item.transfer_link.stage)) && <CustomerChangeRequest enrollment={item} />}
       {item.state === 'held' && !item.is_provisional && !pendingTransfer && <details className={styles.section}><summary>{copy.cancelTitle}</summary><p>{item.funding.integration_state === 'ready' ? copy.cancelDescription : copy.releaseUnavailable}</p><IdentityForm action={`enrollments/${item.enrollment_id}/cancel`} payload={form => ({ reason: String(form.get('reason')).trim(), remedy_proposal_id: null, expected_version: item.version })} disabled={item.funding.integration_state !== 'ready'} submitLabel={copy.cancel} successMessage={copy.cancelled} resettable={false} onSaved={record.reload}><TextField name="reason" label={copy.reason} maxLength={2000} /></IdentityForm></details>}

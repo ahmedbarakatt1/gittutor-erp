@@ -4,10 +4,26 @@ import { bookingFixture } from '../helpers/booking';
 import { calendarFixture } from '../helpers/calendar';
 import { loadLocalSupabase } from '../helpers/supabase';
 import { formatCairoInstant } from '../../src/modules/booking/scheduling';
+import { tutorReassignmentSchema } from '../../src/modules/teaching/operations';
 test.use({ trace: 'off', screenshot: 'off' });
 async function login(page: Page, actor: { id: string; email: string; password: string }) { await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password); const response = page.waitForResponse(row => new URL(row.url()).pathname === '/api/auth/login' && row.request().method() === 'POST'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15000 }); }
 function local(instant: string) { const time = formatCairoInstant(instant); return `${time.local_date}T${time.local_time}`; }
-async function submit(page: Page, form: Locator, path: string, label: string) { const response = page.waitForResponse(row => new URL(row.url()).pathname === `/api/v1/${path}` && row.request().method() === 'POST'); await form.getByRole('button', { name: label, exact: true }).click(); const result = await response, body = await result.json(); expect(result.status(), body.message).toBe(201); return body.data; }
+async function stage<T>(name: string, action: () => Promise<T>): Promise<T> {
+  console.info(`[teaching-operations] start: ${name}`);
+  try { const result = await test.step(name, action, { timeout: 20000 }); console.info(`[teaching-operations] done: ${name}`); return result; }
+  catch (error) { console.info(`[teaching-operations] failed before cleanup: ${name}`); throw error; }
+}
+async function submit(page: Page, form: Locator, path: string, label: string) {
+  const response = page.waitForResponse(row => new URL(row.url()).pathname === `/api/v1/${path}` && row.request().method() === 'POST');
+  const [, result] = await Promise.all([
+    stage(`${label}: click`, () => form.getByRole('button', { name: label, exact: true }).click()),
+    stage(`${label}: response headers`, () => response),
+  ]);
+  console.info(`[teaching-operations] ${label}: HTTP ${result.status()}`);
+  const body = await stage(`${label}: response body`, () => result.json());
+  await stage(`${label}: response assertion`, async () => { expect(result.status(), body.message).toBe(201); });
+  return body.data;
+}
 test('unavailability has a responsible owner and a selected series change leaves its other session untouched', async ({ browser }, info) => {
   test.setTimeout(90000);
   const f = await bookingFixture(); await f.availability(); const firstTime = f.interval(5), secondTime = f.interval(6), proposedTime = f.interval(8), first = await f.occurrence('private', firstTime), second = await f.occurrence('private', secondTime);
@@ -17,8 +33,8 @@ test('unavailability has a responsible owner and a selected series change leaves
     await login(tutor, f.actor); await tutor.goto('/tutor/teaching');
     const report = tutor.getByRole('form', { name: 'Report unavailability', exact: true });
     await report.getByLabel('Unavailable from (Cairo time)', { exact: true }).fill(local(firstTime.start_at)); await report.getByLabel('Unavailable until (Cairo time)', { exact: true }).fill(local(firstTime.end_at)); await report.getByLabel('Reason', { exact: true }).fill('Review a conflicting teaching commitment.');
-    const incident = await submit(tutor, report, 'tutor-unavailability', 'Report unavailability'); expect(incident.affected_count).toBe(1);
-    await login(admin, loadLocalSupabase().actors.admin_a); await admin.goto('/admin/teaching');
+    const incident = await submit(tutor, report, 'tutor-unavailability', 'Report unavailability'); await stage('Unavailability affected-count assertion', async () => { expect(incident.affected_count).toBe(1); });
+    await stage('Administrator login after incident', () => login(admin, loadLocalSupabase().actors.admin_a)); await stage('Open administrator teaching workspace', () => admin.goto('/admin/teaching'));
     const affected = admin.getByRole('listitem').filter({ has: admin.locator(`a[href="/admin/schedule?occurrence=${first.occurrence_id}"]`) }).first();
     await expect(affected).toContainText('Responsible administrator:'); await expect(affected.getByRole('link', { name: 'Open the affected session', exact: true })).toBeVisible(); await expect(affected.getByRole('button', { name: 'Close resolved case', exact: true })).toHaveCount(0);
     await admin.locator('summary').filter({ hasText: /^Create session series$/ }).click();
@@ -26,10 +42,11 @@ test('unavailability has a responsible owner and a selected series change leaves
     for (const occurrence of [first, second]) { const checkbox = create.locator(`input[name="occurrence_id"][value="${occurrence.occurrence_id}"]`); while (!(await checkbox.count())) { const more = create.getByRole('button', { name: 'Load more', exact: true }); await expect(more).toBeVisible(); const next = admin.waitForResponse(row => new URL(row.url()).pathname === '/api/v1/occurrences' && new URL(row.url()).searchParams.has('cursor')); await more.click(); expect((await next).status()).toBe(200); await expect(create.getByRole('button', { name: 'Loading more…', exact: true })).toHaveCount(0); } await checkbox.check(); }
     const series = await submit(admin, create, 'occurrence-series', 'Create session series');
     const editor = admin.getByRole('form', { name: 'Create individual change proposals', exact: true });
-    await expect(editor).toBeVisible(); await editor.getByRole('checkbox').first().check();
+    await expect(editor).toBeVisible();
     // Select the exact first occurrence by its displayed existing time, with no manual identifier entry.
     const candidateRows = await editor.getByRole('group', { name: 'Select sessions', exact: true }).locator('label').all();
-    for (const row of candidateRows) { const time = row.locator('time').first(); if (await time.getAttribute('datetime') === firstTime.start_at) { await row.getByRole('checkbox').check(); } else { await row.getByRole('checkbox').uncheck(); } }
+    for (const row of candidateRows) { const time = row.locator('time').first(), instant = await time.getAttribute('datetime'); if (instant && Date.parse(instant) === Date.parse(firstTime.start_at)) { await row.getByRole('checkbox').check(); } else { await row.getByRole('checkbox').uncheck(); } }
+    await expect(editor.locator('input[type="checkbox"]:checked')).toHaveCount(1);
     await editor.getByLabel('Proposed start (Cairo time)', { exact: true }).fill(local(proposedTime.start_at)); await editor.getByLabel('Responses valid until (Cairo time)', { exact: true }).fill(local(new Date(Date.now() + 3600000).toISOString())); await editor.getByLabel('Reason', { exact: true }).fill('Review only the affected session; preserve the second session.');
     const changes = await submit(admin, editor, `occurrence-series/${series.series_id}/changes`, 'Create individual change proposals'); expect(changes.proposal_ids).toHaveLength(1);
     await expect(admin.getByRole('heading', { name: 'Change-set progress', exact: true })).toBeVisible();
@@ -37,7 +54,8 @@ test('unavailability has a responsible owner and a selected series change leaves
     const saved = (await f.database.query('select id,start_at from app_private.occurrences where id=any($1::uuid[])', [[first.occurrence_id, second.occurrence_id]])).rows;
     expect(new Date(saved.find(row => row.id === first.occurrence_id).start_at).toISOString()).toBe(firstTime.start_at); expect(new Date(saved.find(row => row.id === second.occurrence_id).start_at).toISOString()).toBe(secondTime.start_at);
     expect(await admin.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  } finally { await Promise.all(contexts.map(context => context.close())); await f.close(); }
+  } catch (error) { console.info('[teaching-operations] Unavailability/series test entered cleanup after failure'); throw error; }
+  finally { await stage('Close unavailability browser contexts', async () => { await Promise.all(contexts.map(context => context.close())); }); await stage('Close unavailability fixture', () => f.close()); }
 });
 
 test('tutor replacement requires separate learner and both tutor consent before admin application', async ({ browser }, info) => {
@@ -57,7 +75,9 @@ test('tutor replacement requires separate learner and both tutor consent before 
     const open = async (page: Page) => { const details = page.locator(`[data-reassignment-id="${proposal.proposal_id}"]`); await expect(details).toBeVisible(); if (await details.getAttribute('open') === null) await details.locator(':scope > summary').click(); return details; };
     await login(learner, loadLocalSupabase().actors.learner_a); await learner.goto(`/learn/bookings/${f.enrollmentId}`);
     let terms = await open(learner); await expect(terms.getByText('Your agreed tuition stays unchanged.', { exact: true })).toBeVisible();
-    const customerPayload = await learner.request.get(`/api/v1/tutor-reassignments/${proposal.proposal_id}?view=customer&learner_id=${f.learnerId}`); expect(customerPayload.status()).toBe(200); expect(JSON.stringify(await customerPayload.json())).not.toMatch(/amount_minor|fee|compensation|25000|10000/);
+    const customerPayload = await learner.request.get(`/api/v1/tutor-reassignments/${proposal.proposal_id}?view=customer&learner_id=${f.learnerId}`); expect(customerPayload.status()).toBe(200);
+    const customerBody = await customerPayload.json();const customerRecord = tutorReassignmentSchema.parse(customerBody.data);expect(customerRecord.view).toBe('customer');
+    expect(JSON.stringify(customerBody)).not.toMatch(/"(?:amount_minor|fee|fee_minor|compensation|old_tutor_compensation_minor|new_fee_minor)"\s*:/);
     for (const [page, actor, path] of [[learner, null, null], [previousTutor, f.actor, '/tutor/teaching'], [newTutor, replacement.actor, '/tutor/teaching']] as const) {
       if (actor && path) { await login(page, actor); await page.goto(path); }
       terms = await open(page);

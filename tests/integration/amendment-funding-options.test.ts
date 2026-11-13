@@ -11,6 +11,8 @@ import { listChargeAmendmentFundingOptions } from '../../src/modules/payments/qu
 async function proposal(initialTier: 2 | 3, funded: boolean) {
   const f = await paymentFixture();
   const content = { ...policyFixture('group'), ...(await f.database.query('select content from app_private.policy_versions where id=$1', [f.policyId])).rows[0].content };
+  // This selector scenario needs a real future debit; a guaranteed dropout retains 55000.
+  content.post_confirmation_dropout_price_guarantee = false;
   content.group_target_size = 3; content.package_contract.package_policy_version_id = null;
   const policy = await f.rpc('create_policy_draft', { p_kind: 'booking', p_scope: 'group', p_content: content, p_idempotency_key: randomUUID() });
   const offer = await f.rpc('create_offer', { p_subject_id: fixtureId('subject_calculus'), p_format: 'group', p_duration_minutes: 60, p_capacity: 4, p_target_tier: 3, p_pricing_version_id: catalogFixtureIds.group_pricing, p_policy_version_id: policy.resource_id, p_idempotency_key: randomUUID() });
