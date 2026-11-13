@@ -1,0 +1,20 @@
+{
+  "tool": "@playwright/cli 0.1.24",
+  "skill_path": "C:/Users/barak/.agents/skills/playwright-cli/SKILL.md",
+  "session": "git-tutor-operational-online",
+  "base_url": "https://ride-roof-ancient-asin.trycloudflare.com",
+  "widths": [
+    1440,
+    360
+  ],
+  "loaded_screenshots_visually_reviewed": true,
+  "console_errors": 0,
+  "console_warnings": 0,
+  "failed_http_responses": 0,
+  "observed_http_status_counts": {
+    "200": 60
+  },
+  "mobile_overflow": false,
+  "private_artifact_directory": ".local/operational-preview/",
+  "completed_at": "2026-11-13T21:10:55.514Z"
+}

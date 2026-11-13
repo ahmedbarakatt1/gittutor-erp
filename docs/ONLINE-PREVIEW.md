@@ -1,8 +1,8 @@
 # Shareable preview
 
-## Actual-data preview after shutdown — build ready, launch pending
+## Actual-data preview after shutdown — verified online
 
-The laptop shutdown stopped the prior server/tunnel. Docker recovered without a reset. The new tunnel is `https://ride-roof-ancient-asin.trycloudflare.com`; the optimized build and complete resumed local walkthrough passed. Online verification remains pending until the user-run server launch. The tunnel exposes only the application on3001. The actual-data backend is separate on loopback54331/54332; shared demo credentials and stress-test records are not copied. The fake-provider worker is running with all11 handlers.
+The laptop shutdown stopped the prior server/tunnel. Docker recovered without a reset. [The current preview](https://ride-roof-ancient-asin.trycloudflare.com) is verified online after the user started the prepared optimized server. All four roles signed in with secure HTTP-only cookies; scoped history, confirmed booking, exact private-file download, customer/service payroll denial and tutor-only simulated payout statement passed. All22 desktop/mobile admin states had0 page/console errors. Official CLI public screenshots/console/network inspection also passed. Evidence: `docs/evidence/operational-browser-online.json` and `operational-online-inspection.json`. The tunnel exposes only the application on3001. The actual-data backend is separate on loopback54331/54332; shared demo credentials and stress-test records are not copied. The fake-provider worker is running with all11 handlers.
 
 After the final build, the prepared launcher reads the ignored operational configuration, selects the pinned installed Node runtime without relying on `pnpm`, sets fake providers and uses the saved current public origin:
 
@@ -13,7 +13,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File '.\tools\Start-OperationalPr
 
 Use `.local/operational-preview/START-HERE.md` for private role logins and the untouched future booking. `.local/operational-preview/DELIVERY-PRACTICE.md` contains the separately labelled tutor completion exercise. Keep these files private. Launch the fake worker with the same script and `-Mode worker`; it uses the operational database, not the previous demo backend. The script's `-Mode dev -BaseUrl http://127.0.0.1:3000 -Port 3000` starts a loopback development app for verification.
 
-The earlier automatic approval review rejected agent public-server launch with `blocked by policy`; the final user-run launch remains the handoff step. Do not treat the historical online results below as current availability. Permanent hosting and live integrations remain external dependencies. Captured email uses private preview aliases and local fake delivery; use prepared verified logins on other devices.
+The earlier automatic approval review rejected agent public-server launch with `blocked by policy`; the user completed the manual launch, resolving the502 response. Keep the computer awake and Docker, server, worker and tunnel running. Do not use the historical URL below. Permanent hosting and live integrations remain external dependencies. Captured email uses private preview aliases and local fake delivery; use prepared verified logins on other devices.
 
 ## Prior synthetic preview evidence
 
