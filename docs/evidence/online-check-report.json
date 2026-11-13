@@ -1,0 +1,64 @@
+{
+  "origin": "https://polo-issn-transmission-connecticut.trycloudflare.com",
+  "verifiedAt": "2026-11-13T17:26:29.057Z",
+  "report": [
+    {
+      "role": "learner",
+      "checks": [
+        "actual browser sign-in",
+        "verified identity",
+        "secure HTTP-only cookie",
+        "original logo",
+        "confirmed booking",
+        "safe customer JSON",
+        "exact private-file bytes",
+        "payroll denied"
+      ]
+    },
+    {
+      "role": "guardian",
+      "checks": [
+        "actual browser sign-in",
+        "verified identity",
+        "secure HTTP-only cookie",
+        "original logo",
+        "confirmed booking",
+        "safe customer JSON",
+        "exact private-file bytes",
+        "payroll denied"
+      ]
+    },
+    {
+      "role": "tutor",
+      "checks": [
+        "actual browser sign-in",
+        "verified identity",
+        "secure HTTP-only cookie",
+        "original logo",
+        "actual earned/settled/payable balance"
+      ]
+    },
+    {
+      "role": "service",
+      "checks": [
+        "actual browser sign-in",
+        "verified identity",
+        "secure HTTP-only cookie",
+        "original logo",
+        "independent transfer review"
+      ]
+    },
+    {
+      "role": "admin",
+      "checks": [
+        "actual browser sign-in",
+        "verified identity",
+        "secure HTTP-only cookie",
+        "original logo",
+        "approved delivery"
+      ]
+    }
+  ],
+  "expectedForbiddenConsoleEntries": 0,
+  "unexpectedErrors": []
+}
