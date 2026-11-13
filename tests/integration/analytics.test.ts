@@ -115,18 +115,20 @@ test('GT-1003/1004/1507 persisted sibling cohorts use approved individual attend
     const assignment = (await f.database.query('select id from app_private.tutor_assignments where occurrence_id=$1 and active', [occurrence.id])).rows[0].id;
     await f.database.query("insert into app_private.attendance_snapshots(id,occurrence_id,version,assignment_id,actual_start_at,actual_end_at,entries,actor_account_id,command_id)values($1,$2,1,$3,'2026-09-01T10:00:00Z','2026-09-01T11:00:00Z',$4,$5,$6)", [attendanceId, occurrence.id, assignment, JSON.stringify([{ enrollment_id: first.enrollment_id, attendance: 'present', attended_seconds: 3600, reason: null }, { enrollment_id: second.enrollment_id, attendance: 'present', attended_seconds: 3600, reason: null }]), f.accountIds.tutor, randomUUID()]);
     await f.database.query("insert into app_private.completions(id,occurrence_id,assignment_id,fee_agreement_id,policy_version_id,attendance_id,topic_summary,submitted_by,command_id)values($1,$2,$3,$4,$5,$6,'Synthetic historical source-only attendance fixture',$7,$8)", [completionId, occurrence.id, assignment, occurrence.feeId, f.policyIds.group, attendanceId, f.accountIds.tutor, randomUUID()]);
-    const range = () => ({ p_from: '2026-08-01', p_to: '2026-08-31', p_as_of: new Date().toISOString(), p_campaign_id: campaign });
-    expect((await getCohortReport(admin, range())).summary).toMatchObject({ learners: 2, attended: 0, newly_taught: 0 });
+    // Sample the database clock after committed facts, preserving microseconds.
+    // A client millisecond clock can precede the just-recorded approval.
+    const range = async () => ({ p_from: '2026-08-01', p_to: '2026-08-31', p_as_of: (await f.database.query(`select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as as_of`)).rows[0].as_of, p_campaign_id: campaign });
+    expect((await getCohortReport(admin, await range())).summary).toMatchObject({ learners: 2, attended: 0, newly_taught: 0 });
     await f.database.query("update app_private.occurrences set state='completed',start_at='2026-09-01T10:00:00Z',end_at='2026-09-01T11:00:00Z',confirmation_deadline_at='2026-08-31T10:00:00Z'where id=$1", [occurrence.id]);
     await f.database.query("update app_private.enrollments set state='confirmed'where occurrence_id=$1", [occurrence.id]);
     await f.database.query('insert into app_private.completion_approvals(completion_id,approved_by,command_id)values($1,$2,$3)', [completionId, (await admin.auth.getUser()).data.user!.id, randomUUID()]);
-    expect((await getCohortReport(admin, range())).summary).toMatchObject({ learners: 2, attended: 2, unknown_history: 2, newly_taught: 0 });
+    expect((await getCohortReport(admin, await range())).summary).toMatchObject({ learners: 2, attended: 2, unknown_history: 2, newly_taught: 0 });
     for (const name of ['learner', 'sibling']) await invokeAnalyticsCommand(admin, 'record_learner_history', { p_learner_id: f.learnerIds[name], p_history_complete: true, p_evidence_file_id: evidence, p_reason: 'Complete synthetic lifetime source history', p_expected_version: 1, p_idempotency_key: randomUUID() });
-    const report = await getCohortReport(admin, range()); expect(report.summary).toMatchObject({ learners: 2, interactions: 4, attended: 2, newly_taught: 2, paid: 0 });
+    const report = await getCohortReport(admin, await range()); expect(report.summary).toMatchObject({ learners: 2, interactions: 4, attended: 2, newly_taught: 2, paid: 0 });
     expect(report.items.every(row => row.first_inquiry_id === inquiry && row.cohort_date === '2026-08-31')).toBe(true);
-    expect((await getCohortReport(admin, { ...range(), p_from: '2026-09-01', p_to: '2026-09-30' })).summary.learners).toBe(0);
+    expect((await getCohortReport(admin, { ...(await range()), p_from: '2026-09-01', p_to: '2026-09-30' })).summary.learners).toBe(0);
     expect((await f.database.query("select app_private.analytics_record_inquiry('support',$1,null,$2,'2026-08-31T20:59:59Z',null,null) id", [(await f.database.query('select source_event_id from app_private.lead_inquiries where id=$1', [inquiry])).rows[0].source_event_id, f.accountIds.guardian])).rows[0].id).toBe(inquiry);
-    expect((await getCohortReport(admin, range())).summary.newly_taught).toBe(2);
+    expect((await getCohortReport(admin, await range())).summary.newly_taught).toBe(2);
     const workload = await getWorkloadReport(admin, { p_from: '2026-09-01', p_to: '2026-09-01', p_limit: 100, p_tutor_cursor: null });
     let tutorPage = workload; while (!tutorPage.tutors.some(row => row.tutor_id === f.tutorId) && tutorPage.tutor_next_cursor) tutorPage = await getWorkloadReport(admin, { p_from: '2026-09-01', p_to: '2026-09-01', p_limit: 100, p_tutor_cursor: tutorPage.tutor_next_cursor });
     expect(tutorPage.tutors.find(row => row.tutor_id === f.tutorId)!.delivered_seconds).toBe(3600);
