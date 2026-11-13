@@ -4,6 +4,7 @@ import { TutorReassignments } from '../teaching/tutor-reassignment';
 
 import Link from 'next/link';
 import { SessionMaterials } from '../files/materials';
+import { LearningRecordPanel } from '../teaching/learning-records';
 import { MeetingPanel } from '../teaching/meeting-panel';
 import { useState } from 'react';
 import type { CustomerEnrollment, PublicOccurrence } from '@/modules/booking/queries';
@@ -62,6 +63,7 @@ export function CustomerBookingDetail({ enrollmentId }: { enrollmentId: string }
       </section></div><MeetingPanel occurrenceId={item.occurrence.occurrence_id} learnerId={item.learner.learner_id} /><SessionMaterials enrollmentId={item.enrollment_id} occurrenceId={item.occurrence.occurrence_id} allowPreparationUpload /><BookingFunding item={item} onSaved={record.reload} />
       {!item.is_provisional && !pendingTransfer && ['held', 'confirmed'].includes(item.state) && <BookingPackageCoverage enrollmentId={item.enrollment_id} />}
       <OfferTerms terms={item.quote.customer_policy} policyId={item.quote.policy_version_id} />
+      {item.occurrence.state === 'completed' && <LearningRecordPanel occurrenceId={item.occurrence.occurrence_id} learnerId={item.learner.learner_id} view="customer" />}
       <TutorReassignments occurrenceId={item.occurrence.occurrence_id} learnerId={item.learner.learner_id} view="customer" /><section className={styles.section}><h2>{copy.changes}</h2>{item.pending_proposals.length ? item.pending_proposals.map(ref => <CustomerProposal key={ref.proposal_id} id={ref.proposal_id} kind={ref.kind} learnerId={item.learner.learner_id} />) : <p>{copy.changesEmpty}</p>}</section>
       {item.transfer_link && !item.pending_proposals.some(ref => ref.proposal_id === item.transfer_link!.proposal_id) && <CustomerProposal id={item.transfer_link.proposal_id} kind="enrollment_transfer" learnerId={item.learner.learner_id} />}
       {!item.is_provisional && !pendingTransfer && (!item.transfer_link || ['closed', 'committed'].includes(item.transfer_link.stage)) && <CustomerChangeRequest enrollment={item} />}

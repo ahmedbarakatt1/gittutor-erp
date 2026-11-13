@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{ExportWorkspace}from'@/components/crm/exports';
+export default async function Page(){return <PortalShell kind="tutor" account={await requireAccount('tutor')} title="My statement exports" description="Download your earnings, adjustments and settled payout position." activePath="/tutor/exports" showAccount={false}><ExportWorkspace kinds={['own_tutor_statement']}/></PortalShell>;}

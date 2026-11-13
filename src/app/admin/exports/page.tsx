@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{ExportWorkspace}from'@/components/crm/exports';
+export default async function Page(){return <PortalShell kind="admin" account={await requireAccount('admin')} title="Records and exports" description="Private snapshots of customer, session and financial records." activePath="/admin/exports" showAccount={false}><ExportWorkspace kinds={['admin_customers','admin_sessions','admin_finance']}/></PortalShell>;}

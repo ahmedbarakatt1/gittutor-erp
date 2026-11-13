@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{CustomerWorkspace}from'@/components/crm/workspace';
+export default async function Page(){const account=await requireAccount('admin');return <PortalShell kind="admin" account={account} title="Customer register" description="Verified customer identities, booking history and accountable follow-ups." activePath="/admin/customers" showAccount={false}><CustomerWorkspace admin/></PortalShell>;}

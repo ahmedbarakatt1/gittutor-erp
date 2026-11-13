@@ -1,0 +1,18 @@
+import{z}from'zod';
+import{bookingRpc,BookingRpcError,type BookingRpcClient}from'../booking/commands';
+import{exportSchemas,type ExportKind}from'./exports';
+const id=z.uuid(),version=z.number().int().positive().max(2147483647),instant=z.iso.datetime({offset:true}),key=z.string().min(1).max(200),reason=z.string().trim().min(1).max(2000),write={p_expected_version:version,p_idempotency_key:key},common={command_id:id,resource_id:id,version};
+export const exportKindSchema=z.enum(['own_account','own_tutor_statement','admin_customers','admin_sessions','admin_finance']);
+const ids=z.array(id).min(1).max(100).refine(values=>new Set(values).size===values.length),range={from:instant.optional(),to:instant.optional()};
+export const exportFilterSchemas={own_account:z.object({learner_ids:ids,...range}).strict(),own_tutor_statement:z.object(range).strict(),admin_customers:z.object({q:z.string().max(200).optional(),archived:z.boolean().optional()}).strict(),admin_sessions:z.object({...range,state:z.enum(['draft','forming','confirmed','in_progress','completion_pending','completed','cancelled']).optional(),tutor_id:id.optional()}).strict(),admin_finance:z.object({...range,learner_ids:ids.optional()}).strict()};
+export const crmCommands={
+ assign_follow_up:{input:z.object({p_learner_id:id,p_owner_id:id,p_due_at:instant,p_reason:reason,p_channel:z.enum(['email','phone','whatsapp','portal']),...write}).strict(),output:z.object({...common,follow_up_id:id}).strict()},
+ complete_follow_up:{input:z.object({p_follow_up_id:id,p_resolution:reason,...write}).strict(),output:z.object({...common,state:z.literal('completed')}).strict()},
+ set_customer_archived:{input:z.object({p_learner_id:id,p_archived:z.boolean(),p_reason:reason,...write}).strict(),output:z.object({...common,archived:z.boolean()}).strict()},
+ record_customer_contact:{input:z.object({p_learner_id:id,p_channel:z.enum(['email','phone']),p_destination:z.string().trim().min(3).max(320),p_evidence_note:reason,...write}).strict(),output:z.object({...common,contact_observation_id:id}).strict()},
+ review_identity_match:{input:z.object({p_match_id:id,p_decision:z.enum(['distinct','aliased']),p_person_id:id.nullable(),p_evidence_note:reason,...write}).strict(),output:z.object({...common,mapping_version:version}).strict()},
+ request_export:{input:z.object({p_kind:exportKindSchema,p_filters:z.record(z.string(),z.unknown()),p_columns:z.array(z.string()).min(1).max(30),p_as_of:instant,p_idempotency_key:key}).strict().superRefine((v,c)=>{const filters=exportFilterSchemas[v.p_kind].safeParse(v.p_filters);if(!filters.success||new Set(v.p_columns).size!==v.p_columns.length||v.p_columns.some(column=>!(exportSchemas[v.p_kind]as readonly string[]).includes(column)))c.addIssue({code:'custom',message:'VALIDATION_ERROR'});}),output:z.object({...common,export_id:id,snapshot_at:instant,job_id:id}).strict()},
+}as const;
+export type CrmCommandName=keyof typeof crmCommands;
+export type{ExportKind};
+export async function invokeCrmCommandWithStatus<N extends CrmCommandName>(client:BookingRpcClient,name:N,args:Record<string,unknown>){const definition=crmCommands[name];if(!definition)throw new BookingRpcError('VALIDATION_ERROR');const input=definition.input.safeParse(args);if(!input.success)throw new BookingRpcError('VALIDATION_ERROR');const result=await bookingRpc(client,name,input.data),output=definition.output.safeParse(result.data);if(!output.success||![200,201,202].includes(result.status??0))throw new BookingRpcError('DEPENDENCY_UNAVAILABLE');return{data:output.data as z.output<(typeof crmCommands)[N]['output']>,status:result.status as 200|201|202};}

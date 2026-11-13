@@ -10,6 +10,7 @@ import { createLocalEmailAdapter } from '../../src/server/providers/email';
 import { mkdtemp,readdir,readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import {calendarFixture} from '../helpers/calendar';
 
 test('notification routing deduplicates real booking recipients and denies unrelated accounts',async()=>{
  const f=await bookingFixture(),worker=new Pool({connectionString:loadLocalSupabase().worker_database_url});
@@ -21,6 +22,25 @@ test('notification routing deduplicates real booking recipients and denies unrel
   const foreignId=own.data.items[0].delivery_id;expect((await f.students[1].rpc('retry_notification',{p_delivery_id:foreignId,p_reason:'Synthetic unauthorized retry',p_idempotency_key:randomUUID()})).error?.message).toBe('FORBIDDEN');
  }finally{await worker.end();await f.close();}
 });
+
+test('guardian consent revoked after queuing suppresses the real send and removes in-app visibility',async()=>{
+ const f=await calendarFixture(),g=await bookingFixture(),worker=new Pool({connectionString:loadLocalSupabase().worker_database_url}),guardian=g.tutor;
+ const directory=await mkdtemp(join(tmpdir(),'git-tutor-revoked-notice-'));
+ const claim=async(purpose:string,target:string)=>{await f.database.query('begin');try{await f.database.query('select id from app_private.outbox_jobs where purpose=$1 and id<>$2 for update',[purpose,target]);const jobs=await claimJobs(worker,purpose,1,60);expect(jobs[0]?.id).toBe(target);return jobs[0];}finally{await f.database.query('rollback');}};
+ try{
+  const contacts=await f.rpc('get_my_verified_contacts',{},guardian),accountId=(await guardian.auth.getUser()).data.user!.id;
+  const invitation=await f.rpc('create_guardian_invitation',{p_contact_id:(contacts.items as {contact_id:string}[])[0].contact_id,p_scopes:['booking','notifications'],p_expires_at:new Date(Date.now()+86400000).toISOString(),p_idempotency_key:randomUUID()},f.learner);
+  const token=(await f.database.query("select payload from app_private.domain_events where event_type='guardian_invitation_created'and aggregate_id=$1",[invitation.invitation_id])).rows[0].payload.single_use_token;
+  const link=await f.rpc('accept_guardian_invitation',{p_invitation_id:invitation.invitation_id,p_single_use_token:token,p_expected_version:1,p_idempotency_key:randomUUID()},guardian);
+  const event=randomUUID(),routeId=(await f.database.query("select app_private.enqueue_event($1,'occurrence_rescheduled',$2,$3,'notifications.route') id",[event,f.occurrenceId,JSON.stringify({occurrence_id:f.occurrenceId})])).rows[0].id;
+  const route=await claim('notifications.route',routeId);await worker.query('select app_private.route_notification_event($1,$2)',[route.id,route.lease_token]);
+  const d=(await f.database.query("select d.id,j.id job_id from app_private.notification_deliveries d join app_private.domain_events e on e.aggregate_id=d.id and e.event_type='notification_dispatch'join app_private.outbox_jobs j on j.event_id=e.id where d.event_id=$1 and d.recipient_account_id=$2 and d.channel='email'",[event,accountId])).rows[0];expect(d).toBeTruthy();
+  await f.rpc('revoke_guardian_link',{p_guardian_link_id:link.guardian_link_id,p_expected_version:1,p_reason:'Withdraw queued notification authority',p_idempotency_key:randomUUID()},f.learner);
+  expect(await executeLeasedJob(worker,await claim('notifications.send',d.job_id),notificationSendHandler(worker,()=>createLocalEmailAdapter(directory,true),'http://localhost:3000'))).toBe('completed');
+  expect((await f.database.query('select state,safe_error_code from app_private.notification_deliveries where id=$1',[d.id])).rows[0]).toEqual({state:'suppressed',safe_error_code:'CURRENT_AUTHORITY_REQUIRED'});expect(await readdir(directory)).toEqual([]);
+  const inbox=await guardian.rpc('list_my_notifications',{p_limit:100});expect(inbox.error).toBeNull();expect(inbox.data.items.some((item:{event_id:string})=>item.event_id===event)).toBe(false);
+ }finally{await worker.end();await g.close();await f.close();}
+},60000);
 
 test('durable email recovers lost acknowledgement, preserves callback order and blocks unsafe resend',async()=>{
  const f=await bookingFixture(),worker=new Pool({connectionString:loadLocalSupabase().worker_database_url});

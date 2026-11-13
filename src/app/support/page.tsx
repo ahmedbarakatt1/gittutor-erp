@@ -1,0 +1,2 @@
+import Link from'next/link';import{SupportWorkspace}from'@/components/support/workspace';import{PublicContactLinks}from'@/components/public-contact';import{supportCopy as copy}from'@/locales/support';
+export default function Page(){return <><header className="site-header container"><Link href="/" className="brand-link">Git Tutor.</Link><nav><Link href="/subjects">Subjects</Link><Link href="/login">Your account</Link></nav></header><main className="container" id="main"><h1>{copy.title}</h1><p>{copy.intro}</p><SupportWorkspace/><PublicContactLinks/></main></>;}

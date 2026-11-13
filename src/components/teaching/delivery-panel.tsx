@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { LearningRecordPanel } from './learning-records';
 import type { OccurrenceDelivery } from '@/modules/teaching/queries';
 import { formatCairoInstant } from '@/modules/booking/scheduling';
 import { scaledIntegerInput } from '@/modules/shared/format';
@@ -34,6 +35,7 @@ export function DeliveryPanel({ occurrenceId, view }: { occurrenceId: string; vi
     {view === 'admin' && data.can_approve && data.completion && <IdentityForm action={`occurrences/${occurrenceId}/completion/approve`} submitLabel={copy.approve} successMessage={copy.approved} onSaved={record.reload} resettable={false} payload={() => ({ completion_version: data.completion!.version, approved_remedy_ids: data.approved_remedy_ids, expected_version: data.version })}><Check name="reviewed" label={copy.approvalConfirm} /></IdentityForm>}
     {data.earning && <aside className={styles.notice}><h3>{copy.earning}</h3><p>{copy.privateNotice}</p><strong>{money(data.earning.amount_minor, data.earning.currency)}</strong><p><CairoTimestamp value={data.earning.posted_at} /></p></aside>}
     {view === 'admin' && data.can_amend && data.completion && <AmendDelivery data={data} onSaved={record.reload} />}
+    {data.state === 'completed' && <LearningRecordPanel occurrenceId={occurrenceId} view={view} />}
   </div>}</section>;
 }
 

@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{SessionDirectory}from'@/components/crm/sessions';
+export default async function Page(){return <PortalShell kind="admin" account={await requireAccount('admin')} title="Session directory" description="Filter durable session records and reconcile occurrence totals." activePath="/admin/sessions" showAccount={false}><SessionDirectory/></PortalShell>;}

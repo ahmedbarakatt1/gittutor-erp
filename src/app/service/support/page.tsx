@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{SupportWorkspace}from'@/components/support/workspace';
+export default async function Page(){const account=await requireAccount('customer_service');return <PortalShell kind="service" account={account} title="Support inbox" description="Own the next response and keep private notes separate from the conversation." activePath="/service/support" showAccount={false}><SupportWorkspace staff/></PortalShell>;}

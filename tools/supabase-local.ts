@@ -82,6 +82,9 @@ export function assertPackageWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
 }
 
 const paymentWorkerSignatures: Record<string, string> = {
+  prepare_payout_destination: 'uuid,uuid,text',
+  read_payout_destination_for_server: 'uuid,uuid,uuid,text,uuid,text',
+  issue_payout_destination_validation_artifact: 'uuid,uuid,uuid,integer,text,text,text,text,jsonb',
   prepare_refund_destination_context: 'uuid,uuid,uuid,text',
   read_refund_destination_for_server: 'uuid,uuid,uuid,text,uuid,text',
   issue_destination_validation_artifact: 'uuid,uuid,uuid,integer,text,text,text,text,jsonb',
@@ -93,7 +96,7 @@ export function assertPaymentWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
   if (signature) {
     if (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef || fn.signature !== `app_private.${fn.proname}(${signature})`
       || fn.rolname !== 'git_tutor_commands' || [...fn.executors].sort().join(',') !== 'git_tutor_commands,git_tutor_worker') throw new Error('SUPABASE_PAYMENT_WORKER_BOUNDARY_INVALID');
-  } else if (fn.worker && (fn.nspname === 'finance_private' || /refund_destination|statement_import|destination_validation_artifact/.test(fn.proname))) throw new Error('SUPABASE_PAYMENT_WORKER_BOUNDARY_INVALID');
+  } else if (fn.worker && (fn.nspname === 'finance_private' || /(?:refund|payout)_destination|statement_import|destination_validation_artifact/.test(fn.proname))) throw new Error('SUPABASE_PAYMENT_WORKER_BOUNDARY_INVALID');
 }
 
 const integrationWorkerSignatures: Record<string, string> = {
@@ -104,6 +107,8 @@ const integrationWorkerSignatures: Record<string, string> = {
   rotate_calendar_credentials: 'uuid,integer,uuid,uuid,jsonb,text,uuid,uuid',
   route_notification_event: 'uuid,uuid', prepare_notification_delivery: 'uuid,uuid,uuid',
   finalize_notification_delivery: 'uuid,uuid,uuid,uuid,jsonb', record_email_callback: 'uuid,text,uuid,text,timestamp with time zone',
+  prepare_export_render: 'uuid,uuid,uuid', finalize_export_render: 'uuid,uuid,uuid,integer,text', prepare_export_download: 'uuid,uuid,text',
+  record_whatsapp_event: 'text,text,jsonb', prepare_whatsapp_send: 'uuid,uuid,uuid,text,text', finalize_whatsapp_send: 'uuid,uuid,uuid,jsonb',
 };
 export function assertIntegrationWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' | 'nspname' | 'signature' | 'rolname' | 'prosecdef' | 'executors'> & { worker: boolean }) {
   const signature = integrationWorkerSignatures[fn.proname];

@@ -1,0 +1,5 @@
+import {requireAccount} from '@/server/auth';
+import {parseServerConfig} from '@/server/config';
+import {PortalShell} from '../portal-shell';
+import {NotificationInbox,NotificationOperations,NotificationMode} from './inbox';
+export async function NotificationsPage({kind,operations=false}:{kind:'learn'|'tutor'|'service'|'admin';operations?:boolean}){const account=await requireAccount(kind==='admin'?'admin':kind==='tutor'?'tutor':kind==='service'?'customer_service':undefined),config=parseServerConfig(process.env);return <PortalShell kind={kind} account={account} title={operations?'Notification operations':'Your updates'} description={operations?'Follow delivery outcomes and assign responsibility for notices that need attention.':'Booking, study resources and account updates, with access to the latest details.'} activePath={`/${kind}/${operations?'notifications-operations':'notifications'}`} showAccount={false}><NotificationMode simulated={config.providers.email==='fake'}/>{operations?<NotificationOperations/>:<NotificationInbox/>}</PortalShell>;}

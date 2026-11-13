@@ -1,0 +1,6 @@
+import{expect,test}from'vitest';
+import{encodeCsv,exportSchemas}from'../../src/modules/crm/exports';
+test('GT-705 text formula prefixes are neutralized without mutating stored values or signed numeric columns',()=>{
+ const rows=[{display_name:'=HYPERLINK("https://example.test")',balance_minor:-500},{display_name:' \t+SUM(1,2)',balance_minor:'9007199254740992'},{display_name:'@command',balance_minor:0},{display_name:'-text',balance_minor:25}];const original=structuredClone(rows);const csv=encodeCsv('admin_customers',['display_name','balance_minor'],rows);expect(csv).toContain(`"'=HYPERLINK(""https://example.test"")"`);expect(csv).toContain(`"' \t+SUM(1,2)"`);expect(csv).toContain(`"'@command"`);expect(csv).toContain(`"'-text"`);expect(csv).toContain('"-500"');expect(csv).toContain('"9007199254740992"');expect(rows).toEqual(original);
+});
+test('customer export schemas never admit compensation, notes, destinations or unknown columns',()=>{expect(exportSchemas.own_account).not.toContain('tutor_fee_minor');expect(()=>encodeCsv('own_account',['tutor_fee_minor'],[{tutor_fee_minor:45000}])).toThrow('VALIDATION_ERROR');expect(encodeCsv('own_account',['display_name'],[{display_name:'Synthetic learner',tutor_fee_minor:45000,internal_note:'private'}])).not.toMatch(/45000|private|internal_note/);});

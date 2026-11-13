@@ -1,0 +1,44 @@
+import { z } from 'zod';
+import type { IdentityRpcClient } from '../identity/commands';
+import { paymentRpc } from '../payments/commands';
+const id = z.uuid(), date = z.iso.date(), instant = z.iso.datetime({ offset: true }), count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), version = count.positive(), reason = z.string().trim().min(1).max(2000), key = z.string().min(1).max(200);
+const attribution = z.enum(['unknown', 'verified_organic', 'verified_campaign']);
+const commandResult = z.object({ command_id: id, resource_id: id, version }).strict();
+export const analyticsCommands = {
+  create_campaign: z.object({ p_source: z.string().trim().min(1).max(100), p_external_campaign_id: z.string().trim().min(1).max(200), p_name: z.string().trim().min(1).max(200), p_active_from: date, p_active_to: date, p_idempotency_key: key }).strict(),
+  review_attribution: z.object({ p_inquiry_id: id, p_attribution: attribution, p_campaign_id: id.nullable(), p_evidence_file_id: id.nullable(), p_reason: reason, p_expected_version: version, p_idempotency_key: key }).strict(),
+  link_inquiry_learner: z.object({ p_inquiry_id: id, p_learner_id: id, p_evidence_file_id: id, p_reason: reason, p_idempotency_key: key }).strict(),
+  review_inquiry_link: z.object({ p_inquiry_id: id, p_learner_id: id, p_active: z.boolean(), p_evidence_file_id: id, p_reason: reason, p_expected_version: version, p_idempotency_key: key }).strict(),
+  record_learner_history: z.object({ p_learner_id: id, p_history_complete: z.boolean(), p_evidence_file_id: id, p_reason: reason, p_expected_version: version, p_idempotency_key: key }).strict(),
+  record_campaign_spend: z.object({ p_campaign_id: id, p_from: date, p_to: date, p_amount_minor: count, p_currency: z.literal('EGP'), p_evidence_file_id: id, p_expense_id: id.nullable(), p_idempotency_key: key }).strict(),
+  correct_campaign_spend: z.object({ p_spend_entry_id: id, p_amount_minor: count, p_reason: reason, p_evidence_file_id: id, p_expected_version: version, p_idempotency_key: key }).strict(),
+} as const;
+export async function invokeAnalyticsCommand(client: IdentityRpcClient, name: keyof typeof analyticsCommands, input: unknown) {
+  const parsed = analyticsCommands[name].parse(input), body = Object.fromEntries(Object.entries(parsed).filter(([field]) => field !== 'p_idempotency_key').map(([field, value]) => [field.slice(2), value]));
+  const result = name === 'review_inquiry_link' ? await paymentRpc(client, 'review_inquiry_link', parsed) : await paymentRpc(client, 'analytics_command', { p_name: name, p_input: body, p_idempotency_key: parsed.p_idempotency_key });
+  return { data: commandResult.parse(result.data), status: 200 };
+}
+const paging = { p_cursor: id.nullable().default(null), p_limit: count.min(1).max(100).default(25) };
+export const cohortFilters = z.object({ p_from: date, p_to: date, p_as_of: instant, p_observation_days: count.min(1).max(365).default(30), p_campaign_id: id.nullable().default(null), p_source: attribution.nullable().default(null), p_format: z.enum(['private', 'group']).nullable().default(null), p_subject_id: id.nullable().default(null), p_policy_version: z.literal('first_eligible_v1').default('first_eligible_v1'), ...paging }).strict().refine(value => value.p_from <= value.p_to);
+export const cohortRow = z.object({ learner_id: id, learner_name: z.string(), first_inquiry_id: id, first_inquiry_at: instant, cohort_date: date, attribution, campaign_id: id.nullable(), history_status: z.enum(['complete', 'unknown', 'returning']), history_version: version, interactions: count, booked: z.boolean(), paid: z.boolean(), attended: z.boolean(), newly_taught: z.boolean(), first_attendance_at: instant.nullable(), first_occurrence_id: id.nullable(), provisional: z.boolean(), window_end: instant }).strict();
+const summary = z.object({ learners: count, interactions: count, booked: count, paid: count, attended: count, newly_taught: count, returning: count, unknown_history: count, verified_campaign: count, verified_organic: count, unknown_source: count, provisional: count }).strict();
+export const cohortReportSchema = z.object({ from: date, to: date, as_of: instant, observation_days: count, time_zone: z.literal('Africa/Cairo'), policy_version: z.literal('first_eligible_v1'), grain: z.literal('learner'), summary, unlinked_inquiries: count, items: z.array(cohortRow).max(100), next_cursor: id.nullable(), spend: z.object({ state: z.enum(['known', 'missing', 'partial', 'not_applicable']), amount_minor: count.nullable(), currency: z.literal('EGP'), basis: z.literal('campaign_calendar_dates'), cac_minor: count.nullable(), entries: z.array(z.object({ spend_entry_id: id, from: date, to: date, amount_minor: count, expense_id: id.nullable(), version, evidence_file_id: id }).strict()).max(1000) }).strict() }).strict();
+export type CohortReport = z.infer<typeof cohortReportSchema>;
+export async function getCohortReport(client: IdentityRpcClient, input: unknown) { return cohortReportSchema.parse((await paymentRpc(client, 'get_cohort_report', cohortFilters.parse(input))).data); }
+const inquiry = z.object({ inquiry_id: id, source: z.enum(['website_booking', 'support', 'whatsapp']), source_event_id: id, actor_account_id: id.nullable(), observed_at: instant, recorded_at: instant, observed_source_token: z.string().nullable(), attribution, campaign_id: id.nullable(), version, learner_ids: z.array(id), links: z.array(z.object({ learner_id: id, active: z.boolean(), version }).strict()) }).strict();
+export type AnalyticsInquiry = z.infer<typeof inquiry>;
+export async function listAnalyticsInquiries(client: IdentityRpcClient, input: unknown = {}) { const args = z.object({ p_learner_id: id.nullable().default(null), ...paging }).strict().parse(input); return z.object({ items: z.array(inquiry), next_cursor: id.nullable() }).strict().parse((await paymentRpc(client, 'list_analytics_inquiries', args)).data); }
+export const campaignSchema = z.object({ campaign_id: id, source: z.string(), external_campaign_id: z.string(), name: z.string(), active_from: date, active_to: date }).strict();
+export type Campaign = z.infer<typeof campaignSchema>;
+export async function listCampaigns(client: IdentityRpcClient, input: unknown = {}) { return z.object({ items: z.array(campaignSchema), next_cursor: id.nullable() }).strict().parse((await paymentRpc(client, 'list_campaigns', z.object(paging).strict().parse(input))).data); }
+const tutor = z.object({ tutor_id: id, tutor_name: z.string(), scheduled_seconds: count, delivered_seconds: count, available_seconds: count.nullable(), capacity_state: z.enum(['configured', 'unknown']), occurrences: z.array(z.object({ occurrence_id: id, start_at: instant, scheduled_seconds: count, delivered_seconds: count }).strict()) }).strict();
+const conversation = z.object({ conversation_id: id, channel: z.enum(['website', 'whatsapp']), state: z.enum(['bot', 'waiting', 'assigned', 'escalated', 'resolved']), owner_id: id.nullable(), owner_name: z.string().nullable(), waiting_seconds: count.nullable(), first_response_seconds: count.nullable(), owned_seconds: count, ownership_changes: count }).strict();
+export const workloadReportSchema = z.object({ from: date, to: date, time_zone: z.literal('Africa/Cairo'), staffed_hours_state: z.literal('unknown'), staffed_response_seconds: z.null(), tutors: z.array(tutor).max(100), conversations: z.array(conversation).max(100), summary: z.object({ scheduled_seconds: count, delivered_seconds: count, open_conversations: count, unassigned_conversations: count, answered_conversations: count, total_response_seconds: count, total_owned_seconds: count }).strict(), next_cursor: id.nullable(), tutor_next_cursor: id.nullable(), conversation_next_cursor: id.nullable() }).strict();
+export type WorkloadReport = z.infer<typeof workloadReportSchema>;
+export async function getWorkloadReport(client: IdentityRpcClient, input: unknown) { return workloadReportSchema.parse((await paymentRpc(client, 'get_workload_report_page', z.object({ p_from: date, p_to: date, p_tutor_cursor: id.nullable().default(null), p_conversation_cursor: id.nullable().default(null), p_limit: count.min(1).max(100).default(25) }).strict().parse(input))).data); }
+
+export function cohortCsv(rows: z.infer<typeof cohortRow>[]) {
+  const fields = ['learner_id', 'learner_name', 'first_inquiry_id', 'first_inquiry_at', 'cohort_date', 'attribution', 'campaign_id', 'history_status', 'interactions', 'booked', 'paid', 'attended', 'newly_taught', 'first_attendance_at', 'first_occurrence_id', 'provisional', 'window_end'] as const;
+  const escape = (value: unknown) => { let text = value == null ? '' : String(value); if (/^[\s]*[=+\-@\t\r\n]/.test(text)) text = `'${text}`; return `"${text.replaceAll('"', '""')}"`; };
+  return '\uFEFF' + [fields.map(escape).join(','), ...rows.map(row => { const parsed = cohortRow.parse(row); return fields.map(field => escape(parsed[field])).join(','); })].join('\r\n');
+}

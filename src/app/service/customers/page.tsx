@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{CustomerWorkspace}from'@/components/crm/workspace';
+export default async function Page(){const account=await requireAccount('customer_service');return <PortalShell kind="service" account={account} title="Your customers" description="Customers connected to your active cases and assigned follow-ups." activePath="/service/customers" showAccount={false}><CustomerWorkspace admin={false}/></PortalShell>;}

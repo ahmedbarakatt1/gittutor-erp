@@ -1,5 +1,15 @@
 # T09 notification foundation and executed checks
 
+## Completion pass —13 November
+
+The earlier foundation-only entries below are historical. Added durable24-hour/1-hour reminders fenced by occurrence version, canonical event aliases, safe support/export recipients and current guardian withdrawal suppression. Tutor statements link to `/tutor/pay`; user-requested export delivery rechecks the stored requester's scope and session. Actual failed-delivery recovery is available in the admin workspace. Customer email stays a finite bilingual category/time/secure-link notice; it never serializes raw business events or attaches private files.
+
+- `pnpm exec vitest run tests/integration/notification-scheduling.test.ts tests/integration/payroll-concurrency.test.ts tests/integration/notifications.test.ts`:5/5 passed,6.71s (`.local/t09-scheduler-t08-payroll-green.log`). This combined command includes the separate payroll race.
+- `pnpm exec vitest run tests/integration/group-completion.test.ts tests/integration/notifications.test.ts`:4/4 passed,7.68s (`.local/t08-group-t09-revocation-first.log`). Guardian withdrawal occurs after a real notice is queued; the restricted worker creates zero email artifacts, records suppression and removes current inbox visibility.
+- `pnpm exec playwright test tests/e2e/notifications.spec.ts --workers=1 --output=.local/test-results-t09-notifications`:2/2 passed,16.5s (`.local/t09-notifications-browser-first.log`). Both viewports exercise real customer inbox APIs and actual admin retry after a definite fake-provider rejection, followed by one successful send. The mobile screenshot `.local/screenshots/t09-notifications-mobile.png` was visually inspected: wrapped navigation, readable cards and no horizontal overflow; long retained synthetic notice history remains visible.
+
+Unknown outcomes remain reconciliation work. A full catalogue pass is not inferred from these checks; learning-record notification integration and the whole release regression are recorded separately in the current status/readiness documents.
+
 The original T04–T06 combined checkpoint remains open. Following the user's explicit request to move to remaining features, notification implementation proceeds alongside T08. This document records a foundation, not completion of the full recipient matrix or release acceptance.
 
 ## Implemented

@@ -14,12 +14,16 @@ import { calendarHandler } from './calendar';
 import { calendarAdapterFactory } from '../server/calendar-provider';
 import { notificationRouteHandler, notificationSendHandler } from './notifications';
 import { createLocalEmailAdapter, createSesEmailAdapter } from '../server/providers/email';
+import { exportRenderHandler } from './exports';
+import { whatsappSendHandler } from './whatsapp';
+import { createWhatsAppAdapter, parseWhatsAppConfig } from '../server/providers/whatsapp';
 
 const configuration = parseServerConfig(process.env);
 const pool = createDatabasePool(databaseUrl('worker'));
 const storage = createPrivateObjectStore(configuration);
 const liveScanner = configuration.providers.file_scan === 'clamav' ? createClamavScanAdapter(configuration.file_scan_url!) : null;
 const liveEmail = configuration.providers.email === 'ses' ? createSesEmailAdapter(configuration.email!) : null;
+const whatsapp = parseWhatsAppConfig(process.env, configuration.isolated);
 let stopping = false;
 process.on('SIGINT', () => { stopping = true; });
 process.on('SIGTERM', () => { stopping = true; });
@@ -34,6 +38,8 @@ const handlers: Record<string, JobHandler> = {
   'calendar.sync': calendarHandler(pool, calendarAdapterFactory(pool, configuration)),
   'notifications.route': notificationRouteHandler(pool),
   'notifications.send': notificationSendHandler(pool, scenario => liveEmail ?? createLocalEmailAdapter('.local/email-inbox', configuration.isolated, scenario), configuration.app_base_url),
+  'exports.render': exportRenderHandler(pool, storage),
+  'support.whatsapp_send': whatsappSendHandler(pool, scenario => createWhatsAppAdapter(whatsapp, scenario), whatsapp.mode, whatsapp.phone_number_id),
   'foundation.healthcheck': {
     execute: async job => `fake:healthcheck:${job.event_id}`,
     reconcile: async () => ({ outcome: 'not_sent' }), // Pure local healthcheck has no external side effect.

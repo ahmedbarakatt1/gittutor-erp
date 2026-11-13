@@ -1,0 +1,2 @@
+import{requireAccount}from'@/server/auth';import{PortalShell}from'@/components/portal-shell';import{ExportWorkspace}from'@/components/crm/exports';
+export default async function Page(){const account=await requireAccount('student');return <PortalShell kind="learn" account={account} title="My data exports" description="Download records for yourself or your currently authorized learners." activePath="/learn/exports" showAccount={false}><ExportWorkspace kinds={['own_account']} learnerIds={account.authorized_learner_ids}/></PortalShell>;}

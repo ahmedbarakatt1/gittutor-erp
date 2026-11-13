@@ -20,6 +20,7 @@ export default function HomePage() {
           <a href="#formats">{copy.navigation.formats}</a>
           <a href="#how-it-works">{copy.navigation.how}</a>
           <a href="#questions">{copy.navigation.faq}</a>
+          <Link href="/support">Support</Link>
           <Link href="/login">{copy.navigation.account}</Link>
         </nav>
       </header>
