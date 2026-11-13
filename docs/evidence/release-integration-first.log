@@ -1,0 +1,113 @@
+$ vitest run tests/integration
+
+ RUN  v5.1.0 D:/GitTutor System
+
+ ❯ tests/integration/payment-concurrency.test.ts (1 test | 1 failed) 764ms
+   × GT-1408 independent allocation transactions cannot spend one settled source twice 763ms
+ ❯ tests/integration/amendment-funding-options.test.ts (2 tests | 1 failed) 4404ms
+   × only an accepted positive future debit is discoverable with current payments authority 3050ms
+ ❯ tests/integration/tutor-reassignment.test.ts (1 test | 1 failed) 1765ms
+   × reviewed all-party reassignment preserves source charges and assignment history while moving private material access 1763ms
+ ❯ tests/integration/statement-import-worker.test.ts (3 tests | 3 failed) 1192ms
+   × real import metadata remains awaiting bytes and completed worker replay cannot invent transfers 56ms
+   × actual restricted worker imports pending candidates once and replays without cash or payer assertions 31ms
+   × independent statement workers deduplicate the same source and reject a conflicting whole import 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/amendment-funding-options.test.ts > only an accepted positive future debit is discoverable with current payments authority
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/integration/amendment-funding-options.test.ts:54:24
+     52|     await s.accept();
+     53|     const page = await listChargeAmendmentFundingOptions(f.learner, s.…
+     54|     expect(page.items).toHaveLength(1);
+       |                        ^
+     55|     expect(page.items[0]).toMatchObject({ amendment_id: s.amendmentId,…
+     56|     expect(JSON.stringify(page)).not.toMatch(/fee_minor|compensation|m…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/integration/payment-concurrency.test.ts > GT-1408 independent allocation transactions cannot spend one settled source twice
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/integration/payment-concurrency.test.ts:15:43
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/integration/statement-import-worker.test.ts > real import metadata remains awaiting bytes and completed worker replay cannot invent transfers
+Error: create_statement_import:FILE_REJECTED
+ ❯ Object.rpc tests/helpers/booking.ts:19:28
+     17|   async function rpc(name:string,args:BookingJson={},client=admin):Pro…
+     18|     const result=await client.rpc(name,args);
+     19|     if(result.error) throw new Error(`${name}:${result.error.message}`…
+       |                            ^
+     20|     return result.data as BookingJson;
+     21|   }
+ ❯ tests/integration/statement-import-worker.test.ts:39:60
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/integration/statement-import-worker.test.ts > actual restricted worker imports pending candidates once and replays without cash or payer assertions
+Error: create_statement_import:FILE_REJECTED
+ ❯ Object.rpc tests/helpers/booking.ts:19:28
+     17|   async function rpc(name:string,args:BookingJson={},client=admin):Pro…
+     18|     const result=await client.rpc(name,args);
+     19|     if(result.error) throw new Error(`${name}:${result.error.message}`…
+       |                            ^
+     20|     return result.data as BookingJson;
+     21|   }
+ ❯ tests/integration/statement-import-worker.test.ts:58:60
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/integration/statement-import-worker.test.ts > independent statement workers deduplicate the same source and reject a conflicting whole import
+Error: create_statement_import:FILE_REJECTED
+ ❯ Object.rpc tests/helpers/booking.ts:19:28
+     17|   async function rpc(name:string,args:BookingJson={},client=admin):Pro…
+     18|     const result=await client.rpc(name,args);
+     19|     if(result.error) throw new Error(`${name}:${result.error.message}`…
+       |                            ^
+     20|     return result.data as BookingJson;
+     21|   }
+ ❯ tests/integration/statement-import-worker.test.ts:78:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/integration/tutor-reassignment.test.ts > reviewed all-party reassignment preserves source charges and assignment history while moving private material access
+AssertionError: expected '{"proposal_id":"ec602130-c895-4abe-b9…' not to match /amount_minor|fee|compensation|25000|1…/
+
+- Expected:
+/amount_minor|fee|compensation|25000|10000/
+
++ Received:
+"{\"proposal_id\":\"ec602130-c895-4abe-b980-9c52d5e9aba0\",\"occurrence_id\":\"1c144852-8cd5-4566-b8e6-5d2c5f9f1968\",\"base_occurrence_version\":3,\"version\":1,\"state\":\"proposed\",\"expires_at\":\"2026-11-13T16:08:08.645+00:00\",\"start_at\":\"2026-11-15T10:00:00+00:00\",\"end_at\":\"2026-11-15T11:00:00+00:00\",\"old_tutor\":{\"tutor_id\":\"d613d491-d6af-4e4a-bb60-94531756a518\",\"display_name\":\"Synthetic booking tutor\"},\"new_tutor\":{\"tutor_id\":\"62ebe495-6386-4c99-bb27-a859b1fa6ab4\",\"display_name\":\"Synthetic booking tutor\"},\"terms_hash\":\"f0bd40a23348ae75158615563fb0e180724d2bcd0506bdba4e0d24afee61451e\",\"accepted_at\":null,\"can_accept\":true,\"can_approve\":false,\"can_commit\":false,\"can_decline\":true,\"required_actions\":[\"PENDING_ACCEPTANCES\"],\"view\":\"customer\",\"terms\":{\"kind\":\"tutor_reassignment\",\"learner_id\":\"023abbc7-80a2-43f1-9319-28458dc7d3c5\",\"enrollment_id\":\"cdea3448-7caa-4fb9-96f2-28be8c749cee\",\"source_quote_id\":\"f27c6e34-5988-4384-87eb-8c5954720b90\",\"policy_version_id\":\"2204a733-26d6-55a4-ab33-a08d29d3db2c\",\"customer_price_minor\":50000,\"currency\":\"EGP\",\"charges_unchanged\":true}}"
+
+ ❯ tests/integration/tutor-reassignment.test.ts:19:230
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  4 failed | 80 passed (84)
+      Tests  6 failed | 273 passed (279)
+   Start at  17:49:28
+   Duration  583.27s (tests 95%, import 5%)
+
+    Isolate  84 workers spawned · ~194ms startup each (spawn + environment, per file)
+             at least ~16.10s faster with isolate: false — reuses workers across files instead of one per file
+
+[ELIFECYCLE] Command failed with exit code 1.

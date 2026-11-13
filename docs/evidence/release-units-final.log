@@ -1,0 +1,13 @@
+$ vitest run tests/unit
+
+ RUN  v5.1.0 D:/GitTutor System
+
+
+ Test Files  47 passed (47)
+      Tests  347 passed (347)
+   Start at  18:38:02
+   Duration  43.86s (import 77%, tests 16%, transform 4%, worker 3%)
+
+    Isolate  47 workers spawned · ~478ms startup each (spawn + environment, per file)
+             at least ~22.00s faster with isolate: false — reuses workers across files instead of one per file
+

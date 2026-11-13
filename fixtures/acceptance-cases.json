@@ -306,7 +306,7 @@
       "priority": "P1",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/object-authorization.test.ts",
+      "test_file": "tests/integration/crm-exports.test.ts",
       "source_case_id": "107",
       "scenario": {
         "fixture_ids": [
@@ -1791,7 +1791,7 @@
       "priority": "P1",
       "layer": "sql_concurrency",
       "supporting_layers": [],
-      "test_file": "tests/integration/customer-register-and-exports.test.ts",
+      "test_file": "tests/integration/crm-exports.test.ts",
       "source_case_id": "701",
       "scenario": {
         "fixture_ids": [
@@ -1832,7 +1832,7 @@
       "priority": "P0",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/customer-register-and-exports.test.ts",
+      "test_file": "tests/integration/crm-exports.test.ts",
       "source_case_id": "702",
       "scenario": {
         "fixture_ids": [
@@ -1866,7 +1866,7 @@
       "priority": "P2",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/customer-register-and-exports.test.ts",
+      "test_file": "tests/integration/crm-exports.test.ts",
       "source_case_id": "703",
       "scenario": {
         "fixture_ids": [
@@ -1902,7 +1902,7 @@
       "priority": "P0",
       "layer": "http_authorization",
       "supporting_layers": [],
-      "test_file": "tests/integration/customer-register-and-exports.test.ts",
+      "test_file": "tests/e2e/crm.spec.ts",
       "source_case_id": "704",
       "scenario": {
         "fixture_ids": [
@@ -1973,7 +1973,7 @@
       "priority": "P1",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/customer-register-and-exports.test.ts",
+      "test_file": "tests/integration/crm-exports.test.ts",
       "source_case_id": "706",
       "scenario": {
         "fixture_ids": [
@@ -2009,7 +2009,7 @@
       "priority": "P1",
       "layer": "http_authorization",
       "supporting_layers": [],
-      "test_file": "tests/integration/customer-register-and-exports.test.ts",
+      "test_file": "tests/e2e/crm.spec.ts",
       "source_case_id": "707",
       "scenario": {
         "fixture_ids": [
@@ -2266,7 +2266,7 @@
       "priority": "P0",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/primary-ledger-reconciliation.test.ts",
+      "test_file": "tests/integration/finance-report-controls.test.ts",
       "source_case_id": "807",
       "scenario": {
         "fixture_ids": [
@@ -2582,7 +2582,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/acquisition-analytics.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": "1001",
       "scenario": {
         "fixture_ids": [
@@ -2616,7 +2616,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/acquisition-analytics.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": "1002",
       "scenario": {
         "fixture_ids": [
@@ -2653,7 +2653,7 @@
       "priority": "P0",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/acquisition-analytics.test.ts",
+      "test_file": "tests/integration/analytics.test.ts",
       "source_case_id": "1003",
       "scenario": {
         "fixture_ids": [
@@ -2689,7 +2689,7 @@
       "priority": "P1",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/acquisition-analytics.test.ts",
+      "test_file": "tests/integration/analytics.test.ts",
       "source_case_id": "1004",
       "scenario": {
         "fixture_ids": [
@@ -2725,7 +2725,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/acquisition-analytics.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": "1005",
       "scenario": {
         "fixture_ids": [
@@ -2759,7 +2759,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/acquisition-analytics.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": "1006",
       "scenario": {
         "fixture_ids": [
@@ -2793,7 +2793,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/acquisition-analytics.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": "1007",
       "scenario": {
         "fixture_ids": [
@@ -2827,7 +2827,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/acquisition-analytics.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": "1008",
       "scenario": {
         "fixture_ids": [
@@ -5396,7 +5396,7 @@
       "priority": "P0",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/gross-tutor-obligations.test.ts",
+      "test_file": "tests/integration/finance-report-controls.test.ts",
       "source_case_id": null,
       "scenario": {
         "fixture_ids": [
@@ -5438,7 +5438,7 @@
       "priority": "P0",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/cohort-regressions.test.ts",
+      "test_file": "tests/integration/analytics.test.ts",
       "source_case_id": null,
       "scenario": {
         "fixture_ids": [
@@ -5475,7 +5475,7 @@
       "priority": "P1",
       "layer": "unit",
       "supporting_layers": [],
-      "test_file": "tests/unit/attribution-provenance.test.ts",
+      "test_file": "tests/unit/cohorts.test.ts",
       "source_case_id": null,
       "scenario": {
         "fixture_ids": [
@@ -5517,7 +5517,7 @@
       "priority": "P0",
       "layer": "sql_integration",
       "supporting_layers": [],
-      "test_file": "tests/integration/export-aggregation-grain.test.ts",
+      "test_file": "tests/integration/crm-exports.test.ts",
       "source_case_id": null,
       "scenario": {
         "fixture_ids": [

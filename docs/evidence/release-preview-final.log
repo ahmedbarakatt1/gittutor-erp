@@ -1,0 +1,8 @@
+student: current account, role and local sign-in guide verified
+guardian: current account, role and local sign-in guide verified
+tutor: current account, role and local sign-in guide verified
+customer_service: current account, role and local sign-in guide verified
+admin: current account, role and local sign-in guide verified
+/: HTTP 200
+/subjects: HTTP 200
+/login: HTTP 200

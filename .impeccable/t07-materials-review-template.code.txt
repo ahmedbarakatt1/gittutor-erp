@@ -1,0 +1,35 @@
+async (page) => {
+  const metadata = __MATERIAL_METADATA__;
+  const findings = [];
+  let errors = 0, warnings = 0, failures = [];
+  page.on('console', message => { if (message.type() === 'error') errors++; if (message.type() === 'warning') warnings++; });
+  page.on('pageerror', () => errors++);
+  page.on('response', response => { if (response.status() >= 400) failures.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  await page.context().setStorageState('.local/ui-review/t07-materials-desktop-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/bookings/' + metadata.enrollmentId);
+  const room = page.getByRole('region', { name: 'Session room', exact: true });
+  await room.getByText('Room ready', { exact: true }).waitFor();
+  await room.getByRole('button', { name: 'Preview simulated meeting', exact: true }).click();
+  await room.getByRole('region', { name: 'Simulated room preview', exact: true }).waitFor();
+  for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.evaluate(() => document.fonts.ready);
+    await room.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.screenshot({ path: '.impeccable/review/t07-meeting-' + viewport.label + '.png' });
+    findings.push({ surface: 'meeting', width: viewport.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+  }
+  await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+  await room.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await page.screenshot({ path: '.impeccable/review/t07-meeting-rtl.png' });
+  findings.push({ surface: 'meeting', width: 360, direction: 'rtl', overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+  await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+  await room.getByRole('button', { name: 'Refresh meeting status', exact: true }).focus();
+  await page.keyboard.press('Tab');
+  const focus = await page.evaluate(() => { const el = document.activeElement, style = getComputedStyle(el); return { tag: el.tagName, outlineWidth: style.outlineWidth, outlineStyle: style.outlineStyle }; });
+  await page.goto('http://127.0.0.1:3000/learn/files?enrollment=' + metadata.enrollmentId);
+  await page.getByRole('heading', { name: 'Private preparation', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Class resources', exact: true }).waitFor();
+  await page.screenshot({ path: '.impeccable/review/t07-materials-mobile.png', fullPage: true });
+  findings.push({ surface: 'withdrawn-materials', width: 360, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+  return { findings, focus, consoleErrors: errors, consoleWarnings: warnings, failedResponses: failures, provider: 'simulated; no live class opened', scan: 'actual stored bytes; simulated scanner' };
+}

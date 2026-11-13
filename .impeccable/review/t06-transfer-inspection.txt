@@ -1,0 +1,49 @@
+### Result
+[{"label":"completed-booking","measurements":[{"width":1440,"overflow":false},{"width":360,"overflow":false},{"width":360,"direction":"rtl","overflow":false}],"focus":{"tag":"BUTTON","outlineWidth":"3px","outlineStyle":"solid"},"consoleErrors":0,"consoleWarnings":0,"failedResponses":[]},{"label":"payer-history","measurements":[{"width":1440,"overflow":false},{"width":360,"overflow":false},{"width":360,"direction":"rtl","overflow":false}],"focus":{"tag":"BUTTON","outlineWidth":"3px","outlineStyle":"solid"},"consoleErrors":0,"consoleWarnings":0,"failedResponses":[]}]
+### Ran Playwright code
+```js
+await (async (page) => {
+  const metadata = {"sourceId": "74cceb74-b461-4538-ad51-79c00f3f64b1", "sourceOccurrence": "a9e81b82-041b-4c46-996a-a4c6707c4930", "destinationId": "8c09946c-f29e-45c0-93d9-f6088fcd2e91", "destinationEnrollmentId": "7828bfb6-a488-4f4c-98ea-f598c34c4cef", "proposalId": "1524fe11-dcc2-40a1-9be0-1d089d335720", "consentId": "23313652-bcbb-4dc4-8064-de281487c51a"};
+  const findings = [];
+  let errors = 0, warnings = 0, failures = [];
+  page.on('console', message => { if (message.type() === 'error') errors++; if (message.type() === 'warning') warnings++; });
+  page.on('pageerror', () => errors++);
+  page.on('response', response => { if (response.status() >= 400) failures.push({ path: new URL(response.url()).pathname, status: response.status() }); });
+  async function capture(label, target, rtl) {
+    const measurements = [];
+    for (const viewport of [{ label: 'desktop', width: 1440, height: 1000 }, { label: 'mobile', width: 360, height: 780 }]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.evaluate(() => document.fonts.ready);
+      await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t06-transfer-' + label + '-' + viewport.label + '.png' });
+      measurements.push({ width: viewport.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+    }
+    await page.getByRole('link', { name: 'Back to Git Tutor', exact: true }).focus();
+    await page.keyboard.press('Tab');
+    const focus = await page.evaluate(() => { const el = document.activeElement, style = getComputedStyle(el); return { tag: el.tagName, outlineWidth: style.outlineWidth, outlineStyle: style.outlineStyle }; });
+    if (rtl) {
+      await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+      await target.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await page.screenshot({ path: '.impeccable/review/t06-transfer-' + label + '-rtl.png' });
+      measurements.push({ width: 360, direction: 'rtl', overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+      await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+    }
+    findings.push({ label, measurements, focus, consoleErrors: errors, consoleWarnings: warnings, failedResponses: failures });
+    errors = 0; warnings = 0; failures = [];
+  }
+  await page.context().setStorageState('.local/ui-review/t06-transfer-desktop-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/bookings/' + metadata.destinationEnrollmentId);
+  const history = page.locator('[data-proposal-id="' + metadata.proposalId + '"]');
+  await history.locator(':scope > summary').click();
+  await history.getByText('The session transfer has been applied.', { exact: true }).waitFor();
+  await capture('completed-booking', history, true);
+  await page.context().setStorageState('.local/ui-review/t06-transfer-desktop-payer.json');
+  await page.goto('http://127.0.0.1:3000/learn/payments/enrollment-transfer-consents/' + metadata.consentId);
+  await page.getByText('Funds carried over', { exact: true }).waitFor();
+  await capture('payer-history', page.getByRole('heading', { level: 1 }), true);
+  return findings;
+}
+)(page);
+```
+### Events
+- New console entries: .playwright-cli\console-2026-11-11T19-45-42-235Z.log#L7-L10

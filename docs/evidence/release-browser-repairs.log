@@ -1,0 +1,117 @@
+
+Running 12 tests using 1 worker
+
+(node:24720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\booking.spec.ts:82:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (31.3s)
+  ok  2 [desktop] › tests\e2e\booking.spec.ts:140:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms (44.1s)
+  ok  3 [desktop] › tests\e2e\packages.spec.ts:155:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge (25.2s)
+(node:32256) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  4 [desktop] › tests\e2e\enrollment-transfers.spec.ts:86:1 › a session transfer preserves the funded source until exact learner, tutor and original-payer consent is applied (28.4s)
+[teaching-operations] start: Report unavailability: click
+[teaching-operations] start: Report unavailability: response headers
+[teaching-operations] done: Report unavailability: click
+[teaching-operations] done: Report unavailability: response headers
+[teaching-operations] Report unavailability: HTTP 201
+[teaching-operations] start: Report unavailability: response body
+[teaching-operations] done: Report unavailability: response body
+[teaching-operations] start: Report unavailability: response assertion
+[teaching-operations] done: Report unavailability: response assertion
+[teaching-operations] start: Unavailability affected-count assertion
+[teaching-operations] done: Unavailability affected-count assertion
+[teaching-operations] start: Administrator login after incident
+[teaching-operations] done: Administrator login after incident
+[teaching-operations] start: Open administrator teaching workspace
+[teaching-operations] done: Open administrator teaching workspace
+[teaching-operations] start: Create session series: click
+[teaching-operations] start: Create session series: response headers
+[teaching-operations] done: Create session series: click
+[teaching-operations] done: Create session series: response headers
+[teaching-operations] Create session series: HTTP 201
+[teaching-operations] start: Create session series: response body
+[teaching-operations] done: Create session series: response body
+[teaching-operations] start: Create session series: response assertion
+[teaching-operations] done: Create session series: response assertion
+[teaching-operations] start: Create individual change proposals: click
+[teaching-operations] start: Create individual change proposals: response headers
+[teaching-operations] done: Create individual change proposals: click
+[teaching-operations] done: Create individual change proposals: response headers
+[teaching-operations] Create individual change proposals: HTTP 201
+[teaching-operations] start: Create individual change proposals: response body
+[teaching-operations] done: Create individual change proposals: response body
+[teaching-operations] start: Create individual change proposals: response assertion
+[teaching-operations] done: Create individual change proposals: response assertion
+[teaching-operations] start: Close unavailability browser contexts
+[teaching-operations] done: Close unavailability browser contexts
+[teaching-operations] start: Close unavailability fixture
+[teaching-operations] done: Close unavailability fixture
+  ok  5 [desktop] › tests\e2e\teaching-operations.spec.ts:27:1 › unavailability has a responsible owner and a selected series change leaves its other session untouched (21.8s)
+[teaching-operations] start: Propose a different tutor: click
+[teaching-operations] start: Propose a different tutor: response headers
+[teaching-operations] done: Propose a different tutor: click
+[teaching-operations] done: Propose a different tutor: response headers
+[teaching-operations] Propose a different tutor: HTTP 201
+[teaching-operations] start: Propose a different tutor: response body
+[teaching-operations] done: Propose a different tutor: response body
+[teaching-operations] start: Propose a different tutor: response assertion
+[teaching-operations] done: Propose a different tutor: response assertion
+  ok  6 [desktop] › tests\e2e\teaching-operations.spec.ts:61:1 › tutor replacement requires separate learner and both tutor consent before admin application (17.6s)
+(node:20744) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  7 [mobile] › tests\e2e\booking.spec.ts:82:1 › administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes (31.2s)
+  ok  8 [mobile] › tests\e2e\booking.spec.ts:140:1 › a group change collects separate learner and tutor consent while unfunded commit preserves original terms (40.1s)
+  ok  9 [mobile] › tests\e2e\packages.spec.ts:155:1 › an interrupted purchase retries once; approved bonus credits stay separate from the issued charge (32.5s)
+(node:18324) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 10 [mobile] › tests\e2e\enrollment-transfers.spec.ts:86:1 › a session transfer preserves the funded source until exact learner, tutor and original-payer consent is applied (26.6s)
+[teaching-operations] start: Report unavailability: click
+[teaching-operations] start: Report unavailability: response headers
+[teaching-operations] done: Report unavailability: click
+[teaching-operations] done: Report unavailability: response headers
+[teaching-operations] Report unavailability: HTTP 201
+[teaching-operations] start: Report unavailability: response body
+[teaching-operations] done: Report unavailability: response body
+[teaching-operations] start: Report unavailability: response assertion
+[teaching-operations] done: Report unavailability: response assertion
+[teaching-operations] start: Unavailability affected-count assertion
+[teaching-operations] done: Unavailability affected-count assertion
+[teaching-operations] start: Administrator login after incident
+[teaching-operations] done: Administrator login after incident
+[teaching-operations] start: Open administrator teaching workspace
+[teaching-operations] done: Open administrator teaching workspace
+[teaching-operations] start: Create session series: click
+[teaching-operations] start: Create session series: response headers
+[teaching-operations] done: Create session series: click
+[teaching-operations] done: Create session series: response headers
+[teaching-operations] Create session series: HTTP 201
+[teaching-operations] start: Create session series: response body
+[teaching-operations] done: Create session series: response body
+[teaching-operations] start: Create session series: response assertion
+[teaching-operations] done: Create session series: response assertion
+[teaching-operations] start: Create individual change proposals: click
+[teaching-operations] start: Create individual change proposals: response headers
+[teaching-operations] done: Create individual change proposals: click
+[teaching-operations] done: Create individual change proposals: response headers
+[teaching-operations] Create individual change proposals: HTTP 201
+[teaching-operations] start: Create individual change proposals: response body
+[teaching-operations] done: Create individual change proposals: response body
+[teaching-operations] start: Create individual change proposals: response assertion
+[teaching-operations] done: Create individual change proposals: response assertion
+[teaching-operations] start: Close unavailability browser contexts
+[teaching-operations] done: Close unavailability browser contexts
+[teaching-operations] start: Close unavailability fixture
+[teaching-operations] done: Close unavailability fixture
+  ok 11 [mobile] › tests\e2e\teaching-operations.spec.ts:27:1 › unavailability has a responsible owner and a selected series change leaves its other session untouched (22.2s)
+[teaching-operations] start: Propose a different tutor: click
+[teaching-operations] start: Propose a different tutor: response headers
+[teaching-operations] done: Propose a different tutor: click
+[teaching-operations] done: Propose a different tutor: response headers
+[teaching-operations] Propose a different tutor: HTTP 201
+[teaching-operations] start: Propose a different tutor: response body
+[teaching-operations] done: Propose a different tutor: response body
+[teaching-operations] start: Propose a different tutor: response assertion
+[teaching-operations] done: Propose a different tutor: response assertion
+  ok 12 [mobile] › tests\e2e\teaching-operations.spec.ts:61:1 › tutor replacement requires separate learner and both tutor consent before admin application (16.6s)
+
+  12 passed (5.8m)

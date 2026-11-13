@@ -1,0 +1,42 @@
+### Result
+{"findings":[{"surface":"customer-inbox","width":1440,"overflow":false},{"surface":"customer-inbox","width":360,"overflow":false},{"surface":"admin-delivery-operations","width":1440,"overflow":false},{"surface":"admin-delivery-operations","width":360,"overflow":false}],"requests":[{"path":"/learn/notifications","status":200},{"path":"/api/v1/notifications/preferences","status":200},{"path":"/api/v1/notifications","status":200},{"path":"/admin/notifications-operations","status":200},{"path":"/api/v1/notifications/queues","status":200},{"path":"/api/v1/notifications/deliveries","status":200}],"consoleErrors":0,"consoleWarnings":0,"mutations":0}
+### Ran Playwright code
+```js
+await (async (page) => {
+  let errors = 0, warnings = 0;
+  const requests = [], findings = [];
+  page.on('console', message => { if (message.type() === 'error') errors++; if (message.type() === 'warning') warnings++; });
+  page.on('pageerror', () => errors++);
+  page.on('response', response => { const path = new URL(response.url()).pathname; if (path.includes('notifications')) requests.push({ path, status: response.status() }); });
+  await page.context().setStorageState('.local/ui-review/t07-materials-mobile-customer.json');
+  await page.goto('http://127.0.0.1:3000/learn/notifications');
+  await page.getByRole('button', { name: 'Save email preference', exact: true }).waitFor();
+  await page.getByRole('checkbox', { name: 'Email me operational updates' }).waitFor();
+  for (const size of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 360, height: 780 }]) {
+    await page.setViewportSize({ width: size.width, height: size.height });
+    await page.screenshot({ path: '.impeccable/review/t09-inbox-' + size.name + '.png' });
+    findings.push({ surface: 'customer-inbox', width: size.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+  }
+  await page.context().setStorageState('.local/ui-review/t08-delivery-mobile-admin.json');
+  await page.goto('http://127.0.0.1:3000/admin/notifications-operations');
+  await page.getByRole('heading', { name: 'Delivery activity', exact: true }).waitFor();
+  const response = page.waitForResponse(result => new URL(result.url()).pathname.endsWith('/notifications/deliveries') && new URL(result.url()).searchParams.get('state') === 'unknown');
+  await page.getByLabel('Delivery status', { exact: true }).selectOption('unknown');
+  const selected = await response;
+  if (selected.status() !== 200) throw new Error('NOTIFICATION_FILTER_READ_FAILED');
+  await page.locator('summary').filter({ hasText: /^General operations/ }).click();
+  await page.getByLabel('Verified staff owner', { exact: true }).first().waitFor();
+  for (const size of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 360, height: 780 }]) {
+    await page.setViewportSize({ width: size.width, height: size.height });
+    await page.screenshot({ path: '.impeccable/review/t09-operations-' + size.name + '.png' });
+    findings.push({ surface: 'admin-delivery-operations', width: size.width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) });
+  }
+  return { findings, requests, consoleErrors: errors, consoleWarnings: warnings, mutations: 0 };
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:3000/admin/notifications-operations
+- Page Title: Git Tutor | Work through it, together.
+### Events
+- New console entries: .playwright-cli\console-2026-11-11T20-25-48-339Z.log#L16-L48

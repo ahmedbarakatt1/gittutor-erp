@@ -1,0 +1,4 @@
+PASS document links and 7 JSON files
+PASS 147 acceptance cases, 84 preserved IDs, 18 requirements and 13 tasks
+PASS pricing, policy scope and selected financial oracles in the 33-scenario fixture set
+Application execution evidence is recorded separately during implementation.
