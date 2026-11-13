@@ -21,7 +21,7 @@ export async function serverSupabase() {
   const store = await cookies();
   return createServerClient(config.supabase_url, config.supabase_publishable_key, {
     db: { schema: "api" },
-    cookieOptions: { httpOnly: true, sameSite: "lax", secure: !config.isolated, path: "/" },
+    cookieOptions: { httpOnly: true, sameSite: "lax", secure: new URL(config.app_base_url).protocol === 'https:', path: "/" },
     cookies: {
       getAll: () => store.getAll(),
       setAll(values) {
@@ -49,7 +49,7 @@ export function requestSupabase(request: NextRequest) {
   const responseHeaders = new Headers();
   const client = createServerClient(config.supabase_url, config.supabase_publishable_key, {
     db: { schema: "api" },
-    cookieOptions: { httpOnly: true, sameSite: "lax", secure: !config.isolated, path: "/" },
+    cookieOptions: { httpOnly: true, sameSite: "lax", secure: new URL(config.app_base_url).protocol === 'https:', path: "/" },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(values, headers) {

@@ -1,0 +1,38 @@
+
+ RUN  v5.1.0 D:/GitTutor System
+
+ ❯ tests/unit/auth-cookie-transport.test.ts (2 tests | 1 failed) 20ms
+   × session transport follows configured https://preview.example.test even with fake providers 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/auth-cookie-transport.test.ts > session transport follows configured https://preview.example.test even with fake providers
+AssertionError: expected { name: 'auth-test', …(5) } to match object { secure: true, httpOnly: true, …(2) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax",
+-   "secure": true,
++   "secure": false,
+  }
+
+ ❯ tests/unit/auth-cookie-transport.test.ts:32:45
+     30|   const transport = requestSupabase(new NextRequest('http://127.0.0.1:…
+     31|   const response = transport.finish(NextResponse.json({ ok: true }));
+     32|   expect(response.cookies.get('auth-test')).toMatchObject({ secure, ht…
+       |                                             ^
+     33|   expect(response.headers.get('Cache-Control')).toBe('private, no-stor…
+     34|   await serverSupabase();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  19:23:40
+   Duration  616ms (import 70%, transform 22%, tests 5%, worker 3%)

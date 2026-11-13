@@ -1,0 +1,108 @@
+$ next build
+▲ Next.js 16.4.6 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 75ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.9s
+  Running TypeScript ...
+  Finished TypeScript in 12.9s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/59) ...
+  Generating static pages using 11 workers (14/59)
+  Generating static pages using 11 workers (29/59)
+  Generating static pages using 11 workers (44/59)
+✓ Generating static pages using 11 workers (59/59) in 1506ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/campaigns
+├ ƒ /admin/catalog
+├ ƒ /admin/customers
+├ ƒ /admin/exports
+├ ƒ /admin/finance
+├ ƒ /admin/integrations
+├ ƒ /admin/notifications
+├ ƒ /admin/notifications-operations
+├ ƒ /admin/packages
+├ ƒ /admin/pay
+├ ƒ /admin/payments
+├ ƒ /admin/payments/imports/[id]
+├ ƒ /admin/payments/reconciliation
+├ ƒ /admin/payments/reviews
+├ ƒ /admin/payments/reviews/[id]
+├ ƒ /admin/payments/transfers/[id]
+├ ƒ /admin/refunds
+├ ƒ /admin/refunds/[id]
+├ ƒ /admin/schedule
+├ ƒ /admin/sessions
+├ ƒ /admin/students
+├ ƒ /admin/support
+├ ƒ /admin/teaching
+├ ƒ /admin/team
+├ ƒ /api/auth/[action]
+├ ƒ /api/calendar/connect
+├ ƒ /api/calendar/google/callback
+├ ƒ /api/v1/[...path]
+├ ƒ /api/v1/analytics/[...path]
+├ ƒ /api/v1/crm/[[...path]]
+├ ƒ /api/v1/exports/[[...path]]
+├ ƒ /api/v1/files/[id]/content
+├ ƒ /api/v1/learning-records/[occurrenceId]
+├ ƒ /api/v1/me
+├ ƒ /api/v1/notifications/[[...path]]
+├ ƒ /api/v1/support/[[...path]]
+├ ƒ /api/webhooks/email
+├ ƒ /api/webhooks/whatsapp
+├ ƒ /apply-to-teach
+├ ƒ /auth/callback
+├ ƒ /auth/set-password
+├ ○ /auth/verify
+├ ƒ /learn
+├ ƒ /learn/bookings
+├ ƒ /learn/bookings/[id]
+├ ƒ /learn/exports
+├ ƒ /learn/files
+├ ƒ /learn/notifications
+├ ƒ /learn/packages
+├ ƒ /learn/packages/[id]
+├ ƒ /learn/payments
+├ ƒ /learn/payments/[id]
+├ ƒ /learn/payments/charges/[id]
+├ ƒ /learn/payments/enrollment-transfer-consents/[id]
+├ ƒ /learn/payments/plans/[id]
+├ ƒ /learn/payments/transfers/[id]
+├ ƒ /learn/refunds
+├ ƒ /learn/refunds/[id]
+├ ƒ /learn/support
+├ ƒ /login
+├ ƒ /offers
+├ ƒ /offers/[id]
+├ ƒ /service
+├ ƒ /service/customers
+├ ƒ /service/notifications
+├ ƒ /service/payments
+├ ƒ /service/payments/[id]
+├ ƒ /service/payments/imports/[id]
+├ ƒ /service/payments/incoming
+├ ƒ /service/payments/transfers/[id]
+├ ƒ /service/support
+├ ○ /signup
+├ ƒ /subjects
+├ ○ /support
+├ ƒ /tutor
+├ ƒ /tutor/exports
+├ ƒ /tutor/notifications
+├ ƒ /tutor/pay
+├ ƒ /tutor/schedule
+├ ƒ /tutor/teaching
+└ ƒ /tutors/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
