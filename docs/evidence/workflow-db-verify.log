@@ -1,0 +1,3 @@
+$ tsx tools/db-verify.ts && tsx tools/supabase-local.ts verify
+Database verification passed: 7 private tables with RLS, 5 functions checked, api-only exposure.
+Real Supabase verification passed: 148 migrations, 233 private RLS tables, 710 function boundaries.

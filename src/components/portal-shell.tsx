@@ -35,6 +35,8 @@ export function PortalShell({ kind, account, children, title, description, activ
     </header>
     <div className={styles.portalLayout}>
       <nav className={styles.portalNav} aria-label={text.workspace}>
+        {kind==='admin'&&<Link href="/admin/workflow" aria-current={activePath==='/admin/workflow'?'page':undefined}>Actual records</Link>}
+        {kind==='admin'&&<Link href="/admin/access" aria-current={activePath==='/admin/access'?'page':undefined}>Staff and applications</Link>}
         {(kind==='admin'||kind==='service')&&<Link href={`/${kind}/customers`} aria-current={activePath===`/${kind}/customers`?'page':undefined}>Customers</Link>}
         {(kind==='admin'||kind==='service')&&<Link href={`/${kind}/support`} aria-current={activePath===`/${kind}/support`?'page':undefined}>Support inbox</Link>}
         {kind==='learn'&&<Link href="/learn/support" aria-current={activePath==='/learn/support'?'page':undefined}>Support</Link>}

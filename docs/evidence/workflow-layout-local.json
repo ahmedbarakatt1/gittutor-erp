@@ -1,0 +1,18 @@
+[
+  {
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "menuHeight": 1690.890625,
+    "metricColumns": "256.5px 256.5px 256.5px 256.5px",
+    "rowCount": 12
+  },
+  {
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "menuHeight": 75.75,
+    "metricColumns": "153px 153px",
+    "rowCount": 12
+  }
+]

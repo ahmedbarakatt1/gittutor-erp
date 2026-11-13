@@ -1,0 +1,66 @@
+{
+  "baseURL": "http://127.0.0.1:3000",
+  "results": [
+    {
+      "table": "sessions",
+      "count": 85
+    },
+    {
+      "table": "packages",
+      "count": 10
+    },
+    {
+      "table": "students",
+      "count": 5
+    },
+    {
+      "table": "tutors",
+      "count": 11
+    },
+    {
+      "table": "marketing",
+      "count": 2
+    },
+    {
+      "table": "distributions",
+      "count": 1
+    },
+    {
+      "table": "balances",
+      "count": 25
+    },
+    {
+      "width": 1440,
+      "noPageOverflow": true
+    },
+    {
+      "width": 768,
+      "noPageOverflow": true
+    },
+    {
+      "width": 360,
+      "noPageOverflow": true
+    },
+    {
+      "role": "learner",
+      "privateSnapshotUnavailable": true
+    },
+    {
+      "role": "guardian",
+      "privateSnapshotUnavailable": true
+    },
+    {
+      "role": "tutor",
+      "privateSnapshotUnavailable": true
+    },
+    {
+      "role": "service",
+      "privateSnapshotUnavailable": true
+    },
+    {
+      "role": "admin",
+      "privateSnapshotUnavailable": true
+    }
+  ],
+  "errors": []
+}

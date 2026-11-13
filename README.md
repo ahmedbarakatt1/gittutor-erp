@@ -4,6 +4,8 @@
 
 The public website and student/guardian, tutor, customer-service and admin portals are implemented for synthetic testing. Start with the [guided demo](docs/DEMO-WALKTHROUGH.md), [local testing instructions](docs/LOCAL-TESTING.md) and [implementation status](docs/IMPLEMENTATION-STATUS.md). The original Instagram logo and red, charcoal, cream and yellow design are documented in [brand provenance](docs/BRAND-ASSETS.md). The [online-preview instructions](docs/ONLINE-PREVIEW.md) describe temporary access from other devices and its current verification state.
 
+The separately authorized [actual workbook import](docs/ACTUAL-DATA-IMPORT.md) is now available at `/admin/workflow`, private to its own records-owner account. Its 139 historical source records are searchable and retain reported values and review flags; they do not become verified operational transactions automatically. The real-data login and manifest are ignored under `.local/workflow-import/`. Demonstration accounts cannot read them. This database now contains real private records: preserve it and use a separate disposable environment for destructive tests.
+
 Use the pinned Node runtime from `.node-version`, pnpm 11.25.0, Docker Desktop with its Linux engine running, and PostgreSQL 17 binaries for the isolated foundation tests.
 
 ```powershell
