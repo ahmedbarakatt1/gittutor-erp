@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import layoutStyles from '../auth.module.css';
 import { useEffect, useState } from 'react';
 import type { PackageContract, PackageSummary, PackageProposalSummary } from '@/modules/packages/queries';
 import { packageCopy as copy } from '@/locales/packages';
@@ -23,7 +24,7 @@ export function CustomerPackages({ initialLearner, initialContract }: { initialL
 
 function LearnerPackages({ learner, initialContract }: { learner: PackageLearner; initialContract?: string }) {
   const purchases = usePagedRecords<PackageSummary>(`me/packages?learner_id=${learner.learner_id}`);
-  return <><section className={styles.section} aria-labelledby="purchases-heading"><h2 id="purchases-heading">{learner.display_name}</h2><PackageReadState pending={purchases.items === null} {...purchases} />{purchases.items?.length === 0 && <p className={styles.empty}>{copy.empty}</p>}<ul className={styles.list}>{purchases.items?.map(item => <li key={item.package_purchase_id}><h3>{item.title}</h3><p>{copy.states[item.purchase_state]}</p><dl className={styles.facts}><div><dt>{copy.available}</dt><dd><bdi dir="auto">{credits(item.usable_available_credit_quanta)}</bdi></dd></div><div><dt>{copy.purchasedCredits}</dt><dd><bdi dir="auto">{credits(item.purchased_credit_quanta)}</bdi></dd></div><div><dt>{copy.created}</dt><dd><bdi dir="auto"><CairoTimestamp value={item.created_at} /></bdi></dd></div></dl><Link className={styles.link} href={`/learn/packages/${item.package_purchase_id}`}>{copy.open}</Link></li>)}</ul></section><PurchasePackage learner={learner} initialContract={initialContract} onSaved={purchases.reload} /><LearnerPackageProposals learnerId={learner.learner_id} /></>;
+  return <><section className={styles.section} aria-labelledby="purchases-heading"><h2 id="purchases-heading">{learner.display_name}</h2><PackageReadState pending={purchases.items === null} {...purchases} />{purchases.items?.length === 0 && <p className={styles.empty}>{copy.empty}</p>}<ul className={`${styles.list} ${layoutStyles.recordGrid}`}>{purchases.items?.map(item => <li key={item.package_purchase_id}><h3>{item.title}</h3><p>{copy.states[item.purchase_state]}</p><dl className={styles.facts}><div><dt>{copy.available}</dt><dd><bdi dir="auto">{credits(item.usable_available_credit_quanta)}</bdi></dd></div><div><dt>{copy.purchasedCredits}</dt><dd><bdi dir="auto">{credits(item.purchased_credit_quanta)}</bdi></dd></div><div><dt>{copy.created}</dt><dd><bdi dir="auto"><CairoTimestamp value={item.created_at} /></bdi></dd></div></dl><Link className={styles.link} href={`/learn/packages/${item.package_purchase_id}`}>{copy.open}</Link></li>)}</ul></section><PurchasePackage learner={learner} initialContract={initialContract} onSaved={purchases.reload} /><LearnerPackageProposals learnerId={learner.learner_id} /></>;
 }
 
 export function PurchasePackage({ learner, initialContract, onSaved }: { learner: PackageLearner; initialContract?: string; onSaved?: () => void }) {

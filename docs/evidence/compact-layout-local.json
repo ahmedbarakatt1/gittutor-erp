@@ -1,0 +1,563 @@
+[
+  {
+    "route": "/admin/finance",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 6277,
+    "grids": [
+      {
+        "type": "filters",
+        "items": 5,
+        "columns": "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
+        "height": 313
+      },
+      {
+        "type": "metrics",
+        "items": 8,
+        "columns": "340px 340px 340px",
+        "height": 303
+      },
+      {
+        "type": "metrics",
+        "items": 11,
+        "columns": "340px 340px 340px",
+        "height": 410
+      },
+      {
+        "type": "records",
+        "items": 11,
+        "columns": "518px 518px",
+        "height": 1522
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/admin/finance",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 9602,
+    "grids": [
+      {
+        "type": "filters",
+        "items": 5,
+        "columns": "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
+        "height": 446
+      },
+      {
+        "type": "metrics",
+        "items": 8,
+        "columns": "512px",
+        "height": 840
+      },
+      {
+        "type": "metrics",
+        "items": 11,
+        "columns": "512px",
+        "height": 1163
+      },
+      {
+        "type": "records",
+        "items": 11,
+        "columns": "512px",
+        "height": 2711
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/admin/finance",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 11548,
+    "grids": [
+      {
+        "type": "filters",
+        "items": 5,
+        "columns": "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
+        "height": 556
+      },
+      {
+        "type": "metrics",
+        "items": 8,
+        "columns": "316px",
+        "height": 840
+      },
+      {
+        "type": "metrics",
+        "items": 11,
+        "columns": "316px",
+        "height": 1163
+      },
+      {
+        "type": "records",
+        "items": 11,
+        "columns": "316px",
+        "height": 3687
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/admin/students",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 7148,
+    "grids": [
+      {
+        "type": "metrics",
+        "items": 12,
+        "columns": "340px 340px 340px",
+        "height": 338
+      }
+    ],
+    "overflow": [],
+    "errors": [
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n      <LoadingBoundary name=\"students/\" loading={null}>\n        <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n          <RedirectBoundary>\n            <RedirectErrorBoundary router={{...}}>\n              <InnerLayoutRouter url=\"/admin/stu...\" tree={[...]} params={{}} renderTree={{...}} segmentPath={[...]} ...>\n                <SegmentViewNode type=\"page\" pagePath=\"admin/stud...\">\n                  <SegmentTrieNode>\n                  <StudentsPage>\n                    <PortalShell>\n                      <div className=\"auth-modul...\">\n                        <a>\n                        <header>\n                        <div className=\"auth-modul...\">\n                          <nav>\n                          <main id=\"account\" className=\"auth-modul...\">\n                            <h1>\n                            <p>\n                            <AnalyticsWorkspace view=\"students\" today=\"2026-11-13\">\n                              <div className=\"files-modu...\" style={{...}}>\n                                <nav>\n                                <section>\n                                <form className=\"auth-modul...\" onSubmit={function onSubmit}>\n                                  <fieldset\n+                                   className=\"auth-module__yTVJjG__formFields auth-module__yTVJjG__filterFields\"\n-                                   className=\"auth-module__yTVJjG__formFields\"\n                                    disabled={true}\n                                  >\n                ...\n              ...\n"
+    ]
+  },
+  {
+    "route": "/admin/students",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 9369,
+    "grids": [
+      {
+        "type": "metrics",
+        "items": 12,
+        "columns": "512px",
+        "height": 1055
+      }
+    ],
+    "overflow": [],
+    "errors": [
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n      <LoadingBoundary name=\"students/\" loading={null}>\n        <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n          <RedirectBoundary>\n            <RedirectErrorBoundary router={{...}}>\n              <InnerLayoutRouter url=\"/admin/stu...\" tree={[...]} params={{}} renderTree={{...}} segmentPath={[...]} ...>\n                <SegmentViewNode type=\"page\" pagePath=\"admin/stud...\">\n                  <SegmentTrieNode>\n                  <StudentsPage>\n                    <PortalShell>\n                      <div className=\"auth-modul...\">\n                        <a>\n                        <header>\n                        <div className=\"auth-modul...\">\n                          <nav>\n                          <main id=\"account\" className=\"auth-modul...\">\n                            <h1>\n                            <p>\n                            <AnalyticsWorkspace view=\"students\" today=\"2026-11-13\">\n                              <div className=\"files-modu...\" style={{...}}>\n                                <nav>\n                                <section>\n                                <form className=\"auth-modul...\" onSubmit={function onSubmit}>\n                                  <fieldset\n+                                   className=\"auth-module__yTVJjG__formFields auth-module__yTVJjG__filterFields\"\n-                                   className=\"auth-module__yTVJjG__formFields\"\n                                    disabled={true}\n                                  >\n                ...\n              ...\n"
+    ]
+  },
+  {
+    "route": "/admin/students",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 12793,
+    "grids": [
+      {
+        "type": "metrics",
+        "items": 12,
+        "columns": "316px",
+        "height": 1055
+      }
+    ],
+    "overflow": [],
+    "errors": [
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n      <LoadingBoundary name=\"students/\" loading={null}>\n        <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n          <RedirectBoundary>\n            <RedirectErrorBoundary router={{...}}>\n              <InnerLayoutRouter url=\"/admin/stu...\" tree={[...]} params={{}} renderTree={{...}} segmentPath={[...]} ...>\n                <SegmentViewNode type=\"page\" pagePath=\"admin/stud...\">\n                  <SegmentTrieNode>\n                  <StudentsPage>\n                    <PortalShell>\n                      <div className=\"auth-modul...\">\n                        <a>\n                        <header>\n                        <div className=\"auth-modul...\">\n                          <nav>\n                          <main id=\"account\" className=\"auth-modul...\">\n                            <h1>\n                            <p>\n                            <AnalyticsWorkspace view=\"students\" today=\"2026-11-13\">\n                              <div className=\"files-modu...\" style={{...}}>\n                                <nav>\n                                <section>\n                                <form className=\"auth-modul...\" onSubmit={function onSubmit}>\n                                  <fieldset\n+                                   className=\"auth-module__yTVJjG__formFields auth-module__yTVJjG__filterFields\"\n-                                   className=\"auth-module__yTVJjG__formFields\"\n                                    disabled={true}\n                                  >\n                ...\n              ...\n"
+    ]
+  },
+  {
+    "route": "/learn/payments",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 13964,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "518px 518px",
+        "height": 1988
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "518px 518px",
+        "height": 2241
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "518px 518px",
+        "height": 2241
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "518px 518px",
+        "height": 1932
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/learn/payments",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 22296,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "512px",
+        "height": 3825
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "512px",
+        "height": 4311
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "512px",
+        "height": 4280
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "512px",
+        "height": 3717
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/learn/payments",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 25261,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "316px",
+        "height": 3693
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "316px",
+        "height": 4970
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "316px",
+        "height": 4318
+      },
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "316px",
+        "height": 4376
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/learn/packages",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 7172,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "518px 518px",
+        "height": 4255
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/learn/packages",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 11124,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "512px",
+        "height": 8183
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/learn/packages",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 14641,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "316px",
+        "height": 10582
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/service/payments",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 3439,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "518px 518px",
+        "height": 2849
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/service/payments",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 6000,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "512px",
+        "height": 5390
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/service/payments",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 6323,
+    "grids": [
+      {
+        "type": "records",
+        "items": 25,
+        "columns": "316px",
+        "height": 5390
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/tutor/schedule",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 2710,
+    "grids": [
+      {
+        "type": "records",
+        "items": 3,
+        "columns": "518px 518px",
+        "height": 894
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/tutor/schedule",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 3244,
+    "grids": [
+      {
+        "type": "records",
+        "items": 3,
+        "columns": "512px",
+        "height": 1419
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/tutor/schedule",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 4660,
+    "grids": [
+      {
+        "type": "records",
+        "items": 3,
+        "columns": "316px",
+        "height": 1371
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/tutor/pay",
+    "width": 1440,
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "pageHeight": 1927,
+    "grids": [
+      {
+        "type": "metrics",
+        "items": 6,
+        "columns": "340px 340px 340px",
+        "height": 159
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "1068px 0px",
+        "height": 353
+      },
+      {
+        "type": "metrics",
+        "items": 4,
+        "columns": "340px 340px 340px",
+        "height": 159
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "1068px 0px",
+        "height": 101
+      },
+      {
+        "type": "records",
+        "items": 0,
+        "columns": "0px 0px",
+        "height": 0
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "1068px 0px",
+        "height": 154
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/tutor/pay",
+    "width": 768,
+    "viewport": 768,
+    "documentWidth": 768,
+    "pageHeight": 2543,
+    "grids": [
+      {
+        "type": "metrics",
+        "items": 6,
+        "columns": "512px",
+        "height": 517
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "512px",
+        "height": 532
+      },
+      {
+        "type": "metrics",
+        "items": 4,
+        "columns": "512px",
+        "height": 338
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "512px",
+        "height": 101
+      },
+      {
+        "type": "records",
+        "items": 0,
+        "columns": "0px",
+        "height": 0
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "512px",
+        "height": 154
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "route": "/tutor/pay",
+    "width": 360,
+    "viewport": 360,
+    "documentWidth": 360,
+    "pageHeight": 3071,
+    "grids": [
+      {
+        "type": "metrics",
+        "items": 6,
+        "columns": "316px",
+        "height": 517
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "316px",
+        "height": 532
+      },
+      {
+        "type": "metrics",
+        "items": 4,
+        "columns": "316px",
+        "height": 338
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "316px",
+        "height": 101
+      },
+      {
+        "type": "records",
+        "items": 0,
+        "columns": "0px",
+        "height": 0
+      },
+      {
+        "type": "records",
+        "items": 1,
+        "columns": "316px",
+        "height": 180
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  }
+]

@@ -51,6 +51,16 @@
 .accountGrid dt { font-size: 14px; color: var(--muted); margin-block-end: 5px; }
 .accountGrid dd { margin: 0; overflow-wrap: anywhere; }
 .accountReference { font-size: 14px; font-variant-numeric: tabular-nums; }
+.metricGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1.25rem 1.5rem; margin-block: 1.5rem; }
+.metricGrid > div { min-inline-size: 0; padding-block-start: .75rem; border-block-start: 1px solid var(--border); }
+.metricGrid dt { color: var(--muted); font-size: .9rem; }
+.metricGrid dd { margin: .4rem 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.recordGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr)); gap: 0 2rem; align-items: start; }
+.recordGrid > li { min-inline-size: 0; padding-block: 1.25rem; overflow-wrap: anywhere; }
+.recordGrid > li > h3:first-child { margin-block-start: 0; }
+.filterFields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); align-items: start; }
+.filterFields > p, .filterFields > button { grid-column: 1 / -1; }
+.filterFields > button { justify-self: start; }
 .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #285c40; }
 .status svg { inline-size: 18px; block-size: 18px; }
 .section { margin-block-start: 40px; }
@@ -130,7 +140,8 @@
   .portalIdentity { align-items: flex-start; flex-direction: column; gap: 9px; }
   .workspaceName { padding: 0; border: 0; }
   .portalLayout { grid-template-columns: 1fr; }
-  .portalNav, .staff .portalNav { padding: 14px 22px; display: flex; gap: 12px; border-inline-end: 0; border-block-end: 1px solid var(--border); flex-wrap: wrap; }
+  .portalNav, .staff .portalNav { padding: 14px 22px; display: flex; gap: 12px; border-inline-end: 0; border-block-end: 1px solid var(--border); flex-wrap: nowrap; overflow-x: auto; max-inline-size: 100%; }
+  .portalNav a { flex: 0 0 auto; white-space: nowrap; }
   .portalMain { padding: 34px 22px; }
   .portalMain h1 { font-size: 2rem; }
   .accountGrid, .staff .accountGrid { padding: 22px; }

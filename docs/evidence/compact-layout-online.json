@@ -1,0 +1,402 @@
+{
+  "baseURL": "https://polo-issn-transmission-connecticut.trycloudflare.com",
+  "report": [
+    {
+      "route": "/admin/finance",
+      "width": 1440,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 11
+        }
+      ],
+      "hasFilterFields": true,
+      "menuHeight": 5161.234375
+    },
+    {
+      "route": "/admin/finance",
+      "width": 768,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 11
+        }
+      ],
+      "hasFilterFields": true,
+      "menuHeight": 7195.828125
+    },
+    {
+      "route": "/admin/finance",
+      "width": 360,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 11
+        }
+      ],
+      "hasFilterFields": true,
+      "menuHeight": 75.75
+    },
+    {
+      "route": "/admin/students",
+      "width": 1440,
+      "overflow": false,
+      "grids": [],
+      "hasFilterFields": true,
+      "menuHeight": 1233
+    },
+    {
+      "route": "/admin/students",
+      "width": 768,
+      "overflow": false,
+      "grids": [],
+      "hasFilterFields": true,
+      "menuHeight": 1233
+    },
+    {
+      "route": "/admin/students",
+      "width": 360,
+      "overflow": false,
+      "grids": [],
+      "hasFilterFields": true,
+      "menuHeight": 75.75
+    },
+    {
+      "route": "/tutor/pay",
+      "width": 1440,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "metric",
+          "columns": "340px 340px 340px",
+          "children": 6
+        },
+        {
+          "type": "record",
+          "columns": "1068px 0px",
+          "children": 1
+        },
+        {
+          "type": "metric",
+          "columns": "340px 340px 340px",
+          "children": 4
+        },
+        {
+          "type": "record",
+          "columns": "1068px 0px",
+          "children": 1
+        },
+        {
+          "type": "record",
+          "columns": "0px 0px",
+          "children": 0
+        },
+        {
+          "type": "record",
+          "columns": "1068px 0px",
+          "children": 1
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 1833.5
+    },
+    {
+      "route": "/tutor/pay",
+      "width": 768,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "metric",
+          "columns": "512px",
+          "children": 6
+        },
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 1
+        },
+        {
+          "type": "metric",
+          "columns": "512px",
+          "children": 4
+        },
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 1
+        },
+        {
+          "type": "record",
+          "columns": "0px",
+          "children": 0
+        },
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 1
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 2449.953125
+    },
+    {
+      "route": "/tutor/pay",
+      "width": 360,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "metric",
+          "columns": "316px",
+          "children": 6
+        },
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 1
+        },
+        {
+          "type": "metric",
+          "columns": "316px",
+          "children": 4
+        },
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 1
+        },
+        {
+          "type": "record",
+          "columns": "0px",
+          "children": 0
+        },
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 1
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 75.75
+    },
+    {
+      "route": "/tutor/schedule",
+      "width": 1440,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 3
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 2617.109375
+    },
+    {
+      "route": "/tutor/schedule",
+      "width": 768,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 3
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 3150.953125
+    },
+    {
+      "route": "/tutor/schedule",
+      "width": 360,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 3
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 75.75
+    },
+    {
+      "route": "/learn/payments",
+      "width": 1440,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 25
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 13874.90625
+    },
+    {
+      "route": "/learn/payments",
+      "width": 768,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 25
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 22206.84375
+    },
+    {
+      "route": "/learn/payments",
+      "width": 360,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 25
+        },
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 25
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 75.75
+    },
+    {
+      "route": "/learn/packages",
+      "width": 1440,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 25
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 7082.984375
+    },
+    {
+      "route": "/learn/packages",
+      "width": 768,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 25
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 11035
+    },
+    {
+      "route": "/learn/packages",
+      "width": 360,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 25
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 75.75
+    },
+    {
+      "route": "/service/payments",
+      "width": 1440,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "518px 518px",
+          "children": 23
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 3794.765625
+    },
+    {
+      "route": "/service/payments",
+      "width": 768,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "512px",
+          "children": 23
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 6837.375
+    },
+    {
+      "route": "/service/payments",
+      "width": 360,
+      "overflow": false,
+      "grids": [
+        {
+          "type": "record",
+          "columns": "316px",
+          "children": 23
+        }
+      ],
+      "hasFilterFields": false,
+      "menuHeight": 75.75
+    }
+  ],
+  "unexpectedErrors": []
+}
