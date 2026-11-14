@@ -2,11 +2,13 @@
 
 ## Current decision
 
-**Ready for local exploratory testing — 13 November 2026.** The implemented public site and all role workspaces are available at `http://127.0.0.1:3000`. This is not a production release or a claim that all 147 acceptance catalogue entries have passed.
+**Production preparation —14 November2026; activation not approved yet.** Actual workbook history is integrated into the main role workspaces, with complete fake-provider preview journeys previously executed. The temporary laptop preview requires its services running; historical URL checks do not attest current uptime. Portable non-root web/worker images and isolated packaging smoke checks now pass. Hosted domain/account selection, Supabase reauthentication, live providers, commercial approval, hosted recovery and remaining acceptance variants are still open.
 
-The application includes the public site and learner/guardian, tutor, customer-service and admin workspaces. It uses synthetic identities and fake external providers. Docker and the existing Supabase database/storage are running again without a reset. The supplied phone/WhatsApp contact and Instagram-informed subject categories are incorporated.
+The application includes the public site and learner/guardian, tutor, customer-service and admin workspaces. Its private actual-data preview uses imported history and separate fictional practice transactions; ordinary regression suites use synthetic identities. Live activation must use a clean hosted target and reviewed real-record cutover, never a preview dump. Tutor compensation remains privileged. The supplied contact and Instagram logo/design are incorporated.
 
-## Executed checks
+Latest production preparation: Docker web/worker builds and4 isolated image checks passed. After the final RPC-boundary correction,394 unit tests and whole lint/types passed;6/6 focused unit/actual-PostgreSQL checks also passed. Dependency audit found0 advisories across178 production/optional dependencies. Clean CI run43581649382 passed295/296 integration tests after fixing initialization; the final stale owner assertion was corrected and its focused check passed. Full rerun and final totals will be recorded in [implementation status](IMPLEMENTATION-STATUS.md). No all-green remote release is claimed yet.
+
+## Earlier executed release checks —13 November2026
 
 | Check | Latest recorded result | Evidence |
 |---|---|---|
@@ -47,4 +49,4 @@ The local restoration used a separate database in the existing container plus a 
 | Hosted recovery/operations |Local isolated rehearsal runner and durable replay |Approve retention/RPO/RTO/operator; restore into a separate hosted project, recover object bytes and encryption material, reconcile controls and measure recovery.|
 | CI/deployment |Pinned workflow and separate web/worker process definitions |Execute the workflow on the remote host, deploy staging and record its role, browser, provider and recovery results.|
 
-No live provider pilot, hosted CI run or production deployment is claimed. See [local testing instructions](LOCAL-TESTING.md) and [deployment instructions](DEPLOYMENT.md).
+No live provider pilot or production deployment is claimed. Hosted CI execution and its failures/repairs are recorded above and in implementation status; remote CI is not a hosted application/provider pilot. See [local testing instructions](LOCAL-TESTING.md) and [deployment instructions](DEPLOYMENT.md).

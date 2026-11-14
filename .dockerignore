@@ -1,0 +1,17 @@
+# Allowlist the build context. Real records, credentials, tests and Git history never enter it.
+**
+!Dockerfile
+!.dockerignore
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!next.config.ts
+!tsconfig.json
+!next-env.d.ts
+!src/
+!src/**
+!public/
+!public/**
+!contracts/
+!contracts/runtime/
+!contracts/runtime/**

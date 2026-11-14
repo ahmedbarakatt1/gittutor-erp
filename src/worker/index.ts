@@ -17,6 +17,7 @@ import { createLocalEmailAdapter, createSesEmailAdapter } from '../server/provid
 import { exportRenderHandler } from './exports';
 import { whatsappSendHandler } from './whatsapp';
 import { createWhatsAppAdapter, parseWhatsAppConfig } from '../server/providers/whatsapp';
+import { writeHeartbeat } from './health';
 
 const configuration = parseServerConfig(process.env);
 const pool = createDatabasePool(databaseUrl('worker'));
@@ -50,6 +51,7 @@ console.log(JSON.stringify({ event: 'worker_started', integrations: integrationS
 try {
   while (!stopping) {
     const jobs = await claimJobs(pool, process.env.WORKER_PURPOSE || null);
+    await writeHeartbeat(process.env.WORKER_HEARTBEAT_FILE);
     for (const job of jobs) {
       const handler = handlers[job.purpose];
       if (!handler) {
@@ -58,6 +60,7 @@ try {
         continue;
       }
       const result = await executeLeasedJob(pool, job, handler);
+      await writeHeartbeat(process.env.WORKER_HEARTBEAT_FILE);
       console.log(JSON.stringify({ event: 'job_processed', job_id: job.id, result }));
     }
     if (process.argv.includes('--once')) stopping = true;
