@@ -1,6 +1,6 @@
 # Try the complete flow
 
-Open the verified [shareable Git Tutor preview](https://polo-issn-transmission-connecticut.trycloudflare.com), or the [local development app](http://127.0.0.1:3000). All five roles have passed actual sign-in through the public address; [online-preview evidence and lifetime](ONLINE-PREVIEW.md) distinguish those checks from the full local mutating journey. The public preview is a temporary tunnel to this computer's optimized app server. It works while the computer, server, tunnel and local database are running; restarting the tunnel may change the URL. Your exact account details, fresh session links and reference numbers are in the private, ignored [START-HERE.md](../.local/demo/START-HERE.md). Keep that file open alongside this guide. All five accounts are synthetic; use separate browser profiles or sign out before changing roles.
+This guide records the synthetic demo verified on13 November2026 at the [temporary preview address](https://polo-issn-transmission-connecticut.trycloudflare.com), or the [local development app](http://127.0.0.1:3000). Its historical checks do not attest current uptime; [online-preview evidence and lifetime](ONLINE-PREVIEW.md) explain that boundary. The tunnel works only while this computer, server, tunnel and database are running, and restarting it may change the URL. Exact account details, fresh session links and references are generated in the private, ignored `.local/demo/START-HERE.md` by the preparation command below. These generated files intentionally do not exist in a clean checkout. Keep that file open alongside this guide. All five accounts are synthetic; use separate browser profiles or sign out before changing roles.
 
 The guide uses one learner throughout and a newly named **Git Tutor guided demo** tutor. The learner and guardian also have older verification records, so use the exact links in START-HERE instead of choosing an unrelated record from a long list. No previous data was removed. The private session price is the approved synthetic example, EGP 500. The published group prices remain EGP 575, 550 and 500 per learner for groups of two, three and four.
 
@@ -14,7 +14,7 @@ The guide uses one learner throughout and a newly named **Git Tutor guided demo*
 
 ## 2. Upload the customer receipt
 
-1. Select the InstaPay collection account printed in [demo-receipt.pdf](../.local/demo/demo-receipt.pdf). This is a synthetic destination; do not send money.
+1. Select the InstaPay collection account printed in the generated `.local/demo/demo-receipt.pdf`. This is a synthetic destination; do not send money.
 2. Enter **500** in **Amount you transferred (EGP)** and copy the personal transfer reference from START-HERE.
 3. Expand **Upload supporting evidence**, choose `demo-receipt.pdf`, then **Upload and check file**. Wait for **Check passed**. The worker performs a simulated local scan; the interface says so explicitly.
 4. The uploaded file becomes the selected **Prepared evidence**. Choose **Submit receipt for review** and then **Follow this receipt**.
@@ -35,7 +35,7 @@ Expected: EGP 500 is allocated once to this tuition charge. The prepared tutor a
 
 1. Keep the fake-provider worker running. After confirmation, the calendar job creates a **simulated** meeting. Refresh the booking to see the current meeting state. The fake room is not an actual Google Meet call.
 2. Sign in as **tutor** and open the exact tutor session link in START-HERE.
-3. Under **Class resources**, upload [demo-material.pdf](../.local/demo/demo-material.pdf). Wait for **Check passed**, then choose **Publish to this session**. Uploading alone does not share it.
+3. Under **Class resources**, upload the generated `.local/demo/demo-material.pdf`. Wait for **Check passed**, then choose **Publish to this session**. Uploading alone does not share it.
 4. Reload the learner's booking and download the published file. The linked **guardian** can open the same learner's session and materials. A learner's **Private preparation** upload is restricted to that learner, authorized guardian and assigned tutor.
 
 The second session in START-HERE is the automated verification example. When the handoff reports a browser pass, it already has the receipt, allocated payment, confirmation, simulated meeting and downloadable class material available to inspect. Your personal session is intentionally untouched by that run.

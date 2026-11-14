@@ -18,11 +18,13 @@ jobs:
       APP_ENV: test
     steps:
       - uses: actions/checkout@v4.2.2
+      - run: python tools/verify-pack.py
       - uses: actions/setup-node@v4.4.0
         with:
           node-version: '24.22.1'
       - run: npm install --global pnpm@11.25.0
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx tools/validate-evidence.ts fixtures/acceptance-cases.json
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec tsx tools/ci-native-database.ts
       - run: pnpm exec tsx tools/db-migrate.ts
@@ -38,5 +40,3 @@ jobs:
       - run: pnpm test:e2e
       - run: pnpm db:verify
       - run: pnpm build
-      - run: python tools/verify-pack.py
-      - run: pnpm exec tsx tools/validate-evidence.ts fixtures/acceptance-cases.json
