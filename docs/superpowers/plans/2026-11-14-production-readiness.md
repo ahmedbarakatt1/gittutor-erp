@@ -26,6 +26,8 @@ Run focused regressions, whole static/unit checks, full remote database/browser 
 
 ## Review focus
 
+Vercel compatibility addition: preserve5MiB receipts/25MiB materials despite the4.5MB function request ceiling. Add bounded same-origin authenticated pieces, pinned whole-file verification, immutable final adoption, durable private cleanup candidates and streamed downloads/exports. Execute actual Storage/SQL boundary tests plus desktop/mobile interrupted-upload checks; obtain focused independent review. No signed public Storage URL or reduced file limit.
+
 Private build-context leakage; production using fake adapters, preview credentials or fixtures; worker runtime dependencies/shutdown; startup/health claims that hide unavailable services; migration freshness and least privilege; false acceptance claims; verified-source history versus fictional practice transactions.
 
 ## Current external dependencies

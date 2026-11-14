@@ -16,6 +16,10 @@ After that repair, the full local browser run completed152 passed/4 failed/2 gat
 
 CI43594506569 subsequently stopped at393/394 units on the stale assertion expecting unconditional fake-provider copy. The revised assertion preserves history separation and rejects that misleading production claim. Focused5/5 and whole394/394 unit checks plus scoped ESLint passed locally; no application change was needed. The remote integration/browser/build stages did not execute on that run. The next complete run remains the release gate.
 
+The Vercel transport follow-up preserves the file limits through3MiB authenticated pieces and streamed downloads/exports. Actual25MiB Storage validation, corrupt/interrupted retry, durable cleanup candidates, scan denial and unrelated-account denial are covered. Latest local whole units398/398, lint/types exit0, file/CRM/analytics browsers8/8 plus strengthened lost-acknowledgement desktop/mobile2/2. Independent final review reports no remaining concrete findings. A Linux local Vercel build passed on the preceding8b673d1 source; the updated build and full remote gate must be recorded separately. No hosted upload/deployment is claimed.
+
+The updated Linux Vercel build subsequently passed, including optimized compilation/types/static generation and actual Build Output API packaging. File/export/analytics entries all declare Node24.x response streaming. This resolves the local host-build check; deployed payload behavior still requires its own pilot.
+
 ## Earlier executed release checks —13 November2026
 
 | Check | Latest recorded result | Evidence |

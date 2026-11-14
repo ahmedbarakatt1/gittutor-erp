@@ -8,6 +8,7 @@ import { runFileScan, syntheticPdf } from '../helpers/files';
 import { loadLocalSupabase } from '../helpers/supabase';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
 import { provisionFakeMeeting } from '../helpers/calendar';
+import { bookingFixture } from '../helpers/booking';
 
 test.use({ trace: 'off', screenshot: 'off' });
 const baseURL = 'http://127.0.0.1:3000';
@@ -70,6 +71,54 @@ async function download(page: Page, fileId: string) {
   expect(response.headers()['x-content-type-options']).toBe('nosniff');
   expect(createHash('sha256').update(await response.body()).digest('hex')).toBe(createHash('sha256').update(syntheticPdf).digest('hex'));
 }
+
+test('large private material recovers interrupted pieces and a lost final acknowledgement', async ({ page }) => {
+  test.setTimeout(90_000);
+  test.info().annotations.push({ type: 'transport-fixture', description: 'Only a host payload ceiling, one dropped request and one lost final acknowledgement are simulated; Auth, SQL, Storage and scan-worker execution are real local services.' });
+  const fixture = await bookingFixture();
+  try {
+    await fixture.availability(); const occurrence = await fixture.occurrence(), enrollment = await fixture.reserve(String(occurrence.occurrence_id));
+    await login(page, 'learner_a'); await page.goto(`/learn/files?enrollment=${enrollment.enrollment_id}`);
+    const bytes = Buffer.alloc(5 * 1024 * 1024, 32); bytes.write('%PDF-1.4\n'); bytes.write('\n%%EOF\n', bytes.length - 7);
+    const requests: { size: number; range: string | undefined }[] = []; let interruptions = 0;
+    await page.route('**/api/v1/files/*/content', async route => {
+      const request = route.request(); if (request.method() !== 'PUT') return route.continue();
+      const size = request.postDataBuffer()?.length ?? 0, range = request.headers()['content-range']; requests.push({ size, range });
+      if (size > 4_500_000) return route.fulfill({ status: 413, contentType: 'application/json', body: JSON.stringify({ message: 'Host payload limit exceeded' }) });
+      if (range?.startsWith('bytes 3145728-') && interruptions < 2) {
+        interruptions++;
+        if (interruptions === 2) expect((await route.fetch()).status()).toBe(200);
+        return route.abort('connectionreset');
+      }
+      return route.continue();
+    });
+    const widget = section(page, 'Private preparation').getByRole('group', { name: 'Add a file', exact: true });
+    await widget.getByLabel('Choose a file', { exact: true }).setInputFiles({ name: 'large-private-preparation.pdf', mimeType: 'application/pdf', buffer: bytes });
+    await widget.getByRole('button', { name: 'Upload and check file', exact: true }).click();
+    await expect(widget.getByRole('alert')).toBeVisible();
+    await widget.getByRole('button', { name: 'Retry this upload', exact: true }).click();
+    await expect(widget.getByRole('button', { name: 'Retry this upload', exact: true })).toBeEnabled();
+    await expect(widget.getByRole('alert')).toBeVisible();
+    const [completed] = await Promise.all([
+      page.waitForResponse(response => /\/api\/v1\/files\/[^/]+\/complete$/.test(new URL(response.url()).pathname) && response.request().method() === 'POST'),
+      widget.getByRole('button', { name: 'Retry this upload', exact: true }).click(),
+    ]);
+    expect(completed.status()).toBe(202); expect(interruptions).toBe(2);
+    expect(requests).toEqual([
+      { size: 3145728, range: 'bytes 0-3145727/5242880' }, { size: 2097152, range: 'bytes 3145728-5242879/5242880' },
+      { size: 3145728, range: 'bytes 0-3145727/5242880' }, { size: 2097152, range: 'bytes 3145728-5242879/5242880' },
+      { size: 3145728, range: 'bytes 0-3145727/5242880' },
+    ]);
+    const fileId = new URL(completed.url()).pathname.split('/')[4], body = await completed.json();
+    expect((await page.request.get(`/api/v1/files/${fileId}/content`)).ok()).toBe(false);
+    expect(await runFileScan(body.data.scan_job_id)).toBe('completed');
+    const downloaded = await page.request.get(`/api/v1/files/${fileId}/content`);
+    expect(downloaded.status()).toBe(200); expect(downloaded.headers()['cache-control']).toContain('no-store');
+    expect(createHash('sha256').update(await downloaded.body()).digest('hex')).toBe(createHash('sha256').update(bytes).digest('hex'));
+    expect(JSON.stringify(await (await page.request.get(`/api/v1/files/${fileId}`)).json())).not.toMatch(/object_key|part_keys|tutor_fee|lease_token|authorization_id/);
+    expect((await fixture.database.query('select count(*)::int n from app_private.files where id=$1', [fileId])).rows[0].n).toBe(1);
+  } finally { await page.unrouteAll({ behavior: 'ignoreErrors' }); await fixture.close(); }
+});
 
 test('actual private preparation retries safely, publishes a separate class resource and revokes its saved download', async ({ browser }, info) => {
   test.setTimeout(120_000);

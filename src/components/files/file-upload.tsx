@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FileView } from '@/modules/files/queries';
+import { fileChunkBytes, fileRanges } from '@/modules/files/transport';
 import { fileCopy as copy } from '@/locales/files';
 import { useHydrated } from '../use-hydrated';
 import styles from './files.module.css';
@@ -61,8 +62,20 @@ export function FileUpload({ purpose, parentId, evidenceAction, onUploaded, onRe
       }
       setPhase('creating'); const intent = await json('/api/v1/files', body, operation.current.intentKey);
       if (!/^[0-9a-f-]{36}$/.test(intent?.file_id || '') || intent.upload_path !== `/api/v1/files/${intent.file_id}/content`) throw new Error(copy.failed);
-      setPhase('uploading'); const uploaded = await fetch(intent.upload_path, { method: 'PUT', credentials: 'same-origin', signal: controller.signal, headers: { 'Content-Type': 'application/octet-stream' }, body: bytes });
-      if (!uploaded.ok) { const failure = await uploaded.json(); setRequestId(failure.request_id || ''); throw new Error(failure.message || copy.failed); }
+      setPhase('uploading');
+      for (const range of fileRanges(bytes.byteLength)) {
+        const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
+        if (bytes.byteLength > fileChunkBytes) headers['Content-Range'] = `bytes ${range.start}-${range.end}/${range.total}`;
+        const uploaded = await fetch(intent.upload_path, { method: 'PUT', credentials: 'same-origin', signal: controller.signal, headers, body: bytes.slice(range.start, range.end + 1) });
+        const result = await uploaded.json();
+        if (!uploaded.ok) { setRequestId(result.request_id || ''); throw new Error(result.message || copy.failed); }
+        if (result.data?.file_id !== intent.file_id) throw new Error(copy.failed);
+        if (result.data.upload_state === 'uploaded') {
+          if (result.data.size_bytes !== bytes.byteLength || result.data.checksum_sha256 !== checksum) throw new Error(copy.failed);
+          break; // A lost final acknowledgement can reconcile on the first chunk of a retry.
+        }
+        if (result.data.upload_state !== 'uploading' || range.end === range.total - 1) throw new Error(copy.failed);
+      }
       setPhase('completing'); await json(`/api/v1/files/${intent.file_id}/complete`, { checksum_sha256: checksum }, operation.current.completeKey);
       setFileId(intent.file_id); setRefresh(value => value + 1); onUploaded?.(intent.file_id);
     } catch (failure) { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : copy.failed); }

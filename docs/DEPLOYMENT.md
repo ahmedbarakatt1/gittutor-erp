@@ -84,6 +84,20 @@ On the selected clean hosted target, prepare a separate transactional migration:
 
 Before switching DNS, compare customer pages, APIs, email payloads, exports and downloaded files against the compensation allowlist. Test denied-role access separately from privileged owner/tutor views. Retain the source and rollback manifest privately; disable new writes during final reconciliation rather than merging unreviewed activity afterward.
 
+## Private upload staging and cleanup
+
+Vercel requests use3MiB pieces while preserving5MiB receipt and25MiB teaching-file limits. Complete bytes still pass server type/size/hash/archive checks before immutable adoption, and scanning/current access remain mandatory. Downloads and exports stream through the authorized application route. The local Linux Vercel build and local tests do not prove the hosted payload path; include a25MiB upload/interruption/retry/download in the hosted pilot.
+
+Every chunked intent writes a private, immutable version1 cleanup manifest at `git-tutor-private/<file-id>/parts/<intent-checksum>/cleanup.json` before staging bytes. Successful adoption attempts deletion of only those parts. Failed deletion emits `file_chunk_cleanup_pending` with a file ID; the manifest remains even after success to cover process death or a late concurrent write. Manifests and keys are never public attachments.
+
+Until an approved retention schedule is configured, the responsible Storage operator must reconcile candidates explicitly:
+
+1. Inspect private manifests through the authorized Storage account. Match `file_id`, whole checksum and size to the immutable database upload intent. Accept only version1/kind `file_chunk_cleanup_candidate` and the exact derived index0–8 paths; never trust an arbitrary supplied deletion path.
+2. For an adopted upload, independently verify that its canonical immutable object exists and matches the recorded complete checksum/size. Delete only the listed staging pieces, never the adopted object or manifest. Check the provider error field and confirm absence; record the result privately. Repeated reconciliation is safe, including after a concurrent late write.
+3. For an unadopted or disputed upload, preserve candidate bytes until the owner-approved retention/incident policy authorizes cleanup. No age-based deletion schedule is invented by this deployment.
+
+The manifest is a durable candidate inventory, not an assertion that cleanup succeeded. Configure operator ownership, retention and alert routing before production activation.
+
 ## Provider activation, recovery and release gates
 
 Follow [release readiness](RELEASE-READINESS.md) for controlled live checks: approved commercial policy, bank settlement evidence, Calendar/Meet organizer permissions, SES sender/SNS callbacks, WhatsApp account/templates/consent, malware quarantine and hosted Auth delivery. Fake modes remain confined to isolated development/test. Expose only approved HTTPS callbacks with signature/account/redirect validation.
