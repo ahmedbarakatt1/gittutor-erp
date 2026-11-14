@@ -50,7 +50,9 @@ test('payment cards show monetary fields before context and retain remaining det
   expect(html.indexOf('Reported remaining balance')).toBeLessThan(html.indexOf('Context 0'));
   expect(html).toContain('Saved detail 5');
   expect(html).toContain('Completed · reported');
-  expect(html).toContain('fake providers');
+  expect(html).toContain('Imported history stays separate from activity recorded here.');
+  expect(html).not.toContain('fake providers');
+  expect(html).not.toContain('no real money moves');
 });
 
 test('a selected canonical workflow keeps workbook history closed and its controls available', () => {
