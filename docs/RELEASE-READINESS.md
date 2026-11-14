@@ -2,13 +2,15 @@
 
 ## Current decision
 
-**Production preparation —14 November2026; activation not approved yet.** Actual workbook history is integrated into the main role workspaces, with complete fake-provider preview journeys previously executed. The temporary laptop preview requires its services running; historical URL checks do not attest current uptime. Portable non-root web/worker images and isolated packaging smoke checks now pass. Hosted domain/account selection, Supabase reauthentication, live providers, commercial approval, hosted recovery and remaining acceptance variants are still open.
+**Production preparation —14 November2026; activation not approved yet.** Actual workbook history is integrated into the main role workspaces, with complete fake-provider preview journeys previously executed. The temporary laptop preview requires its services running; historical URL checks do not attest current uptime. Portable non-root web/worker images and isolated packaging smoke checks now pass. The owner selected Vercel; account connection, hosted project/URL selection, Supabase reauthentication, live providers, commercial approval, hosted recovery and remaining acceptance variants are still open.
 
 The application includes the public site and learner/guardian, tutor, customer-service and admin workspaces. Its private actual-data preview uses imported history and separate fictional practice transactions; ordinary regression suites use synthetic identities. Live activation must use a clean hosted target and reviewed real-record cutover, never a preview dump. Tutor compensation remains privileged. The supplied contact and Instagram logo/design are incorporated.
 
 Latest production preparation: Docker web/worker builds and4 isolated image checks passed. After the final RPC-boundary correction,394 unit tests and whole lint/types passed;6/6 focused unit/actual-PostgreSQL checks also passed. Dependency audit found0 advisories across178 production/optional dependencies. Clean CI run43581649382 passed295/296 integration tests after fixing initialization; the final stale owner assertion was corrected and its focused check passed. Full rerun and final totals will be recorded in [implementation status](IMPLEMENTATION-STATUS.md). No all-green remote release is claimed yet.
 
 Subsequent CI43583823884 passed setup/static checks but stopped at393/394 units on a random UUID substring false positive in the Google privacy test. A deterministic reproducer failed locally; an exact allowed-payload assertion plus private input sentinels passed5/5 focused calendar checks. The next full run must supply its own integration/browser result.
+
+CI43584368137 then passed394/394 units and297/297 real-database integration checks. Browser result86 passed/70 failed/2 gated demo skips: shared sign-in assertions still expected the account UUID card removed from operational dashboards. The repaired setup checks server-authenticated identity directly; exact roles/scopes and confidentiality checks remain. Five focused role/guardian/logout/application browser checks passed locally. Full browser verification and later build/release steps remain pending the next run.
 
 ## Earlier executed release checks —13 November2026
 

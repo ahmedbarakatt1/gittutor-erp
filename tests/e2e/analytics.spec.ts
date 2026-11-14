@@ -1,10 +1,11 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { loadLocalSupabase } from '../helpers/supabase';
 import { formatCairoInstant } from '../../src/modules/booking/scheduling';
 test.use({ trace: 'off', screenshot: 'off' });
-async function login(page: Page, label: string) { const actor = loadLocalSupabase().actors[label]; await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password); const response = page.waitForResponse(row => new URL(row.url()).pathname === '/api/auth/login' && row.request().method() === 'POST'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(actor.id); }
+async function login(page: Page, label: string) { const actor = loadLocalSupabase().actors[label]; await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password); const response = page.waitForResponse(row => new URL(row.url()).pathname === '/api/auth/login' && row.request().method() === 'POST'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expectSignedInAccount(page, actor.id); }
 test('admin campaign reporting exports the same cohort; learner access and mobile layout remain bounded', async ({ page, browser }, info) => {
   test.setTimeout(90000); const separate = await browser.newContext({ baseURL: 'http://127.0.0.1:3000' });
   try {

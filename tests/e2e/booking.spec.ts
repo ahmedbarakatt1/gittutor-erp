@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page, type Locator, type APIRequestContext, type Response } from '@playwright/test';
 import { bookingFixture } from '../helpers/booking';
 import { loadLocalSupabase } from '../helpers/supabase';
@@ -18,7 +19,7 @@ async function login(page: Page, actor: string | { id: string; email: string; pa
   const user = typeof actor === 'string' ? loadLocalSupabase().actors[actor] : actor;
   await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(user.email); await page.getByLabel('Password', { exact: true }).fill(user.password);
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(user.id, { timeout: 15_000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expectSignedInAccount(page, user.id);
 }
 async function submit(page: Page, form: Locator, action: string, expected = 200) {
   const pending = page.waitForResponse(result => new URL(result.url()).pathname === `/api/v1/${action}` && result.request().method() === 'POST');

@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page, type Locator, type APIRequestContext, type APIResponse } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
@@ -15,7 +16,7 @@ async function signIn(page: Page, label: string | { id: string; email: string; p
   const response = page.waitForResponse(result => result.url().endsWith('/api/auth/login') && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 async function items<T>(request: APIRequestContext, path: string): Promise<T[]> {
   const all: T[] = []; let cursor: string | null = null;

@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -18,7 +19,7 @@ async function login(page: Page, label: string | { id: string; email: string; pa
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 function section(page: Page, name: string) { return page.locator('section').filter({ has: page.getByRole('heading', { level: 2, name, exact: true }) }).last(); }
 async function upload(page: Page, region: Locator, filename: string, interrupt = false) {

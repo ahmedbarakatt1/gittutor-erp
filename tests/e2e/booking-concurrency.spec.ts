@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page } from '@playwright/test';
 import { Pool } from 'pg';
 import { bookingFixture } from '../helpers/booking';
@@ -10,7 +11,7 @@ import { bookingDueHandler } from '../../src/worker/booking-due';
 const baseURL = 'http://127.0.0.1:3000';
 async function signIn(page: Page, label: string) {
   const user = loadLocalSupabase().actors[label]; await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(user.email); await page.getByLabel('Password', { exact: true }).fill(user.password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expect(page.getByTestId('account-id')).toHaveText(user.id, { timeout: 15_000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expectSignedInAccount(page, user.id);
 }
 
 async function findOfferedSeat(page: Page, enrollmentId: string) {

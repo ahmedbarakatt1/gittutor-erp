@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
@@ -21,7 +22,7 @@ async function login(page: Page, label: string | { id: string; email: string; pa
   const signedIn = page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/login' && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await signedIn).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 async function submit(page: Page, form: Locator, path: string, status = 200, verifyRolledBack?: () => Promise<void>) {
   const send = async () => {

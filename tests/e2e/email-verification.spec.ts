@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { expect, test, type Page } from '@playwright/test';
@@ -70,7 +71,7 @@ test('signup email confirms the actual Auth account and retains ordinary custome
     expect(denied.status()).toBe(401);
     const link = await verificationLink(email, 'email');
     await followVerification(page, link, '/learn');
-    await expect(page.getByTestId('account-id')).toHaveText(id);
+    await expectSignedInAccount(page, id);
     const response = await page.request.get('/api/v1/me');
     expect(response.status()).toBe(200);
     const { data } = await response.json();

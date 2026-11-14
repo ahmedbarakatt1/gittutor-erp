@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page, type Locator } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -12,7 +13,7 @@ const forbidden = /fee_minor|compensation_policy_version|fee_min_minor|fee_max_m
 async function login(page: Page, label: string | { id: string; email: string; password: string }) {
   page.setDefaultTimeout(15_000);
   const actor = typeof label === 'string' ? loadLocalSupabase().actors[label] : label; await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expectSignedInAccount(page, actor.id);
 }
 async function submit(page: Page, form: Locator, path: string, status: number) {
   const response = page.waitForResponse(result => new URL(result.url()).pathname === `/api/v1/${path}` && result.request().method() === 'POST');
