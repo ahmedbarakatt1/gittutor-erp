@@ -1,0 +1,17 @@
+# Upload only application source and build inputs, including for local CLI deploys.
+/*
+!vercel.json
+!.vercelignore
+!Dockerfile
+!.dockerignore
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!next.config.ts
+!tsconfig.json
+!next-env.d.ts
+!src/
+!public/
+!contracts/
+/contracts/*
+!/contracts/runtime/

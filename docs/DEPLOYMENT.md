@@ -2,6 +2,31 @@
 
 Production activation is pending. The actual-data preview contains private imported history alongside explicitly fictional practice activity; it is not a production database. Preserve both local databases and the source workbook. Use a separate hosted staging project before the clean production cutover.
 
+## Selected host: Vercel
+
+The owner selected Vercel on14 November2026. `vercel.json` prepares the Next.js web deployment; `.vercelignore` limits uploads to application/build inputs and runtime contracts. It excludes the workbook, `.local`, credentials, authored compensation policy, tests and browser sessions. The file is an upload boundary, not a substitute for customer response authorization. No Vercel project or deployment has been created yet: account connection and Supabase reauthentication are pending.
+
+Connect the private `ahmedbarakatt1/gittutor-erp` repository to the selected Vercel team. Review `codex/production-readiness` before selecting a production branch; do not promote an unverified revision automatically. Use these project settings:
+
+| Setting | Value |
+|---|---|
+| Framework / root |Next.js / repository root|
+| Node runtime |24.x; Vercel manages its patch version|
+| Package manager |`pnpm@11.25.0`, from `packageManager`|
+| Build environment |`ENABLE_EXPERIMENTAL_COREPACK=1`|
+| Install / build |Commands in `vercel.json`; frozen lockfile|
+| Output |Framework default; leave `GIT_TUTOR_STANDALONE` unset|
+| Production origin |The assigned stable project `.vercel.app` URL initially, or the owner's permanent domain|
+| Region |Select after inspecting the Supabase project region and connection limits|
+
+Add production runtime keys from `deploy/production.env.example` through Vercel's secret/environment settings. Keep operator database credentials out of Vercel. Separate Preview and Production settings and databases; never expose real records through a shared demo login. Configure Supabase site/redirect URLs and provider callbacks for the exact assigned origin. A fresh Vercel deployment URL is not evidence that its database, worker or external providers work. [Vercel build configuration](https://vercel.com/docs/builds/configure-a-build), [Node runtime versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions), [upload exclusions](https://vercel.com/docs/deployments/vercel-ignore).
+
+Git Tutor needs the continuous worker for exports, quarantine scans, notifications, scheduling and other durable jobs. Vercel now offers **Daemons in public beta**. `deploy/vercel-daemon.example.json` is a reviewable complete configuration with the worker stopped (`fra1:0`); its region is a placeholder. After selecting the region, account plan and operating budget, merge it into root `vercel.json` and explicitly enable one instance. The existing Dockerfile's final target is the worker, so Vercel can use its default command; no Next server runs inside that daemon. The 120-second grace period matches the portable deployment. Current health evidence covers the Docker heartbeat check and idle shutdown; the daemon has no configured HTTP liveness probe, and hosted restart/loaded shutdown still require verification. [Daemon configuration](https://vercel.com/docs/daemons/config-reference).
+
+Daemons run only in Vercel's Production environment. Use a separate staging Vercel project for a hosted worker rehearsal, or an isolated external worker; a normal Preview web deployment alone cannot exercise the full flow. Hobby daemon quotas stop workers when exhausted:420 GB-hours/month supports approximately17.5 days at1 GiB, even while idle. Confirm an appropriate plan and budget before activation. The private malware scanner needs a reachable secured endpoint; another daemon cannot accept its inbound TCP traffic. [Daemon limits and billing](https://vercel.com/docs/daemons/limits).
+
+After hosted database preparation below, run preflight, then verify `/healthz`, authenticated roles, a controlled booking/payment/file/export journey, actual queue processing, confidentiality, provider delivery and recovery on the hosted target. Record the deployed Git revision and provider/runtime settings without secrets. Keep production writes closed until those gates pass.
+
 ## Portable web and worker images
 
 `Dockerfile` provides pinned Node24.22.1/pnpm11.25.0 targets. Both processes must use the same reviewed commit and matching migrations. The strict `.dockerignore` allowlist excludes local credentials, source workbooks, test fixtures, browser state and authored compensation policy. `contracts/runtime` contains the application schemas needed at runtime. No private build arguments or build secrets are required. Next standalone output is opt-in, preserving ordinary local `next start` behavior.

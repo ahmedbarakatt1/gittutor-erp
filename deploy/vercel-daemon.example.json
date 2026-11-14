@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "daemons": {
+    "git-tutor-worker": {
+      "root": ".",
+      "entrypoint": "Dockerfile",
+      "instances": { "fra1": 0 },
+      "resources": { "requests": { "memory": "1Gi" } },
+      "terminationGracePeriodSeconds": 120
+    }
+  }
+}
