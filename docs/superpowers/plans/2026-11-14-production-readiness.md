@@ -30,4 +30,4 @@ Private build-context leakage; production using fake adapters, preview credentia
 
 ## Current external dependencies
 
-The connected Supabase account currently requires reauthentication. Production domain, hosting account/budget and live provider accounts are not supplied. Continue independent work while the requested details are pending; never treat silence as permission for paid provisioning.
+The owner selected Vercel. Its existing CLI sign-in works; a dedicated project is created/configured on the sole current Hobby team, with no deployment or paid upgrade. Supabase CLI access also works; organization choice for a separate project is pending. Its app connector independently requires reauthentication. Live provider accounts are not supplied. Continue independent work while requested details are pending; never treat silence as permission for paid provisioning. Root web configuration and a stopped Daemon example are prepared; enable the continuous worker only after checking the target region, commercial plan and budget.

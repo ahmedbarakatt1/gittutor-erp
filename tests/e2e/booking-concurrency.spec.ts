@@ -23,7 +23,7 @@ async function findOfferedSeat(page: Page, enrollmentId: string) {
   await page.goto('/learn/bookings');
   const first = await firstResponse; expect(first.status()).toBe(200);
   let body = (await first.json()).data as { items: unknown[]; next_cursor: string | null };
-  const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'A temporary seat is available', exact: true }) });
+  const section = page.getByRole('heading', { name: 'A temporary seat is available', exact: true }).locator('..');
   const offer = section.locator(`a[href="/learn/bookings/${enrollmentId}"]`).filter({ hasText: 'A temporary seat is available' });
   let loaded = body.items.length;
   await expect(section.getByRole('listitem')).toHaveCount(loaded);

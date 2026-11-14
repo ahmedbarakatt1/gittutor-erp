@@ -60,7 +60,7 @@ async function findPayerConsent(page: Page, proposalId: string): Promise<Enrollm
   const first = page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === 'GET');
   await page.goto('/learn/payments');
   let response = await first;
-  const region = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Requests to use your original funds', exact: true }) });
+  const region = page.getByRole('heading', { name: 'Requests to use your original funds', exact: true }).locator('..');
   for (;;) {
     expect(response.status()).toBe(200);
     const records = (await response.json()).data as { items: EnrollmentTransferConsent[]; next_cursor: string | null };
@@ -74,12 +74,11 @@ async function findPayerConsent(page: Page, proposalId: string): Promise<Enrollm
     const cursor = records.next_cursor;
     expect(cursor, 'The exact original-payer consent must be discoverable through the real list').toBeTruthy();
     expect(cursors.has(cursor!)).toBe(false); cursors.add(cursor!);
-    const next = page.waitForResponse(result => {
+    const [next] = await Promise.all([page.waitForResponse(result => {
       const url = new URL(result.url());
       return url.pathname === path && url.searchParams.get('cursor') === cursor && result.request().method() === 'GET';
-    });
-    await region.getByRole('button', { name: 'Load more', exact: true }).click();
-    response = await next;
+    }), region.getByRole('button', { name: 'Load more', exact: true }).click()]);
+    response = next;
     await expect(region.getByRole('button', { name: 'Loading more…', exact: true })).toHaveCount(0);
   }
 }
