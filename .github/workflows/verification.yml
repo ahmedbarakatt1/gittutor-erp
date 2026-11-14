@@ -28,6 +28,9 @@ jobs:
       - run: pnpm exec tsx tools/db-migrate.ts
       - run: pnpm exec tsx tools/db-seed.ts
       - run: pnpm supabase:start
+      - run: pnpm exec tsx tools/supabase-local.ts migrate
+      - run: pnpm exec tsx tools/supabase-local.ts seed
+      - run: pnpm db:verify
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:unit

@@ -1,5 +1,11 @@
 # Implementation status
 
+## Production preparation —14 November2026, in progress
+
+The owner requested production readiness as soon as possible. Work follows [the production continuation plan](superpowers/plans/2026-11-14-production-readiness.md), preserving the actual-data preview and both databases. The connected Supabase projects/organizations calls returned UNAUTHORIZED/reauthentication required. Domain, hosting account/budget and live provider setup are pending owner input; portable packaging and release repairs continue independently.
+
+Observed release blocker: GitHub run43489093140 for f62e893 failed at integration tests with missing app_private.account_roles and UNKNOWN_SYNTHETIC_ACTOR. The workflow bootstrapped only foundation migrations and omitted full Supabase migration/seed orchestration. Those steps and early DB boundary verification are being added; no clean CI pass is claimed yet. Private original log: .local/production-ci-initial.log. `pnpm audit --prod --json` executed successfully:0 reported vulnerabilities across149 production/optional dependencies. This is a dependency advisory check, not a complete security audit. Docker's official node:24.22.1-bookworm-slim manifest exists. No new hosting charge or live-provider action has occurred.
+
 ## Real data in main workflows — ready online, 13 November 2026
 
 **Ready to test:** [open the current actual-data preview](https://ride-roof-ancient-asin.trycloudflare.com). After the user started the prepared optimized server, public verification passed all four role logins, secure HTTP-only session cookies, role-scoped workbook projections, non-owner source-archive denial, confirmed enrollment, exact private download, customer/service payroll denial and the tutor's positive simulated earning/payout statement. All22 admin desktop/mobile states passed with0 page/console errors. Official Playwright CLI independently reviewed the loaded public dashboard at1440/360 with0 console errors/warnings or failed HTTP responses. Private personal booking and tutor-completion exercises remain untouched. Use `.local/operational-preview/START-HERE.md` and `DELIVERY-PRACTICE.md`; keep the laptop awake with Docker, server, worker and tunnel running. Providers remain fake/manual.
