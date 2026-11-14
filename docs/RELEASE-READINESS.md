@@ -8,6 +8,8 @@ The application includes the public site and learner/guardian, tutor, customer-s
 
 Latest production preparation: Docker web/worker builds and4 isolated image checks passed. After the final RPC-boundary correction,394 unit tests and whole lint/types passed;6/6 focused unit/actual-PostgreSQL checks also passed. Dependency audit found0 advisories across178 production/optional dependencies. Clean CI run43581649382 passed295/296 integration tests after fixing initialization; the final stale owner assertion was corrected and its focused check passed. Full rerun and final totals will be recorded in [implementation status](IMPLEMENTATION-STATUS.md). No all-green remote release is claimed yet.
 
+Subsequent CI43583823884 passed setup/static checks but stopped at393/394 units on a random UUID substring false positive in the Google privacy test. A deterministic reproducer failed locally; an exact allowed-payload assertion plus private input sentinels passed5/5 focused calendar checks. The next full run must supply its own integration/browser result.
+
 ## Earlier executed release checks —13 November2026
 
 | Check | Latest recorded result | Evidence |

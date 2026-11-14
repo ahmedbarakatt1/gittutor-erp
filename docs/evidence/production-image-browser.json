@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-14",
+  "source_commit": "54c93ea",
+  "tool": "official @playwright/cli 0.1.24",
+  "skill_path": "C:/Users/barak/.agents/skills/playwright-cli/SKILL.md",
+  "session": "git-tutor-production-image",
+  "browser": "msedge",
+  "target": "read-only non-root Linux web image, ephemeral loopback port, APP_ENV=test",
+  "checks": {
+    "home_desktop": "1440x1000 rendered screenshot reviewed",
+    "home_mobile": "360x800 rendered screenshot reviewed, document width360, original logo natural width150",
+    "subjects_mobile": "360x800 rendered screenshot reviewed, document width360; intended unavailable-catalog state with no backend configured",
+    "console_errors": 0,
+    "console_warnings": 0,
+    "inspected_http_responses_including_static": 39,
+    "http_failures": 0
+  },
+  "screenshots": [
+    ".local/production-image-desktop.png",
+    ".local/production-image-mobile.png",
+    ".local/production-image-subjects-mobile.png"
+  ],
+  "logs": [".local/production-image-console.log", ".local/production-image-network.log"],
+  "cleanup": "CLI session closed and exact-labelled browser container removed",
+  "limits": "Packaging/browser asset review only. No authenticated workflow or live-provider acceptance claimed. No design changes made."
+}
