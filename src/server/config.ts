@@ -53,7 +53,10 @@ export function parseServerConfig(raw: Env) {
   if (raw.NODE_ENV === "production" && !raw.APP_ENV) throw new Error("APP_ENV must be explicit at production startup");
   const environment = choice<Environment>(raw.APP_ENV, ["development", "test", "staging", "production"], "development", "APP_ENV");
   const publicKeys = new Set(["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]);
-  if (Object.keys(raw).some(key => key.startsWith("NEXT_PUBLIC_") && !publicKeys.has(key))) {
+  // Vercel injects this even when automatic system-variable exposure is disabled.
+  // It is platform metadata, discarded here and never added to our public DTO.
+  const platformKeys = new Set(['NEXT_PUBLIC_VERCEL_OBSERVABILITY_CLIENT_CONFIG']);
+  if (Object.keys(raw).some(key => key.startsWith("NEXT_PUBLIC_") && !publicKeys.has(key) && !platformKeys.has(key))) {
     throw new Error("Unexpected public environment configuration");
   }
   const isolated = environment === "development" || environment === "test";

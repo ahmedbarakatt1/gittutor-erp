@@ -15,6 +15,12 @@ describe("configuration boundary", () => {
     expect(() => parseServerConfig({ EMAIL_ADAPTER: "typo" })).toThrow();
     expect(() => parseServerConfig({ NEXT_PUBLIC_SUPABASE_SECRET_KEY: "x" })).toThrow(/public/i);
   });
+  it('tolerates the exact Vercel-injected observability setting without forwarding it', () => {
+    const config = parseServerConfig({APP_ENV:'test',NEXT_PUBLIC_VERCEL_OBSERVABILITY_CLIENT_CONFIG:'platform-client-configuration'});
+    expect(publicConfig(config)).toEqual({supabase_url:null,supabase_publishable_key:null});
+    expect(JSON.stringify(config)).not.toContain('platform-client-configuration');
+    expect(() => parseServerConfig({APP_ENV:'test',NEXT_PUBLIC_VERCEL_OBSERVABILITY_SECRET:'private-sentinel'})).toThrow(/public/i);
+  });
   it("rejects a half configured Supabase browser client", () => {
     expect(() => parseServerConfig({ NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co" })).toThrow();
   });

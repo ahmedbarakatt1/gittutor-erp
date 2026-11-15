@@ -10,8 +10,9 @@
 !next.config.ts
 !tsconfig.json
 !next-env.d.ts
-!src/
-!public/
-!contracts/
+# The CLI checks directory paths without trailing slashes before descending.
+!src
+!public
+!contracts
 /contracts/*
-!/contracts/runtime/
+!/contracts/runtime
