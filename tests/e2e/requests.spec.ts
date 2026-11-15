@@ -66,7 +66,7 @@ test('customer material request goes through staff review into a separately cons
     await page.getByText('Edit your request details', { exact: true }).click();
     await page.getByLabel('What would you like help with?', { exact: true }).fill('Start with slide 4, especially the orbit examples.');
     await page.getByRole('button', { name: 'Save request details', exact: true }).click();
-    await expect(page.getByText('Start with slide 4, especially the orbit examples.', { exact: true })).toBeVisible();
+    await expect(page.locator('p').filter({ hasText: /^Start with slide 4, especially the orbit examples\.$/ })).toBeVisible();
     await page.getByRole('button', { name: 'Submit tutoring request', exact: true }).click();
     await expect(page.getByText('Submitted', { exact: true }).first()).toBeVisible();
     await staff.reload(); await staff.getByLabel('Next step', { exact: true }).selectOption('matched');
