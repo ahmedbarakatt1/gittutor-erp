@@ -2,6 +2,8 @@
 
 The owner selected Gmail on15November2026. The application now supports `EMAIL_ADAPTER=gmail`, a consumer Gmail sender and a separate Google App Password. It uses pinned Nodemailer10.5.0, certificate-validated TLS to `smtp.gmail.com:465`, finite timeouts, no pooling or automatic resend, and the existing customer-content allowlist. Files, arbitrary headers, CC and BCC are not accepted from notification input. SMTP acceptance records **sent**, not verified delivery.
 
+Current execution: the App Password is saved in Windows-encrypted private storage; Gmail SMTP authentication passed; one explicitly approved owner-only message was accepted, and the owner confirmed receipt in Inbox. Clean production Auth SMTP settings were saved/read back, with signup restrictions and the existing rate limit preserved. Supabase invitation/recovery delivery and the eventual worker host still require their own checks. [Exact evidence](evidence/gmail-smtp-20261115.md).
+
 ## Configure the credential privately
 
 1. Sign into the intended Gmail sender account and enable2-Step Verification.
@@ -13,15 +15,15 @@ Google may require a sign-in/security review for the deployment's IP. A changed 
 
 ### If Google says the setting is unavailable
 
-The owner initially supplied the unavailable-setting screen on15November, then confirmed2-Step Verification is enabled and the page now shows an app-name field and **Create** button. The creation-screen blocker is resolved according to the owner's report; no credential has yet been saved or tested. Enter **Git Tutor**, click **Create**, and enter the generated password only through the hidden collector described above. No app needs to be added elsewhere beforehand. The earlier screenshot alone did not establish the cause.
+The owner initially supplied the unavailable-setting screen on15November, then confirmed2-Step Verification and the app-name/**Create** form. Credential creation, encrypted saving and SMTP authentication subsequently succeeded. For future rotation, enter **Git Tutor**, click **Create**, and use the hidden collector described above. No app needs to be added elsewhere beforehand. The earlier screenshot alone did not establish the cause.
 
 Google also lists security-key-only2-Step Verification, organizational accounts and Advanced Protection as reasons the option can be absent. Do not use the ordinary account password, disable Advanced Protection or weaken an organization policy to bypass this. If2-Step Verification is already enabled, identify the applicable account restriction before choosing another route. Google OAuth email would require separate implementation/configuration and would not by itself configure Supabase Auth SMTP; no such fallback is currently claimed live. [Official troubleshooting](https://support.google.com/accounts/answer/185833?hl=en).
 
 ## Controlled verification before activation
 
-The first proposed message is to the owner address only, subject **Git Tutor email setup test**, body **This is the approved Git Tutor email setup test. No customer records or tutor compensation are included.** Obtain approval for that exact send; then verify received content and record SMTP acceptance separately from inbox receipt. No test has been sent by preparing this guide.
+The owner explicitly approved and received the first message, subject **Git Tutor email setup test**, body **This is the approved Git Tutor email setup test. No customer records or tutor compensation are included.** It was sent only to the owner. Record SMTP acceptance separately from recipient-confirmed Inbox receipt. This approval covers that one message; do not repeat it or infer approval for other recipients/invitations.
 
-Supabase Auth email is a separate SMTP configuration: host `smtp.gmail.com`, port465, sender/user equal to the Gmail account, password equal to its App Password. Configure it only on the clean production project after host/origin selection, then separately test an owner invitation and sign-in/password flow. App notification success does not prove Auth SMTP success.
+Supabase Auth email has a separate SMTP configuration: host `smtp.gmail.com`, port465, sender/user equal to the Gmail account, password equal to its App Password. These settings are saved on the clean production project; origins remain unchanged and signup remains closed. After the production host/origin is selected, separately approve and test an owner invitation and sign-in/password flow. App notification success does not prove Auth SMTP delivery.
 
 Gmail has no provider send-idempotency key or signed delivery/bounce callbacks here. The stable `Message-ID` identifies an attempt for inspection; it does not prevent duplicate delivery. A lost acknowledgement remains **unknown** and cannot be blindly retried. Automated reconciliation intentionally remains unknown. Do not mark an email delivered from SMTP acceptance or treat an empty search as proof it was never sent. The existing admin operations queue shows unresolved attempts for investigation; an evidenced Gmail resolution procedure remains part of live readiness.
 
