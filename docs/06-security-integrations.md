@@ -50,7 +50,7 @@ Define typed server-only adapters for calendar, transactional email, WhatsApp, s
 | `AWS_REGION`, `EMAIL_FROM`, `EMAIL_SNS_TOPIC_ARN` | Live SES sender and allowed signed notification topic |
 | `EMAIL_FROM`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` | Verified Resend sender, sending-only key and signed delivery callbacks |
 | `GMAIL_SMTP_USER`, `GMAIL_APP_PASSWORD` | Owner-selected consumer Gmail sender and private App Password; see [Gmail setup](GMAIL-SETUP.md) |
-| `EMAIL_FROM`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` | Optional Mailjet SMTP sender and private API/secret pair; inactive after Spam test, see [Mailjet setup](MAILJET-SETUP.md) |
+| `EMAIL_FROM`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` | Selected Mailjet sender and private API/secret pair; [Mailjet setup](MAILJET-SETUP.md) records Auth settings and remaining delivery gates |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional server credential chain inputs when workload identity is unavailable |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Approved organizer OAuth configuration |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` | Live business account, send credentials and webhook verification |
@@ -108,7 +108,7 @@ Use an outbox uniqueness key containing event, recipient account, channel and te
 
 The owner selected domain-free Gmail on15November2026. Gmail SMTP acceptance establishes sent only. It provides neither a provider idempotency key nor the signed delivery/bounce callback implemented for SES/Resend. A stable Message-ID supports investigation without guaranteeing deduplication. Timeout/ambiguous outcomes remain unknown and cannot be automatically resent. Live readiness requires separate SMTP, received-content and Auth SMTP checks plus an evidenced procedure for unresolved outcomes; selecting Gmail does not waive these controls. Resend's signed terminal outcomes likewise cannot be overwritten by a later HTTP acceptance.
 
-The optional Mailjet SMTP adapter follows the same sent/unknown boundary and content allowlist, with open/click tracking forced off. Its CustomID/Message-ID are investigation references, not deduplication guarantees. Authenticated Mailjet callbacks/automated reconciliation are not implemented. The owner-approved test reached Spam; Gmail remains selected by the owner's subsequent decision. No unverified Mailjet webhook is accepted as delivery evidence.
+The selected Mailjet SMTP adapter follows the same sent/unknown boundary and content allowlist, with open/click tracking forced off. Its CustomID/Message-ID are investigation references, not deduplication guarantees. Authenticated Mailjet callbacks/automated reconciliation are not implemented. The owner-approved test reached Spam; the latest instruction selected Mailjet and clean Auth configuration is saved while the preview stays fake/manual. Supabase Auth needs separate account-level tracking inspection before token-bearing mail. No unverified Mailjet webhook is accepted as delivery evidence.
 
 Supabase Auth owns its verification, recovery and invitation token lifecycle. Configure its approved SMTP sender and templates and test those deliveries separately from application-outbox email. The application sends each business event through the outbox once its transaction commits. Package-funded delivery and routine completion use the corresponding own-customer and own-tutor projections.
 

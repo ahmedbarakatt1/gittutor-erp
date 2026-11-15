@@ -1,6 +1,6 @@
 # Free-service deployment decision
 
-Prepared15November2026. The owner requires free services and selected Gmail without a domain. No paid upgrade, trial-credit resource, new hosting account or production cutover is authorized by this document. The current Vercel pilot remains available for testing.
+Prepared15November2026. The owner requires free services; the latest email choice is Mailjet. No paid upgrade, trial-credit resource, new hosting account or production cutover is authorized by this document. The current Vercel pilot remains available for testing.
 
 **Owner decision after review: keep the current testing preview for now.** The Oracle proposal below is deferred; no Oracle signup, access credential or provisioning is requested at this point. The owner also reports an existing longer-duration Meet account; verify that account and its capabilities instead of selecting a different provider.
 
@@ -18,9 +18,9 @@ Vercel Hobby remains useful for the current isolated pilot but its terms restric
 
 ## Email and meetings
 
-Use the implemented Gmail SMTP adapter for the selected owner address, with a privately entered App Password. No bought domain or mailbox hosting is needed for this route. It has limited sending capacity and manual handling of uncertain outcomes; [Gmail setup](GMAIL-SETUP.md) records the exact verification steps. Configure Supabase Auth SMTP separately, then verify owner access. Never activate sending against a pilot job backlog.
+Use the selected Mailjet SMTP adapter for the verified owner address, with privately stored API/secret credentials. Clean production Auth settings are saved/read back; actual Auth delivery and final worker activation remain unverified. Never activate sending against a pilot backlog. Gmail's encrypted credential/helper remain available for rollback.
 
-Mailjet was subsequently prepared at the owner's request. Its approved owner test arrived in Spam, so the owner selected **Keep Gmail for now; retain Mailjet ready**. Mailjet's Free plan has6,000/month and200/day limits; a verified Gmail sender does not establish reliable Inbox delivery. The optional adapter and encrypted credentials remain inactive. [Mailjet setup](MAILJET-SETUP.md).
+Mailjet's owner test arrived in Spam. The latest **use mailjet** instruction superseded the intermediate keep-Gmail choice. Its Free plan has6,000/month and200/day limits; a verified Gmail sender does not establish reliable Inbox delivery. The preview stays fake/manual and no customer queue was dispatched. [Mailjet setup](MAILJET-SETUP.md).
 
 The existing Calendar/Meet integration needs a Google Cloud OAuth web client and organizer consent. Free Meet permits up to60minutes when three or more people join; a tutor plus two learners already reaches that limit. It cannot provide the promised90–105minute continuous group session. Before activation, select an existing organizer account with suitable meeting entitlement, or approve a different free meeting provider and its implementation/testing. A forced break/rejoin is a commercial-policy change and is not silently substituted. [Google Meet limits](https://support.google.com/meet/answer/7317473?hl=en).
 

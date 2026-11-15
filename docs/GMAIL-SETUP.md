@@ -1,5 +1,7 @@
 # Gmail without a domain
 
+Latest15November decision: the owner subsequently instructed **use mailjet**. Clean production Auth now uses Mailjet; this Gmail configuration/evidence is retained for rollback. The Gmail App Password stays encrypted. [Current Mailjet setup](MAILJET-SETUP.md).
+
 The owner selected Gmail on15November2026. The application now supports `EMAIL_ADAPTER=gmail`, a consumer Gmail sender and a separate Google App Password. It uses pinned Nodemailer10.5.0, certificate-validated TLS to `smtp.gmail.com:465`, finite timeouts, no pooling or automatic resend, and the existing customer-content allowlist. Files, arbitrary headers, CC and BCC are not accepted from notification input. SMTP acceptance records **sent**, not verified delivery.
 
 Current execution: the App Password is saved in Windows-encrypted private storage; Gmail SMTP authentication passed; one explicitly approved owner-only message was accepted, and the owner confirmed receipt in Inbox. Clean production Auth SMTP settings were saved/read back, with signup restrictions and the existing rate limit preserved. Supabase invitation/recovery delivery and the eventual worker host still require their own checks. [Exact evidence](evidence/gmail-smtp-20261115.md).
