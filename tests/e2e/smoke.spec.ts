@@ -5,9 +5,9 @@ test('public website shell explains the learning journey and safe group tuition'
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Bring the slide you are stuck on.' })).toBeVisible();
-  await page.getByRole('link', { name: 'Explore subjects', exact: true }).first().click();
-  await expect(page).toHaveURL(/#subjects$/);
+  await expect(page.getByRole('link', { name: 'Request a session', exact: true })).toHaveAttribute('href', '/learn/requests');
   await expect(page.getByRole('heading', { name: 'Find your subject.' })).toBeVisible();
+  await expect(page.locator('.private-tuition')).toContainText('EGP 650');
   for (const tuition of ['575', '550', '500']) {
     await expect(page.getByTestId(`tuition-${tuition}`)).toContainText(tuition);
   }
