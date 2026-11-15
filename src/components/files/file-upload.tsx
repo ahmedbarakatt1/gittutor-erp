@@ -1,28 +1,28 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import type { FileView } from '@/modules/files/queries';
+import type { FileView, PublicFilePurpose } from '@/modules/files/queries';
 import { fileChunkBytes, fileRanges } from '@/modules/files/transport';
 import { fileCopy as copy } from '@/locales/files';
 import { useHydrated } from '../use-hydrated';
 import styles from './files.module.css';
 import formStyles from '../auth.module.css';
 
-export type UploadPurpose = 'private_preparation' | 'shared_handout' | 'receipt' | 'statement_evidence' | 'review_evidence';
+export type UploadPurpose = PublicFilePurpose;
 type Operation = { signature: string; intentKey: string; completeKey: string; storageKey: string };
 type Phase = 'idle' | 'hashing' | 'creating' | 'uploading' | 'completing';
 const evidenceTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
 const pptx = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-function accepted(purpose: UploadPurpose) { return purpose === 'statement_evidence' ? ['text/csv', 'application/pdf'] : ['private_preparation', 'shared_handout'].includes(purpose) ? [...evidenceTypes, pptx] : evidenceTypes; }
+function accepted(purpose: UploadPurpose) { return purpose === 'statement_evidence' ? ['text/csv', 'application/pdf'] : ['private_preparation', 'shared_handout', 'request_material'].includes(purpose) ? [...evidenceTypes, pptx] : evidenceTypes; }
 function fileType(file: File) { if (!file.type) { const extensions: Record<string, string> = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' }; const inferred = extensions[file.name.split('.').at(-1)?.toLowerCase() || '']; if (inferred) return inferred; } if (/\.pptx$/i.test(file.name) && !file.type) return pptx; if (/\.csv$/i.test(file.name) && ['', 'application/vnd.ms-excel'].includes(file.type)) return 'text/csv'; return file.type; }
 function hexadecimal(bytes: ArrayBuffer) { return Array.from(new Uint8Array(bytes), value => value.toString(16).padStart(2, '0')).join(''); }
 
 /** No bytes or filenames persist in browser storage. A reselected identical file retains its logical retry keys. */
-export function FileUpload({ purpose, parentId, evidenceAction, onUploaded, onReady }: { purpose: UploadPurpose; parentId: string | null; evidenceAction?: string; onUploaded?: (id: string) => void; onReady?: (file: FileView) => void }) {
+export function FileUpload({ purpose, parentId, evidenceAction, operationScope, onUploaded, onReady }: { purpose: UploadPurpose; parentId: string | null; evidenceAction?: string; operationScope?: string; onUploaded?: (id: string) => void; onReady?: (file: FileView) => void }) {
   const id = useId(), hydrated = useHydrated(), [selected, setSelected] = useState<File | null>(null), [phase, setPhase] = useState<Phase>('idle'), [error, setError] = useState(''), [requestId, setRequestId] = useState('');
   const [fileId, setFileId] = useState(''), [record, setRecord] = useState<FileView | null>(null), [refresh, setRefresh] = useState(0);
   const operation = useRef<Operation | null>(null), uploadAbort = useRef<AbortController | null>(null), readyCallback = useRef(onReady), delivered = useRef('');
-  const busy = phase !== 'idle', maximum = ['private_preparation', 'shared_handout', 'statement_evidence'].includes(purpose) ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
+  const busy = phase !== 'idle', maximum = ['private_preparation', 'shared_handout', 'request_material', 'statement_evidence'].includes(purpose) ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
   const hint = purpose === 'statement_evidence' ? copy.statementLimits : maximum > 5 * 1024 * 1024 ? copy.teachingLimits : copy.receiptLimits;
   useEffect(() => { readyCallback.current = onReady; }, [onReady]);
   useEffect(() => () => { uploadAbort.current?.abort(); }, []);
@@ -50,7 +50,7 @@ export function FileUpload({ purpose, parentId, evidenceAction, onUploaded, onRe
     try {
       setPhase('hashing'); const bytes = await selected.arrayBuffer(), checksum = hexadecimal(await crypto.subtle.digest('SHA-256', bytes));
       const body = { purpose, parent_id: parentId, filename: selected.name, declared_type: declaredType, size_bytes: selected.size, checksum_sha256: checksum, evidence_action: evidenceAction || null };
-      const signature = JSON.stringify(body), digest = hexadecimal(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signature)));
+      const signature = JSON.stringify(operationScope === undefined ? body : { ...body, operationScope }), digest = hexadecimal(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signature)));
       if (operation.current?.signature !== signature) {
         const storageKey = `git-tutor-upload:${digest}`; let intentKey: string = crypto.randomUUID(), completeKey: string = crypto.randomUUID();
         try { const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null'); if (/^[0-9a-f-]{36}$/.test(saved?.intentKey || '') && /^[0-9a-f-]{36}$/.test(saved?.completeKey || '')) { intentKey = saved.intentKey; completeKey = saved.completeKey; } sessionStorage.setItem(storageKey, JSON.stringify({ intentKey, completeKey })); } catch { /* In-memory retry remains available. */ }

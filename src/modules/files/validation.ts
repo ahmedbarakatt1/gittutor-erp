@@ -38,7 +38,7 @@ export function validateFileBytes(declaration:FileDeclaration,value:Uint8Array){
  else if(bytes.length>=16&&bytes.subarray(0,4).toString('ascii')==='RIFF'&&bytes.subarray(8,12).toString('ascii')==='WEBP'&&bytes.readUInt32LE(4)+8===bytes.length)detected='image/webp';
  else if(bytes.length>=4&&bytes.readUInt32LE(0)===0x04034b50){validatePresentation(bytes);detected=pptx;}
  else if(declaration.purpose==='statement_evidence'&&declaration.declared_type==='text/csv'){try{const text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);if(!text.includes('\0')&&!/<(?:html|script|!doctype)/i.test(text))detected='text/csv';}catch{/* invalid UTF8 is not CSV */}}
- const allowed=declaration.purpose==='statement_evidence'?['application/pdf','text/csv']:['application/pdf','image/png','image/jpeg','image/webp',...(['private_preparation','shared_handout'].includes(declaration.purpose)?[pptx]:[])];
+ const allowed=declaration.purpose==='statement_evidence'?['application/pdf','text/csv']:['application/pdf','image/png','image/jpeg','image/webp',...(['private_preparation','shared_handout','request_material'].includes(declaration.purpose)?[pptx]:[])];
  if(!detected||detected!==declaration.declared_type||!allowed.includes(detected))invalid('FILE_TYPE_INVALID');
  return{size_bytes:bytes.length,checksum_sha256:hash,detected_type:detected};
 }
