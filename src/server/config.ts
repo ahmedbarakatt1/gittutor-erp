@@ -48,6 +48,21 @@ function privateEncryptionKeys(raw: Env) {
   return { key, keyId, previous };
 }
 
+function resendConfig(raw: Env, environment: Environment) {
+  const from = raw.EMAIL_FROM!.trim();
+  if (!/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(from) ||
+      (environment === 'production' && /[@.]resend\.dev$/i.test(from))) {
+    throw new Error('Invalid configuration: EMAIL_FROM');
+  }
+  const webhookSecret = raw.RESEND_WEBHOOK_SECRET!.trim();
+  const encoded = webhookSecret.slice('whsec_'.length);
+  if (!webhookSecret.startsWith('whsec_') || webhookSecret.length > 256 ||
+      Buffer.byteLength(encoded, 'base64') < 16 || Buffer.from(encoded, 'base64').toString('base64') !== encoded) {
+    throw new Error('Invalid configuration: RESEND_WEBHOOK_SECRET');
+  }
+  return { from, api_key: raw.RESEND_API_KEY!.trim(), webhook_secret: webhookSecret };
+}
+
 /** Server-owned configuration. Never pass this object to a client component or log it. */
 export function parseServerConfig(raw: Env) {
   if (raw.NODE_ENV === "production" && !raw.APP_ENV) throw new Error("APP_ENV must be explicit at production startup");
@@ -61,7 +76,7 @@ export function parseServerConfig(raw: Env) {
   }
   const isolated = environment === "development" || environment === "test";
   const providers = {
-    email: choice(raw.EMAIL_ADAPTER, ["fake", "ses"], "fake", "EMAIL_ADAPTER"),
+    email: choice(raw.EMAIL_ADAPTER, ["fake", "ses", "resend"], "fake", "EMAIL_ADAPTER"),
     calendar: choice(raw.CALENDAR_ADAPTER, ["fake", "google"], "fake", "CALENDAR_ADAPTER"),
     whatsapp: choice(raw.WHATSAPP_ADAPTER, ["fake", "cloud"], "fake", "WHATSAPP_ADAPTER"),
     file_scan: choice(raw.FILE_SCAN_ADAPTER, ["fake", "clamav"], "fake", "FILE_SCAN_ADAPTER"),
@@ -75,6 +90,7 @@ export function parseServerConfig(raw: Env) {
   const required: string[] = [];
   if (!isolated) required.push("APP_BASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "WORKER_DATABASE_URL", "SUPABASE_SECRET_KEY", "SECRET_ENCRYPTION_KEY");
   if (providers.email === "ses") required.push("AWS_REGION", "EMAIL_FROM", "EMAIL_SNS_TOPIC_ARN", "EMAIL_CONFIGURATION_SET");
+  if (providers.email === "resend") required.push("EMAIL_FROM", "RESEND_API_KEY", "RESEND_WEBHOOK_SECRET");
   if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_CALENDAR_ID", "SECRET_ENCRYPTION_KEY");
   if (providers.whatsapp === "cloud") required.push("WHATSAPP_BUSINESS_ACCOUNT_ID", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN");
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
@@ -100,6 +116,7 @@ export function parseServerConfig(raw: Env) {
     secret_encryption_key_id: encryption.keyId,
     secret_encryption_previous_keys: encryption.previous,
     google, email,
+    resend: providers.email === 'resend' ? resendConfig(raw, environment) : null,
     file_scan_url: providers.file_scan === 'clamav' ? scannerEndpoint(raw.FILE_SCAN_URL!.trim()) : null,
   };
 }
