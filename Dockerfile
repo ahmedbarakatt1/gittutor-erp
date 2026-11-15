@@ -38,6 +38,7 @@ COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_m
 COPY --chown=node:node package.json tsconfig.json ./
 COPY --chown=node:node src ./src
 COPY --chown=node:node contracts/runtime ./contracts/runtime
+RUN mkdir -p /app/.local && chown node:node /app/.local
 USER node
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD ["node", "--import", "tsx", "src/worker/healthcheck.ts"]
 CMD ["node", "--conditions=react-server", "--import", "tsx", "src/worker/index.ts"]
