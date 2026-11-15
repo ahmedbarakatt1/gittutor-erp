@@ -13,7 +13,7 @@ Google may require a sign-in/security review for the deployment's IP. A changed 
 
 ### If Google says the setting is unavailable
 
-The owner supplied this screen on15November; no credential has been saved. First confirm the selected Google account is the intended sender, then open [2-Step Verification](https://myaccount.google.com/signinoptions/two-step-verification), enable it if absent, and reopen [App Passwords](https://myaccount.google.com/apppasswords). The screenshot alone does not identify the cause.
+The owner initially supplied the unavailable-setting screen on15November, then confirmed2-Step Verification is enabled and the page now shows an app-name field and **Create** button. The creation-screen blocker is resolved according to the owner's report; no credential has yet been saved or tested. Enter **Git Tutor**, click **Create**, and enter the generated password only through the hidden collector described above. No app needs to be added elsewhere beforehand. The earlier screenshot alone did not establish the cause.
 
 Google also lists security-key-only2-Step Verification, organizational accounts and Advanced Protection as reasons the option can be absent. Do not use the ordinary account password, disable Advanced Protection or weaken an organization policy to bypass this. If2-Step Verification is already enabled, identify the applicable account restriction before choosing another route. Google OAuth email would require separate implementation/configuration and would not by itself configure Supabase Auth SMTP; no such fallback is currently claimed live. [Official troubleshooting](https://support.google.com/accounts/answer/185833?hl=en).
 
