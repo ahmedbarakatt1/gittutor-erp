@@ -4,6 +4,8 @@ Updated15November2026. The owner requested free services only. No paid purchase,
 
 Latest choices: keep the current testing preview; defer the Oracle proposal. The owner confirmed `gittutor2@gmail.com` as the account with longer Meet calls. Its App Password is stored encrypted; Gmail SMTP authentication and one explicitly approved, Inbox-confirmed owner message passed. Clean production Auth SMTP settings are saved; actual Auth delivery remains unverified. No Oracle account/access or alternative meeting-provider decision is requested now.
 
+Mailjet follow-up: the account is activated, its supplied API/secret pair is encrypted locally, and sender verification/SMTP authentication passed. The approved owner-only test arrived in **Spam**. The owner explicitly chose to **keep Gmail for now and retain Mailjet ready**. No additional Mailjet key is needed; later activation needs an approved sender/deliverability decision and separate Auth checks. [Mailjet setup and evidence](MAILJET-SETUP.md).
+
 ## Already prepared
 
 - Vercel and Supabase account access works through the selected private CLI profiles; no further login code is needed.

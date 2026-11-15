@@ -71,6 +71,17 @@ function gmailConfig(raw: Env) {
   return { user, app_password };
 }
 
+function mailjetConfig(raw: Env) {
+  const from = raw.EMAIL_FROM!.trim();
+  if (!/^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/.test(from)) throw new Error('Invalid configuration: EMAIL_FROM');
+  const api_key = raw.MAILJET_API_KEY!.trim();
+  const secret_key = raw.MAILJET_SECRET_KEY!.trim();
+  for (const [key, value] of [['MAILJET_API_KEY', api_key], ['MAILJET_SECRET_KEY', secret_key]]) {
+    if (!/^[A-Za-z0-9_-]{16,256}$/.test(value)) throw new Error(`Invalid configuration: ${key}`);
+  }
+  return { from, api_key, secret_key };
+}
+
 /** Server-owned configuration. Never pass this object to a client component or log it. */
 export function parseServerConfig(raw: Env) {
   if (raw.NODE_ENV === "production" && !raw.APP_ENV) throw new Error("APP_ENV must be explicit at production startup");
@@ -84,7 +95,7 @@ export function parseServerConfig(raw: Env) {
   }
   const isolated = environment === "development" || environment === "test";
   const providers = {
-    email: choice(raw.EMAIL_ADAPTER, ["fake", "ses", "resend", "gmail"], "fake", "EMAIL_ADAPTER"),
+    email: choice(raw.EMAIL_ADAPTER, ["fake", "ses", "resend", "gmail", "mailjet"], "fake", "EMAIL_ADAPTER"),
     calendar: choice(raw.CALENDAR_ADAPTER, ["fake", "google"], "fake", "CALENDAR_ADAPTER"),
     whatsapp: choice(raw.WHATSAPP_ADAPTER, ["fake", "cloud"], "fake", "WHATSAPP_ADAPTER"),
     file_scan: choice(raw.FILE_SCAN_ADAPTER, ["fake", "clamav"], "fake", "FILE_SCAN_ADAPTER"),
@@ -100,6 +111,7 @@ export function parseServerConfig(raw: Env) {
   if (providers.email === "ses") required.push("AWS_REGION", "EMAIL_FROM", "EMAIL_SNS_TOPIC_ARN", "EMAIL_CONFIGURATION_SET");
   if (providers.email === "resend") required.push("EMAIL_FROM", "RESEND_API_KEY", "RESEND_WEBHOOK_SECRET");
   if (providers.email === "gmail") required.push("GMAIL_SMTP_USER", "GMAIL_APP_PASSWORD");
+  if (providers.email === "mailjet") required.push("EMAIL_FROM", "MAILJET_API_KEY", "MAILJET_SECRET_KEY");
   if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_CALENDAR_ID", "SECRET_ENCRYPTION_KEY");
   if (providers.whatsapp === "cloud") required.push("WHATSAPP_BUSINESS_ACCOUNT_ID", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN");
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
@@ -127,6 +139,7 @@ export function parseServerConfig(raw: Env) {
     google, email,
     resend: providers.email === 'resend' ? resendConfig(raw, environment) : null,
     gmail: providers.email === 'gmail' ? gmailConfig(raw) : null,
+    mailjet: providers.email === 'mailjet' ? mailjetConfig(raw) : null,
     file_scan_url: providers.file_scan === 'clamav' ? scannerEndpoint(raw.FILE_SCAN_URL!.trim()) : null,
   };
 }

@@ -1,0 +1,31 @@
+# Mailjet setup
+
+Updated15November2026. The owner requested Mailjet and completed account creation/email activation for `gittutor2@gmail.com`. The Free signup was selected; no card, paid plan or upgrade was added. Official Free allowances are6,000 emails/month,200/day and1,000 stored contacts. [Current pricing](https://www.mailjet.com/pricing/).
+
+The supplied API/secret pair is saved only as Windows-current-user DPAPI ciphertext in ignored `.local/production-setup/mailjet-credentials.dpapi`. These are SMTP credentials; neither the Mailjet login password nor the Gmail App Password is used for Mailjet SMTP. No secret belongs in public environment variables, browser responses, committed files or normal logs.
+
+## Executed result and owner decision
+
+Mailjet's authenticated sender lookup returned **Active** for the owner address. Certificate-validated SMTP authentication passed. The owner approved one fixed **Git Tutor Mailjet setup test** message, Mailjet accepted it, and the owner confirmed receipt in **Spam**. SMTP `sent` and recipient-confirmed Spam are recorded separately; this is not verified Inbox delivery.
+
+After reviewing that result, the owner explicitly chose **Keep Gmail for now; retain Mailjet ready**. Existing Gmail Auth SMTP configuration and encrypted credentials remain unchanged. The testing preview still uses fake/manual providers. No notification backlog, customer email or Auth invitation was dispatched through Mailjet. [Executed evidence](evidence/mailjet-smtp-20261115.md).
+
+Mailjet supports individual sender verification but warns that freemail senders can reach Spam or fail delivery. An owned domain authenticated for SPF/DKIM is the preferred Mailjet route; those DNS records cannot be configured for `gmail.com`. No domain purchase is authorized or required to retain the working Gmail route. Marking one message as not spam would not prove general recipient deliverability. [Sender guidance](https://documentation.mailjet.com/hc/en-us/articles/360042759253-How-to-add-a-sender-address), [SPF guidance](https://documentation.mailjet.com/hc/en-us/articles/360042561514-Understanding-SPF-and-how-it-works).
+
+## Prepared application configuration
+
+`EMAIL_ADAPTER=mailjet` requires private `EMAIL_FROM`, `MAILJET_API_KEY` and `MAILJET_SECRET_KEY`. It uses the existing pinned Nodemailer dependency and fixed `in-v3.mailjet.com:465`, certificate-validated TLS, finite timeouts and disabled SMTP logging. The default remains `fake`; adding credentials alone does not activate Mailjet.
+
+The adapter receives the existing authorized notification projection. It sends one recipient, excludes arbitrary fields/headers/attachments/CC/BCC, disables file/URL access, and forces Mailjet open/click tracking off. Its Message-ID and `X-MJ-CustomID` identify the attempt for investigation; neither is treated as a deduplication guarantee. SMTP acceptance records `sent`, never `delivered`. Explicit rejection records a safe failure code; lost acknowledgements and ambiguous results stay `unknown` with no automatic replay.
+
+Mailjet delivery/bounce callbacks and automated provider reconciliation are **not implemented** in this SMTP adapter. Do not point Mailjet callbacks at the SES/Resend endpoints or treat unauthenticated events as evidence. An authenticated callback/reconciliation integration and live recovery checks remain future work before claiming complete operational delivery tracking.
+
+## Before a later switch
+
+1. Approve the sender and Mailjet activation after addressing the observed Spam result; do not silently switch Auth away from Gmail.
+2. Privately inject the Mailjet keys into the selected server/worker environment. Recheck the intended sender and account limits.
+3. Prepare exact owner-only test content and obtain send approval. Verify actual received content, folder and relevant authentication results. Preserve unknown outcomes without resending.
+4. Configure Supabase Auth SMTP separately using the API key as username and secret key as password. Verify Auth invitations/recovery independently; the application test does not prove Auth delivery.
+5. Activate against an intentionally reviewed queue and recipient set, never the historical/practice preview backlog.
+
+Official implementation references checked15November2026: [SMTP configuration](https://dev.mailjet.com/docs/smtp-relay/configuration), [tracking headers](https://dev.mailjet.com/docs/smtp-relay/custom-headers), [sender verification](https://dev.mailjet.com/docs/email-api/senders-domains/create-sender). Context7 lookup failed with a transport error; official vendor documentation was used instead.

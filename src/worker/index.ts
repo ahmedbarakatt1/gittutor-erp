@@ -15,6 +15,7 @@ import { calendarAdapterFactory } from '../server/calendar-provider';
 import { notificationRouteHandler, notificationSendHandler } from './notifications';
 import { createLocalEmailAdapter, createResendEmailAdapter, createSesEmailAdapter } from '../server/providers/email';
 import { createGmailEmailAdapter } from '../server/providers/gmail';
+import { createMailjetEmailAdapter } from '../server/providers/mailjet';
 import { exportRenderHandler } from './exports';
 import { whatsappSendHandler } from './whatsapp';
 import { createWhatsAppAdapter, parseWhatsAppConfig } from '../server/providers/whatsapp';
@@ -25,6 +26,7 @@ const pool = createDatabasePool(databaseUrl('worker'));
 const storage = createPrivateObjectStore(configuration);
 const liveScanner = configuration.providers.file_scan === 'clamav' ? createClamavScanAdapter(configuration.file_scan_url!) : null;
 const liveEmail = configuration.gmail ? createGmailEmailAdapter(configuration.gmail)
+  : configuration.mailjet ? createMailjetEmailAdapter(configuration.mailjet)
   : configuration.resend ? createResendEmailAdapter(configuration.resend)
   : configuration.email ? createSesEmailAdapter(configuration.email) : null;
 const whatsapp = parseWhatsAppConfig(process.env, configuration.isolated);
