@@ -1,3 +1,4 @@
+import { RequestEntry } from '@/components/requests/entry';
 import type { Metadata } from 'next';
 import { PortalShell } from '@/components/portal-shell';
 import { requireAccount } from '@/server/auth';
@@ -12,9 +13,9 @@ export const metadata: Metadata = { title: 'Administration | Git Tutor', robots:
 export default async function AdminPage() {
   const account = await requireAccount('admin');
   const operations = await getWorkflowOperations(await serverSupabase());
-  if (!operations.enabled) return <PortalShell kind="admin" account={account}><TutorApplicationReview /><StaffAccessWorkspace /></PortalShell>;
+  if (!operations.enabled) return <PortalShell kind="admin" account={account}><RequestEntry staff="admin" /><TutorApplicationReview /><StaffAccessWorkspace /></PortalShell>;
   return <PortalShell kind="admin" account={account} title="Your business overview" description="Manage students, lessons and payments from one workspace." showAccount={false} activePath="/admin">
-    <OperationalWorkspace view="overview" />
+    <RequestEntry staff="admin" /><OperationalWorkspace view="overview" />
     <section className={styles.section} aria-label="Daily operations">
       <h2>Keep things moving</h2>
       <ul className={styles.recordGrid}>

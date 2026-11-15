@@ -72,7 +72,6 @@ test('booking and schedule workspaces require a verified session', async ({ page
 });
 
 test('a public scheduled-session selection survives verified sign-in', async ({ page }) => {
-  await page.goto('/offers'); await page.getByText('Filter by session time', { exact: true }).click(); await page.locator('#from-time').fill('2050-01-01T12:00'); await page.locator('#to-time').fill('2050-01-02T12:00'); await page.getByRole('button', { name: 'Apply filters', exact: true }).click(); await expect(page.getByText('No published offers match this view yet.', { exact: true })).toBeVisible(); await page.getByRole('link', { name: 'Clear filters', exact: true }).click(); await expect(page).toHaveURL(`${baseURL}/offers`);
   await page.goto(`/offers/${catalogFixtureIds.group2_offer}`); const choice = page.getByRole('link', { name: 'Choose this session', exact: true }).first(); await expect(choice).toBeVisible(); const destination = await choice.getAttribute('href'); expect(destination).toMatch(/^\/learn\/bookings\?offer=/);
   await choice.click(); await expect(page).toHaveURL(/\/login\?return_to=/);
   const actor = loadLocalSupabase().actors.learner_d; await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password);

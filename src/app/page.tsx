@@ -29,7 +29,7 @@ export default function HomePage() {
             <p className="hero-lead">{copy.hero.lead}</p>
             <p className="hero-body">{copy.hero.body}</p>
             <div className="hero-actions">
-              <a className="button button-primary" href="#subjects">{copy.hero.primary}</a>
+              <Link className="button button-primary" href="/learn/requests">{copy.hero.primary}</Link>
               <a className="text-link" href="#how-it-works">{copy.hero.secondary}</a>
             </div>
             <p className="hero-note">{copy.hero.note}</p>
@@ -63,6 +63,7 @@ export default function HomePage() {
               <p>{copy.formats.lead}</p>
               <div className="private-format">
                 <h3>{copy.formats.privateTitle}</h3>
+                <p className="private-tuition"><strong>EGP 650</strong> per session</p>
                 <p>{copy.formats.privateBody}</p>
               </div>
             </div>

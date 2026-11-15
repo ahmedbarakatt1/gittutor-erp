@@ -29,10 +29,13 @@
       {"tier_id": "group_4", "group_size": 4, "seat_price_minor": 50000}
     ],
     "private_pricing": {
-      "status": "unset",
-      "seat_price_minor": null,
-      "pricing_unit": null,
-      "duration_minutes": null
+      "status": "customer_rate_confirmed_2026_11_15",
+      "seat_price_minor": 65000,
+      "pricing_unit": "per_occurrence",
+      "duration_minutes": null,
+      "duration_range_minutes": [90, 105],
+      "source": "owner_conversation_2026_11_15",
+      "note": "Exact occurrence duration and complete policy still required; customer rates are in contracts/runtime/public-tuition.json."
     },
     "additional_group_tiers": {
       "status": "requires_approved_contract",

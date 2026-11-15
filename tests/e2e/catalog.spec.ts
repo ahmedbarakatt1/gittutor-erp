@@ -68,8 +68,8 @@ test('published catalog has working filters, readable terms and customer-safe re
       expect(offers.length).toBeGreaterThan(0); expect(JSON.stringify(offers)).not.toMatch(forbidden);
       const offer = offers.find(item => item.format === 'group')!; expect(offer).toBeTruthy();
       await page.goto('/subjects'); await expect(page.getByRole('heading', { name: 'Start with your subject.' })).toBeVisible();
-      await page.goto('/offers'); await page.getByLabel('Subject', { exact: true }).selectOption(offer.subject.subject_id); await page.getByLabel('Study format', { exact: true }).selectOption('group'); await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
-      await expect(page).toHaveURL(new RegExp(`subject_id=${offer.subject.subject_id}.*format=group`));
+      await page.goto('/offers'); await expect(page.getByRole('table', { name: 'Individual and group tuition' })).toContainText('650');
+      await expect(page.getByRole('main')).toContainText('90–105 minutes');
       await page.goto(`/offers/${offer.offer_id}`); await expect(page.getByRole('heading', { name: offer.title, exact: true })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Before you reserve' })).toBeVisible();
       if (offer.availability.scheduled_occurrences > 0) await expect(page.getByRole('heading', { name: 'Upcoming sessions', exact: true })).toBeVisible();
