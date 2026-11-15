@@ -20,8 +20,26 @@ export function CustomerStudyFiles({ initialEnrollment }: { initialEnrollment?: 
 
 export function SessionMaterials({ enrollmentId, occurrenceId, allowPreparationUpload = false, allowHandoutUpload = false }: { enrollmentId?: string; occurrenceId: string; allowPreparationUpload?: boolean; allowHandoutUpload?: boolean }) {
   const preparation = usePaymentList<FileView>(enrollmentId ? `files?enrollment_id=${enrollmentId}&purpose=private_preparation` : null);
+  const requestFiles = usePaymentList<FileView>(enrollmentId ? `files?enrollment_id=${enrollmentId}&purpose=request_material` : null);
   const handouts = usePaymentList<FileView>(`files?occurrence_id=${occurrenceId}&purpose=shared_handout`);
-  return <div className={styles.workspace}>{enrollmentId && <section className={styles.section}><h2>{copy.privateTitle}</h2><p className={styles.intro}>{copy.privateDescription}</p>{allowPreparationUpload && <FileUpload purpose="private_preparation" parentId={enrollmentId} onUploaded={preparation.reload} onReady={preparation.reload} />}<PaymentReadState pending={!preparation.items} {...preparation} /><FileList files={preparation.items} onSaved={preparation.reload} /></section>}<section className={styles.section}><h2>{copy.sharedTitle}</h2><p className={styles.intro}>{copy.sharedDescription}</p>{allowHandoutUpload && <FileUpload purpose="shared_handout" parentId={occurrenceId} onUploaded={handouts.reload} onReady={handouts.reload} />}<PaymentReadState pending={!handouts.items} {...handouts} /><FileList files={handouts.items} onSaved={handouts.reload} /></section></div>;
+  return <div className={styles.workspace}>
+    {enrollmentId && <>
+      <section className={styles.section}>
+        <h2>{copy.privateTitle}</h2><p className={styles.intro}>{copy.privateDescription}</p>
+        {allowPreparationUpload && <FileUpload purpose="private_preparation" parentId={enrollmentId} onUploaded={preparation.reload} onReady={preparation.reload} />}
+        <PaymentReadState pending={!preparation.items} {...preparation} /><FileList files={preparation.items} onSaved={preparation.reload} />
+      </section>
+      <section className={styles.section}>
+        <h2>{copy.requestTitle}</h2><p className={styles.intro}>{copy.requestDescription}</p>
+        <PaymentReadState pending={!requestFiles.items} {...requestFiles} /><FileList files={requestFiles.items} onSaved={requestFiles.reload} />
+      </section>
+    </>}
+    <section className={styles.section}>
+      <h2>{copy.sharedTitle}</h2><p className={styles.intro}>{copy.sharedDescription}</p>
+      {allowHandoutUpload && <FileUpload purpose="shared_handout" parentId={occurrenceId} onUploaded={handouts.reload} onReady={handouts.reload} />}
+      <PaymentReadState pending={!handouts.items} {...handouts} /><FileList files={handouts.items} onSaved={handouts.reload} />
+    </section>
+  </div>;
 }
 
 export function StaffSessionMaterials({ occurrenceId, roster }: { occurrenceId: string; roster: { enrollment_id: string; display_name: string }[] }) {

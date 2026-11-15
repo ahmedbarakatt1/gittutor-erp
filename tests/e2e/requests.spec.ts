@@ -38,6 +38,12 @@ test('customer material request goes through staff review into a separately cons
     const response = await completed, upload = await response.json(); expect(response.status()).toBe(202);
     const fileId = new URL(response.url()).pathname.split('/')[4];
     expect((await page.request.get(`/api/v1/files/${fileId}/content`)).ok()).toBe(false);
+    await expect(page.getByRole('listitem').filter({ hasText: 'lecture-slides.pdf' })).toContainText('Upload or safety check in progress');
+    await page.getByText('Edit your request details', { exact: true }).click();
+    const brief = page.getByLabel('What would you like help with?', { exact: true });
+    await brief.fill('Keep this unsaved edit while the file scan is pending.');
+    await page.waitForResponse(r => r.url().endsWith(`/api/v1/requests/${requestId}`) && r.request().method() === 'GET' && r.ok());
+    await expect(brief).toHaveValue('Keep this unsaved edit while the file scan is pending.');
     await runFileScan(upload.data.scan_job_id);
     await expect(page.getByRole('button', { name: 'Submit tutoring request', exact: true })).toBeEnabled({ timeout: 20000 });
     const submitted = page.waitForResponse(r => r.url().endsWith(`/requests/${requestId}/submit`));
@@ -81,4 +87,48 @@ test('customer material request goes through staff review into a separately cons
     expect(await page.content()).not.toMatch(forbidden);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   } finally { await staffContext.close(); await strangerContext.close(); await f.close(); }
+});
+
+test('request creation preserves an interrupted retry and accepts a later identical draft', async ({ page }) => {
+  test.setTimeout(60000);
+  await login(page, 'learner_a');
+  const topic = `Electronics ${randomUUID().slice(0, 8)}`;
+  let committedId: string | undefined;
+  let firstKey: string | undefined;
+  await page.route('**/api/v1/requests', async route => {
+    if (route.request().method() !== 'POST' || committedId) return route.continue();
+    firstKey = route.request().headers()['idempotency-key'];
+    const response = await route.fetch();
+    expect(response.status()).toBe(201);
+    committedId = (await response.json()).data.resource_id;
+    await route.abort();
+  });
+  async function submit() {
+    await page.getByLabel('Subject or topic', { exact: true }).fill(topic);
+    await page.getByLabel('What would you like help with?', { exact: true }).fill('Review these circuit examples.');
+    await page.getByLabel('Preferred days and times', { exact: true }).fill('Sunday after 6 pm, Egypt time.');
+    await page.getByRole('button', { name: 'Continue to upload material', exact: true }).click();
+  }
+  await page.goto('/learn/requests');
+  await submit();
+  await expect(page.getByRole('form', { name: 'Continue to upload material' }).getByRole('alert')).toBeVisible();
+  expect(committedId).toBeTruthy();
+  expect(firstKey).toBeTruthy();
+  await page.reload();
+  const retry = page.waitForResponse(r => r.url().endsWith('/api/v1/requests') && r.request().method() === 'POST');
+  await submit();
+  const acknowledgement = await retry;
+  expect(acknowledgement.status()).toBe(200);
+  expect(acknowledgement.request().headers()['idempotency-key']).toBe(firstKey);
+  await expect(page).toHaveURL(`/learn/requests?request=${committedId}`);
+
+  await page.getByRole('link', { name: 'New request', exact: true }).click();
+  const next = page.waitForResponse(r => r.url().endsWith('/api/v1/requests') && r.request().method() === 'POST');
+  await submit();
+  const created = await next;
+  expect(created.status()).toBe(201);
+  expect(created.request().headers()['idempotency-key']).not.toBe(firstKey);
+  const nextId = (await created.json()).data.resource_id;
+  expect(nextId).not.toBe(committedId);
+  await expect(page).toHaveURL(`/learn/requests?request=${nextId}`);
 });

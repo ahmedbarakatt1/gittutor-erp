@@ -7,7 +7,7 @@ import styles from './auth.module.css';
 
 type Result = { data?: Record<string, unknown>; code?: string; message?: string; request_id?: string; field_errors?: { conflicting_occurrence_ids?: string[] } };
 
-export function IdentityForm({ children, action, payload, submitLabel, successMessage, disabled = false, resettable = true, clearFieldsOnSuccess = false, onSaved, onPendingChange, onFailure }: {
+export function IdentityForm({ children, action, payload, submitLabel, successMessage, disabled = false, resettable = true, clearFieldsOnSuccess = false, releaseKeyOnSuccess = false, onSaved, onPendingChange, onFailure }: {
   children: ReactNode;
   action: string | ((data: FormData) => string);
   payload: (data: FormData) => Record<string, unknown>;
@@ -16,6 +16,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
   disabled?: boolean;
   resettable?: boolean;
   clearFieldsOnSuccess?: boolean;
+  releaseKeyOnSuccess?: boolean;
   onSaved?: (result: Record<string, unknown>) => void;
   onPendingChange?: (pending: boolean) => void;
   onFailure?: (result: Result) => void;
@@ -63,7 +64,13 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
       const response = await fetch(`/api/v1/${path}`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.current.key }, body: JSON.stringify(body) });
       const responseBody = await response.json() as Result;
       if (!response.ok) { setError(responseBody.message || copy.network); setRequestId(responseBody.request_id || ''); onFailure?.(responseBody); return; }
+      if (releaseKeyOnSuccess && (typeof responseBody.data?.resource_id !== 'string' || !responseBody.data.resource_id)) throw new Error('COMMAND_RESULT_MISSING');
       if (clearFieldsOnSuccess) { form.reset(); operation.current.signature = ''; }
+      if (releaseKeyOnSuccess) {
+        const { storageKey, key } = operation.current;
+        try { if (sessionStorage.getItem(storageKey) === key) sessionStorage.removeItem(storageKey); } catch { /* Storage may be disabled. */ }
+        operation.current = null;
+      }
       setResult(responseBody.data || {});
       onSaved?.(responseBody.data || {});
     } catch { setError(copy.network); }

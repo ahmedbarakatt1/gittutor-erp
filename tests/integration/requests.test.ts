@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 import { expect, test, vi } from 'vitest';
 import { invokeFileCommandWithStatus } from '../../src/modules/files/commands';
-import { getFile } from '../../src/modules/files/queries';
+import { getFile, listFiles } from '../../src/modules/files/queries';
 import { parseServerConfig } from '../../src/server/config';
 import { createFileContentService, createPrivateObjectStore } from '../../src/server/files';
 import { bookingFixture, raceBookingCalls } from '../helpers/booking';
@@ -145,13 +145,19 @@ test('a request waits for clean private bytes and staff matching creates no book
       expect((await f.database.query('select count(*)::int n from app_private.enrollments where occurrence_id=$1', [occurrence.occurrence_id])).rows[0].n).toBe(0);
       await expect(content.download(f.tutor, fileId)).rejects.toThrow('NOT_FOUND');
       const reserved = await f.reserve(occurrence.occurrence_id as string);
+      const list = { enrollment_id: reserved.enrollment_id as string, purpose: 'request_material' as const };
+      expect((await listFiles(learner, list)).items.map(file => file.file_id)).toEqual([fileId]);
+      expect((await listFiles(f.tutor, list)).items).toEqual([]);
+      await expect(listFiles(unrelated, list)).rejects.toThrow('NOT_FOUND');
       await expect(content.download(f.tutor, fileId)).rejects.toThrow('NOT_FOUND');
       // Set only the isolated fixture's enrollment fact to exercise the independent download boundary.
       await f.database.query("update app_private.enrollments set state='confirmed' where id=$1", [reserved.enrollment_id]);
       try {
         expect(Buffer.from((await content.download(f.tutor, fileId)).bytes)).toEqual(syntheticPdf);
+        expect((await listFiles(f.tutor, list)).items).toMatchObject([{ file_id: fileId, can_download: true }]);
         await f.database.query('update app_private.tutor_assignments set active=false where occurrence_id=$1', [occurrence.occurrence_id]);
         await expect(content.download(f.tutor, fileId)).rejects.toThrow('NOT_FOUND');
+        await expect(listFiles(f.tutor, list)).rejects.toThrow('NOT_FOUND');
       } finally {
         await f.database.query('update app_private.tutor_assignments set active=true where occurrence_id=$1', [occurrence.occurrence_id]);
         await f.database.query("update app_private.enrollments set state='held' where id=$1", [reserved.enrollment_id]);

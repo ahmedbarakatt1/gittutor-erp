@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { TutoringRequestView, RequestFormat, RequestState } from '@/modules/requests/queries';
+import { paymentCopy } from '@/locales/payments';
 import { IdentityForm, TextField } from '../identity-form';
 import { Select, SessionTime, cairoDate } from '../booking/shared';
-import { PaymentReadState, usePaymentList, usePaymentRecord } from '../payments/shared';
+import { PaymentReadState, usePaymentList } from '../payments/shared';
 import { FileUpload } from '../files/file-upload';
 import styles from './workspace.module.css';
 
@@ -44,20 +45,50 @@ function CreateRequest({ initialTopic }: { initialTopic: string }) {
   const learner = learners.items?.find(item => item.learner_id === selected) || (learners.items?.length === 1 ? learners.items[0] : undefined);
   return <section><div className={styles.intro}><h2>What are you working on?</h2><p>Tell us what you need, then upload your material and submit. We’ll review it and arrange the right session with you.</p></div>
     <PaymentReadState pending={!learners.items} {...learners} />
-    {learners.items?.length === 0 ? <p className={styles.notice}>Add or link the learner first, so their material stays in the right account. <Link href="/learn#learners">Manage learners</Link></p> : <IdentityForm action="requests" submitLabel="Continue to upload material" successMessage="Draft saved. Add your material to submit." disabled={!learner} resettable={false} payload={form => ({ ...bodyFrom(form), learner_id: learner!.learner_id })} onSaved={result => router.push(`/learn/requests?request=${result.resource_id}`)}>
+    {learners.items?.length === 0 ? <p className={styles.notice}>Add or link the learner first, so their material stays in the right account. <Link href="/learn#learners">Manage learners</Link></p> : <IdentityForm action="requests" submitLabel="Continue to upload material" successMessage="Draft saved. Add your material to submit." disabled={!learner} resettable={false} releaseKeyOnSuccess payload={form => ({ ...bodyFrom(form), learner_id: learner!.learner_id })} onSaved={result => router.push(`/learn/requests?request=${result.resource_id}`)}>
       <Select name="learner_id" label="Who is the session for?" value={learner?.learner_id || ''} onChange={setSelected}><option value="">Choose the learner</option>{learners.items?.map(item => <option key={item.learner_id} value={item.learner_id}>{item.display_name}</option>)}</Select>
       <RequestFields topic={initialTopic} /><p className={styles.hint}>This saves a draft. You’ll upload your material before sending the request. No payment is due now.</p>
     </IdentityForm>}
   </section>;
 }
 
-function RequestDetail({ id, view, onChange }: { id: string; view: 'learn' | 'service' | 'admin'; onChange: () => void }) {
-  const record = usePaymentRecord<TutoringRequestView>(`requests/${id}`), item = record.data;
+function useRequestRecord(id: string) {
+  const [record, setRecord] = useState<{ data?: TutoringRequestView; error?: string }>({});
+  const [attempt, setAttempt] = useState(0);
+  const reload = useCallback(() => setAttempt(value => value + 1), []);
   useEffect(() => {
-    if (!item?.files.some(file => file.upload_state === 'finalized' && file.scan_state === 'pending')) return;
-    const timer = setTimeout(record.reload, 2000);
-    return () => clearTimeout(timer);
-  }, [item, record]);
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let scanPending = false;
+    async function read() {
+      try {
+        const response = await fetch(`/api/v1/requests/${id}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
+        if (controller.signal.aborted) return;
+        if ([401, 403, 404].includes(response.status)) {
+          scanPending = false;
+          setRecord({ error: paymentCopy.permission });
+          return;
+        }
+        if (!response.ok) throw new Error('REQUEST_READ_FAILED');
+        const { data } = await response.json() as { data?: TutoringRequestView };
+        if (controller.signal.aborted) return;
+        if (data?.request_id !== id.toLowerCase() || !Array.isArray(data.files)) throw new Error('REQUEST_READ_FAILED');
+        scanPending = data.files.some(file => file.upload_state === 'finalized' && file.scan_state === 'pending');
+        setRecord({ data });
+      } catch {
+        if (!controller.signal.aborted) setRecord(previous => ({ ...previous, error: paymentCopy.failed }));
+      } finally {
+        if (!controller.signal.aborted && scanPending) timer = setTimeout(read, 2000);
+      }
+    }
+    void read();
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [id, attempt]);
+  return { ...record, reload };
+}
+
+function RequestDetail({ id, view, onChange }: { id: string; view: 'learn' | 'service' | 'admin'; onChange: () => void }) {
+  const record = useRequestRecord(id), item = record.data;
   const reload = () => { record.reload(); onChange(); };
   return <><PaymentReadState pending={!item} {...record} />{item && <section key={`${item.request_id}:${item.version}`}>
     <div className={styles.detailHeading}><h2>{item.topic}</h2><span className={styles.status}>{states[item.state]}</span></div>
