@@ -1,5 +1,26 @@
 # Implementation status
 
+## CI repair and selected Gmail route — 15 November 2026
+
+**Full request-flow CI is green:** [run43746111036](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/43746111036), exact commit `e6160102c66f316c091dd00d45406e5f498fe1c3`, completed successfully. `gh run view 43746111036 --json status,conclusion,headSha,url,jobs` and its downloaded full log were inspected. Actual results:435/435 unit checks,304/304 database checks,164/164 executed browser checks with2 explicitly gated skips, both database verifications, lint, types, optimized build, pack and evidence-format checks. Private full log: `.local/request-flow/ci-e616010-success.log`. This resolves the prior pending/cancelled CI statement and verifies both corrected browser assertions. It does not include the subsequent Gmail change below or promote literal acceptance variants; the formal register remains0 recorded passed/147 not_run.
+
+The owner selected **Gmail without a domain**. Added pinned Nodemailer10.5.0, `EMAIL_ADAPTER=gmail`, private16-letter App Password validation, fixed certificate-validated SMTP TLS and finite timeouts. The existing outbox authority and customer projection remain unchanged. The adapter accepts one recipient and only allowed content, disables file/URL attachment access, performs no automatic resend and records SMTP acceptance as sent only. Ambiguous outcomes remain unknown; reconciliation does not invent delivery or resend. A stable Message-ID supports operator investigation without a deduplication guarantee. `tools/configure-gmail.ps1` collects the password at a hidden Windows prompt and stores only current-user DPAPI ciphertext in ignored private storage; it makes no network call. No credential has been collected, live provider activated or message sent in this change.
+
+Executed Gmail verification:
+
+| Command/check | Result |
+|---|---|
+| `node node_modules/vitest/vitest.mjs run tests/unit/gmail-email.test.ts` before implementation | Failed on the missing adapter as intended; `.local/request-flow/gmail-red.log`. |
+| `node node_modules/vitest/vitest.mjs run tests/unit/gmail-email.test.ts tests/unit/config.test.ts tests/unit/notification-templates.test.ts` |26 passed; `.local/request-flow/gmail-green.log`. |
+| `node --max-old-space-size=768 --max-semi-space-size=4 node_modules/typescript/bin/tsc --noEmit` | Passed; `.local/request-flow/gmail-types-final.log`. Initial types failed because Nodemailer10 bundles named declarations; corrected imports and removed the unnecessary external types package. |
+| `node node_modules/vitest/vitest.mjs run tests/unit` |445 passed across65 files,43.95s; `.local/request-flow/gmail-all-units.log`. |
+| `node node_modules/eslint/bin/eslint.js .` | Passed; `.local/request-flow/gmail-lint.log`. |
+| `pnpm audit --prod --json` |0 informational/low/moderate/high/critical advisories; `.local/request-flow/gmail-audit.json`. |
+| PowerShell AST parse of `tools/configure-gmail.ps1` |0 syntax errors. The interactive credential-entry path has not been executed. |
+| Independent read-only Gmail review | No concrete P1/P2 findings; inspected Nodemailer runtime and existing worker authorization/retry controls. Live SMTP, Auth SMTP and host connectivity were explicitly outside that review. |
+
+The first dependency installation hit the deliberately small384MiB Node heap; the768MiB install completed. No failure is represented as a pass. The Gmail source still needs its own complete CI result after committing. See [Gmail setup](GMAIL-SETUP.md), [free-service deployment proposal](FREE-SERVICE-PLAN.md) and [exact remaining inputs](PRODUCTION-INPUTS.md). Vercel Hobby commercial restrictions and free Meet's60-minute group limit were verified against official sources; no billing change, meeting-policy substitution or alternate-host creation occurred. A hosted-source recovery rehearsal is running into new local targets; no recovery pass is claimed before its result.
+
 ## Current work — request-first journey and free-service production setup, 15 November 2026
 
 The owner corrected the customer journey: submit a subject/course request with lecture material first, then staff arrange the session. Subjects are examples rather than a fixed catalogue; the public Offers page is pricing only. Confirmed customer rates are individual EGP650 and groups of2/3/4 at EGP575/550/500 per student, per90–105 minute session (owner wrote1:30–1:45). Work follows [the request-first plan](superpowers/plans/2026-11-15-request-first.md). **The updated flow is ready for owner testing** at [Git Tutor](https://gittutor-erp-rho.vercel.app), runtime revision10262df, deployment `dpl_6rYoG3fDGBzTh5eDU9r8cnXYhMeE` (READY). Later commits96fdac9/093a5c4 only correct browser assertions. Existing historical/practice data and confidential compensation are preserved. This is a development pilot, not live commercial activation.

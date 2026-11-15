@@ -63,6 +63,14 @@ function resendConfig(raw: Env, environment: Environment) {
   return { from, api_key: raw.RESEND_API_KEY!.trim(), webhook_secret: webhookSecret };
 }
 
+function gmailConfig(raw: Env) {
+  const user = raw.GMAIL_SMTP_USER!.trim().toLowerCase();
+  const app_password = raw.GMAIL_APP_PASSWORD!.replace(/\s/g, '');
+  if (!/^[a-z0-9][a-z0-9.]*@gmail\.com$/.test(user)) throw new Error('Invalid configuration: GMAIL_SMTP_USER');
+  if (!/^[a-z]{16}$/.test(app_password)) throw new Error('Invalid configuration: GMAIL_APP_PASSWORD');
+  return { user, app_password };
+}
+
 /** Server-owned configuration. Never pass this object to a client component or log it. */
 export function parseServerConfig(raw: Env) {
   if (raw.NODE_ENV === "production" && !raw.APP_ENV) throw new Error("APP_ENV must be explicit at production startup");
@@ -76,7 +84,7 @@ export function parseServerConfig(raw: Env) {
   }
   const isolated = environment === "development" || environment === "test";
   const providers = {
-    email: choice(raw.EMAIL_ADAPTER, ["fake", "ses", "resend"], "fake", "EMAIL_ADAPTER"),
+    email: choice(raw.EMAIL_ADAPTER, ["fake", "ses", "resend", "gmail"], "fake", "EMAIL_ADAPTER"),
     calendar: choice(raw.CALENDAR_ADAPTER, ["fake", "google"], "fake", "CALENDAR_ADAPTER"),
     whatsapp: choice(raw.WHATSAPP_ADAPTER, ["fake", "cloud"], "fake", "WHATSAPP_ADAPTER"),
     file_scan: choice(raw.FILE_SCAN_ADAPTER, ["fake", "clamav"], "fake", "FILE_SCAN_ADAPTER"),
@@ -91,6 +99,7 @@ export function parseServerConfig(raw: Env) {
   if (!isolated) required.push("APP_BASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "WORKER_DATABASE_URL", "SUPABASE_SECRET_KEY", "SECRET_ENCRYPTION_KEY");
   if (providers.email === "ses") required.push("AWS_REGION", "EMAIL_FROM", "EMAIL_SNS_TOPIC_ARN", "EMAIL_CONFIGURATION_SET");
   if (providers.email === "resend") required.push("EMAIL_FROM", "RESEND_API_KEY", "RESEND_WEBHOOK_SECRET");
+  if (providers.email === "gmail") required.push("GMAIL_SMTP_USER", "GMAIL_APP_PASSWORD");
   if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_CALENDAR_ID", "SECRET_ENCRYPTION_KEY");
   if (providers.whatsapp === "cloud") required.push("WHATSAPP_BUSINESS_ACCOUNT_ID", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN");
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
@@ -117,6 +126,7 @@ export function parseServerConfig(raw: Env) {
     secret_encryption_previous_keys: encryption.previous,
     google, email,
     resend: providers.email === 'resend' ? resendConfig(raw, environment) : null,
+    gmail: providers.email === 'gmail' ? gmailConfig(raw) : null,
     file_scan_url: providers.file_scan === 'clamav' ? scannerEndpoint(raw.FILE_SCAN_URL!.trim()) : null,
   };
 }

@@ -1,6 +1,6 @@
 # Deploying Git Tutor
 
-Production activation is pending. The actual-data preview contains private imported history alongside explicitly fictional practice activity; it is not a production database. Preserve both local databases and the source workbook. Use a separate hosted staging project before the clean production cutover.
+Production activation is pending. The actual-data preview contains private imported history alongside explicitly fictional practice activity; it is not a production database. Preserve both local databases and the source workbook. The clean production Supabase project is prepared separately at154 migrations. The current request-flow pilot deployment is `dpl_6rYoG3fDGBzTh5eDU9r8cnXYhMeE` (runtime10262df); older deployment identifiers below are historical. The owner selected [Gmail without a domain](GMAIL-SETUP.md) and free services. See the concrete [free-host proposal](FREE-SERVICE-PLAN.md) and [remaining inputs](PRODUCTION-INPUTS.md) before activation.
 
 ## Selected host: Vercel
 
@@ -112,7 +112,7 @@ The manifest is a durable candidate inventory, not an assertion that cleanup suc
 
 ## Provider activation, recovery and release gates
 
-Follow [release readiness](RELEASE-READINESS.md) for controlled live checks: approved commercial policy, bank settlement evidence, Calendar/Meet organizer permissions, SES sender/SNS callbacks, WhatsApp account/templates/consent, malware quarantine and hosted Auth delivery. Fake modes remain confined to isolated development/test. Expose only approved HTTPS callbacks with signature/account/redirect validation.
+Follow [release readiness](RELEASE-READINESS.md) for controlled live checks: approved commercial policy, bank settlement evidence, Calendar/Meet organizer permissions and session-length entitlement, the selected Gmail sender and separate Auth SMTP (or SES/Resend callbacks if subsequently selected), WhatsApp account/templates/consent, malware quarantine and hosted Auth delivery. Gmail acceptance is sent, not delivered; uncertain SMTP sends remain unknown. Never activate a live sender against a preview backlog. Fake modes remain confined to isolated development/test. Expose only approved HTTPS callbacks with signature/account/redirect validation.
 
 Schedule linked database/private-object backups and approve retention, RPO/RTO and an accountable operator. Restore into a separate hosted project and verify Auth access, object hashes, financial controls, encryption-key recovery and pending-job reconciliation before launch. `tools/recovery-rehearsal.ts` is a marked-local runner and cannot prove hosted recovery.
 

@@ -42,12 +42,14 @@ Define typed server-only adapters for calendar, transactional email, WhatsApp, s
 | `WORKER_DATABASE_URL` | Restricted worker login, server only |
 | `SUPABASE_SECRET_KEY` | Server-only Storage wrapper and controlled administrative Auth operations |
 | `SECRET_ENCRYPTION_KEY` | Encrypt provider connections and private payout identifiers, versioned rotation |
-| `EMAIL_ADAPTER` | `fake` or `ses` |
+| `EMAIL_ADAPTER` | `fake`, `ses`, `resend` or `gmail`; fake is isolated-development/test only |
 | `CALENDAR_ADAPTER` | `fake` or `google` |
 | `WHATSAPP_ADAPTER` | `fake` or `cloud` |
 | `FILE_SCAN_ADAPTER`, `FILE_SCAN_URL` | `fake` or `clamav`, approved scanner endpoint |
 | `PAYMENT_RECONCILIATION_ADAPTER` | `manual` |
 | `AWS_REGION`, `EMAIL_FROM`, `EMAIL_SNS_TOPIC_ARN` | Live SES sender and allowed signed notification topic |
+| `EMAIL_FROM`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` | Verified Resend sender, sending-only key and signed delivery callbacks |
+| `GMAIL_SMTP_USER`, `GMAIL_APP_PASSWORD` | Owner-selected consumer Gmail sender and private App Password; see [Gmail setup](GMAIL-SETUP.md) |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional server credential chain inputs when workload identity is unavailable |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Approved organizer OAuth configuration |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` | Live business account, send credentials and webhook verification |
@@ -102,6 +104,8 @@ InstaPay and Vodafone Cash use manually verified receiving-account statements in
 | `export_ready`, `critical_delivery_failed` | Authorized requester or assigned owner | Protected export or retry task |
 
 Use an outbox uniqueness key containing event, recipient account, channel and template version. Store queued/sent/delivered/bounced/suppressed/failed observations separately from attempts. Verify signed SNS callbacks and the permitted topic, deduplicate provider IDs and preserve monotonic delivery outcomes. A hard bounce creates a contact-verification task. An uncertain send is reconciled before resend.
+
+The owner selected domain-free Gmail on15November2026. Gmail SMTP acceptance establishes sent only. It provides neither a provider idempotency key nor the signed delivery/bounce callback implemented for SES/Resend. A stable Message-ID supports investigation without guaranteeing deduplication. Timeout/ambiguous outcomes remain unknown and cannot be automatically resent. Live readiness requires separate SMTP, received-content and Auth SMTP checks plus an evidenced procedure for unresolved outcomes; selecting Gmail does not waive these controls. Resend's signed terminal outcomes likewise cannot be overwritten by a later HTTP acceptance.
 
 Supabase Auth owns its verification, recovery and invitation token lifecycle. Configure its approved SMTP sender and templates and test those deliveries separately from application-outbox email. The application sends each business event through the outbox once its transaction commits. Package-funded delivery and routine completion use the corresponding own-customer and own-tutor projections.
 
