@@ -77,6 +77,7 @@ describe('Resend callbacks', () => {
     ['email.delivered', 'delivered'],
     ['email.bounced', 'bounced'],
     ['email.failed', 'failed'],
+    ['email.suppressed', 'suppressed'],
   ])('records %s using just the authorized callback parameters', async (type, outcome) => {
     const body = JSON.stringify({ ...baseEvent, type }, null, 2);
     const headers = callbackHeaders(body);

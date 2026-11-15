@@ -64,6 +64,7 @@ const outcomes = {
   'email.delivered': 'delivered',
   'email.bounced': 'bounced',
   'email.failed': 'failed',
+  'email.suppressed': 'suppressed',
 } as const;
 
 /** The existing callback function uses UUIDs for deduplication. Svix IDs are strings. */
