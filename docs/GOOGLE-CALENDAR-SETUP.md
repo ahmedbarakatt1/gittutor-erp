@@ -1,6 +1,10 @@
 # Google organizer setup
 
-This is the configuration needed by the existing server-side Calendar adapter. It is separate from Gmail SMTP: the Gmail App Password cannot authorize Calendar or Meet. No Google project, OAuth grant, event or room was created while preparing these instructions.
+This is the configuration needed by the existing server-side Calendar adapter. It is separate from email SMTP: neither the Gmail App Password nor Mailjet keys authorize Calendar or Meet.
+
+16November2026 setup progress: created **Git Tutor Preview**, project `local-turbine-514923-g1`, under `gittutor2@gmail.com` and verified **Google Calendar API: Enabled**. Billing/trial activation was not selected. Branding is prepared with the owner contact and External/Testing audience; the Google API Services User Data Policy acceptance is pending owner action in Brave. There is no OAuth client, organizer grant, event or Meet room yet. The intended preview redirect is `https://gittutor-erp-rho.vercel.app/api/calendar/google/callback`; it is a testing origin, not a production cutover.
+
+Before live preview connection, bound the dispatch scope: the existing `record_calendar_connection` command queues every eligible future occurrence. Do not switch the historical/practice backlog to a live adapter. Keep credential creation, organizer consent, controlled event/Meet verification and wider activation as separately evidenced steps.
 
 1. Sign into the intended organizer account in Google Cloud Console and select/create the Git Tutor project. Enable **Google Calendar API**. Keep any development rehearsal project separate from production.
 2. Configure Google Auth Platform branding, audience, support contact and data access for the actual application. The implemented scopes are `openid`, `email` and `https://www.googleapis.com/auth/calendar.events`. Learners do not need to grant Calendar access merely to use the portal.
