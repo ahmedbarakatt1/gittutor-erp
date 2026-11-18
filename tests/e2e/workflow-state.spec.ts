@@ -46,3 +46,43 @@ test('loading and refreshing workbook history preserves current workflow input',
     await page.unroute('**/api/v1/workflow-operations');
   }
 });
+
+test('reported chart drilldowns open their matching source rows and preserve current workflow controls', async ({ page }) => {
+  const actor = loadLocalSupabase().actors.admin_a;
+  await page.goto('/login');
+  await page.getByLabel('Email address', { exact: true }).fill(actor.email);
+  await page.getByLabel('Password', { exact: true }).fill(actor.password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expectSignedInAccount(page, actor.id);
+
+  const records = ['Completed', 'Scheduled', null].map((status, index) => ({
+    id: 'd3c78931-96e2-4d52-9860-' + String(index + 1).padStart(12, '0'),
+    title: ['Synthetic completed lesson', 'Synthetic planned lesson', 'Synthetic undated lesson'][index], subtitle: 'Practice course',
+    source_table: 'sessions', source_row: index + 2, reported_status: status, date: index === 2 ? null : '2026-10-06',
+    fields: [{ key: 'course', label: 'Course', value: 'Synthetic subject', type: 'text' }], issues: [], actions: [],
+    review: { version: 1, state: 'linked', can_review: false },
+    links: { learner_id: null, tutor_id: null, occurrence_id: null, package_id: null },
+  }));
+  const data = workflowOperationsSchema.parse({ enabled: true, role: 'owner', mapping_options: { learners: [], tutors: [] },
+    sections: [{ key: 'sessions', title: 'Synthetic session history', description: 'Presentation fixture', metrics: [], records }] });
+  await page.route('**/api/v1/workflow-operations', route => route.fulfill({ json: { data } }));
+  await page.goto('/admin/sessions');
+  const history = page.locator('[data-workflow-operations]');
+  const current = page.getByLabel('Session status', { exact: true });
+  await current.selectOption('completed');
+
+  const complete = history.getByRole('button', { name: 'Show 1 record for Completed', exact: true });
+  await complete.focus();
+  await complete.press('Enter');
+  const row = history.locator('summary').filter({ hasText: 'Synthetic completed lesson' });
+  await expect(row).toBeVisible();
+  await expect(history.getByText('Synthetic planned lesson')).toHaveCount(0);
+  await row.click();
+  await expect(history.getByText('Synthetic subject', { exact: true })).toBeVisible();
+  await history.getByRole('button', { name: 'Show 1 record for No valid date' }).click();
+  await expect(history.getByText('Synthetic undated lesson')).toBeVisible();
+  await history.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(history.getByText('Synthetic planned lesson')).toBeVisible();
+  await expect(current).toHaveValue('completed');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

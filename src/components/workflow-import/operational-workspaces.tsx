@@ -1,11 +1,13 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { workflowOperationsSchema, type WorkflowOperationsData, type WorkflowOperationsRecord, type WorkflowOperationsSection } from '@/modules/workflow-import/operational-model';
 import { formatFinanceAmount } from '@/modules/shared/format';
 import { IdentityForm, TextField } from '../identity-form';
 import { usePaymentRecord } from '../payments/shared';
+import { workbookCharts, workbookDateTime } from './record-insights';
+import { WorkbookCharts, type ChartSelection } from './workbook-charts';
 import styles from './operational-workspaces.module.css';
 
 type EnabledData = Extract<WorkflowOperationsData, { enabled: true }>;
@@ -21,42 +23,109 @@ export function WorkflowOperationsWorkspace({ view, children, collapsed = false 
   const data = parsed?.success && parsed.data.enabled ? parsed.data : null;
   const section = data?.sections.find(item => item.key === view);
   const invalid = parsed && !parsed.success;
-  const history = section && data ? <WorkflowSection key={view} section={section} data={data} onSaved={record.reload} /> : null;
+  const history = section && data ? <WorkflowSection key={view} section={section} data={data} onSaved={record.reload} hasWorkflow={Boolean(children)} /> : null;
   return <>{record.error || invalid ? <div className={styles.notice} role="alert"><p>Workbook records could not be loaded.</p><button className={styles.button} type="button" onClick={record.reload}>Try again</button></div> : history ? collapsed ? <details className={styles.history}><summary>Workbook history</summary>{history}</details> : history : record.data === undefined ? <p className={styles.empty} role="status">Loading your records…</p> : null}
     {/* Keep the workflow subtree mounted when the independent history read changes state. */}
-    {children && <section className={section ? styles.newActivity : undefined} id="new-activity">{section && <header><h2>{view === 'finance' ? 'Verified financial activity' : 'New activity and current workflows'}</h2><p className={styles.description}>{view === 'finance' ? 'Posted transactions and reconciled balances are shown separately from workbook reports.' : 'Continue with the linked people and the usual booking, review and delivery controls.'}</p><p className={styles.description}>Imported history stays separate from activity recorded here.</p></header>}{children}</section>}
+    {children && <section className={section ? styles.newActivity : undefined} id="new-activity">{section && <header><h2>{view === 'finance' ? 'Verified financial activity' : 'New activity and current workflows'}</h2><p className={styles.description}>Imported history stays separate from activity recorded here.</p></header>}{children}</section>}
   </>;
 }
 
-function WorkflowSection({ section, data, onSaved }: { section: WorkflowOperationsSection; data: EnabledData; onSaved: () => void }) {
-  const [query, setQuery] = useState(''), [status, setStatus] = useState(''), [reviewOnly, setReviewOnly] = useState(false), [page, setPage] = useState(0);
-  const id = useId(), statuses = [...new Set(section.records.flatMap(row => row.reported_status ? [row.reported_status] : []))].sort();
+function WorkflowSection({ section, data, onSaved, hasWorkflow }: { section: WorkflowOperationsSection; data: EnabledData; onSaved: () => void; hasWorkflow: boolean }) {
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState('');
+  const [table, setTable] = useState('');
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<ChartSelection | null>(null);
+  const [registerOpen, setRegisterOpen] = useState(section.key === 'overview');
+  const registrySummary = useRef<HTMLElement>(null);
+  const id = useId();
+  const charts = useMemo(() => workbookCharts(section.key, section.records), [section]);
+  const chart = charts.find(item => item.key === selected?.chart);
+  const group = chart?.groups.find(item => item.key === selected?.group);
+  const groupIds = useMemo(() => group ? new Set(group.ids) : null, [group]);
+  const statuses = [...new Set(section.records.flatMap(row => row.reported_status ? [row.reported_status] : []))].sort();
+  const tables = [...new Set(section.records.map(row => row.source_table))].sort();
   const normalized = query.trim().toLocaleLowerCase();
-  const rows = section.records.filter(row => (!status || row.reported_status === status) && (!reviewOnly || row.review.state === 'needs_review') && (!normalized || [row.title, row.subtitle, row.date, row.reported_status, ...row.fields.map(field => field.value)].join(' ').toLocaleLowerCase().includes(normalized))).sort((left, right) => sourceTime(right.date) - sourceTime(left.date) || left.source_row - right.source_row || left.source_table.localeCompare(right.source_table) || left.id.localeCompare(right.id));
-  const pageSize = section.key === 'overview' ? 4 : 8, pageCount = Math.max(1, Math.ceil(rows.length / pageSize)), currentPage = Math.min(page, pageCount - 1), visible = rows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const filtered = Boolean(normalized || status || table || reviewOnly || group);
+  const rows = section.records.filter(row =>
+    (!groupIds || groupIds.has(row.id)) && (!table || row.source_table === table) &&
+    (!status || row.reported_status === status) && (!reviewOnly || row.review.state === 'needs_review') &&
+    (!normalized || [row.title, row.subtitle, row.date, row.source_table, row.source_row, row.reported_status, ...row.fields.map(field => field.value)].join(' ').toLocaleLowerCase().includes(normalized))
+  ).sort((left, right) => (workbookDateTime(right.date) ?? -Infinity) - (workbookDateTime(left.date) ?? -Infinity) || left.source_row - right.source_row || left.source_table.localeCompare(right.source_table) || left.id.localeCompare(right.id));
+  const pageSize = section.key === 'overview' ? 4 : 8;
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize)), currentPage = Math.min(page, pageCount - 1);
+  const visible = rows.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  function resetFilters() {
+    setSelected(null); setQuery(''); setStatus(''); setTable(''); setReviewOnly(false); setPage(0);
+  }
+  function drillDown(next: ChartSelection) {
+    resetFilters();
+    if (next.chart !== selected?.chart || next.group !== selected.group) setSelected(next);
+    setRegisterOpen(true);
+    requestAnimationFrame(() => registrySummary.current?.focus());
+  }
+  const summaryMetrics = section.metrics.filter(metric => metric.key !== 'source_records');
+  const metrics = <dl className={styles.metrics}>{summaryMetrics.map(metric => <div key={metric.key}>
+    <dt>{metric.label}</dt>
+    <dd>{metric.value === null ? 'Not recorded' : metric.unit === 'money' ? formatFinanceAmount(metric.value) : metric.value.toLocaleString('en-GB') + (metric.unit === 'hours' ? ' h' : '')}</dd>
+  </div>)}</dl>;
   return <section className={styles.workspace} aria-label={section.title} data-workflow-view={section.key} data-workflow-operations>
-    <header className={styles.header}><div><h2>{section.key === 'overview' ? 'At a glance' : section.title}</h2></div><button className={styles.button} type="button" onClick={onSaved}>Refresh records</button></header>
-    <p className={styles.notice}>These figures come from your workbook. Historical payments and completed lessons await independent verification; new activity is recorded separately.</p>
-    {section.metrics.length > 0 && <dl className={styles.metrics}>{section.metrics.map(metric => <div key={metric.key}><dt>{metric.label}</dt><dd>{metric.value === null ? 'Not recorded' : metric.unit === 'money' ? formatFinanceAmount(metric.value) : `${metric.value.toLocaleString('en-GB')}${metric.unit === 'hours' ? ' h' : ''}`}</dd></div>)}</dl>}
-    {section.records.length > 0 && <div className={styles.filters}><label className={styles.search} htmlFor={`${id}-search`}>Search records<input id={`${id}-search`} type="search" value={query} maxLength={200} onChange={event => { setQuery(event.target.value); setPage(0); }} placeholder="Name, course or reference" /></label>{statuses.length > 0 && <label htmlFor={`${id}-status`}>Reported status<select id={`${id}-status`} value={status} onChange={event => { setStatus(event.target.value); setPage(0); }}><option value="">All statuses</option>{statuses.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}<label htmlFor={`${id}-review`}>Review filter<select id={`${id}-review`} value={reviewOnly ? 'review' : 'all'} onChange={event => { setReviewOnly(event.target.value === 'review'); setPage(0); }}><option value="all">All records</option><option value="review">Needs mapping review</option></select></label></div>}
-    <p className={styles.source}>{rows.length} {rows.length === 1 ? 'record' : 'records'}{normalized || status || reviewOnly ? ` matching your filters · ${section.records.length} total` : ''}{section.metrics.length > 0 ? ' · Totals cover the full view' : ''}</p>
-    {visible.length ? <ul className={styles.records}>{visible.map(row => <li key={`${row.id}-${row.review.version}`} className={styles.card}><WorkflowCard row={row} view={section.key} data={data} onSaved={onSaved} /></li>)}</ul> : <p className={styles.empty}>{section.records.length ? 'No records match these filters.' : 'No workbook records are available for this view.'}</p>}
-    {pageCount > 1 && <nav className={styles.pagination} aria-label={`${section.title} pages`}><button className={styles.button} type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button><span>Page {currentPage + 1} of {pageCount}</span><button className={styles.button} type="button" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Next</button></nav>}
+    <header className={styles.header}>
+      <div><h2>{section.key === 'overview' ? 'Workbook overview' : section.title}</h2>
+        <p className={styles.description}>Payments and completions are reported by the workbook.{charts.length > 0 && ' Select a chart value to see its source records.'}</p></div>
+      <div className={styles.tools}>{hasWorkflow && <a href="#new-activity">Current workflow</a>}
+        <button className={styles.button} type="button" onClick={onSaved}>Refresh records</button></div>
+    </header>
+    {summaryMetrics.length > 0 && (section.key === 'finance' ? <details className={styles.balanceFigures}><summary>Reported balance figures <span>{summaryMetrics.length}</span></summary>{metrics}</details> : metrics)}
+    <WorkbookCharts charts={charts} selected={selected} onSelect={drillDown} recordsId={id + '-register'} />
+    <details id={id + '-register'} className={styles.register} open={registerOpen} onToggle={event => setRegisterOpen(event.currentTarget.open)}>
+      <summary ref={registrySummary}><span className={styles.chevron} aria-hidden="true" /><span>Source records</span><span className={styles.recordCount} aria-live="polite">{filtered ? rows.length + ' of ' : ''}{section.records.length}</span></summary>
+      <div className={styles.registerBody}>
+        {section.records.length > 0 && <div className={styles.filters}>
+          <label className={styles.search}>Search records<input type="search" value={query} maxLength={200} onChange={event => { setQuery(event.target.value); setPage(0); }} placeholder="Name, course or reference" /></label>
+          {tables.length > 1 && <label><span id={id + '-source-label'}>Source</span><select aria-labelledby={id + '-source-label'} value={table} onChange={event => { setTable(event.target.value); setPage(0); }}><option value="">All sources</option>{tables.map(value => <option key={value} value={value}>{tableLabels[value]}</option>)}</select></label>}
+          {statuses.length > 0 && <label><span id={id + '-status-label'}>Reported status</span><select aria-labelledby={id + '-status-label'} value={status} onChange={event => { setStatus(event.target.value); setPage(0); }}><option value="">All statuses</option>{statuses.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
+          <label className={styles.check}><input type="checkbox" checked={reviewOnly} onChange={event => { setReviewOnly(event.target.checked); setPage(0); }} />Needs mapping review</label>
+        </div>}
+        {filtered && <div className={styles.activeFilter}><span role="status">{group && chart ? chart.title + ' · ' + group.label + ' · ' : ''}{rows.length} matching {rows.length === 1 ? 'record' : 'records'}</span><button type="button" onClick={resetFilters}>Clear filters</button></div>}
+        {visible.length ? <ul className={styles.records}>{visible.map(row => <li key={row.id + '-' + row.review.version}>
+          <WorkflowRow row={row} view={section.key} data={data} onSaved={onSaved} groupName={id + '-row'} />
+        </li>)}</ul> : <p className={styles.empty}>{section.records.length ? 'No records match these filters.' : 'No workbook records are available for this view.'}</p>}
+        {pageCount > 1 && <nav className={styles.pagination} aria-label={section.title + ' pages'}><button className={styles.button} type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button><span aria-live="polite">Page {currentPage + 1} of {pageCount}</span><button className={styles.button} type="button" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Next</button></nav>}
+      </div>
+    </details>
   </section>;
 }
 
-function sourceTime(value: string | null) { const parsed = value ? Date.parse(value) : NaN; return Number.isFinite(parsed) ? parsed : -Infinity; }
+const tableLabels: Record<WorkflowOperationsRecord['source_table'], string> = {
+  sessions: 'Sessions', packages: 'Packages', students: 'Students', tutors: 'Tutors', marketing: 'Marketing', distributions: 'Distributions', balances: 'Balances',
+};
 
-function WorkflowCard({ row, view, data, onSaved }: { row: WorkflowOperationsRecord; view: View; data: EnabledData; onSaved: () => void }) {
+const summaryFieldKeys: Partial<Record<View, string[]>> = {
+  payments: ['student_balance_minor'], tutor_pay: ['tutor_fee_balance_minor'], packages: ['sessions_remaining'],
+  finance: ['amount_minor', 'count'], campaigns: ['amount_minor'],
+};
+
+function WorkflowRow({ row, view, data, onSaved, groupName }: { row: WorkflowOperationsRecord; view: View; data: EnabledData; onSaved: () => void; groupName: string }) {
   const fields = view === 'payments' || view === 'tutor_pay' ? [...row.fields].sort((left, right) => Number(right.type === 'money') - Number(left.type === 'money')) : row.fields;
-  const primaryCount = view === 'overview' ? 2 : 6, primaryFields = fields.slice(0, primaryCount), remainingFields = fields.slice(primaryCount);
-  return <><header><h3>{row.title}</h3>{row.subtitle && <p className={styles.subtitle}>{row.subtitle}</p>}</header><div className={styles.badges}>{row.reported_status && <span className={styles.badge}>{row.reported_status} · reported</span>}<span className={styles.badge}>{row.review.state === 'needs_review' ? 'Needs mapping review' : row.review.state === 'linked' ? 'Linked record' : 'Mapping reviewed'}</span>{row.date && <span className={styles.badge}>{formatValue({ key: 'date', label: 'Date', type: 'date', value: row.date })}</span>}</div>
-    {primaryFields.length > 0 && <Fields fields={primaryFields} />}
-    {row.actions.length > 0 && <div className={styles.actions}>{row.actions.map(action => <Link key={`${action.label}-${action.href}`} href={action.href}>{action.label}</Link>)}</div>}
-    {(remainingFields.length > 0 || row.issues.length > 0) && <details className={styles.details}><summary>Details{row.issues.length > 0 ? ` and ${row.issues.length} source ${row.issues.length === 1 ? 'issue' : 'issues'}` : ''}</summary>{remainingFields.length > 0 && <Fields fields={remainingFields} />}{row.issues.length > 0 && <ul>{row.issues.map((issue, index) => <li key={`${issue}-${index}`}>{issue.replaceAll('_', ' ').replaceAll(':', ' · ')}</li>)}</ul>}</details>}
-    {row.review.can_review && data.role === 'owner' && <MappingReview row={row} options={data.mapping_options} onSaved={onSaved} />}
-    <p className={styles.source}>Source: {row.source_table} · row {row.source_row}</p>
-  </>;
+  const summaryFields = fields.filter(field => summaryFieldKeys[view]?.includes(field.key));
+  const highlight = summaryFields.find(field => field.value !== null) ?? summaryFields[0];
+  return <details name={groupName} className={styles.record}>
+    <summary>
+      <span className={styles.rowIdentity}><strong>{row.title}</strong>{row.subtitle && <small>{row.subtitle}</small>}{highlight && row.reported_status && <small>{row.reported_status} · reported</small>}</span>
+      <span className={styles.rowStatus}>{highlight ? <><small>{highlight.label}</small><b>{formatValue(highlight)}</b></> : row.reported_status ? row.reported_status + ' · reported' : tableLabels[row.source_table]}</span>
+      <span className={styles.rowDate}>{row.date ? formatValue({ key: 'date', label: 'Date', type: 'date', value: row.date }) : 'Undated'}</span>
+      <span className={styles.chevron} aria-hidden="true" />
+    </summary>
+    <div className={styles.recordDetail}>
+      <p className={styles.source}>{tableLabels[row.source_table]} · row {row.source_row} · {row.review.state === 'needs_review' ? 'Needs mapping review' : row.review.state === 'linked' ? 'Linked record' : 'Mapping reviewed'}</p>
+      {row.actions.length > 0 && <div className={styles.actions}>{row.actions.map(action => <Link key={action.label + '-' + action.href} href={action.href}>{action.label}</Link>)}</div>}
+      {fields.length > 0 && <Fields fields={fields} />}
+      {row.issues.length > 0 && <details className={styles.details}><summary>Source issues ({row.issues.length})</summary><ul>{row.issues.map((issue, index) => <li key={issue + '-' + index}>{issue.replaceAll('_', ' ').replaceAll(':', ' · ')}</li>)}</ul></details>}
+      {row.review.can_review && data.role === 'owner' && <MappingReview row={row} options={data.mapping_options} onSaved={onSaved} />}
+    </div>
+  </details>;
 }
 
 function Fields({ fields }: { fields: Field[] }) { return <dl className={styles.fields}>{fields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{formatValue(field)}</dd></div>)}</dl>; }
@@ -64,9 +133,10 @@ function formatValue(field: Field) {
   if (field.value === null) return 'Not recorded';
   if (field.type === 'money' && typeof field.value === 'number') return formatFinanceAmount(field.value);
   if (typeof field.value === 'boolean') return field.value ? 'Yes' : 'No';
-  if (field.type === 'date' && typeof field.value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(field.value)) {
-    const date = new Date(`${field.value}T12:00:00Z`);
-    if (Number.isFinite(date.getTime())) return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Cairo' }).format(date);
+  if (field.type === 'date' && typeof field.value === 'string') {
+    const date = workbookDateTime(field.value);
+    if (date === null) return field.value + ' (invalid date)';
+    return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Cairo' }).format(date);
   }
   return String(field.value);
 }

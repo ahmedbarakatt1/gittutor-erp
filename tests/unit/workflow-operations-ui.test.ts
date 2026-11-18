@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({ data: undefined as unknown }));
 // Supply the completed HTTP read; all schema validation and rendering remain real.
 vi.mock('../../src/components/payments/shared', () => ({ usePaymentRecord: () => ({ data: state.data, reload: () => {} }) }));
 import { WorkflowOperationsWorkspace } from '../../src/components/workflow-import/operational-workspaces';
+import { workbookCharts } from '../../src/components/workflow-import/record-insights';
 
 const uuid = (n: number) => `d3c78931-96e2-4d52-9860-${String(n).padStart(12, '0')}`;
 function sourceRow(n: number, date: string | null, title: string): WorkflowOperationsRecord {
@@ -48,6 +49,9 @@ test('payment cards show monetary fields before context and retain remaining det
   state.data = data('payments', [row]);
   const html = render('payments');
   expect(html.indexOf('Reported remaining balance')).toBeLessThan(html.indexOf('Context 0'));
+  const rowSummary = html.slice(html.indexOf('Reported payment')).split('</summary>')[0];
+  expect(rowSummary).toContain('Reported remaining balance');
+  expect(rowSummary).toContain('12.00');
   expect(html).toContain('Saved detail 5');
   expect(html).toContain('Completed · reported');
   expect(html).toContain('Imported history stays separate from activity recorded here.');
@@ -74,4 +78,50 @@ test('customer rendering fails closed when the response contains private compens
   expect(html).toContain('Workbook records could not be loaded.');
   expect(html).not.toContain('Private compensation must stay hidden');
   expect(html).not.toContain('Restricted record');
+});
+
+test('overview chart groups reconcile to the visible session rows without counting packages or dropping unknowns', () => {
+  const records = [
+    sourceRow(1, '2026-02-01', 'Earlier session'),
+    sourceRow(2, '2026-10-05', 'October session'),
+    sourceRow(3, '2026-10-07', 'Another October session'),
+    sourceRow(4, '2026-02-31', 'Invalid business date'),
+    sourceRow(5, null, 'Undated session'),
+    { ...sourceRow(6, '2026-09-01', 'A package'), source_table: 'packages' as const },
+  ];
+  records[1].reported_status = null;
+  records[2].reported_status = ' Cancelled ';
+  records[3].reported_status = 'Other saved label';
+  const [outcomes, months] = workbookCharts('overview', records);
+  for (const chart of [outcomes, months]) {
+    expect(chart.groups.flatMap(group => group.ids).sort()).toEqual(records.slice(0, 5).map(row => row.id).sort());
+  }
+  const counts = (chart: typeof outcomes) => Object.fromEntries(chart.groups.map(group => [group.key, group.ids.length]));
+  expect(counts(outcomes)).toMatchObject({ completed: 2, canceled: 1, other: 1, missing: 1 });
+  expect(counts(months)).toMatchObject({ earlier: 1, '2026-10': 2, '2026-09': 0, missing: 2 });
+  state.data = data('overview', records);
+  const html = render('overview');
+  expect(html).toContain('Session outcomes');
+  expect(html).toContain('Session activity');
+  expect(html).toContain('aria-label="Show 2 records for Completed"');
+  expect(html).not.toContain('NaN');
+});
+
+test('package progress requires both valid source counts and treats zero and missing explicitly', () => {
+  const packages = [[4, 4], [4, 1], [4, 0], [0, 0], [null, null], [2, 3], [4, 1.5]].map(([total, completed], index) => ({
+    ...sourceRow(index + 1, null, 'Test package'), source_table: 'packages' as const,
+    fields: [{ key: 'total_sessions', label: 'Total', type: 'number' as const, value: total },
+      { key: 'sessions_completed', label: 'Completed', type: 'number' as const, value: completed }],
+  }));
+  const [chart] = workbookCharts('packages', packages);
+  expect(Object.fromEntries(chart.groups.map(group => [group.key, group.ids.length]))).toEqual({ complete: 1, partial: 1, none: 1, unknown: 4 });
+});
+
+test('balance breakdown uses only fields available to the viewer and keeps negative, missing and zero distinct', () => {
+  const row = sourceRow(1, null, 'Session');
+  expect(workbookCharts('payments', [row])).toEqual([]);
+  const rows = [1200, 0, -500, null].map((value, index) => ({ ...sourceRow(index + 1, null, 'Session'),
+    fields: [{ key: 'student_balance_minor', label: 'Reported balance', type: 'money' as const, value }] }));
+  const [chart] = workbookCharts('payments', rows);
+  expect(chart.groups.map(group => group.ids.length)).toEqual([1, 1, 1, 1]);
 });
