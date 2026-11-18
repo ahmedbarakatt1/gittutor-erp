@@ -12,6 +12,8 @@ Playwright CLI 0.1.24, session `uiquality`, verified the admin keyboard menu, fo
 
 The first full GitHub run passed database, unit and integration checks. `pnpm test:e2e` reported 163 passed and five failed across three scenarios. The transfer check still queried a definition-list cell for the booking status, the cancellation check looked for credits inside a closed section, and the mobile staff invitation check looked for a workspace link before opening Menu. The updated tests use the visible reservation header and open the associated controls. All financial, confidentiality and access assertions remain in those scenarios.
 
+The [full verification run for `459de31`](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44345460137) passed all 168 desktop and mobile browser tests, the unit and integration suites, both database checks and the production build. The follow-up commit changed only tests and this status document. Its application code matches the verified shared preview at `999ebad`.
+
 ## Confirmed one-to-one booking and live room — 18 November 2026
 
 The owner asked to run the reserved test personally on their behalf. The student portal saved a tutoring request, uploaded the sample lecture PDF, passed its preview scan and submitted the request. Staff matched the request to the bound private session. The student reserved the seat, accepted the EGP 650 test quote and submitted the prepared sample receipt. Staff verified the independent synthetic transfer and allocated it once. The enrollment and occurrence were confirmed before the cutoff. This exercise moved EGP 0.
