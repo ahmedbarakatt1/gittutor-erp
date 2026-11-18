@@ -133,7 +133,10 @@ test('staff recipient follows real invitation mail, sets a password and explicit
     expect(after.status()).toBe(200);
     const { data } = await after.json();
     expect(data.roles).toContain('customer_service');
-    await page.getByRole('link', { name: 'Operations', exact: true }).click();
+    const navigation = page.getByRole('navigation', { name: 'Learning', exact: true });
+    const menu = navigation.getByRole('button', { name: /^Menu/ });
+    if (await menu.isVisible()) await menu.click();
+    await navigation.getByRole('link', { name: 'Operations', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Customer service', exact: true })).toBeVisible();
     expect((await database.query("select count(*)::int as count from app_private.account_roles where account_id=$1 and role='customer_service' and revoked_at is null", [data.account_id])).rows[0].count).toBe(1);
     expect((await database.query('select count(*)::int as count from auth.users where email=$1', [email])).rows[0].count).toBe(1);

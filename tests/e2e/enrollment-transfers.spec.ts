@@ -95,7 +95,7 @@ test('a session transfer preserves the funded source until exact learner, tutor 
   try {
     const [customer, operator, tutor, payer, unrelated] = await Promise.all(contexts.map(context => context.newPage()));
     await login(customer, 'learner_a'); await customer.goto(`/learn/bookings/${sourceId}`);
-    await expect(customer.getByRole('definition').filter({ hasText: /^Confirmed$/ })).toBeVisible();
+    await expect(customer.getByRole('main').locator('header').getByText('Confirmed', { exact: true })).toBeVisible();
     await customer.getByText('Request a change', { exact: true }).click();
     const changes = customer.locator('details').filter({ has: customer.locator('summary').getByText('Request a change', { exact: true }) });
     await chooseDestination(customer, changes, destinationId);

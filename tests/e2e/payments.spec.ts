@@ -287,7 +287,8 @@ test('reserved cancellation shows exact returned and retained credits before cus
     expect(dto.terms).toMatchObject({ old_customer_price_minor: 0, customer_price_minor: 0, customer_adjustment_minor: 0, released_credit_quanta: 500, released_value_minor: 25000, extinguished_credit_quanta: 500, extinguished_value_minor: 25001 });
     expect(JSON.stringify(dto)).not.toMatch(confidential);
     expect(await customer.locator('body').innerText()).not.toMatch(/compensation|Current agreement ceiling|EGP 100\.00/);
-    await expect(customer.getByText('Reserved package credits count toward funding. Check the related reservation for its confirmation status.', { exact: true })).toBeVisible();
+    await customer.locator('summary').filter({ hasText: /^Use package credits$/ }).click();
+    await expect(customer.locator('#package-coverage').getByText('Reserved package credits count toward funding. Check the related reservation for its confirmation status.', { exact: true })).toBeVisible();
     await expect(customer.getByText('Session funding and confirmation remain unavailable until payment integration is complete.', { exact: true })).toHaveCount(0);
     await mkdir('.local/screenshots', { recursive: true });
     await proposal.screenshot({ path: `.local/screenshots/t06-partial-cancellation-${info.project.name}.png` });
