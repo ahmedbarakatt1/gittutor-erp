@@ -1,5 +1,11 @@
 # Implementation status
 
+## Confirmed one-to-one booking and live room — 18 November 2026
+
+The owner asked to run the reserved test personally on their behalf. The student portal saved a tutoring request, uploaded the sample lecture PDF, passed its preview scan and submitted the request. Staff matched the request to the bound private session. The student reserved the seat, accepted the EGP 650 test quote and submitted the prepared sample receipt. Staff verified the independent synthetic transfer and allocated it once. The enrollment and occurrence were confirmed before the cutoff. This exercise moved EGP 0.
+
+The hosted Calendar worker created the private Google Meet event. The student and tutor each clicked **Join session** from their own signed-in portal. Both authorized access reads returned the same verified room and both browsers reached Google. A separate tutor download matched the student's original PDF byte for byte. The organizer joined the call with camera and microphone off. In Brave, the owner confirmed the signed-in student account. That account requested admission with its camera and microphone off. The organizer admitted the named learner. Google Meet displayed two contributors and a learner-joined notification. The test verified admission. It did not measure 90-minute call duration. Private operator command `node --import tsx .local/production-setup/booking-pilot/run-student.mts` exited 0. Private enrollment and room references and a student-room screenshot are in the ignored pilot folder. The first browser run lost its response body on cross-origin navigation after confirmation. The read-only retry used the authenticated access endpoint and reused the same reservation, receipt and event.
+
 ## Private booking rehearsal and workbook dashboards — 18 November 2026
 
 Full GitHub CI passed on the deployed application revision `bf709a9`. Both database verification steps, all unit and integration tests, 166 browser cases and the production build passed. The hosted owner walkthrough also opened the package-progress and payment-balance charts and their contributing records. These results cover the implementation and authenticated preview. Two-person Google admission still requires the owner to join with both accounts.
