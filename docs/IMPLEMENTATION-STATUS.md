@@ -1,5 +1,11 @@
 # Implementation status
 
+## Google organizer connection — 18 November 2026
+
+The owner created the OAuth configuration. Google Cloud confirmed creation of the **Git Tutor Preview** web client, the exact testing callback and a Testing audience of one, `gittutor2@gmail.com`. The consent configuration lists OpenID, email and Calendar events. The credential was saved using Windows DPAPI and the client secret was configured as sensitive on the existing Vercel Hobby project. Billing and plan upgrades were not required.
+
+The hosted preview has two eligible practice occurrences. The new development-only organizer state preserves their existing simulated connection when a live test organizer consents. The dashboard distinguishes the configured connect action from the existing connection. Staging and production continue using the ordinary live connection workflow. A real PostgreSQL rollback rehearsal against the authorized preview used its authenticated owner session to call the connection commands. It verified the original connection ID, unchanged Calendar job count and the new organizer's admin-visible state. `supabase db push --remote=tjrbvejvnquhmqdwsacy --skip-vault --dry-run` listed only migration 20261118130000. Applying that migration to the same testing project succeeded. `vitest run tests/unit/calendar-provider.test.ts tests/unit/google-oauth.test.ts` passed 7 checks. TypeScript passed. Live consent, token refresh and a private Meet event require separate verification. The production Auth project was outside this change.
+
 ## Auth emails received and Google setup awaiting approval — 16 November 2026
 
 The owner explicitly authorized Auth email tests to `gittutor2@gmail.com` and Calendar/Meet connection with free services. Latest full CI [43760307577](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/43760307577), exact revision `e2c68c2904cfdf3fdfae7bc80e7722b9c6e49e61`, completed **successfully**:454 unit tests,304 database tests,164 browser passes with2 gated skips, lint/types/database verification/build/pack/evidence checks. `gh run view 43760307577 --json status,conclusion,headSha,url,jobs` and its full log were inspected; private log `.local/production-setup/ci-e2c68c2-success.log`. The older source run43759579123 was cancelled by the follow-up push, not failed. Formal acceptance remains0 recorded passed/147 not_run.
