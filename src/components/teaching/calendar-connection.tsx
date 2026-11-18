@@ -25,5 +25,31 @@ export function CalendarConnectionPanel({ provider }: { provider: 'fake' | 'goog
     } catch (failure) { setError(failure instanceof Error ? failure.message : copy.connectFailed); }
     finally { setPending(false); }
   }
-  return <section className={styles.section}><h2>{copy.integrationTitle}</h2><PaymentReadState pending={!data} {...record} />{data && <><dl><dt>{copy.mode}</dt><dd>{data.mode === 'fake' ? copy.fakeMode : copy.googleMode}</dd><dt>{copy.connectionState}</dt><dd>{copy.states[data.state]} · {copy.states[data.integration_state]}</dd>{data.organizer_masked_email && <><dt>{copy.organizer}</dt><dd>{data.organizer_masked_email}</dd></>}<dt>{copy.lastVerified}</dt><dd>{data.last_verified_at ? <CairoTimestamp value={data.last_verified_at} /> : copy.neverVerified}</dd></dl>{data.mode === 'fake' && <p className={styles.notice}>{copy.simulated}</p>}{data.integration_state === 'verification_required' && <p>{copy.verification}</p>}{error && <p role="alert" className={formStyles.error}>{error}</p>}{connected && <p role="status">{copy.connectedFake}</p>}<button type="button" className={formStyles.primary} disabled={pending} onClick={() => void connect()}>{provider === 'fake' ? copy.connectFake : data.mode === 'fake' || data.state === 'not_connected' ? copy.connect : copy.reconnect}</button>{data.connection_id && data.state !== 'revoked' && <IdentityForm action="calendar/connection/revoke" submitLabel={copy.revoke} successMessage={copy.revoked} resettable={false} onSaved={record.reload} payload={() => ({ connection_id: data.connection_id, expected_version: data.version })}><p>{copy.reasons.ACCESS_REVOKED}</p></IdentityForm>}</>}</section>;
+  return <section className={styles.section}>
+    <h2>{copy.integrationTitle}</h2>
+    <PaymentReadState pending={!data} {...record} />
+    {data && <>
+      <dl>
+        <dt>{copy.mode}</dt><dd>{data.mode === 'fake' ? copy.fakeMode : copy.googleMode}</dd>
+        <dt>{copy.connectionState}</dt>
+        <dd>{copy.states[data.state]} · {data.state === 'preview_connected' && data.integration_state === 'verified' ? copy.privateMeetVerified : copy.states[data.integration_state]}</dd>
+        {data.organizer_masked_email && <><dt>{copy.organizer}</dt><dd>{data.organizer_masked_email}</dd></>}
+        <dt>{copy.lastVerified}</dt><dd>{data.last_verified_at ? <CairoTimestamp value={data.last_verified_at} /> : copy.neverVerified}</dd>
+      </dl>
+      {data.mode === 'fake' && <p className={styles.notice}>{copy.simulated}</p>}
+      {data.state === 'preview_connected' && <p>{copy.practiceRooms}</p>}
+      {data.integration_state === 'verification_required' && <p>{copy.verification}</p>}
+      {error && <p role="alert" className={formStyles.error}>{error}</p>}
+      {connected && <p role="status">{copy.connectedFake}</p>}
+      <button type="button" className={formStyles.primary} disabled={pending} onClick={() => void connect()}>
+        {provider === 'fake' ? copy.connectFake : data.mode === 'fake' || data.state === 'not_connected' ? copy.connect : copy.reconnect}
+      </button>
+      {data.connection_id && data.state !== 'revoked' && <IdentityForm
+        action="calendar/connection/revoke" submitLabel={copy.revoke} successMessage={copy.revoked}
+        resettable={false} onSaved={record.reload} payload={() => ({ connection_id: data.connection_id, expected_version: data.version })}
+      >
+        <p>{copy.revokeHint}</p>
+      </IdentityForm>}
+    </>}
+  </section>;
 }
