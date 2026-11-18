@@ -18,7 +18,7 @@ Vercel Hobby remains useful for the current isolated pilot but its terms restric
 
 ## Email and meetings
 
-Use the selected Mailjet SMTP adapter for the verified owner address, with privately stored API/secret credentials. Clean production Auth settings are saved/read back; actual Auth delivery and final worker activation remain unverified. Never activate sending against a pilot backlog. Gmail's encrypted credential/helper remain available for rollback.
+Use the selected Mailjet SMTP adapter for the verified owner address, with privately stored API/secret credentials. Clean production Auth settings are saved/read back; the two owner-only Auth messages arrived in Spam. Browser invitation and reset on the final hostname and final worker activation remain unverified. Never activate sending against a pilot backlog. Gmail's encrypted credential/helper remain available for rollback.
 
 Mailjet's owner test arrived in Spam. The latest **use mailjet** instruction superseded the intermediate keep-Gmail choice. Its Free plan has6,000/month and200/day limits; a verified Gmail sender does not establish reliable Inbox delivery. The preview stays fake/manual and no customer queue was dispatched. [Mailjet setup](MAILJET-SETUP.md).
 

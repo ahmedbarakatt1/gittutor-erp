@@ -1,6 +1,6 @@
-# Try the complete flow
+# Try the complete flow locally
 
-This guide records the synthetic demo verified on13 November2026 at the [temporary preview address](https://polo-issn-transmission-connecticut.trycloudflare.com), or the [local development app](http://127.0.0.1:3000). Its historical checks do not attest current uptime; [online-preview evidence and lifetime](ONLINE-PREVIEW.md) explain that boundary. The tunnel works only while this computer, server, tunnel and database are running, and restarting it may change the URL. Exact account details, fresh session links and references are generated in the private, ignored `.local/demo/START-HERE.md` by the preparation command below. These generated files intentionally do not exist in a clean checkout. Keep that file open alongside this guide. All five accounts are synthetic; use separate browser profiles or sign out before changing roles.
+This guide uses the [local development app](http://127.0.0.1:3000) and the synthetic rehearsal verified on 13 November 2026. Generate the private `.local/demo/START-HERE.md` using the preparation command below for the role accounts, current practice booking and sample files. Use separate browser profiles for each role. The [hosted testing preview](ONLINE-PREVIEW.md) uses its own accounts and records.
 
 The guide uses one learner throughout and a newly named **Git Tutor guided demo** tutor. The learner and guardian also have older verification records, so use the exact links in START-HERE instead of choosing an unrelated record from a long list. No previous data was removed. The private session price is the approved synthetic example, EGP 500. The published group prices remain EGP 575, 550 and 500 per learner for groups of two, three and four.
 
@@ -23,7 +23,7 @@ Expected: the receipt is ready for review and the booking remains unconfirmed un
 
 ## 3. Independently review the money
 
-1. In the **service** browser profile open [payment review](https://polo-issn-transmission-connecticut.trycloudflare.com/service/payments). The newly submitted learner receipt appears near the top of **Unassigned**. Choose **Claim case**; keep this case open in a tab.
+1. In the **service** browser profile open [payment review](http://127.0.0.1:3000/service/payments). The newly submitted learner receipt appears near the top of **Unassigned**. Choose **Claim case**; keep this case open in a tab.
 2. Open **Independent incoming transfer** from START-HERE. It is a separate synthetic receiving-account entry, initially pending. Its statement and source-owner files were uploaded into private storage and checked independently of the customer receipt.
 3. In **Verify settled funds**, keep the matching reference and EGP 500 amount. Enter the Cairo settlement time from START-HERE, add a verification note and select the prepared settlement evidence matching the first eight characters of its ID. Choose **Verify settled funds**.
 4. Under **Find verified account**, search for the learner's exact email from START-HERE. Select that account as **Verified source owner**, select the matching **Independent ownership evidence**, give a reason and choose **Verify source owner**.
@@ -47,8 +47,8 @@ Future sessions reject factual attendance. Use the separate **Completed example*
 Only its historical schedule/admission was seeded through the existing guarded local fixture. The setup then invoked authenticated **Record session start → Save attendance → Submit delivery for approval → Approve session delivery** commands with genuine past times. Approval created exactly one EGP 250 tutor earning. A verified synthetic destination and independently checked payout evidence then supported an EGP 150 settled payout. The expected remaining payable is **EGP 100**.
 
 - **Tutor delivery / Admin delivery:** approved attendance and delivery record.
-- [Tutor pay](https://polo-issn-transmission-connecticut.trycloudflare.com/tutor/pay): EGP 250 earned, EGP 150 settled and EGP 100 remaining.
-- [Admin tutor pay](https://polo-issn-transmission-connecticut.trycloudflare.com/admin/pay): load/select the named demo tutor to inspect the earning, payout and private destination controls.
+- [Tutor pay](http://127.0.0.1:3000/tutor/pay): EGP 250 earned, EGP 150 settled and EGP 100 remaining.
+- [Admin tutor pay](http://127.0.0.1:3000/admin/pay): load/select the named demo tutor to inspect the earning, payout and private destination controls.
 - **Learner record:** the completed lesson's customer view excludes tutor compensation and internal records.
 
 This demonstrates actual local authorization, posting and settlement rules. It does not claim a real class was taught or that a real bank transferred money. To experience entering attendance yourself, do it on the personal session after its scheduled time; do not change the clock or mark future attendance.
@@ -57,14 +57,14 @@ This demonstrates actual local authorization, posting and settlement rules. It d
 
 | Role | Link | Try |
 |---|---|---|
-| Learner / guardian | [Packages](https://polo-issn-transmission-connecticut.trycloudflare.com/learn/packages) | Choose the learner, inspect a contract and its entitlement history. New purchases require their own funding; the EGP 500 demo transfer belongs to the private lesson. |
-| Learner | [Support](https://polo-issn-transmission-connecticut.trycloudflare.com/learn/support) | Start a synthetic question and request human help. |
-| Customer service | [Support queue](https://polo-issn-transmission-connecticut.trycloudflare.com/service/support) | Claim the conversation and reply in the local website chat. |
-| Learner / guardian | [My exports](https://polo-issn-transmission-connecticut.trycloudflare.com/learn/exports) | Request an export of the authorized learner's own records. |
-| Tutor | [My exports](https://polo-issn-transmission-connecticut.trycloudflare.com/tutor/exports) | Inspect/export the tutor's own statement. |
-| Admin | [Session directory](https://polo-issn-transmission-connecticut.trycloudflare.com/admin/sessions) | Find the exact session identity and history. |
-| Admin | [Exports](https://polo-issn-transmission-connecticut.trycloudflare.com/admin/exports) | Review scoped export jobs and generated files. |
-| Admin | [Finance](https://polo-issn-transmission-connecticut.trycloudflare.com/admin/finance) | Inspect cash, tuition and payable movements. Overall totals include preserved stress-test history; they are not this demo's totals. |
+| Learner / guardian | [Packages](http://127.0.0.1:3000/learn/packages) | Choose the learner, inspect a contract and its entitlement history. New purchases require their own funding; the EGP 500 demo transfer belongs to the private lesson. |
+| Learner | [Support](http://127.0.0.1:3000/learn/support) | Start a synthetic question and request human help. |
+| Customer service | [Support queue](http://127.0.0.1:3000/service/support) | Claim the conversation and reply in the local website chat. |
+| Learner / guardian | [My exports](http://127.0.0.1:3000/learn/exports) | Request an export of the authorized learner's own records. |
+| Tutor | [My exports](http://127.0.0.1:3000/tutor/exports) | Inspect/export the tutor's own statement. |
+| Admin | [Session directory](http://127.0.0.1:3000/admin/sessions) | Find the exact session identity and history. |
+| Admin | [Exports](http://127.0.0.1:3000/admin/exports) | Review scoped export jobs and generated files. |
+| Admin | [Finance](http://127.0.0.1:3000/admin/finance) | Inspect cash, tuition and payable movements. Overall totals include preserved stress-test history; they are not this demo's totals. |
 
 ## Preparation and verification commands
 
@@ -80,16 +80,11 @@ Remove-Item Env:NODE_OPTIONS
 pnpm worker:dev
 ```
 
-On this desktop, prepend the bundled pinned runtime when needed:
-
-```powershell
-$demoNode = [IO.Path]::GetFullPath((Join-Path (Split-Path (Get-Command pnpm).Source) '../../node/bin/node.exe'))
-$env:Path = "$(Split-Path $demoNode);$env:Path"
-```
+If PowerShell cannot find Node or pnpm, install the pinned versions listed in the [local setup runbook](handoff/03-operations-and-release.md), reopen the terminal and check both version commands before preparing the demo.
 
 Preparation refuses nonlocal targets, nonfake providers and a competing preparation. Repeating it reuses the saved manifest and preserves the user's progress; it does not reset records, regenerate passwords, replay the already completed lesson or spend the personal transfer. An incomplete manifest is retained for inspection instead of silently duplicating the setup. Keep `.local/demo` private and do not remove it to retry an interrupted run.
 
-For an authorized online preview, set `DEMO_BASE_URL` to its HTTPS origin before repeating the preparation command. This only regenerates the private handoff's links; it does not change the application's trusted origin, authentication rules, database target or the saved records. This guide and START-HERE now use the current public address for portal links. For local testing, use the same paths on `http://127.0.0.1:3000`.
+Use the generated links with the same isolated database that provided the demo records. Rewriting the hostname in a local booking link cannot transfer its account or booking to the hosted workbook preview. For the hosted environment use [its own access instructions](ONLINE-PREVIEW.md).
 
 The optional browser check is excluded from normal suites unless `DEMO_VERIFY=1`. It uses the separate verification session and authenticates all five roles. It does not mock application responses. File scanning and calendar provisioning use the existing strict fake adapters. Once it has passed, inspect its saved result rather than spending another booking. Actual logs and screenshots are in `.local/demo-browser*.log` and `.local/demo/screenshots`; the manifest records the successful run only after every assertion passes.
 

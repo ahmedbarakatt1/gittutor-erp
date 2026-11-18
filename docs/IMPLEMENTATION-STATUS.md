@@ -1,5 +1,21 @@
 # Implementation status
 
+## Repository cleanup and colleague handoff — 18 November 2026
+
+The [editable handoff](handoff/README.md) and [printable handoff](../output/pdf/Git-Tutor-Handoff.pdf) cover the public site and four portals, a worked student booking, workbook import and reconciliation, authorization, tutor compensation privacy, provider setup, operations, recovery and outstanding launch work. The source atlas maps 73 page routes, 20 HTTP handler modules and 18 product requirements to the repository. Seven diagrams explain the main workflows and system boundaries. The handoff distinguishes the testing preview, the separate production database and the last recorded live provider tests.
+
+Removed `GitTutor-Codex-Start.md` after confirming it was identical to `CODEX-START.md`. Removed the unreferenced `src/components/catalog/offer-list.tsx` and 22 unused CSS module class names across the authentication, booking, catalog and payment stylesheets. Updated the walkthrough, hosting and provider guides with the current preview address, email delivery evidence and organizer connection status. Kept applied migrations, historical release evidence and private local operational files. No provider, hosted database or deployed application was changed by this cleanup.
+
+| Verification | Result |
+| --- | --- |
+| `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` | Passed. All 463 unit tests passed across 67 files, and the production build completed. |
+| `pnpm exec tsx .local/handoff-qa-20261118/browser.mts` | Chromium passed at 390 × 844 and 1440 × 900 for pricing, flexible subject requests, sign-in and published offer detail. No horizontal overflow, console errors or page exceptions were observed. The offer-detail check used a synthetic catalog response because the local database was offline. The other three pages ran directly from the production build. |
+| `python .local/handoff-build/verify_sources.py` | Checked chapter references, route and handler coverage, requirement coverage, diagram count and private-data markers. The local script and browser harness are disposable evidence tools. The maintained release checks are documented in the operations chapter. |
+| `python .local/handoff-build/pdf/review.py` and visual inspection | Reviewed all 44 rendered A4 pages. The PDF text matched 967 source blocks. All seven vector diagrams retained their 96 searchable labels. Checked 53 bookmarks, 54 internal links and 304 distinct repository paths. |
+| `python tools/verify-pack.py`, `pnpm exec tsx tools/validate-evidence.ts fixtures/acceptance-cases.json` | Pack and evidence validation passed. All 147 formal acceptance cases retain their recorded `not_run` status. |
+
+The outstanding production decisions and rehearsals are listed in the [operations chapter](handoff/03-operations-and-release.md) and the commercial launch review below. The latest full verification of the application preceding this cleanup is linked in the portal navigation entry.
+
 ## Commercial launch review — 18 November 2026
 
 The shared preview returned HTTP 200 on `/login`. The read-only production check `node --max-old-space-size=384 --import tsx .local/production-setup/verify-owner-auth-test.ts` passed at 16:50 UTC. The separate production database holds one unconfirmed owner account, zero staff grants, zero workbook import batches, zero financial postings and zero queued jobs. The tool found 35 restricted worker functions and zero unsafe private tables. The [application verification](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44345460137) passed 168 browser tests. `pnpm exec tsx tools/validate-evidence.ts` separately reports 147 formal acceptance cases still marked not run.

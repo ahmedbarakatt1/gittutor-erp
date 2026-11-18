@@ -1,10 +1,12 @@
 # Git Tutor
 
+Git Tutor takes a student's course materials from a tutoring request through scheduling, payment review, teaching and settlement. Start with the [colleague handoff](docs/handoff/README.md) for the current system, diagrams, source map and first-day runbook. The [shared preview](https://gittutor-erp-rho.vercel.app/login) is the hosted testing environment. The [launch review](docs/IMPLEMENTATION-STATUS.md) records the separate commercial release decision.
+
 ## Run the local implementation
 
-The public website and student/guardian, tutor, customer-service and admin portals are implemented for synthetic testing. Start with the [guided demo](docs/DEMO-WALKTHROUGH.md), [local testing instructions](docs/LOCAL-TESTING.md) and [implementation status](docs/IMPLEMENTATION-STATUS.md). The original Instagram logo and red, charcoal, cream and yellow design are documented in [brand provenance](docs/BRAND-ASSETS.md). The [online-preview instructions](docs/ONLINE-PREVIEW.md) describe temporary access from other devices and its current verification state.
+The public website and student/guardian, tutor, customer-service and admin portals are implemented for synthetic testing. Start with the [guided demo](docs/DEMO-WALKTHROUGH.md), [local testing instructions](docs/LOCAL-TESTING.md) and [implementation status](docs/IMPLEMENTATION-STATUS.md). The original Instagram logo and red, charcoal, cream and yellow design are documented in [brand provenance](docs/BRAND-ASSETS.md). The [online-preview instructions](docs/ONLINE-PREVIEW.md) describe the hosted testing address and how to access it.
 
-The separately authorized [actual workbook integration](docs/OPERATIONAL-DATA-PLAN.md) connects 139 historical source records to the main dashboards and workspaces, with 5 canonical student profiles, 11 tutors and 18 courses in a separate private preview backend. Historical payment/completion labels remain reported; uncertain identities can be reviewed without inventing financial evidence. New practice activity uses normal booking, payment, teaching and payroll commands with fake providers. The source archive remains at `/admin/workflow`. Private logins, manifests and practice files are ignored under `.local/operational-preview/`; shared demonstration accounts cannot access that backend. Preserve both databases and use only separately guarded disposable environments for destructive tests. Current executed checks and availability are in [implementation status](docs/IMPLEMENTATION-STATUS.md).
+The separately authorized [actual workbook integration](docs/OPERATIONAL-DATA-PLAN.md) connects 139 historical source records to the main dashboards and workspaces, with 5 canonical student profiles, 11 tutors and 18 courses in a separate private preview backend. Historical payment/completion labels remain reported; uncertain identities can be reviewed without inventing financial evidence. New practice activity uses normal booking, payment, teaching and payroll commands with isolated providers. One designated private booking used real Google Meet. The source archive remains at `/admin/workflow`. Private logins, manifests and practice files are ignored under `.local/operational-preview/`; shared demonstration accounts cannot access that backend. Preserve both databases and use only separately guarded disposable environments for destructive tests. Current executed checks and availability are in [implementation status](docs/IMPLEMENTATION-STATUS.md).
 
 Use the pinned Node runtime from `.node-version`, pnpm 11.25.0, Docker Desktop with its Linux engine running, and PostgreSQL 17 binaries for the isolated foundation tests.
 
@@ -36,19 +38,9 @@ Run the worker separately with `pnpm worker:dev`. Run `pnpm check` for static, u
 
 Provider modes default to fake/manual in isolated development. The bootstrap configures local Supabase automatically; use `.env.example` as the key reference for other environments. Production startup requires an explicit `APP_ENV` and complete live configuration; the current local implementation is not a live-release approval.
 
-Prepared by Hossam Nabil Elsabbagh. Revision 1, 11 November 2026.
+## Original implementation pack
 
-This folder is a development handoff for the Git Tutor website and tutoring operations platform. It contains the requirements, pricing contracts, data and API design, implementation tasks, synthetic scenarios, and acceptance criteria that Codex should use when building the application.
-
-## Start in Codex
-
-1. Extract this folder into the directory where the application will be developed.
-2. For a new project, open this folder as the project root. For an existing repository, place the pack in `implementation/git-tutor/` and ask Codex to merge the relevant root instructions while preserving that repository's existing guidance.
-3. Open the project in Codex. For the CLI, open a terminal in that directory and run `codex` after completing the normal installation and sign-in flow.
-4. Paste the contents of [CODEX-START.md](CODEX-START.md) into the first task.
-5. Codex should inspect the repository, record its bootstrap choices, and execute the ordered implementation tasks. Missing external credentials are tracked in the integration readiness table while local implementation continues.
-
-`AGENTS.md` provides compact repository instructions. Codex supports repository instructions through this filename. [Official AGENTS.md guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+The original specification and implementation plan were prepared by Hossam Nabil Elsabbagh on 11 November 2026. They describe the starting requirements and remain useful for tracing a decision. Read [AGENTS.md](AGENTS.md) for repository instructions and [CODEX-START.md](CODEX-START.md) for the original implementation brief. For current ownership, runnable commands and remaining work, use the [handoff](docs/handoff/README.md).
 
 ## What controls implementation
 
@@ -73,21 +65,6 @@ This folder is a development handoff for the Git Tutor website and tutoring oper
 | [fixtures/domain-scenarios.json](fixtures/domain-scenarios.json) | Synthetic domain scenarios and expected outcomes |
 | [docs/PACK-VALIDATION.md](docs/PACK-VALIDATION.md) | Handoff validation results and implementation status |
 
-## Choices made for the handoff
+## Verifying the pack
 
-- A greenfield implementation uses Next.js App Router, TypeScript and Supabase Auth/PostgreSQL/private Storage, plus a durable Node.js worker.
-- The currency starts with EGP and the business timezone is Africa/Cairo. The supplied group amounts are interpreted as per occurrence in development scenarios.
-- Tutor compensation and margins are privileged internal data. The customer contract contains tuition and the customer's financial position.
-- The workbook supplies workflow examples. Test and seed records are synthetic. The supplied names, contacts, balances and payment history are excluded from this pack.
-- Duration, deposits, holds, cancellation remedies, package terms and group amendments remain versioned commercial settings. Synthetic settings allow implementation and testing. Publication checks require complete, approved offer terms.
-- The visual starting point is the earlier red, ink and warm-ivory Git Tutor interface. The latest pricing image supplies the commercial amounts. Brand assets and theme approval are recorded before public publication.
-
-## Pack verification
-
-Run `python tools/verify-pack.py` from this folder to check document links, JSON structure, requirement coverage, pricing arithmetic and synthetic-fixture consistency. This checks the handoff resources. Application test commands are established by task T01 and then executed by each owning task.
-
-## Expected first deliverable from Codex
-
-A running local application with working authentication boundaries, the public catalog, confidential group pricing, a persisted private/group reservation, and the first automated database and browser checks. Subsequent tasks complete packages, payment review, teaching, finance, notifications, customer records, support and analytics.
-
-Continue through the implementation plan until its local completion conditions are met. Record the exact external configuration still required for live integrations in `docs/IMPLEMENTATION-STATUS.md`.
+Run `python tools/verify-pack.py` to check local document links, JSON structure, requirement coverage, pricing arithmetic and synthetic-fixture consistency. Run the application tests separately as described in [local testing](docs/LOCAL-TESTING.md) and the [operations guide](docs/handoff/03-operations-and-release.md).

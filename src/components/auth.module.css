@@ -73,14 +73,9 @@
 .learnerList li { padding-block: 15px; border-block-end: 1px solid var(--border); display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; }
 .learnerList span { color: var(--muted); font-size: 14px; }
 .learnerList strong { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
-.futureList { list-style: none; margin-block-start: 20px; }
-.futureList li { padding-block: 18px; border-block-start: 1px solid var(--border); display: grid; grid-template-columns: 180px 1fr; gap: 24px; }
-.futureList button { text-align: start; border: 0; background: none; color: var(--muted); font-weight: 650; padding: 0; cursor: default; align-self: start; }
-.futureList p { font-size: 14px; color: var(--muted); }
 .staff .portalMain h1 { font-size: 2rem; }
 .staff .accountGrid { padding: 24px; margin-block-start: 24px; }
 .staff .section { margin-block-start: 28px; }
-.staff .futureList li { padding-block: 14px; }
 .formFields { min-inline-size: 0; border: 0; padding: 0; margin: 0; display: grid; gap: 22px; }
 .formFields:disabled { opacity: .75; }
 .workflow { margin-block-start: 38px; border-block-start: 1px solid var(--border); padding-block-start: 30px; }
@@ -141,7 +136,6 @@
   .portalMain h1 { font-size: 2rem; }
   .accountGrid, .staff .accountGrid { padding: 22px; }
   .accountGrid dl { grid-template-columns: 1fr; gap: 20px; }
-  .futureList li { grid-template-columns: 1fr; gap: 6px; }
   .workflowColumns { grid-template-columns: 1fr; gap: 36px; }
   .applicationPage { margin-block: 40px; }
   .applicationPage h1 { font-size: 2rem; }
