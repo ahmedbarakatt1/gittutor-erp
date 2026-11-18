@@ -176,9 +176,12 @@ test('actual private preparation retries safely, publishes a separate class reso
     await peer.goto(`/learn/bookings/${second.enrollment_id}`);
     const room = peer.getByRole('region', { name: 'Session room', exact: true });
     await expect(room.getByText('Room ready', { exact: true })).toBeVisible();
+    const roomButton = room.getByRole('button', { name: 'Preview simulated meeting', exact: true });
+    await expect(roomButton).toBeInViewport();
+    await expect(peer.getByText('Study files and class resources', { exact: true }).locator('..')).not.toHaveAttribute('open', '');
     await expect(room.getByRole('timer')).toContainText('Starts in');
     const access = peer.waitForResponse(response => new URL(response.url()).pathname === `/api/v1/occurrences/${held.occurrenceId}/meeting/access`);
-    await room.getByRole('button', { name: 'Preview simulated meeting', exact: true }).click();
+    await roomButton.click();
     const accessResponse = await access; expect(accessResponse.status()).toBe(200);
     expect(JSON.stringify(await accessResponse.json())).not.toMatch(/fee_minor|compensation|provider_token|refresh_token|internal_notes/);
     await expect(room.getByRole('region', { name: 'Simulated room preview', exact: true })).toBeVisible();

@@ -9,9 +9,39 @@ import { money } from '../booking/shared';
 import { State } from './shared';
 import styles from './payments.module.css';
 
+import detail from '../booking/reservation.module.css';
+import formStyles from '../auth.module.css';
+
 export function BookingFunding({ item, onSaved }: { item: CustomerEnrollment; onSaved: () => void }) {
   const funding = item.funding;
-  return <section className={styles.section} aria-labelledby="confirmation-heading"><h3 id="confirmation-heading">{copy.bookingPayment}</h3><p>{funding.integration_state === 'ready' ? copy.confirmationDescription : bookingCopy.fundingPending}</p><p>{copy.outcome}: <State value={item.occurrence.state} /></p>{funding.integration_state === 'ready' && <><dl className={styles.facts}>{funding.net_charge_minor !== null && <div><dt>{copy.net}</dt><dd><bdi>{money(funding.net_charge_minor)}</bdi></dd></div>}{funding.allocated_minor !== null && <div><dt>{copy.cash}</dt><dd><bdi>{money(funding.allocated_minor)}</bdi></dd></div>}{funding.allocated_package_value_minor !== null && <div><dt>{copy.packageValue}</dt><dd><bdi>{money(funding.allocated_package_value_minor)}</bdi></dd></div>}{funding.balance_minor !== null && <div><dt>{copy.balance}</dt><dd><bdi>{money(funding.balance_minor)}</bdi></dd></div>}<div><dt>{copy.additional}</dt><dd><bdi>{money(funding.additional_required_minor)}</bdi></dd></div></dl><p className={styles.notice}>{copy.reasons[funding.reason] || bookingCopy.fundingReady}</p>{funding.charge_id ? <Link className={styles.link} href={`/learn/payments/charges/${funding.charge_id}`}>{copy.openInstructions}</Link> : item.quote.accepted_at && !item.is_provisional ? <IdentityForm action={`enrollments/${item.enrollment_id}/charge`} submitLabel={copy.prepareInstructions} successMessage={copy.instructionsPrepared} resettable={false} payload={() => ({ expected_version: item.version })} onSaved={onSaved}>{null}</IdentityForm> : null}</>}<p data-testid="confirmation-explanation">{copy.automaticConfirmation}</p></section>;
+  const waiting = item.state === 'held';
+  const ready = funding.integration_state === 'ready';
+  const needsPayment = waiting && !item.is_provisional && Boolean(item.quote.accepted_at) && ready && funding.reason === 'INSUFFICIENT_FUNDS';
+
+  return <section className={detail.funding} aria-labelledby="confirmation-heading">
+    <div className={detail.titleLine}>
+      <h2 id="confirmation-heading">{copy.bookingPayment}</h2>
+      {ready && funding.balance_minor !== null && <span>{copy.balance} <strong>{money(funding.balance_minor)}</strong></span>}
+    </div>
+    {ready ? <>
+      {waiting && funding.additional_required_minor > 0 && <p>{copy.additional} <strong>{money(funding.additional_required_minor)}</strong></p>}
+      {waiting && <p data-testid="confirmation-explanation" className={detail.explanation}>{copy.reasons[funding.reason] || bookingCopy.fundingReady} {copy.automaticConfirmation}</p>}
+      {funding.charge_id ?
+        <Link className={needsPayment ? `${formStyles.primary} ${detail.fundingAction}` : styles.link} href={`/learn/payments/charges/${funding.charge_id}`}>{copy.openInstructions}</Link>
+        : item.quote.accepted_at && !item.is_provisional && <IdentityForm action={`enrollments/${item.enrollment_id}/charge`} submitLabel={copy.prepareInstructions}
+          successMessage={copy.instructionsPrepared} resettable={false} payload={() => ({ expected_version: item.version })} onSaved={onSaved}>{null}</IdentityForm>}
+      <details><summary>{copy.paymentBreakdown}</summary>
+        <p>{copy.outcome}: <State value={item.occurrence.state} /></p>
+        {!waiting && <p>{copy.reasons[funding.reason] || bookingCopy.fundingReady}</p>}
+        <dl className={detail.quoteFacts}>
+          {funding.net_charge_minor !== null && <div><dt>{copy.net}</dt><dd>{money(funding.net_charge_minor)}</dd></div>}
+          {funding.allocated_minor !== null && <div><dt>{copy.cash}</dt><dd>{money(funding.allocated_minor)}</dd></div>}
+          {funding.allocated_package_value_minor !== null && <div><dt>{copy.packageValue}</dt><dd>{money(funding.allocated_package_value_minor)}</dd></div>}
+          <div><dt>{copy.additional}</dt><dd>{money(funding.additional_required_minor)}</dd></div>
+        </dl>
+      </details>
+    </> : <p data-testid="confirmation-explanation">{bookingCopy.fundingPending}</p>}
+  </section>;
 }
 export function AdminConfirmation({ item, onSaved }: { item: AdminOccurrence; onSaved: () => void }) {
   const active = item.roster.filter(row => ['held', 'confirmed'].includes(row.state) && !row.provisional_amendment_id);

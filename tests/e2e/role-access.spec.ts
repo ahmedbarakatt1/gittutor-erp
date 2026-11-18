@@ -64,6 +64,32 @@ test('form validation is associated with controls and preserves entered email', 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('mobile navigation supports keyboard use and keeps the current learner page in view', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, 'learner_a');
+  await page.goto('/learn/bookings');
+  const nav = page.getByRole('navigation', { name: 'Learning', exact: true });
+  const toggle = nav.getByRole('button', { name: /^Menu/ });
+  const current = nav.locator('a[aria-current="page"]');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(current).toBeHidden();
+  await toggle.press('Enter');
+  await expect(current).toHaveAttribute('href', '/learn/bookings');
+  await current.focus();
+  await current.press('Escape');
+  await expect(toggle).toBeFocused();
+  await expect(current).toBeHidden();
+  await toggle.click();
+  await expect(nav.locator('a[href^="/admin"]')).toHaveCount(0);
+  await nav.locator('a[href="/learn/files"]').click();
+  await expect(page).toHaveURL(/\/learn\/files$/);
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(toggle).toBeHidden();
+  await expect(current).toBeVisible();
+  await expect(current).toHaveAttribute('href', '/learn/files');
+});
+
 test('real independent sessions enter only their assigned staff portal', async ({ browser }, testInfo) => {
   test.setTimeout(90_000);
   const contexts: BrowserContext[] = [];

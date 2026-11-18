@@ -1,12 +1,16 @@
 .authPage { min-block-size: 100svh; padding: 36px 6vw; }
 .brand { display: inline-flex; flex-shrink: 0; text-decoration: none; }
 
-.authLayout { max-inline-size: 1100px; margin-inline: auto; padding-block: 76px; display: grid; grid-template-columns: 1fr 1fr; gap: 110px; align-items: start; }
-.authAside { padding-block-start: 46px; }
-.authAside h2 { font-size: 3rem; line-height: 1.12; max-inline-size: 13ch; }
-.authAside p { color: var(--muted); margin-block-start: 28px; max-inline-size: 36ch; }
-.authPanel { background: var(--surface); padding: 38px; border-radius: var(--radius-surface); }
-.authPanel h1 { font-size: 2rem; }
+.authLayout { min-block-size: 100svh; display: grid; align-content: center; justify-items: center; padding: 24px; }
+.authPanel { inline-size: min(100%, 29rem); background: var(--surface); border: 1px solid var(--border); padding: clamp(24px, 4vw, 40px); border-radius: var(--radius-surface); }
+.authMasthead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block-end: 18px; margin-block-end: 24px; border-block-end: 1px solid var(--border); }
+.authMasthead img { inline-size: 50px; block-size: 50px; }
+.authMasthead a { display: inline-flex; align-items: center; gap: 6px; min-block-size: 44px; font-size: .9rem; color: var(--muted); text-decoration: none; }
+.authMasthead a:hover { text-decoration: underline; }
+.authPanel h1 { font-size: clamp(1.9rem, 3vw, 2.4rem); line-height: 1.15; }
+.authPanel .description { margin-block-start: 8px; }
+.authPanel .form { margin-block-start: 22px; }
+.authPanel .formFields { gap: 16px; }
 .description { color: var(--muted); margin-block-start: 14px; }
 .form { margin-block-start: 30px; display: grid; gap: 22px; }
 .field { min-inline-size: 0; }
@@ -17,8 +21,10 @@
 .field textarea { resize: vertical; }
 .field select:focus-visible, .field textarea:focus-visible, .checkGroup input:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .field input[aria-invalid='true'] { border-color: #ae2427; }
-.passwordRow { display: grid; gap: 8px; }
-.passwordRow button { justify-self: end; padding: 4px 0; min-block-size: 32px; background: transparent; border: 0; text-decoration: underline; text-underline-offset: 4px; font-size: 14px; color: var(--muted); }
+.passwordRow { position: relative; }
+.passwordRow input { padding-inline-end: 4.8rem; }
+.passwordRow button { position: absolute; inset-block: 2px; inset-inline-end: 2px; min-inline-size: 3.8rem; padding: 0 10px; background: white; border: 0; border-radius: 5px; font-size: .9rem; font-weight: 650; color: var(--ink); }
+.passwordRow button:hover { text-decoration: underline; }
 .hint { color: var(--muted); font-size: 14px; margin-block-start: 8px; }
 .fieldError { color: #9c2024; font-size: 14px; margin-block-start: 8px; }
 .error { border: 1px solid #c46c65; background: #fff4ee; border-radius: 6px; padding: 14px; color: #852024; }
@@ -33,17 +39,15 @@
 .verification h1 { font-size: 2.5rem; }
 .verification p { margin-block: 24px; }
 .portal { min-block-size: 100svh; }
-.portalHeader { min-block-size: 88px; border-block-end: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 5vw; }
-.portalIdentity { display: flex; align-items: center; gap: 28px; }
-.workspaceName { color: var(--muted); font-size: 14px; border-inline-start: 1px solid var(--border); padding-inline-start: 28px; }
+.portalHeader { min-block-size: 64px; border-block-end: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 6px max(20px, calc((100% - 1332px) / 2)); }
+.portalIdentity { display: flex; align-items: center; gap: 14px; min-inline-size: 0; }
+.portalIdentity img { inline-size: 46px; block-size: 46px; }
+.workspaceName { color: var(--ink); font-size: 1rem; font-weight: 650; border-inline-start: 1px solid var(--border); padding-inline-start: 14px; }
 .signout { background: transparent; color: var(--ink); border: 1px solid #8a8c83; border-radius: 6px; padding: 8px 16px; min-block-size: 42px; font-weight: 650; }
 .signout:hover { background: var(--tint); }
 .signout:disabled { opacity: .6; cursor: wait; }
-.portalLayout { display: grid; grid-template-columns: 200px minmax(0, 1fr); max-inline-size: 1380px; margin-inline: auto; }
-.portalNav { padding: 40px 24px; border-inline-end: 1px solid var(--border); }
-.portalNav a { display: block; padding: 11px 14px; border-radius: 6px; text-decoration: none; font-size: 15px; }
-.portalNav a[aria-current='page'] { color: var(--brand-hover); background: #f3e6dc; font-weight: 750; }
-.portalMain { padding: 50px 56px; min-inline-size: 0; }
+.portalLayout { display: grid; grid-template-columns: 208px minmax(0, 1fr); max-inline-size: 1380px; min-block-size: calc(100svh - 64px); margin-inline: auto; }
+.portalMain { padding: 32px clamp(24px, 3vw, 48px); min-inline-size: 0; }
 .portalMain h1 { font-size: 2.5rem; }
 .portalMain h2 { font-size: 1.5rem; }
 .accountGrid { margin-block-start: 36px; background: white; border-radius: 12px; padding: 28px; }
@@ -73,9 +77,6 @@
 .futureList li { padding-block: 18px; border-block-start: 1px solid var(--border); display: grid; grid-template-columns: 180px 1fr; gap: 24px; }
 .futureList button { text-align: start; border: 0; background: none; color: var(--muted); font-weight: 650; padding: 0; cursor: default; align-self: start; }
 .futureList p { font-size: 14px; color: var(--muted); }
-.staff .portalHeader { min-block-size: 72px; background: white; padding-block: 14px; }
-.staff .portalNav { background: var(--tint); padding-block: 28px; }
-.staff .portalMain { padding-block: 34px; }
 .staff .portalMain h1 { font-size: 2rem; }
 .staff .accountGrid { padding: 24px; margin-block-start: 24px; }
 .staff .section { margin-block-start: 28px; }
@@ -124,25 +125,19 @@
 .workflow > .signout { margin-block-start: 18px; }
 .recordPicker { margin-block-start: 22px; }
 .advanced > .signout, .workflowColumns > section > .signout { margin-block-start: 18px; }
-@media (max-width: 1000px) { .authLayout { gap: 48px; } .authAside h2 { font-size: 2.5rem; } .portalMain { padding: 36px 28px; } }
+@media (min-width: 701px) and (max-width: 1000px) { .portalMain { padding: 26px 22px; } }
 @media (max-width: 700px) {
   .authPage { padding: 26px 22px; }
-  .authLayout { grid-template-columns: 1fr; padding-block: 38px; gap: 36px; }
-  .authAside { order: 2; padding: 0 4px; }
-  .authAside h2 { font-size: 1.5rem; max-inline-size: 25ch; }
-  .authAside p { margin-block-start: 16px; }
-  .authPanel { padding: 26px 22px; }
-  .authPanel h1 { font-size: 1.75rem; }
+  .authLayout { align-content: start; padding: clamp(16px, 6vw, 32px) 16px; }
+  .authPanel { padding: 20px; }
   .alternative a { margin-inline-start: 0; }
   .verification { margin-block: 48px; }
   .verification h1 { font-size: 2rem; }
-  .portalHeader { padding: 20px 22px; align-items: flex-start; }
-  .portalIdentity { align-items: flex-start; flex-direction: column; gap: 9px; }
-  .workspaceName { padding: 0; border: 0; }
-  .portalLayout { grid-template-columns: 1fr; }
-  .portalNav, .staff .portalNav { padding: 14px 22px; display: flex; gap: 12px; border-inline-end: 0; border-block-end: 1px solid var(--border); flex-wrap: nowrap; overflow-x: auto; max-inline-size: 100%; }
-  .portalNav a { flex: 0 0 auto; white-space: nowrap; }
-  .portalMain { padding: 34px 22px; }
+  .portalHeader { padding: 5px 16px; min-block-size: 58px; }
+  .portalIdentity { gap: 10px; }
+  .workspaceName { padding-inline-start: 10px; }
+  .portalLayout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .portalMain { padding: 22px 18px 36px; }
   .portalMain h1 { font-size: 2rem; }
   .accountGrid, .staff .accountGrid { padding: 22px; }
   .accountGrid dl { grid-template-columns: 1fr; gap: 20px; }

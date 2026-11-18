@@ -103,7 +103,12 @@ test('administrator schedules and approves exact teaching terms; guardian reserv
       const hold = page.getByRole('form', { name: 'Reserve a temporary seat', exact: true }); await hold.getByLabel('I have reviewed the offer’s price, timing and cancellation terms.').check();
       const reservation = await submit(page, hold, `occurrences/${occurrenceId}/holds`, 201); enrollmentIds.push(String(reservation.enrollment_id));
       await page.locator('#reserve').getByRole('link', { name: 'Review your reservation', exact: true }).click(); await page.waitForURL(`**/learn/bookings/${reservation.enrollment_id}`, { timeout: 15_000 });
-      const quote = page.getByRole('form', { name: 'Accept this quote', exact: true }); await quote.getByLabel('I accept this learner’s exact price, session time and saved terms.').check(); await submit(page, quote, `quotes/${reservation.quote_id}/accept`);
+      const quote = page.getByRole('form', { name: 'Accept this quote', exact: true });
+      await expect(page.getByRole('region', { name: 'Session room', exact: true })).toHaveCount(0);
+      await page.getByText('Review booking terms', { exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Payment for confirmation', exact: true })).toBeVisible();
+      await page.getByText('Review booking terms', { exact: true }).click();
+      await quote.getByLabel('I accept this learner’s exact price, session time and saved terms.').check(); await submit(page, quote, `quotes/${reservation.quote_id}/accept`);
       await expect(page.getByRole('status').filter({ hasText: 'Quote accepted:' })).toBeVisible(); await expect(page.getByTestId('confirmation-explanation')).toBeVisible(); await expect(page.getByRole('button', { name: 'Confirm session', exact: true })).toHaveCount(0);
       const detail = await page.request.get(`/api/v1/enrollments/${reservation.enrollment_id}`); expect(detail.status()).toBe(200); const dto = (await detail.json()).data; expect(dto.learner.learner_id).toBe(learnerId); expect(dto.funding.integration_state).toBe('ready'); expect(dto.funding.allocated_minor).toBe(0); expect(dto.funding.eligible).toBe(false);
       expect(JSON.stringify(dto)).not.toMatch(privateFields); expect(await page.content()).not.toMatch(privateFields); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

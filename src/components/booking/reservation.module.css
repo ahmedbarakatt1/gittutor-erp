@@ -1,0 +1,84 @@
+.toolbar, .titleLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .45rem 1.2rem;
+}
+.toolbar { margin-block: .5rem .75rem; }
+.toolbar a, .quietButton { display: inline-flex; align-items: center; min-block-size: 44px; }
+.quietButton {
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  padding-inline: .25rem;
+  text-decoration: underline;
+  text-underline-offset: .24em;
+}
+.quietButton:hover { color: var(--ink); }
+.reservation { min-inline-size: 0; overflow-wrap: anywhere; }
+.overview { display: grid; gap: .35rem; margin-block-end: 1.1rem; }
+.titleLine h2 { margin: 0; }
+.people, .reference, .quoteFacts dt { color: var(--muted); }
+.people strong { color: var(--ink); font-weight: 650; }
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: var(--tint);
+  padding: .15rem .65rem;
+  font-weight: 650;
+}
+.state::before { content: ''; inline-size: .5rem; block-size: .5rem; border: 1.5px solid currentColor; border-radius: 50%; }
+.state[data-confirmed=true] { color: #244e35; background: #e5efe4; }
+.state[data-confirmed=true]::before { background: currentColor; }
+.deadline { margin-block-start: .25rem; }
+.quote, .funding {
+  min-inline-size: 0;
+  padding: clamp(1rem, 2.6vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  margin-block: 1rem;
+}
+.quote form, .funding form { margin-block: .7rem 0; }
+.quote .disclosure { margin-block: .35rem; }
+.price { color: var(--ink); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.quoteFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.8rem;
+  margin: .65rem 0;
+}
+.quoteFacts dt, .quoteFacts dd { margin: 0; }
+.quoteFacts dd { font-weight: 650; }
+.funding { display: grid; gap: .65rem; }
+.funding h2 { margin: 0; }
+.fundingAction { display: inline-flex; margin-block: .25rem; justify-self: start; }
+.funding .explanation { max-inline-size: 70ch; color: var(--muted); }
+.sections { border-block-start: 1px solid var(--border); margin-block-start: 1.2rem; }
+.sections > details {
+  padding-block: 0;
+  margin: 0;
+  border-block-end: 1px solid var(--border);
+}
+.sections > details > summary, .disclosure > summary, .funding > details > summary {
+  padding-block: .7rem;
+  min-block-size: 44px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sections > details > summary::marker, .disclosure > summary::marker, .funding > details > summary::marker { color: var(--brand-hover); }
+.sections > details[open] { padding-block-end: 1rem; }
+.sections > details[open] > section:first-of-type { margin-block-start: .5rem; }
+.reference { font-size: 1rem; }
+.reference summary { cursor: pointer; text-underline-offset: .22em; }
+.reference summary:hover { text-decoration: underline; }
+.reference bdi { font-variant-numeric: tabular-nums; }
+.proposals { margin-block: 1rem; }
+@media (max-width: 480px) {
+  .titleLine { align-items: start; }
+  .quoteFacts { column-gap: 1.2rem; }
+}

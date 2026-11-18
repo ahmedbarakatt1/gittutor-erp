@@ -16,6 +16,7 @@ export function CustomerTutorReassignments({ occurrenceId, learnerId }: { occurr
 
 function CustomerReassignmentRecords({ path }: { path: string }) {
   const records = usePaymentList<CustomerReassignment>(path), now = usePaymentClock();
+  if (records.items?.length === 0) return <details><summary>{copy.title}</summary><p>{copy.noChanges}</p><PaymentReadState pending={false} {...records} /></details>;
   return <section className={styles.section}><h2>{copy.title}</h2><PaymentReadState pending={!records.items} {...records} />{records.items?.length === 0 && <p>{copy.noChanges}</p>}{records.items?.filter(item => item.view === 'customer').map(item => <details className={styles.section} key={`${item.proposal_id}-${item.version}`} data-reassignment-id={item.proposal_id}>
     <summary>{item.old_tutor.display_name} → {item.new_tutor.display_name} · {copy.state[item.state]}</summary><SessionTime start={item.start_at} end={item.end_at} /><p>{copy.from}: {item.old_tutor.display_name}</p><p>{copy.to}: {item.new_tutor.display_name}</p>{['proposed', 'accepted', 'approved'].includes(item.state) && <p>{copy.intro}</p>}<p>{copy.expires}: <CairoTimestamp value={item.expires_at} /></p>{item.required_actions.map(action => <p className={styles.notice} key={action}>{copy.actions[action]}</p>)}
     <p>{copy.unchanged}</p><p>{copy.price}: <strong>{money(item.terms.customer_price_minor, item.terms.currency)}</strong></p>

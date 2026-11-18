@@ -6,7 +6,16 @@ export const authCopy = {
   password: 'Password',
   showPassword: 'Show password',
   hidePassword: 'Hide password',
+  show: 'Show', hide: 'Hide',
   passwordHint: 'Use at least 12 characters.',
+  navigation: {
+    menu: 'Menu', workspace: 'Workspace', sessions: 'Lessons', records: 'Records & reports',
+    money: 'Billing', service: 'Support & account', manage: 'Administration', switchWorkspace: 'Other workspaces',
+    dashboard: 'Dashboard', requests: 'Session requests', customers: 'Customers', support: 'Support',
+    supportInbox: 'Support inbox', exports: 'Your exports', history: 'Session history', campaigns: 'Campaigns',
+    students: 'Student progression', team: 'Team', updates: 'Your updates', notifications: 'Notification operations',
+    archive: 'Source archive', staff: 'Staff and applications',
+  },
   login: {
     title: 'Welcome back.',
     description: 'Sign in to your Git Tutor account.',
@@ -14,8 +23,6 @@ export const authCopy = {
     pending: 'Signing in…',
     alternative: 'New to Git Tutor?',
     link: 'Create an account',
-    asideTitle: 'Your learning starts with a question.',
-    asideBody: 'Keep your course materials, questions and next steps together as you learn.',
   },
   signup: {
     title: 'Make room for learning.',
@@ -24,8 +31,6 @@ export const authCopy = {
     pending: 'Creating account…',
     alternative: 'Already have an account?',
     link: 'Sign in',
-    asideTitle: 'Bring what you want to understand.',
-    asideBody: 'A topic, a problem or a slide. Start with your own questions and work towards a clearer next step.',
   },
   verification: {
     title: 'Check your email.',

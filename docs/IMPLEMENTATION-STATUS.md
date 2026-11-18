@@ -1,5 +1,11 @@
 # Implementation status
 
+## Portal navigation, booking actions and workbook overview — 18 November 2026
+
+The four workspaces now group the routes available to the signed-in role by task. On phones a keyboard-accessible Menu shows the current section. The sign-in form is a single column. The student reservation leads with the applicable quote, payment or meeting action, and keeps files, package and policy details available on demand. The admin overview renders its authorized workbook summary on the first response, with both charts, direct access to their source records and a compact list of daily operations. This change uses the existing data and providers.
+
+Before the change, a signed-in Chromium browser at 390 × 900 measured the student join action 1,690 px from the top and the admin charts 957 px from the top. The admin navigation extended 2,778 px sideways. Local checks passed with `pnpm lint`, `pnpm typecheck`, `pnpm test:unit` (463 tests), `python tools/verify-pack.py`, `pnpm exec tsx tools/validate-evidence.ts` and `git diff --check`. The formal acceptance register remains 147 not run. The isolated workbook UI checks exercised chart drill-down, source-row search, filters, pagination and refresh at 320, 390 and 1,440 px. Private screenshots and measurements stay outside version control.
+
 ## Confirmed one-to-one booking and live room — 18 November 2026
 
 The owner asked to run the reserved test personally on their behalf. The student portal saved a tutoring request, uploaded the sample lecture PDF, passed its preview scan and submitted the request. Staff matched the request to the bound private session. The student reserved the seat, accepted the EGP 650 test quote and submitted the prepared sample receipt. Staff verified the independent synthetic transfer and allocated it once. The enrollment and occurrence were confirmed before the cutoff. This exercise moved EGP 0.

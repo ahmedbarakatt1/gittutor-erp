@@ -85,7 +85,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
         <label htmlFor="password">{copy.password}</label>
         <div className={styles.passwordRow}>
           <input ref={passwordRef} id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required minLength={mode === 'signup' ? 12 : undefined} maxLength={256} aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'password-error' : mode === 'signup' ? 'password-hint' : undefined} />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-pressed={showPassword}>{showPassword ? copy.hidePassword : copy.showPassword}</button>
+          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-controls="password" aria-label={showPassword ? copy.hidePassword : copy.showPassword}>{showPassword ? copy.hide : copy.show}</button>
         </div>
         {fieldErrors.password ? <p className={styles.fieldError} id="password-error" role="alert">{fieldErrors.password}</p> : mode === 'signup' && <p className={styles.hint} id="password-hint">{copy.passwordHint}</p>}
       </div>

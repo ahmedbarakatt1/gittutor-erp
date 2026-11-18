@@ -17,27 +17,38 @@ type Field = WorkflowOperationsRecord['fields'][number];
 export const OperationalWorkspace = WorkflowOperationsWorkspace;
 
 /** Imported facts are read through the same current-role boundary as their workspace. */
-export function WorkflowOperationsWorkspace({ view, children, collapsed = false }: { view: View; children?: ReactNode; collapsed?: boolean }) {
-  const record = usePaymentRecord<unknown>('workflow-operations');
-  const parsed = record.data === undefined ? null : workflowOperationsSchema.safeParse(record.data);
+export function WorkflowOperationsWorkspace({ view, children, collapsed = false, initialData, overviewAction }: {
+  view: View; children?: ReactNode; collapsed?: boolean; initialData?: EnabledData; overviewAction?: ReactNode;
+}) {
+  const [refreshRequested, setRefreshRequested] = useState(false);
+  const useInitialRead = initialData !== undefined && !refreshRequested;
+  const record = usePaymentRecord<unknown>(useInitialRead ? null : 'workflow-operations');
+  const response = useInitialRead ? initialData : record.data;
+  const parsed = useMemo(() => response === undefined ? null : workflowOperationsSchema.safeParse(response), [response]);
   const data = parsed?.success && parsed.data.enabled ? parsed.data : null;
   const section = data?.sections.find(item => item.key === view);
   const invalid = parsed && !parsed.success;
-  const history = section && data ? <WorkflowSection key={view} section={section} data={data} onSaved={record.reload} hasWorkflow={Boolean(children)} /> : null;
-  return <>{record.error || invalid ? <div className={styles.notice} role="alert"><p>Workbook records could not be loaded.</p><button className={styles.button} type="button" onClick={record.reload}>Try again</button></div> : history ? collapsed ? <details className={styles.history}><summary>Workbook history</summary>{history}</details> : history : record.data === undefined ? <p className={styles.empty} role="status">Loading your records…</p> : null}
+  function reload() {
+    if (useInitialRead) setRefreshRequested(true);
+    else record.reload();
+  }
+  const history = section && data ? <WorkflowSection key={view} section={section} data={data} onSaved={reload} hasWorkflow={Boolean(children)} overviewAction={overviewAction} /> : null;
+  return <>{!history && overviewAction && <div className={styles.tools}>{overviewAction}</div>}
+    {record.error || invalid ? <div className={styles.notice} role="alert"><p>Workbook records could not be loaded.</p><button className={styles.button} type="button" onClick={reload}>Try again</button></div> : history ? collapsed ? <details className={styles.history}><summary>Workbook history</summary>{history}</details> : history : response === undefined ? <p className={styles.empty} role="status">Loading your records…</p> : null}
     {/* Keep the workflow subtree mounted when the independent history read changes state. */}
     {children && <section className={section ? styles.newActivity : undefined} id="new-activity">{section && <header><h2>{view === 'finance' ? 'Verified financial activity' : 'New activity and current workflows'}</h2><p className={styles.description}>Imported history stays separate from activity recorded here.</p></header>}{children}</section>}
   </>;
 }
 
-function WorkflowSection({ section, data, onSaved, hasWorkflow }: { section: WorkflowOperationsSection; data: EnabledData; onSaved: () => void; hasWorkflow: boolean }) {
+function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }: { section: WorkflowOperationsSection; data: EnabledData; onSaved: () => void; hasWorkflow: boolean; overviewAction?: ReactNode }) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [table, setTable] = useState('');
   const [reviewOnly, setReviewOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ChartSelection | null>(null);
-  const [registerOpen, setRegisterOpen] = useState(section.key === 'overview');
+  const [registerOpen, setRegisterOpen] = useState(section.key === 'overview' && !overviewAction);
   const registrySummary = useRef<HTMLElement>(null);
   const id = useId();
   const charts = useMemo(() => workbookCharts(section.key, section.records), [section]);
@@ -47,6 +58,7 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow }: { section: Wor
   const statuses = [...new Set(section.records.flatMap(row => row.reported_status ? [row.reported_status] : []))].sort();
   const tables = [...new Set(section.records.map(row => row.source_table))].sort();
   const normalized = query.trim().toLocaleLowerCase();
+  const advancedFilterCount = Number(Boolean(table)) + Number(Boolean(status)) + Number(reviewOnly);
   const filtered = Boolean(normalized || status || table || reviewOnly || group);
   const rows = section.records.filter(row =>
     (!groupIds || groupIds.has(row.id)) && (!table || row.source_table === table) &&
@@ -59,11 +71,14 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow }: { section: Wor
   function resetFilters() {
     setSelected(null); setQuery(''); setStatus(''); setTable(''); setReviewOnly(false); setPage(0);
   }
+  function openRegister() {
+    setRegisterOpen(true);
+    requestAnimationFrame(() => registrySummary.current?.focus());
+  }
   function drillDown(next: ChartSelection) {
     resetFilters();
     if (next.chart !== selected?.chart || next.group !== selected.group) setSelected(next);
-    setRegisterOpen(true);
-    requestAnimationFrame(() => registrySummary.current?.focus());
+    openRegister();
   }
   const summaryMetrics = section.metrics.filter(metric => metric.key !== 'source_records');
   const metrics = <dl className={styles.metrics}>{summaryMetrics.map(metric => <div key={metric.key}>
@@ -71,29 +86,37 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow }: { section: Wor
     <dd>{metric.value === null ? 'Not recorded' : metric.unit === 'money' ? formatFinanceAmount(metric.value) : metric.value.toLocaleString('en-GB') + (metric.unit === 'hours' ? ' h' : '')}</dd>
   </div>)}</dl>;
   return <section className={styles.workspace} aria-label={section.title} data-workflow-view={section.key} data-workflow-operations>
-    <header className={styles.header}>
+    {overviewAction ? <header className={styles.overviewToolbar}>
+      <h2 className={styles.visuallyHidden}>Workbook overview</h2>
+      {overviewAction}
+      <button type="button" onClick={openRegister} aria-controls={id + '-register'}>Browse records</button>
+      <button type="button" className={styles.refresh} onClick={onSaved}>Refresh records</button>
+    </header> : <header className={styles.header}>
       <div><h2>{section.key === 'overview' ? 'Workbook overview' : section.title}</h2>
         <p className={styles.description}>Payments and completions are reported by the workbook.{charts.length > 0 && ' Select a chart value to see its source records.'}</p></div>
       <div className={styles.tools}>{hasWorkflow && <a href="#new-activity">Current workflow</a>}
         <button className={styles.button} type="button" onClick={onSaved}>Refresh records</button></div>
-    </header>
+    </header>}
     {summaryMetrics.length > 0 && (section.key === 'finance' ? <details className={styles.balanceFigures}><summary>Reported balance figures <span>{summaryMetrics.length}</span></summary>{metrics}</details> : metrics)}
     <WorkbookCharts charts={charts} selected={selected} onSelect={drillDown} recordsId={id + '-register'} />
     <details id={id + '-register'} className={styles.register} open={registerOpen} onToggle={event => setRegisterOpen(event.currentTarget.open)}>
       <summary ref={registrySummary}><span className={styles.chevron} aria-hidden="true" /><span>Source records</span><span className={styles.recordCount} aria-live="polite">{filtered ? rows.length + ' of ' : ''}{section.records.length}</span></summary>
-      <div className={styles.registerBody}>
-        {section.records.length > 0 && <div className={styles.filters}>
+      {(!overviewAction || registerOpen) && <div className={styles.registerBody}>
+        {section.records.length > 0 && <div className={styles.filters} data-compact-filters={overviewAction ? true : undefined}>
           <label className={styles.search}>Search records<input type="search" value={query} maxLength={200} onChange={event => { setQuery(event.target.value); setPage(0); }} placeholder="Name, course or reference" /></label>
+          {overviewAction && <button className={styles.button} type="button" aria-expanded={filtersOpen} aria-controls={id + '-filters'} onClick={() => setFiltersOpen(!filtersOpen)}>Filters{advancedFilterCount > 0 && ' (' + advancedFilterCount + ')'}</button>}
+          <div id={id + '-filters'} className={overviewAction ? styles.advancedFilters : styles.inlineFilters} hidden={Boolean(overviewAction) && !filtersOpen}>
           {tables.length > 1 && <label><span id={id + '-source-label'}>Source</span><select aria-labelledby={id + '-source-label'} value={table} onChange={event => { setTable(event.target.value); setPage(0); }}><option value="">All sources</option>{tables.map(value => <option key={value} value={value}>{tableLabels[value]}</option>)}</select></label>}
           {statuses.length > 0 && <label><span id={id + '-status-label'}>Reported status</span><select aria-labelledby={id + '-status-label'} value={status} onChange={event => { setStatus(event.target.value); setPage(0); }}><option value="">All statuses</option>{statuses.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
           <label className={styles.check}><input type="checkbox" checked={reviewOnly} onChange={event => { setReviewOnly(event.target.checked); setPage(0); }} />Needs mapping review</label>
+          </div>
         </div>}
         {filtered && <div className={styles.activeFilter}><span role="status">{group && chart ? chart.title + ' · ' + group.label + ' · ' : ''}{rows.length} matching {rows.length === 1 ? 'record' : 'records'}</span><button type="button" onClick={resetFilters}>Clear filters</button></div>}
         {visible.length ? <ul className={styles.records}>{visible.map(row => <li key={row.id + '-' + row.review.version}>
           <WorkflowRow row={row} view={section.key} data={data} onSaved={onSaved} groupName={id + '-row'} />
         </li>)}</ul> : <p className={styles.empty}>{section.records.length ? 'No records match these filters.' : 'No workbook records are available for this view.'}</p>}
         {pageCount > 1 && <nav className={styles.pagination} aria-label={section.title + ' pages'}><button className={styles.button} type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button><span aria-live="polite">Page {currentPage + 1} of {pageCount}</span><button className={styles.button} type="button" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Next</button></nav>}
-      </div>
+      </div>}
     </details>
   </section>;
 }

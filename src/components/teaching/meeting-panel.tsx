@@ -5,10 +5,10 @@ import type { MeetingView, MeetingAccess } from '@/modules/teaching/meetings';
 import { meetingCopy as copy } from '@/locales/meetings';
 import { IdentityForm, TextField } from '../identity-form';
 import { SessionTime } from '../booking/shared';
-import styles from '../files/files.module.css';
+import styles from './meeting-panel.module.css';
 import formStyles from '../auth.module.css';
 
-export function MeetingPanel({ occurrenceId, learnerId, view = 'customer' }: { occurrenceId: string; learnerId?: string; view?: 'customer' | 'tutor' | 'admin' }) {
+export function MeetingPanel({ occurrenceId, learnerId, view = 'customer', displayedSchedule }: { occurrenceId: string; learnerId?: string; view?: 'customer' | 'tutor' | 'admin'; displayedSchedule?: { start: string; end: string } }) {
   const query = `view=${view}${learnerId ? `&learner_id=${learnerId}` : ''}`, path = `occurrences/${occurrenceId}/meeting?${query}`;
   const [record, setRecord] = useState<{ path: string; data: MeetingView; received: number } | null>(null), [failed, setFailed] = useState(false), [attempt, setAttempt] = useState(0), [clock, setClock] = useState(0), [joining, setJoining] = useState(false), [joinError, setJoinError] = useState(''), [preview, setPreview] = useState(false);
   const data = record?.path === path ? record.data : undefined;
@@ -38,5 +38,46 @@ export function MeetingPanel({ occurrenceId, learnerId, view = 'customer' }: { o
     } catch (error) { setJoinError(error instanceof Error ? error.message : copy.failed); setAttempt(value => value + 1); }
     finally { setJoining(false); }
   }
-  return <section className={styles.section} aria-label={copy.title}><h2>{copy.title}</h2>{!data && !failed && <p role="status">{copy.loading}</p>}{failed && <p role="alert" className={formStyles.error}>{copy.failed}</p>}<button type="button" className={formStyles.signout} onClick={refresh}>{copy.refresh}</button>{data && <><p>{copy.status[data.meeting_status]}</p><SessionTime start={data.start_at} end={data.end_at} /><p role="timer" aria-live="off">{ended ? copy.ended : remaining > 0 ? `${copy.starts}: ${copy.countdown(Math.floor(remaining / 1440), Math.floor(remaining % 1440 / 60), remaining % 60)}` : copy.scheduledNow}</p>{data.integration_state === 'simulated' && <p className={styles.notice}>{copy.simulated}</p>}{data.integration_state === 'verification_required' && <p className={styles.notice}>{copy.verification}</p>}{data.reason && <p>{copy.reasons[data.reason]}</p>}<button type="button" className={formStyles.primary} onClick={() => void join()} disabled={!data.can_join || ended || joining || failed}>{joining ? copy.joining : data.integration_state === 'simulated' ? copy.preview : copy.join}</button>{joinError && <p role="alert" className={formStyles.error}>{joinError}</p>}{preview && <section className={styles.notice} aria-label={copy.previewTitle}><h3>{copy.previewTitle}</h3><p>{copy.previewDescription}</p><button type="button" className={formStyles.signout} onClick={() => setPreview(false)}>{copy.close}</button></section>}{view === 'admin' && <><IdentityForm action={`occurrences/${occurrenceId}/meeting/retry`} submitLabel={copy.retry} successMessage={copy.retried} resettable={false} payload={() => ({ expected_version: data.occurrence_version })} onSaved={refresh}><p>{copy.reasons.PROVISIONING}</p></IdentityForm><details><summary>{copy.replace}</summary><IdentityForm action={`occurrences/${occurrenceId}/meeting/replace`} submitLabel={copy.replace} successMessage={copy.replaced} resettable={false} payload={form => ({ reason: String(form.get('reason')).trim(), expected_version: data.occurrence_version })} onSaved={refresh}><p>{copy.replaceDescription}</p><TextField name="reason" label={copy.replaceReason} maxLength={2000} /></IdentityForm></details></>}</>}</section>;
+  return <section className={styles.room} aria-label={copy.title}>
+    <div className={styles.heading}>
+      <h2><svg className={styles.camera} aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+        <rect x="3" y="6.5" width="12" height="11" rx="2.5" /><path d="m15 10 6-3v10l-6-3" />
+      </svg>{copy.title}</h2>
+      <button type="button" className={styles.refresh} aria-label={copy.refresh} onClick={refresh}>{copy.refreshShort}</button>
+    </div>
+    {!data && !failed && <p role="status">{copy.loading}</p>}
+    {failed && <p role="alert" className={formStyles.error}>{copy.failed}</p>}
+    {data && <>
+      <div className={styles.body}>
+        <div className={styles.info}>
+          <p className={styles.readiness}><span className={styles.indicator} data-ready={data.can_join && !ended} aria-hidden="true" />{copy.status[data.meeting_status]}</p>
+          {(!displayedSchedule || displayedSchedule.start !== data.start_at || displayedSchedule.end !== data.end_at) && <SessionTime start={data.start_at} end={data.end_at} />}
+          <p role="timer" aria-live="off">{ended ? copy.ended : remaining > 0
+            ? `${copy.starts} ${copy.countdown(Math.floor(remaining / 1440), Math.floor(remaining % 1440 / 60), remaining % 60)}` : copy.scheduledNow}</p>
+          {data.reason && data.reason !== 'SESSION_ENDED' && <p>{copy.reasons[data.reason]}</p>}
+        </div>
+        <div className={styles.action}>
+          <button type="button" className={formStyles.primary} onClick={() => void join()} disabled={!data.can_join || ended || joining || failed}>
+            {joining ? copy.joining : data.integration_state === 'simulated' ? copy.preview : copy.join}
+          </button>
+          <p>{data.integration_state === 'simulated' ? copy.simulated : data.integration_state === 'verified' ? copy.live : data.reason !== 'LIVE_VERIFICATION_REQUIRED' ? copy.verification : null}</p>
+        </div>
+      </div>
+      {joinError && <p role="alert" className={formStyles.error}>{joinError}</p>}
+      {preview && <section className={styles.preview} aria-label={copy.previewTitle}>
+        <h3>{copy.previewTitle}</h3><p role="status">{copy.previewDescription}</p>
+        <button type="button" className={formStyles.signout} onClick={() => setPreview(false)}>{copy.close}</button>
+      </section>}
+      {view === 'admin' && <details className={styles.manage}><summary>{copy.manage}</summary>
+        <IdentityForm action={`occurrences/${occurrenceId}/meeting/retry`} submitLabel={copy.retry} successMessage={copy.retried}
+          resettable={false} payload={() => ({ expected_version: data.occurrence_version })} onSaved={refresh}><p>{copy.reasons.PROVISIONING}</p></IdentityForm>
+        <details><summary>{copy.replace}</summary>
+          <IdentityForm action={`occurrences/${occurrenceId}/meeting/replace`} submitLabel={copy.replace} successMessage={copy.replaced}
+            resettable={false} payload={form => ({ reason: String(form.get('reason')).trim(), expected_version: data.occurrence_version })} onSaved={refresh}>
+            <p>{copy.replaceDescription}</p><TextField name="reason" label={copy.replaceReason} maxLength={2000} />
+          </IdentityForm>
+        </details>
+      </details>}
+    </>}
+  </section>;
 }

@@ -3,9 +3,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, expect, test, vi } from 'vitest';
 import type { WorkflowOperationsData, WorkflowOperationsRecord } from '../../src/modules/workflow-import/operational-model';
 
-const state = vi.hoisted(() => ({ data: undefined as unknown }));
+const state = vi.hoisted(() => ({ data: undefined as unknown, reads: [] as (string | null)[] }));
 // Supply the completed HTTP read; all schema validation and rendering remain real.
-vi.mock('../../src/components/payments/shared', () => ({ usePaymentRecord: () => ({ data: state.data, reload: () => {} }) }));
+vi.mock('../../src/components/payments/shared', () => ({
+  usePaymentRecord: (path: string | null) => { state.reads.push(path); return { data: path ? state.data : undefined, reload: () => {} }; },
+}));
+vi.mock('../../src/server/auth', () => ({ requireAccount: async () => ({ roles: ['admin'] }) }));
+vi.mock('../../src/server/supabase', () => ({ serverSupabase: async () => ({}) }));
+vi.mock('../../src/modules/workflow-import/operational-queries', () => ({ getWorkflowOperations: async () => state.data }));
+import AdminPage from '../../src/app/admin/page';
 import { WorkflowOperationsWorkspace } from '../../src/components/workflow-import/operational-workspaces';
 import { workbookCharts } from '../../src/components/workflow-import/record-insights';
 
@@ -19,7 +25,34 @@ function data(view: 'sessions' | 'overview' | 'payments', records: WorkflowOpera
   return { enabled: true, role: 'owner', mapping_options: { learners: [], tutors: [] }, sections: [{ key: view, title: 'Workbook records', description: 'Historical reports', metrics: [], records }] };
 }
 const render = (view: 'sessions' | 'overview' | 'payments', collapsed = false) => renderToStaticMarkup(createElement(WorkflowOperationsWorkspace, { view, collapsed }, createElement('button', null, 'Continue current workflow')));
-beforeEach(() => { state.data = undefined; });
+beforeEach(() => { state.data = undefined; state.reads.length = 0; });
+
+test('admin overview renders its scoped figures on first paint and opens records on demand', async () => {
+  const response = data('overview', [sourceRow(1, '2026-10-01', 'Synthetic lesson')]);
+  if (!response.enabled) throw Error('Expected enabled fixture');
+  response.mapping_options.tutors.push({ id: uuid(3), display_name: 'Unused mapping choice' });
+  response.sections.push({ key: 'finance', title: 'Separate finance view', description: '', metrics: [], records: [sourceRow(2, null, 'Finance-only value')] });
+  state.data = response;
+  const page = await AdminPage();
+  const [workspace] = page.props.children;
+  expect(workspace.props.initialData.sections.map((section: { key: string }) => section.key)).toEqual(['overview']);
+  expect(workspace.props.initialData.mapping_options).toEqual({ learners: [], tutors: [] });
+  const html = renderToStaticMarkup(createElement('main', null, page.props.children));
+  expect(state.reads).toEqual([null]);
+  expect(html).toContain('Session outcomes');
+  expect(html).toContain('Session activity');
+  expect(html).toContain('Browse records');
+  expect(html).toContain('Open request queue');
+  expect(html).toContain('Source records');
+  expect(html).not.toContain('Search records');
+  expect(html).not.toContain('Loading your records');
+  expect(html).not.toContain('Finance-only value');
+  expect(html.indexOf('Session activity')).toBeLessThan(html.indexOf('Daily operations'));
+
+  response.sections[0].records[0].review.can_review = true;
+  const [reviewWorkspace] = (await AdminPage()).props.children;
+  expect(reviewWorkspace.props.initialData.mapping_options).toEqual(response.mapping_options);
+});
 
 test('disabled imports preserve the current workspace without preview notices', () => {
   state.data = { enabled: false };
