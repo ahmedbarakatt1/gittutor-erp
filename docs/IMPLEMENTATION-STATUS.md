@@ -1,5 +1,11 @@
 # Implementation status
 
+## Commercial launch review — 18 November 2026
+
+The shared preview returned HTTP 200 on `/login`. The read-only production check `node --max-old-space-size=384 --import tsx .local/production-setup/verify-owner-auth-test.ts` passed at 16:50 UTC. The separate production database holds one unconfirmed owner account, zero staff grants, zero workbook import batches, zero financial postings and zero queued jobs. The tool found 35 restricted worker functions and zero unsafe private tables. The [application verification](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44345460137) passed 168 browser tests. `pnpm exec tsx tools/validate-evidence.ts` separately reports 147 formal acceptance cases still marked not run.
+
+The first owner decision is commercial hosting for the web app, continuous worker and private upload scanner. The free-host proposal is deferred. Other owner inputs include verified payment destinations and commercial terms, reviewed identity and balance mappings, the scope of WhatsApp at launch, and backup retention and recovery targets. Engineering work includes production Auth and organizer access on the final hostname, a controlled money and group-meeting rehearsal, live upload quarantine, a replacement-host restore, and the outstanding financial and access assertions. The two-person Meet pilot and owner-only Mailjet Spam deliveries remain the latest executed evidence. See [production inputs](PRODUCTION-INPUTS.md) and the [free-host plan](FREE-SERVICE-PLAN.md).
+
 ## Portal navigation, booking actions and workbook overview — 18 November 2026
 
 The four workspaces now group the routes available to the signed-in role by task. On phones a keyboard-accessible Menu shows the current section. The sign-in form is a single column. The student reservation leads with the applicable quote, payment or meeting action, and keeps files, package and policy details available on demand. The admin overview renders its authorized workbook summary on the first response, with both charts, direct access to their source records and a compact list of daily operations. This change uses the existing data and providers.
