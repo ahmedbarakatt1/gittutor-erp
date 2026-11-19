@@ -102,7 +102,7 @@ export function assertPaymentWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
 const integrationWorkerSignatures: Record<string, string> = {
   prepare_file_content: 'uuid,uuid', record_file_object: 'uuid,uuid,uuid,jsonb', prepare_file_download: 'uuid,uuid',
   prepare_file_scan: 'uuid,uuid,uuid', finalize_file_scan: 'uuid,integer,uuid,uuid,jsonb',
-  record_calendar_connection: 'uuid,uuid,uuid,text,text,jsonb,text', prepare_calendar_sync: 'uuid,uuid,uuid',
+  record_calendar_organizer: 'uuid,uuid,uuid,text,text,jsonb,text,text', record_calendar_connection: 'uuid,uuid,uuid,text,text,jsonb,text', prepare_calendar_sync: 'uuid,uuid,uuid',
   get_calendar_credentials: 'uuid,integer,uuid,uuid', finalize_calendar_sync: 'uuid,integer,uuid,integer,integer,uuid,uuid,jsonb',
   rotate_calendar_credentials: 'uuid,integer,uuid,uuid,jsonb,text,uuid,uuid',
   route_notification_event: 'uuid,uuid', prepare_notification_delivery: 'uuid,uuid,uuid',

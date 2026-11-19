@@ -33,7 +33,7 @@ test.each(['learner@example.test', 'learner@preview.gittutor.invalid', 'learner@
   const d = desired(recipient), email = message(recipient);
   expect((await createFakeCalendarAdapter(calendarPath, 'timeout_after_success').apply(d)).outcome).toBe('unknown');
   expect((await createFakeCalendarAdapter(calendarPath).reconcile(d)).outcome).toBe('ready');
-  expect(JSON.parse(await readFile(join(calendarPath, `${d.provider_event_id}.json`), 'utf8')).outcome).toBe('ready');
+  expect(JSON.parse(await readFile(join(calendarPath, d.connection_id, `${d.provider_event_id}.json`), 'utf8')).outcome).toBe('ready');
   expect((await createLocalEmailAdapter(emailPath, true, 'timeout_after_success').send(email)).outcome).toBe('unknown');
   expect((await createLocalEmailAdapter(emailPath, true).reconcile(email.attempt_id)).outcome).toBe('sent');
   expect(JSON.parse(await readFile(join(emailPath, `${email.attempt_id}.json`), 'utf8')).message.to).toBe(recipient);

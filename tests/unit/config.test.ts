@@ -44,6 +44,15 @@ describe("configuration boundary", () => {
   it("validates complete live configuration without exposing secrets", () => {
     expect(() => parseServerConfig({ APP_ENV: "production", EMAIL_ADAPTER: "ses", CALENDAR_ADAPTER: "google", WHATSAPP_ADAPTER: "cloud", FILE_SCAN_ADAPTER: "clamav" })).toThrow();
   });
+  it('allows Google organizers to use their account-specific primary calendars without a shared calendar ID', () => {
+    const settings = {
+      APP_ENV: 'test', CALENDAR_ADAPTER: 'google', SECRET_ENCRYPTION_KEY: 'a'.repeat(64),
+      GOOGLE_OAUTH_CLIENT_ID: 'synthetic', GOOGLE_OAUTH_CLIENT_SECRET: 'synthetic',
+      GOOGLE_OAUTH_REDIRECT_URI: 'http://localhost:3000/api/calendar/google/callback',
+    };
+    expect(parseServerConfig(settings).google?.calendar_id).toBe('primary');
+    expect(parseServerConfig({ ...settings, GOOGLE_CALENDAR_ID: 'legacy@example.test' }).google?.calendar_id).toBe('legacy@example.test');
+  });
   it('requires complete server-only settings for Resend and leaves fake and SES settings independent', () => {
     const resend = {
       APP_ENV: 'test',

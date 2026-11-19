@@ -30,6 +30,7 @@ test('a private pilot permits one learner and routes only its confirmed slot to 
   const f = await calendarFixture();
   try {
     const request = await f.rpc('create_calendar_connection_request', {p_idempotency_key:randomUUID()});
+    const other = await f.rpc('create_calendar_connection_request', {p_idempotency_key:randomUUID()});
     await f.database.query('begin');
     try {
       const envelope = {v:1,alg:'A256GCM',kid:'test',nonce:'A'.repeat(16),tag:'A'.repeat(22),ciphertext:'AA'};
@@ -37,10 +38,15 @@ test('a private pilot permits one learner and routes only its confirmed slot to 
         request.request_id,request.connection_id,randomUUID(),'organizer@example.test','primary',envelope,'test',
       ]);
       await f.database.query('update app_private.provider_connections set verified_at=now() where id=$1',[request.connection_id]);
+      await f.database.query('select app_private.record_calendar_organizer($1,$2,$3,$4,$5,$6,$7,$8)', [
+        other.request_id,other.connection_id,randomUUID(),'another-organizer@example.test','primary',envelope,'test',randomUUID(),
+      ]);
+      await f.database.query('update app_private.provider_connections set verified_at=now() where id=$1',[other.connection_id]);
       const learner = (await f.database.query('select learner_id,booker_account_id from app_private.enrollments where id=$1',[f.enrollmentId])).rows[0];
       const session = (await f.learner.auth.getSession()).data.session!;
       const claims = JSON.parse(Buffer.from(session.access_token.split('.')[1],'base64url').toString());
-      await exerciseCalendarBookingPilot(f.database,f.occurrenceId,learner.learner_id,f.tutorId,learner.booker_account_id,request.connection_id as string,claims);
+      await exerciseCalendarBookingPilot(f.database,f.occurrenceId,learner.learner_id,f.tutorId,learner.booker_account_id,
+        request.connection_id as string,claims,other.connection_id as string);
     } finally { await f.database.query('rollback'); }
   } finally { await f.close(); }
 }, 60000);

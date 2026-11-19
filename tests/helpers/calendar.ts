@@ -12,13 +12,20 @@ import { createFakeCalendarAdapter } from '../../src/server/providers/calendar';
 import { getOccurrenceMeeting,invokeMeetingCommandWithStatus } from '../../src/modules/teaching/meetings';
 /** Genuine verified quote, source payment, exact fee and confirmed booking; provider alone is fake. */
 export async function calendarFixture(){const f=await paymentFixture({charge:'enrollment'});try{
- const connection=await f.rpc('connect_fake_calendar',{p_idempotency_key:randomUUID()});
+ const connection=await f.rpc('add_fake_calendar_organizer',{p_idempotency_key:randomUUID()});
+ // Fixtures often use the same hour. Give this generated tutor a dedicated fake
+ // identity, so parallel lessons exercise the same organizer preference as Google.
+ await f.database.query("update app_private.provider_connections set organizer_email=$2 where id=$1 and mode='fake'",[connection.connection_id,f.actor.email]);
  const row=(await f.database.query('select o.* from app_private.occurrences o join app_private.enrollments e on e.occurrence_id=o.id where e.id=$1',[f.enrollmentId])).rows[0];
  await f.rpc('approve_tutor_fee',{p_occurrence_id:row.id,p_tutor_id:f.tutorId,p_fee_minor:25000,p_currency:'EGP',p_duration_minutes:60,p_compensation_policy_version_id:row.pricing_version_id,p_target_tier:null,p_purpose:'initial',p_reason:'Synthetic calendar exact agreement',p_expected_version:row.version,p_idempotency_key:randomUUID()});
  const receiving=await f.receiving();await settleEnrollment(f,f.enrollmentId!,0,50000,receiving);
  const current=(await f.database.query('select state,version from app_private.occurrences where id=$1',[row.id])).rows[0];if(current.state!=='confirmed')await f.rpc('confirm_occurrence',{p_occurrence_id:row.id,p_expected_version:current.version,p_idempotency_key:randomUUID()});
  assert.equal((await f.database.query('select state from app_private.occurrences where id=$1',[row.id])).rows[0].state,'confirmed');
- return {...f,occurrenceId:row.id as string,connectionId:connection.connection_id as string};
+ const close=async()=>{try{
+   const current=(await f.database.query('select state,version from app_private.provider_connections where id=$1',[connection.connection_id])).rows[0];
+   if(current.state==='connected')await f.rpc('revoke_calendar_connection',{p_connection_id:connection.connection_id,p_expected_version:current.version,p_idempotency_key:randomUUID()});
+ }finally{await f.close();}};
+ return {...f,close,occurrenceId:row.id as string,connectionId:connection.connection_id as string};
  }catch(error){await f.close();throw error;}}
 
 /** Only the real admin RPC and restricted leased worker make this meeting ready. */

@@ -116,7 +116,7 @@ export function parseServerConfig(raw: Env) {
   if (providers.email === "resend") required.push("EMAIL_FROM", "RESEND_API_KEY", "RESEND_WEBHOOK_SECRET");
   if (providers.email === "gmail") required.push("GMAIL_SMTP_USER", "GMAIL_APP_PASSWORD");
   if (providers.email === "mailjet") required.push("EMAIL_FROM", "MAILJET_API_KEY", "MAILJET_SECRET_KEY");
-  if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "GOOGLE_CALENDAR_ID", "SECRET_ENCRYPTION_KEY");
+  if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "SECRET_ENCRYPTION_KEY");
   if (providers.whatsapp === "cloud") required.push("WHATSAPP_BUSINESS_ACCOUNT_ID", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN");
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
   const missing = required.filter(key => !raw[key]?.trim());
@@ -125,7 +125,7 @@ export function parseServerConfig(raw: Env) {
   const appBaseUrl = absoluteUrl(raw.APP_BASE_URL || "http://localhost:3000", "APP_BASE_URL", !isolated);
   const google = providers.calendar === 'google' ? {
     client_id: raw.GOOGLE_OAUTH_CLIENT_ID!.trim(), client_secret: raw.GOOGLE_OAUTH_CLIENT_SECRET!.trim(),
-    redirect_uri: absoluteUrl(raw.GOOGLE_OAUTH_REDIRECT_URI!.trim(), 'GOOGLE_OAUTH_REDIRECT_URI', !isolated), calendar_id: raw.GOOGLE_CALENDAR_ID!.trim(),
+    redirect_uri: absoluteUrl(raw.GOOGLE_OAUTH_REDIRECT_URI!.trim(), 'GOOGLE_OAUTH_REDIRECT_URI', !isolated), calendar_id: raw.GOOGLE_CALENDAR_ID?.trim() || 'primary',
   } : null;
   const email = providers.email === 'ses' ? { region: raw.AWS_REGION!.trim(), from: raw.EMAIL_FROM!.trim(), topic_arn: raw.EMAIL_SNS_TOPIC_ARN!.trim(), configuration_set: raw.EMAIL_CONFIGURATION_SET!.trim() } : null;
   if (email && (!/^[a-z]{2}(?:-[a-z]+)+-\d$/.test(email.region) || !/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(email.from) || !new RegExp(`^arn:aws:sns:${email.region}:\\d{12}:[A-Za-z0-9_-]{1,256}$`).test(email.topic_arn) || !/^[A-Za-z0-9_-]{1,64}$/.test(email.configuration_set))) throw new Error('Invalid email configuration');

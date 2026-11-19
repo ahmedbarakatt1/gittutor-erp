@@ -1,4 +1,4 @@
-import { getCalendarConnection, getMeetingAccess, getOccurrenceMeeting, type meetingCommands } from '@/modules/teaching/meetings';
+import { getCalendarConnection, listCalendarConnections, getMeetingAccess, getOccurrenceMeeting, type meetingCommands } from '@/modules/teaching/meetings';
 import type { IdentityRpcClient } from '@/modules/identity/commands';
 
 type MeetingRoute = { family: 'meetings'; pattern: RegExp; rpc: keyof typeof meetingCommands; pathArgument?: string; fields: string[] };
@@ -9,6 +9,7 @@ export const meetingCommandRoutes: MeetingRoute[] = [
 ];
 export function findMeetingReadRoute(path: string): { fields: string[]; run: (client: IdentityRpcClient, options: Record<string, unknown>) => Promise<unknown> } | undefined {
   if (path === 'calendar/connection') return { fields: [], run: client => getCalendarConnection(client) };
+  if (path === 'calendar/connections') return { fields: [], run: listCalendarConnections };
   const access = /^occurrences\/([^/]+)\/meeting\/access$/.exec(path);
   if (access) return { fields: ['view', 'learner_id'], run: (client, options) => getMeetingAccess(client, access[1], options) };
   const meeting = /^occurrences\/([^/]+)\/meeting$/.exec(path);

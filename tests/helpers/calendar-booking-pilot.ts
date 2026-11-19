@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import type {Client} from 'pg';
 
 /** Runs in the caller's rollback-only transaction. No provider or real attendee is contacted. */
-export async function exerciseCalendarBookingPilot(db: Client, sourceId: string, learner: string, tutor: string, account: string, grant: string, learnerClaims: object) {
+export async function exerciseCalendarBookingPilot(db: Client, sourceId: string, learner: string, tutor: string, account: string, grant: string, learnerClaims: object, anotherGrant?: string) {
   const occurrence = randomUUID();
   await db.query(`insert into app_private.occurrences
     (id,offer_id,tutor_id,format,capacity,duration_minutes,start_at,end_at,time_zone,policy_version_id,pricing_version_id,availability_version,confirmation_deadline_at)
@@ -14,7 +14,7 @@ export async function exerciseCalendarBookingPilot(db: Client, sourceId: string,
       (occurrence_id,learner_id,tutor_id,connection_id,connection_version,start_at,end_at,tutor_google_email)
     select o.id,$2,o.tutor_id,c.id,c.version,o.start_at,o.end_at,'pilot-tutor@example.test'
     from app_private.occurrences o cross join app_private.provider_connections c where o.id=$1 and c.id=$3`, [occurrence,learner,grant]);
-  const modes = async (id: string) => (await db.query(`select pc.mode from app_private.provider_connections pc
+  const modes = async (id: string) => (await db.query(`select distinct pc.mode from app_private.provider_connections pc
     where app_private.calendar_connection_in_scope(pc,$1) order by pc.mode`, [id])).rows.map(row => row.mode);
   assert.deepEqual(await modes(sourceId), ['fake']);
   assert.deepEqual(await modes(occurrence), []);
@@ -40,6 +40,12 @@ export async function exerciseCalendarBookingPilot(db: Client, sourceId: string,
   assert.equal(ready.desired.occurrence_id,occurrence);
   assert.equal((await db.query("select (app_private.get_calendar_credentials($1,$2,$3,$4)->>'connection_id')=$1::text ok",
     [grant,ready.desired.connection_version,job,lease])).rows[0].ok,true);
+  if (anotherGrant) {
+    await db.query('savepoint denied_cross_account');
+    await db.query('set local role git_tutor_worker');
+    await assert.rejects(db.query('select app_private.get_calendar_credentials($1,1,$2,$3)',[anotherGrant,job,lease]),/STATE_CONFLICT/);
+    await db.query('rollback to savepoint denied_cross_account');
+  }
   const observed = {outcome:'ready',provider_event_id:ready.desired.provider_event_id,join_url:'https://meet.google.com/xxx-xxxx-xxx'};
   const result = await db.query('select app_private.finalize_calendar_sync($1,$2,$3,$4,$5,$6,$7,$8) r',
     [occurrence,ready.desired.occurrence_version,grant,ready.desired.connection_version,ready.desired.meeting_generation,job,lease,observed]);
