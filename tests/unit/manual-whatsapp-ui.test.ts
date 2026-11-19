@@ -17,6 +17,7 @@ test('manual support shows the existing contact before sign-in and keeps the web
   vi.stubEnv('WHATSAPP_ADAPTER', 'manual');
   const customer = renderToStaticMarkup(await ChannelWorkspace({}));
   expect(customer).toContain('href="' + publicContact.whatsappHref + '"');
+  expect(customer).toContain('href="/brand/contact-icons.svg#whatsapp"');
   expect(customer).toContain(publicContact.phoneDisplay);
   expect(customer).toContain('Start a conversation');
   const staff = renderToStaticMarkup(await ChannelWorkspace({ staff: true }));
