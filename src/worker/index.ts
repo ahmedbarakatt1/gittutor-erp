@@ -1,7 +1,7 @@
 import { setTimeout } from 'node:timers/promises';
 import { createDatabasePool, databaseUrl } from '../server/database';
 import { integrationStates, parseServerConfig } from '../server/config';
-import { claimJobs, failJob } from './claims';
+import { claimWorkerJobs, failJob } from './claims';
 import { executeLeasedJob, type JobHandler } from './execute';
 import { staffInvitationHandler } from './auth-invitations';
 import { bookingDueHandler } from './booking-due';
@@ -45,7 +45,9 @@ const handlers: Record<string, JobHandler> = {
   'notifications.route': notificationRouteHandler(pool),
   'notifications.send': notificationSendHandler(pool, scenario => liveEmail ?? createLocalEmailAdapter('.local/email-inbox', configuration.isolated, scenario), configuration.app_base_url),
   'exports.render': exportRenderHandler(pool, storage),
-  'support.whatsapp_send': whatsappSendHandler(pool, scenario => createWhatsAppAdapter(whatsapp, scenario), whatsapp.mode, whatsapp.phone_number_id),
+  ...(whatsapp.mode === 'manual' ? {} : {
+    'support.whatsapp_send': whatsappSendHandler(pool, scenario => createWhatsAppAdapter(whatsapp, scenario), whatsapp.mode, whatsapp.phone_number_id),
+  }),
   'foundation.healthcheck': {
     execute: async job => `fake:healthcheck:${job.event_id}`,
     reconcile: async () => ({ outcome: 'not_sent' }), // Pure local healthcheck has no external side effect.
@@ -55,7 +57,7 @@ const handlers: Record<string, JobHandler> = {
 console.log(JSON.stringify({ event: 'worker_started', integrations: integrationStates(configuration), handlers: Object.keys(handlers) }));
 try {
   while (!stopping) {
-    const jobs = await claimJobs(pool, process.env.WORKER_PURPOSE || null);
+    const jobs = await claimWorkerJobs(pool, process.env.WORKER_PURPOSE || null, whatsapp.mode);
     await writeHeartbeat(process.env.WORKER_HEARTBEAT_FILE);
     for (const job of jobs) {
       const handler = handlers[job.purpose];

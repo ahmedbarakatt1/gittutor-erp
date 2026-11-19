@@ -48,6 +48,7 @@ const errors: Record<string, [number, string]> = {
   VERSION_CONFLICT: [409, "This record has changed. Refresh before trying again."],
   IDEMPOTENCY_CONFLICT: [409, "This operation key was already used with different details."],
   STATE_CONFLICT: [409, "This action is no longer available for the current record."],
+  WHATSAPP_MANUAL_CONTACT_ONLY: [409, "Reply directly in WhatsApp. Website conversations can be answered here."],
   DESTINATION_UNVERIFIED: [409, "Verify the destination before continuing."],
   EVIDENCE_REQUIRED: [409, "The required verified evidence is not available."],
   CAPACITY_CONFLICT: [409, "This place is no longer available. Choose another session."],

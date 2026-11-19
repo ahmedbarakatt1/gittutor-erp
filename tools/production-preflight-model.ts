@@ -28,7 +28,7 @@ export function inspectProductionConfiguration(env: Env): PreflightCheck[] {
   const reference = env.PRODUCTION_PROJECT_REF || '';
   return [
     check('explicit_production_environment', () => env.APP_ENV === 'production'),
-    check('complete_live_adapter_configuration', () => { const config = parseServerConfig(env); parseWhatsAppConfig(env, config.isolated); return !config.isolated; }),
+    check('selected_production_adapters_configured', () => { const config = parseServerConfig(env); parseWhatsAppConfig(env, config.isolated); return !config.isolated; }),
     check('permanent_https_origin', () => origin(env.APP_BASE_URL)),
     check('selected_supabase_project', () => /^[a-z]{20}$/.test(reference) && env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '') === `https://${reference}.supabase.co`),
     check('restricted_worker_tls_connection', () => database(env.WORKER_DATABASE_URL, reference, true)),

@@ -18,6 +18,11 @@ export async function claimJobs(database: Database, purpose: string | null = nul
   const result = await database.query('select * from app_private.claim_jobs($1,$2,$3)', [purpose, limit, leaseSeconds]);
   return result.rows as Job[];
 }
+export async function claimWorkerJobs(database: Database, purpose: string | null, mode: 'manual' | 'fake' | 'cloud'): Promise<Job[]> {
+  if (mode !== 'manual') return claimJobs(database, purpose);
+  const result = await database.query('select * from app_private.claim_jobs($1,$2,$3,$4)', [purpose, 10, 60, 'support.whatsapp_send']);
+  return result.rows as Job[];
+}
 export async function completeJob(database: Database, job: Job, providerReference: string | null) {
   await database.query('select app_private.complete_job($1,$2,$3)', [job.id, job.lease_token, providerReference]);
 }

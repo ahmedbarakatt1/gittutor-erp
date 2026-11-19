@@ -44,7 +44,7 @@ Define typed server-only adapters for calendar, transactional email, WhatsApp, s
 | `SECRET_ENCRYPTION_KEY` | Encrypt provider connections and private payout identifiers, versioned rotation |
 | `EMAIL_ADAPTER` | `fake`, `ses`, `resend` or `gmail`; fake is isolated-development/test only |
 | `CALENDAR_ADAPTER` | `fake` or `google` |
-| `WHATSAPP_ADAPTER` | `fake` or `cloud` |
+| `WHATSAPP_ADAPTER` | `manual` for the launch contact link, `fake` for isolated simulations, or `cloud` for automated Meta messaging |
 | `FILE_SCAN_ADAPTER`, `FILE_SCAN_URL` | `fake` or `clamav`, approved scanner endpoint |
 | `PAYMENT_RECONCILIATION_ADAPTER` | `manual` |
 | `AWS_REGION`, `EMAIL_FROM`, `EMAIL_SNS_TOPIC_ARN` | Live SES sender and allowed signed notification topic |
@@ -53,7 +53,7 @@ Define typed server-only adapters for calendar, transactional email, WhatsApp, s
 | `EMAIL_FROM`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` | Selected Mailjet sender and private API/secret pair; [Mailjet setup](MAILJET-SETUP.md) records Auth settings and remaining delivery gates |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional server credential chain inputs when workload identity is unavailable |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Approved organizer OAuth configuration |
-| `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` | Live business account, send credentials and webhook verification |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_GRAPH_VERSION` | Cloud mode only. Live business account, send credentials, webhook verification and Graph API version |
 
 Persist refresh tokens encrypted in `provider_connections`. Verify required settings at process startup. A public/publishable Supabase key is the browser credential. Privileged keys stay server-side and user financial commands always carry the user's JWT. [Supabase SSR client configuration](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
 
@@ -115,6 +115,8 @@ Supabase Auth owns its verification, recovery and invitation token lifecycle. Co
 Dispatch rechecks guardian scope, staff membership, assignment, verified address, preference and current business version. Automatic operational notices use current event entitlement independently of an interactive login. User-requested privileged export jobs also revalidate the requester's authority and session. Separate marketing consent from operational notices. Bodies omit attachments, raw payout destinations, other learners' details and internal notes. English/Arabic templates use approved terminology and Cairo time.
 
 ## WhatsApp and human ownership
+
+Manual mode opens the public business number in WhatsApp. Staff handle those conversations in the business app. Website chat retains its own ownership, transcript and handoff. The following webhook and delivery rules apply when Cloud automation is enabled.
 
 Verify webhook subscription challenges with the verify token and message callbacks using `X-Hub-Signature-256`, HMAC-SHA256 over raw request bytes and constant-time comparison. Deduplicate message/status IDs before changing a thread. Store separate channel identities and `last_whatsapp_user_message_at`. Only authenticated incoming WhatsApp messages reset that channel's 24-hour customer-service window.
 

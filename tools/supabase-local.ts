@@ -8,7 +8,7 @@ import { Client } from 'pg';
 import { createClient } from '@supabase/supabase-js';
 import { adminDatabase, anonymousClient, assertLocalSupabase, loadLocalSupabase, type LocalSupabase } from '../tests/helpers/supabase';
 import { fixtureId } from './db-seed';
-import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
+import { FOUNDATION_MIGRATION } from './db-migrate';
 import { seedCatalog } from './catalog-seed';
 import { seedBooking } from './booking-seed';
 import { seedPackages } from './package-seed';
@@ -242,7 +242,7 @@ async function copyLocalConfiguration() {
   await mkdir(resolve(workspace, 'supabase/migrations'), { recursive: true });
   const configText = (await readFile('supabase/config.toml', 'utf8')).replace(/(\[db\.migrations\][\s\S]*?)enabled = true/, '$1enabled = false');
   await writeFile(resolve(workspace, 'supabase/config.toml'), configText);
-  for (const filename of NATIVE_BASELINE_MIGRATIONS) await writeFile(resolve(workspace, 'supabase/migrations', filename), await readFile(resolve('supabase/migrations', filename)));
+  await writeFile(resolve(workspace, 'supabase/migrations', FOUNDATION_MIGRATION), await readFile(resolve('supabase/migrations', FOUNDATION_MIGRATION)));
   let templates: string[] = [];
   try { templates = await readdir('supabase/templates'); } catch { /* No custom template yet. */ }
   await mkdir(resolve(workspace, 'supabase/templates'), { recursive: true });

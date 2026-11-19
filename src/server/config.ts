@@ -7,6 +7,10 @@ function choice<T extends string>(raw: string | undefined, choices: readonly T[]
   return value as T;
 }
 
+export function whatsAppMode(value: string | undefined) {
+  return choice(value, ["fake", "manual", "cloud"], "fake", "WHATSAPP_ADAPTER");
+}
+
 function absoluteUrl(value: string, key: string, requireHttps = false): string {
   const parsed = new URL(value);
   if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password || (requireHttps && parsed.protocol !== "https:")) {
@@ -97,7 +101,7 @@ export function parseServerConfig(raw: Env) {
   const providers = {
     email: choice(raw.EMAIL_ADAPTER, ["fake", "ses", "resend", "gmail", "mailjet"], "fake", "EMAIL_ADAPTER"),
     calendar: choice(raw.CALENDAR_ADAPTER, ["fake", "google"], "fake", "CALENDAR_ADAPTER"),
-    whatsapp: choice(raw.WHATSAPP_ADAPTER, ["fake", "cloud"], "fake", "WHATSAPP_ADAPTER"),
+    whatsapp: whatsAppMode(raw.WHATSAPP_ADAPTER),
     file_scan: choice(raw.FILE_SCAN_ADAPTER, ["fake", "clamav"], "fake", "FILE_SCAN_ADAPTER"),
     payments: choice(raw.PAYMENT_RECONCILIATION_ADAPTER, ["manual"], "manual", "PAYMENT_RECONCILIATION_ADAPTER"),
   };
@@ -152,5 +156,9 @@ export function publicConfig(config: ServerConfig) {
 }
 
 export function integrationStates(config: ServerConfig) {
-  return Object.entries(config.providers).map(([provider, mode]) => ({ provider, mode, state: mode === "fake" ? "simulated" : "verification_required" }));
+  return Object.entries(config.providers).map(([provider, mode]) => {
+    const state = provider === "whatsapp" && mode === "manual" ? "manual_contact"
+      : mode === "fake" ? "simulated" : "verification_required";
+    return { provider, mode, state };
+  });
 }

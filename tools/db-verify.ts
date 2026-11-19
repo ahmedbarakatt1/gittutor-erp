@@ -20,7 +20,7 @@ try {
     if (!(await client.query('select to_regclass($1) as oid', [`app_private.${table}`])).rows[0].oid) failures.push(`Missing table: ${table}`);
   }
   if (!(await client.query("select to_regclass('git_tutor_migrations.applied_migrations') as oid")).rows[0].oid) failures.push('Missing local migration history');
-  const requiredFunctions = ['reject_immutable_change()', 'enqueue_event(uuid,text,uuid,jsonb,text)', 'claim_jobs(text,integer,integer)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
+  const requiredFunctions = ['reject_immutable_change()', 'enqueue_event(uuid,text,uuid,jsonb,text)', 'claim_jobs(text,integer,integer)', 'claim_jobs(text,integer,integer,text)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
   for (const fn of requiredFunctions) {
     if (!(await client.query('select to_regprocedure($1) as oid', [`app_private.${fn}`])).rows[0].oid) failures.push(`Missing function: ${fn}`);
   }

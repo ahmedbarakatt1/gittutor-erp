@@ -2,7 +2,7 @@ import type { Client } from 'pg';
 
 // Reviewed exact RPC boundary from the application migrations, including server-mediated calls.
 // A new migration granting the worker another signature must update this list explicitly.
-const queueSignatures = ['claim_jobs(text,integer,integer)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
+const queueSignatures = ['claim_jobs(text,integer,integer)', 'claim_jobs(text,integer,integer,text)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
 const commandSignatures = [
   'finalize_calendar_sync(uuid,integer,uuid,integer,integer,uuid,uuid,jsonb)',
   'finalize_export_render(uuid,uuid,uuid,integer,text)', 'finalize_file_scan(uuid,integer,uuid,uuid,jsonb)',

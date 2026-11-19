@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { parseEnv } from 'node:util';
-import { parseServerConfig } from '../../src/server/config';
+import { integrationStates, parseServerConfig } from '../../src/server/config';
 import { inspectProductionConfiguration, inspectProductionDatabase } from '../../tools/production-preflight-model';
 import { workerRpcOwners } from '../../tools/production-worker-boundary';
 
@@ -22,6 +22,15 @@ const clean = () => ({ environment: 'production', fixture_marker: null, fixture_
 });
 
 describe('production activation preflight', () => {
+  it('boots the manual WhatsApp launch without any Meta account, credentials, or Graph version', async () => {
+    const template = parseEnv(await readFile('deploy/production.env.example', 'utf8'));
+    expect(template.WHATSAPP_ADAPTER).toBe('manual');
+    const rest = Object.fromEntries(Object.entries(configured()).filter(([key]) => !key.startsWith('WHATSAPP_')));
+    const env = { ...rest, WHATSAPP_ADAPTER: 'manual' };
+    expect(integrationStates(parseServerConfig(env))).toContainEqual({ provider: 'whatsapp', mode: 'manual', state: 'manual_contact' });
+    expect(inspectProductionConfiguration(env).every(check => check.passed)).toBe(true);
+    expect(inspectProductionConfiguration({ ...env, WHATSAPP_ADAPTER: 'cloud' }).some(check => !check.passed)).toBe(true);
+  });
   it('boots the published runtime template with the selected Mailjet sender', async () => {
     const template = parseEnv(await readFile('deploy/production.env.example', 'utf8'));
     const secrets: Record<string, string> = { ...configured(), MAILJET_API_KEY: 'a'.repeat(32), MAILJET_SECRET_KEY: 'b'.repeat(32) };
