@@ -18,8 +18,11 @@ export async function GET(request: NextRequest) {
     }
   }
   if (code && code.length <= 4096) {
-    const { error } = await context.client.auth.exchangeCodeForSession(code);
-    if (!error) return context.finish(NextResponse.redirect(new URL("/learn", base)));
+    const { data, error } = await context.client.auth.exchangeCodeForSession(code);
+    if (!error) {
+      const destination = "redirectType" in data && data.redirectType === "recovery" ? "/auth/set-password" : "/learn";
+      return context.finish(NextResponse.redirect(new URL(destination, base)));
+    }
   }
   return context.finish(NextResponse.redirect(new URL("/login?reason=verification", base)));
 }
