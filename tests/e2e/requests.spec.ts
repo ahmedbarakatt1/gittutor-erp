@@ -20,7 +20,7 @@ test('customer material request goes through staff review into a separately cons
   const f = await requestFixture(), staffContext = await browser.newContext({ baseURL: 'http://127.0.0.1:3000' }), strangerContext = await browser.newContext({ baseURL: 'http://127.0.0.1:3000' });
   const staff = await staffContext.newPage(), stranger = await strangerContext.newPage(), topic = `Astronomy ${randomUUID().slice(0, 8)}`;
   try {
-    await f.availability(); const occurrence = await f.eligibleOccurrence();
+    await f.availability(); const occurrence = await f.eligibleOccurrence(68125, 105);
     await login(page, 'learner_a');
     await page.goto('/learn/requests');
     await page.getByLabel('Who is the session for?', { exact: true }).selectOption(f.learners[0]);
@@ -76,6 +76,8 @@ test('customer material request goes through staff review into a separately cons
       if (await more.isVisible()) await more.click(); else await staff.waitForTimeout(200);
     }
     await selector.selectOption(String(occurrence.occurrence_id));
+    await expect(selector.locator('option:checked')).toContainText('681.25');
+    await expect(selector.locator('option:checked')).toContainText('1 seat available');
     await staff.getByLabel('Reply to the student or parent', { exact: true }).fill('Your individual session is ready to review.');
     await staff.getByRole('button', { name: 'Save review and reply', exact: true }).click();
     await expect(staff.getByText('Session proposed', { exact: true }).first()).toBeVisible();
@@ -83,9 +85,18 @@ test('customer material request goes through staff review into a separately cons
     await expect(page).toHaveURL(/\/learn\/bookings\?offer=/);
     await page.getByLabel('Booking for', { exact: true }).selectOption(f.learners[0]);
     await expect(page.getByRole('heading', { name: 'Review before reserving', exact: true })).toBeVisible();
-    await expect(page.getByRole('main')).toContainText('650');
+    await expect(page.getByRole('main')).toContainText('681.25');
     expect(await page.content()).not.toMatch(forbidden);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const reserve = () => page.request.post(`/api/v1/occurrences/${occurrence.occurrence_id}/holds`, {
+      headers: { Origin: new URL(page.url()).origin, 'Idempotency-Key': randomUUID() }, data: { learner_id: f.learners[0] },
+    });
+    const held = await reserve();
+    expect(held.status()).toBe(201);
+    const { enrollment_id } = (await held.json()).data;
+    expect((await reserve()).status()).toBe(409);
+    await page.goto(`/learn/requests?request=${requestId}`);
+    await expect(page.getByRole('link', { name: 'Open your booking' })).toHaveAttribute('href', `/learn/bookings/${enrollment_id}`);
   } finally { await staffContext.close(); await strangerContext.close(); await f.close(); }
 });
 

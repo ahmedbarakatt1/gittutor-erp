@@ -1,3 +1,5 @@
+import { groupTuition, individualTuition } from '@/modules/catalog/public-tuition';
+import { formatMinorUnits } from '@/modules/shared/format';
 import { StudyExample } from '@/components/study-example';
 import { GizaAccent } from '@/components/giza-accent';
 import { en as copy } from '@/locales/en';
@@ -6,7 +8,7 @@ import { PublicContactLinks } from '@/components/public-contact';
 import { BrandLogo } from '@/components/brand-logo';
 
 export default function HomePage() {
-  const money = new Intl.NumberFormat(copy.locale, { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 });
+  const money = (minor: number) => formatMinorUnits(minor, 'EGP', copy.locale, true);
   return (
     <>
       <a className="skip-link" href="#main">{copy.navigation.skip}</a>
@@ -63,7 +65,7 @@ export default function HomePage() {
               <p>{copy.formats.lead}</p>
               <div className="private-format">
                 <h3>{copy.formats.privateTitle}</h3>
-                <p className="private-tuition"><strong>EGP 650</strong> per session</p>
+                <p className="private-tuition"><strong>{money(individualTuition.price_minor)}</strong> per session</p>
                 <p>{copy.formats.privateBody}</p>
               </div>
             </div>
@@ -71,10 +73,10 @@ export default function HomePage() {
               <h3>{copy.formats.groupTitle}</h3>
               <p>{copy.formats.groupBody}</p>
               <ul className="tuition-list">
-                {copy.formats.tiers.map((tier) => (
-                  <li key={tier.size}>
-                    <div className="group-size"><strong>{tier.size}</strong><span>{copy.formats.students}</span></div>
-                    <div className="group-price"><strong data-testid={`tuition-${tier.priceMinor / 100}`}>{money.format(tier.priceMinor / 100)}</strong><span>{copy.formats.perStudent}</span></div>
+                {groupTuition.map((tier) => (
+                  <li key={tier.students}>
+                    <div className="group-size"><strong>{tier.students}</strong><span>{copy.formats.students}</span></div>
+                    <div className="group-price"><strong data-testid={`tuition-${tier.price_minor / 100}`}>{money(tier.price_minor)}</strong><span>{copy.formats.perStudent}</span></div>
                   </li>
                 ))}
               </ul>

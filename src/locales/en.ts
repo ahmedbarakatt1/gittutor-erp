@@ -1,3 +1,5 @@
+import { sessionLength } from '../modules/catalog/public-tuition';
+
 export const en = {
   locale: 'en-EG',
   direction: 'ltr' as const,
@@ -61,10 +63,9 @@ export const en = {
     groupBody: 'Share the session with students working through the same topic. Every student has their own booking and preparation space.',
     students: 'students',
     perStudent: 'per student, per session',
-    tiers: [{ size: 2, priceMinor: 57500 }, { size: 3, priceMinor: 55000 }, { size: 4, priceMinor: 50000 }],
     privateTitle: 'One-to-one learning',
-    privateBody: '90–105 minutes shaped around your course materials, pace and questions.',
-    terms: 'Sessions last 90–105 minutes. These prices are per student, per session. We confirm the exact time and booking terms after reviewing your request.',
+    privateBody: `${sessionLength} shaped around your course materials, pace and questions.`,
+    terms: `Sessions last ${sessionLength}. These prices are per student, per session. We confirm the exact time and booking terms after reviewing your request.`,
   },
   how: {
     title: 'From “I’m stuck” to “I get it.”',

@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import tuition from '../../../contracts/runtime/public-tuition.json';
+import { sessionLength, tuition } from '../../modules/catalog/public-tuition';
 import styles from './tuition.module.css';
 
 /** Separate customer-only contract: never import compensation authoring data here. */
 export function TuitionComparison() {
   return <section className={styles.comparison} aria-label="Session pricing">
-    <div className={styles.context}><h2>A session built around your material.</h2><p>90–105 minutes to work through your slides, course notes and questions.</p><p>Every price is <strong>per student, per session</strong>. Choose individual support or bring a study group.</p></div>
+    <div className={styles.context}><h2>A session built around your material.</h2><p>{sessionLength} to work through your slides, course notes and questions.</p><p>Every price is <strong>per student, per session</strong>. Choose individual support or bring a study group.</p></div>
     <div className={styles.rates}>
       <div className={styles.table} role="table" aria-label="Individual and group tuition">
         <div className={styles.tableHeading} role="row"><span role="columnheader">Study format</span><span role="columnheader">Price per student</span></div>

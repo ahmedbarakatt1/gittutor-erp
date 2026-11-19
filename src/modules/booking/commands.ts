@@ -5,7 +5,7 @@ import { meetingStatusSchema, occurrenceStateSchema } from './public-occurrence'
 import { packageProposalInputSchema } from '../packages/proposal-contract';
 
 export type BookingRpcClient=IdentityRpcClient;
-const codes=new Set(['AUTH_REQUIRED','SESSION_REVOKED','VERIFIED_ACCOUNT_REQUIRED','FORBIDDEN','CONSENT_REQUIRED','OWNER_REQUIRED','NOT_FOUND','VALIDATION_ERROR','AMOUNT_OUT_OF_RANGE','INVALID_TIME','VERSION_CONFLICT','IDEMPOTENCY_CONFLICT','CAPACITY_CONFLICT','SCHEDULE_CONFLICT','INSUFFICIENT_FUNDS','INSUFFICIENT_ENTITLEMENT','POLICY_INCOMPLETE','STATE_CONFLICT','WINDOW_CLOSED','DEPENDENCY_UNAVAILABLE','RETRYABLE_CONFLICT']);
+const codes=new Set(['AUTH_REQUIRED','SESSION_REVOKED','VERIFIED_ACCOUNT_REQUIRED','FORBIDDEN','CONSENT_REQUIRED','OWNER_REQUIRED','NOT_FOUND','VALIDATION_ERROR','AMOUNT_OUT_OF_RANGE','INVALID_TIME','VERSION_CONFLICT','IDEMPOTENCY_CONFLICT','CAPACITY_CONFLICT','DUPLICATE_ENROLLMENT','SCHEDULE_CONFLICT','INSUFFICIENT_FUNDS','INSUFFICIENT_ENTITLEMENT','POLICY_INCOMPLETE','STATE_CONFLICT','WINDOW_CLOSED','DEPENDENCY_UNAVAILABLE','RETRYABLE_CONFLICT']);
 export class BookingRpcError extends Error{constructor(public readonly code:string,public readonly field_errors?:{conflicting_occurrence_ids:string[]}){super(code);this.name='BookingRpcError';}}
 const conflictDetails=z.object({conflicting_occurrence_ids:z.array(z.uuid()).max(100)}).strict();
 export async function bookingRpc(client:BookingRpcClient,name:string,args?:Record<string,unknown>){

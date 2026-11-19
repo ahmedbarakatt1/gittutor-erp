@@ -9,6 +9,7 @@ import { bookingFixture, raceBookingCalls } from '../helpers/booking';
 import { runFileScan, syntheticPdf } from '../helpers/files';
 import { requestFixture } from '../helpers/requests';
 import { anonymousClient, authClient, loadLocalSupabase } from '../helpers/supabase';
+import publicTuition from '../../contracts/runtime/public-tuition.json';
 
 vi.mock('server-only', () => ({}));
 
@@ -45,6 +46,10 @@ test('private request drafts enforce current scope, retries and concurrent versi
     expect(retries[0].error).toBeNull();
     expect(retries[1]).toEqual(retries[0]);
     const id = first.data.resource_id;
+    const savedTerms = await f.database.query(`select d.* from app_private.tutoring_requests r
+      join app_private.request_duration_policies d on d.version = r.duration_policy_version where r.id = $1`, [id]);
+    expect(savedTerms.rows[0]).toEqual({ version: expect.any(String), duration_minutes_min: publicTuition.duration_minutes_min,
+      duration_minutes_max: publicTuition.duration_minutes_max });
     const args = { p_request_id: id };
     for (const client of [unrelated, guardian, f.admin, f.tutor]) {
       expect((await client.rpc('get_tutoring_request', args)).error?.message).toBe('NOT_FOUND');
@@ -89,6 +94,7 @@ test('a request waits for clean private bytes and staff matching creates no book
       const created = await f.rpc('create_tutoring_request', { ...details, p_learner_id: f.learners[0], p_idempotency_key: randomUUID() }, learner);
       const requestId = created.resource_id as string;
       const args = { p_request_id: requestId };
+      expect((await staff.rpc('get_tutoring_request', args)).error?.message).toBe('NOT_FOUND');
       const submit = { ...args, p_expected_version: 1, p_idempotency_key: randomUUID() };
       expect((await learner.rpc('submit_tutoring_request', submit)).error?.message).toBe('EVIDENCE_REQUIRED');
       const checksum = createHash('sha256').update(syntheticPdf).digest('hex');
@@ -113,6 +119,7 @@ test('a request waits for clean private bytes and staff matching creates no book
       await expect(getFile(learner, quarantinedId)).rejects.toThrow('NOT_FOUND');
       await expect(content.upload(learner, quarantinedId, syntheticPdf)).rejects.toThrow('NOT_FOUND');
       await expect(getFile(staff, fileId)).rejects.toThrow('NOT_FOUND');
+      await expect(content.download(f.admin, fileId)).rejects.toThrow('NOT_FOUND');
       const submitCurrent = { ...submit, p_expected_version: 2 };
       expect((await learner.rpc('submit_tutoring_request', submitCurrent)).data.version).toBe(3);
       expect((await learner.rpc('submit_tutoring_request', submitCurrent)).data.version).toBe(3);
@@ -129,15 +136,22 @@ test('a request waits for clean private bytes and staff matching creates no book
 
       await f.availability();
       const earlierOffer = await f.occurrence();
-      const occurrence = await f.eligibleOccurrence();
+      const full = await f.eligibleOccurrence();
+      const occurrence = await f.eligibleOccurrence(68125, 105);
+      const otherHold = await f.reserve(String(full.occurrence_id), 1);
       expect((await learner.rpc('list_tutoring_request_matches', args)).error?.message).toBe('FORBIDDEN');
       const candidates = await staff.rpc('list_tutoring_request_matches', { ...args, p_limit: 100 });
       expect(candidates.error).toBeNull();
-      expect(candidates.data.items).toContainEqual(expect.objectContaining({ occurrence_id: occurrence.occurrence_id }));
+      expect(candidates.data.items).toContainEqual(expect.objectContaining({ occurrence_id: occurrence.occurrence_id, customer_price_minor: 68125, available_seats: 1 }));
       expect(candidates.data.items).not.toContainEqual(expect.objectContaining({ occurrence_id: earlierOffer.occurrence_id }));
+      expect(candidates.data.items).not.toContainEqual(expect.objectContaining({ occurrence_id: full.occurrence_id }));
       const review = { ...args, p_state: 'matched', p_customer_reply: 'Review the proposed time.', p_occurrence_id: occurrence.occurrence_id, p_expected_version: 6, p_idempotency_key: randomUUID() };
       expect((await learner.rpc('review_tutoring_request', review)).error?.message).toBe('FORBIDDEN');
       expect((await staff.rpc('review_tutoring_request', { ...review, p_occurrence_id: earlierOffer.occurrence_id })).error?.message).toBe('NOT_FOUND');
+      expect((await staff.rpc('review_tutoring_request', { ...review, p_occurrence_id: full.occurrence_id })).error?.message).toBe('NOT_FOUND');
+      await f.database.query("update app_private.enrollments set hold_expires_at = now() - interval '1 minute' where id=$1", [otherHold.enrollment_id]);
+      const afterExpiry = await staff.rpc('list_tutoring_request_matches', { ...args, p_limit: 100 });
+      expect(afterExpiry.data.items).toContainEqual(expect.objectContaining({ occurrence_id: full.occurrence_id, available_seats: 1 }));
       expect((await staff.rpc('review_tutoring_request', review)).data.version).toBe(7);
       const visible = (await learner.rpc('get_tutoring_request', args)).data;
       expect(visible).toMatchObject({ state: 'matched', can_review: false, customer_reply: review.p_customer_reply, matched_session: { occurrence_id: occurrence.occurrence_id } });
@@ -145,14 +159,45 @@ test('a request waits for clean private bytes and staff matching creates no book
       expect((await f.database.query('select count(*)::int n from app_private.enrollments where occurrence_id=$1', [occurrence.occurrence_id])).rows[0].n).toBe(0);
       await expect(content.download(f.tutor, fileId)).rejects.toThrow('NOT_FOUND');
       const reserved = await f.reserve(occurrence.occurrence_id as string);
+      expect(reserved.customer_price_minor).toBe(68125);
+      expect((await learner.rpc('get_tutoring_request', args)).data.matched_session.enrollment_id).toBe(reserved.enrollment_id);
+      expect((await staff.rpc('get_tutoring_request', args)).data.matched_session.enrollment_id).toBeNull();
+      expect((await staff.rpc('list_tutoring_request_matches', { ...args, p_limit: 100 })).data.items)
+        .toContainEqual(expect.objectContaining({ occurrence_id: occurrence.occurrence_id, available_seats: 0 }));
       const list = { enrollment_id: reserved.enrollment_id as string, purpose: 'request_material' as const };
       expect((await listFiles(learner, list)).items.map(file => file.file_id)).toEqual([fileId]);
       expect((await listFiles(f.tutor, list)).items).toEqual([]);
       await expect(listFiles(unrelated, list)).rejects.toThrow('NOT_FOUND');
       await expect(content.download(f.tutor, fileId)).rejects.toThrow('NOT_FOUND');
-      // Set only the isolated fixture's enrollment fact to exercise the independent download boundary.
-      await f.database.query("update app_private.enrollments set state='confirmed' where id=$1", [reserved.enrollment_id]);
+      // Hold the same occurrence lock used by booking confirmation. Review must
+      // wait for the confirmed enrollment to commit, then preserve its materials.
+      await f.database.query('begin');
+      let competingReview;
       try {
+        await f.database.query('select id from app_private.occurrences where id=$1 for update', [occurrence.occurrence_id]);
+        await f.database.query("update app_private.enrollments set state='confirmed' where id=$1", [reserved.enrollment_id]);
+        competingReview = staff.rpc('review_tutoring_request', { ...review, p_state: 'reviewing', p_expected_version: 7,
+          p_occurrence_id: null, p_idempotency_key: randomUUID() }).then(result => result.error?.message);
+        await vi.waitFor(async () => {
+          const locks = await f.database.query('select exists (select 1 from pg_locks where not granted and pg_backend_pid() = any(pg_blocking_pids(pid))) as waiting');
+          expect(locks.rows[0].waiting).toBe(true);
+        }, { timeout: 5000 });
+        await f.database.query('commit');
+      } catch (error) {
+        await f.database.query('rollback');
+        await competingReview;
+        throw error;
+      }
+      expect(await competingReview).toBe('STATE_CONFLICT');
+      try {
+        expect((await staff.rpc('get_tutoring_request', args)).data.can_review).toBe(false);
+        expect((await staff.rpc('list_tutoring_request_matches', args)).error?.message).toBe('STATE_CONFLICT');
+        expect((await staff.rpc('review_tutoring_request', review)).data.version).toBe(7);
+        for (const state of ['reviewing', 'needs_information', 'closed', 'matched']) {
+          expect((await staff.rpc('review_tutoring_request', { ...review, p_state: state, p_expected_version: 7,
+            p_occurrence_id: state === 'matched' ? full.occurrence_id : null, p_idempotency_key: randomUUID() })).error?.message).toBe('STATE_CONFLICT');
+        }
+        expect((await learner.rpc('remove_tutoring_request_file', { ...args, p_file_id: fileId, p_expected_version: 7, p_idempotency_key: randomUUID() })).error?.message).toBe('STATE_CONFLICT');
         expect(Buffer.from((await content.download(f.tutor, fileId)).bytes)).toEqual(syntheticPdf);
         expect((await listFiles(f.tutor, list)).items).toMatchObject([{ file_id: fileId, can_download: true }]);
         await f.database.query('update app_private.tutor_assignments set active=false where occurrence_id=$1', [occurrence.occurrence_id]);
@@ -162,6 +207,18 @@ test('a request waits for clean private bytes and staff matching creates no book
         await f.database.query('update app_private.tutor_assignments set active=true where occurrence_id=$1', [occurrence.occurrence_id]);
         await f.database.query("update app_private.enrollments set state='held' where id=$1", [reserved.enrollment_id]);
       }
+      const close = { ...args, p_state: 'closed', p_customer_reply: 'Closed on request.', p_expected_version: 7, p_idempotency_key: randomUUID() };
+      const closed = await staff.rpc('review_tutoring_request', close);
+      expect(closed.data?.version).toBe(8);
+      expect((await staff.rpc('review_tutoring_request', close)).data).toEqual(closed.data);
+      expect((await staff.rpc('review_tutoring_request', { ...close, p_idempotency_key: randomUUID() })).error?.message).toBe('NOT_FOUND');
+      expect((await staff.rpc('get_tutoring_request', args)).error?.message).toBe('NOT_FOUND');
+      expect((await staff.rpc('list_tutoring_request_queue', { p_limit: 100 })).data.items).not.toContainEqual(expect.objectContaining({ request_id: requestId }));
+      expect((await f.admin.rpc('get_tutoring_request', args)).data).toMatchObject({ request_id: requestId, state: 'closed', can_review: false });
+      expect((await learner.rpc('get_tutoring_request', args)).data.state).toBe('closed');
+      await expect(getFile(staff, fileId)).rejects.toThrow('NOT_FOUND');
+      await expect(content.download(staff, fileId)).rejects.toThrow('NOT_FOUND');
+      expect(Buffer.from((await content.download(f.admin, fileId)).bytes)).toEqual(syntheticPdf);
     } finally { await staff.auth.signOut({ scope: 'local' }); }
   } finally {
     await worker.end();

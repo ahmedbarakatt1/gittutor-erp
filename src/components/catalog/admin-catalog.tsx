@@ -5,6 +5,7 @@ import { useId, useState, type ReactNode } from 'react';
 import type { AdminOffer, AdminPolicy, AdminPricing, AdminTutor } from '@/modules/catalog/queries';
 import { parseScaledIntegerInput, scaledIntegerInput } from '@/modules/shared/format';
 import { catalogCopy } from '@/locales/catalog';
+import { groupTuition } from '@/modules/catalog/public-tuition';
 import { policyCopy } from '@/locales/catalog-policy';
 import { IdentityForm, TextField } from '../identity-form';
 import { usePagedRecords } from '../identity-workspaces';
@@ -52,7 +53,7 @@ function PricingForm({ record, source, onSaved, onBusy }: { record?: AdminPricin
       const customer_pricing: ObjectValue = { currency: 'EGP', pricing_unit: 'per_occurrence', duration_minutes: Number(form.get('duration_minutes')) };
       const nextCompensation: ObjectValue = { currency: 'EGP' };
       if (scope === 'group') {
-        customer_pricing.group_tiers = [{ tier_id: 'group_2', group_size: 2, seat_price_minor: 57500 }, { tier_id: 'group_3', group_size: 3, seat_price_minor: 55000 }, { tier_id: 'group_4', group_size: 4, seat_price_minor: 50000 }];
+        customer_pricing.group_tiers = groupTuition.map(tier => ({ tier_id: `group_${tier.students}`, group_size: tier.students, seat_price_minor: tier.price_minor }));
         nextCompensation.group_fee_bands = [2, 3, 4].map(size => ({ tier_id: `group_${size}`, fee_min_minor: minor(form.get(`fee_min_${size}`)), fee_max_minor: minor(form.get(`fee_max_${size}`)) }));
       } else { customer_pricing.private_seat_price_minor = minor(form.get('private_tuition')); nextCompensation.private_fee_rule = { currency: 'EGP', fee_min_minor: minor(form.get('fee_min')), fee_max_minor: minor(form.get('fee_max')), exact_occurrence_approval_required: true }; }
       return { customer_pricing, compensation: nextCompensation, ...(record ? { expected_version: record.version } : { scope }) };

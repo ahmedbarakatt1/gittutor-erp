@@ -6,7 +6,10 @@ const id = z.uuid();
 const instant = z.iso.datetime({ offset: true });
 const cursor = z.string().min(1).max(200);
 const pages = z.object({ cursor: cursor.nullable().optional(), limit: z.number().int().min(1).max(100).optional() }).strict();
-const matchSchema = z.object({ offer_id: id, occurrence_id: id, title: z.string(), start_at: instant, end_at: instant }).strict();
+const matchSchema = z.object({
+  offer_id: id, occurrence_id: id, title: z.string(), start_at: instant, end_at: instant,
+  available_seats: z.number().int().min(0).max(4), customer_price_minor: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+}).strict();
 
 export const tutoringRequestViewSchema = z.object({
   request_id: id,
@@ -19,7 +22,7 @@ export const tutoringRequestViewSchema = z.object({
   state: requestStateSchema,
   version: z.number().int().positive().max(2147483647),
   customer_reply: z.string().max(2000).nullable(),
-  matched_session: matchSchema.nullable(),
+  matched_session: matchSchema.extend({ enrollment_id: id.nullable() }).nullable(),
   files: z.array(fileViewSchema),
   created_at: instant,
   updated_at: instant,

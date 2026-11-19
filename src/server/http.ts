@@ -51,6 +51,7 @@ const errors: Record<string, [number, string]> = {
   DESTINATION_UNVERIFIED: [409, "Verify the destination before continuing."],
   EVIDENCE_REQUIRED: [409, "The required verified evidence is not available."],
   CAPACITY_CONFLICT: [409, "This place is no longer available. Choose another session."],
+  DUPLICATE_ENROLLMENT: [409, "This learner already has a place in this session."],
   SCHEDULE_CONFLICT: [409, "This time conflicts with an existing commitment."],
   INSUFFICIENT_FUNDS: [409, "The verified available funds do not cover this action."],
   INSUFFICIENT_ENTITLEMENT: [409, "There is not enough available package entitlement."],

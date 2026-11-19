@@ -46,14 +46,17 @@ test('request writes require signed claims, same origin, idempotency and allowli
     p_description: payload.description, p_preferred_times: payload.preferred_times, p_format: payload.format, p_idempotency_key: key });
 });
 
-test('match options fail closed on unexpected private RPC fields', async () => {
+test.each([false, true])('match options expose the current quote and seat count, rejecting private fields (private = %s)', async hasPrivateField => {
   const requestId = randomUUID();
   port.rpc.mockResolvedValueOnce({ status: 200, error: null, data: { items: [{
     offer_id: randomUUID(), occurrence_id: randomUUID(), title: 'Systems', start_at: '2026-11-16T16:00:00Z',
-    end_at: '2026-11-16T17:30:00Z', tutor_fee_minor: 25000,
+    end_at: '2026-11-16T17:30:00Z', customer_price_minor: 68125, available_seats: 1,
+    ...(hasPrivateField && { tutor_fee_minor: 25000 }),
   }], next_cursor: null } });
   const response = await GET(new NextRequest(`${origin}/api/v1/requests/${requestId}/matches`), { params: Promise.resolve({ path: [requestId, 'matches'] }) });
   expect(port.rpc).toHaveBeenCalledWith('list_tutoring_request_matches', { p_request_id: requestId, p_cursor: null, p_limit: 25 });
-  expect(response.status).toBe(503);
-  expect(await response.json()).toMatchObject({ code: 'DEPENDENCY_UNAVAILABLE', request_id: expect.any(String) });
+  expect(response.status).toBe(hasPrivateField ? 503 : 200);
+  expect(await response.json()).toMatchObject(hasPrivateField
+    ? { code: 'DEPENDENCY_UNAVAILABLE', request_id: expect.any(String) }
+    : { data: { items: [{ customer_price_minor: 68125, available_seats: 1 }] } });
 });

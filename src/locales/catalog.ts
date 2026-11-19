@@ -1,3 +1,5 @@
+import { groupTuition } from '../modules/catalog/public-tuition';
+
 export const catalogCopy = {
   locale: 'en-EG',
   home: 'Git Tutor home',
@@ -111,7 +113,7 @@ export const catalogCopy = {
     scope: 'Offer format', duration: 'Duration in minutes', status: 'Status', reason: 'Decision reason',
     publicPricing: 'Customer tuition', privatePricing: 'Private tutor compensation', privateNotice: 'Administrator-only. These values never appear in the customer catalog.',
     privateTuition: 'Private tuition (EGP)', minimumFee: 'Minimum tutor fee (EGP)', maximumFee: 'Maximum tutor fee (EGP)',
-    groupPricing: 'Group tuition is fixed at EGP 575, 550 and 500 per student for two, three and four learners.',
+    groupPricing: `Group tuition per student: ${groupTuition.map(tier => `EGP ${tier.price_minor / 100} for a group of ${tier.students}`).join(', ')}.`,
     groupCompensation: 'Enter the confirmed compensation bands. Each scheduled occurrence needs one exact approved fee within its band.',
     pricingRecord: 'Approved pricing', policyRecord: 'Saved commercial terms', subject: 'Subject', tier: 'Target group size', capacity: 'Maximum group size',
     preview: 'Customer preview', noApproved: 'Save matching pricing and commercial terms before creating an offer. Both versions need approval before publication.',
