@@ -52,6 +52,16 @@ Every primary and supporting layer must be present exactly once for the case. La
 
 The validator checks provenance consistency and artifact integrity; it cannot prove a fabricated JSON report is truthful. The runner and retained test output remain the source of execution evidence. `approved_live` is a descriptive evidence value, not authorization to contact live providers or proof of provider readiness.
 
+## Four financial release cases
+
+Dispatch **Local application verification** with `financial_acceptance_revision` set to the full Git commit to test. A blank input runs the ordinary verification suite. The financial job checks out the requested revision, creates its own synthetic Supabase stack, runs GT-1317, GT-1403, GT-1405 and GT-1510, and uploads one sanitized JSON artifact, including on test failure. Catalogue changes require review of the resulting tests against each case.
+
+On an existing marked disposable stack, run `node tools/evidence/record-financial.mjs . <full-commit>` from the checkout. The artifact records UTC times, the queried database migration, test outcomes and the assertion count captured from Vitest inside each executing worker. It includes full-file SHA-256 hashes for the test sources, local imports and instrumentation. Raw Vitest output stays in the ignored local directory. The isolated alternate-port harness validates its two loopback port substitutions against the committed helper.
+
+GT-1317 retains its separate formal limitation. Its test demonstrates one real cancellation restoring a credit before class in a savepoint, followed by completion and a stale cancellation competing for the same reservation. The application requires different occurrence versions for those two terminal commands. A green regression is recorded independently of that acceptance decision.
+
+The 19 November local attempt failed at synthetic sign-in before any case reached its assertions. A direct Auth check returned HTTP 504 while PostgreSQL remained reachable. The failed run remains available in the [original immutable report](evidence/acceptance/a4c588b8-ef3d-4707-86c2-960a55abb994.json).
+
 ## Validator verification, 2026-11-11
 
 - `pnpm exec vitest run tests/unit/evidence.test.ts`: RED against the intentional stub, **33 failed**, exit 1; retained local output `.local/evidence-red.log`. This confirmed unsupported passes were not yet rejected.
