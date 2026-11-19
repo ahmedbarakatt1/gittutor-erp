@@ -1,15 +1,14 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import type { Client } from 'pg';
+import type { Client, Pool } from 'pg';
 
-/** Synthetic consent observations only. Both principals use their real database roles. */
-export async function exerciseOrganizerConsent(db:Client, claims:object) {
+/** Use a real restricted login for privilege checks. Uncommitted synthetic
+ * reconnect fixtures are visible only to their owning database transaction. */
+export async function exerciseOrganizerConsent(db:Client, claims:object, worker:Pool) {
   const envelope={v:1,alg:'A256GCM',kid:'test',nonce:'A'.repeat(16),tag:'A'.repeat(22),ciphertext:'AA'};
   const grant=async(request:{request_id:string;connection_id:string}, subject:string, email:string, calendar='primary', credential=randomUUID())=>{
-    await db.query('set local role git_tutor_worker');
     const {rows}=await db.query('select app_private.record_calendar_organizer($1,$2,$3,$4,$5,$6,$7,$8) r',
       [request.request_id,request.connection_id,credential,email,calendar,envelope,'test',subject]);
-    await db.query('reset role');
     return rows[0].r;
   };
   const request=async(id?:string,version?:number)=>{
@@ -59,11 +58,13 @@ export async function exerciseOrganizerConsent(db:Client, claims:object) {
       and not exists(select 1 from app_private.calendar_booking_pilots p where p.occurrence_id=o.id) limit 1`,[first.connection_id]);
     assert.equal(legacy.eligible,false);
     // Credentials cannot be read directly, even by an authenticated admin or by the worker.
-    for(const role of ['authenticated','git_tutor_worker']){
-      await expectRejected(async()=>{
-        await db.query(`set local role ${role}`);
-        return db.query('select encrypted_credentials from app_private.provider_credential_versions');
-      },/permission denied/);
-    }
+    await expectRejected(async()=>{
+      await db.query('set local role authenticated');
+      return db.query('select encrypted_credentials from app_private.provider_credential_versions');
+    },/permission denied/);
+    assert.equal((await worker.query('select current_user who')).rows[0].who,'git_tutor_worker');
+    await assert.rejects(worker.query('select encrypted_credentials from app_private.provider_credential_versions'),/permission denied/);
+    await assert.rejects(worker.query('select app_private.record_calendar_organizer($1,$2,$3,$4,$5,$6,$7,$8)',
+      [randomUUID(),randomUUID(),randomUUID(),email,'primary',envelope,'test',subject]),/AUTH_REQUIRED/);
   } finally { await db.query('rollback'); }
 }

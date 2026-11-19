@@ -8,9 +8,10 @@ import { meetingCopy as copy } from '@/locales/meetings';
 export const metadata: Metadata = { title: 'Integrations | Git Tutor', robots: { index: false, follow: false } };
 export default async function IntegrationsPage({ searchParams }: { searchParams: Promise<{ calendar?: string }> }) {
   const account = await requireAccount('admin');
-  const { calendar, whatsapp } = parseServerConfig(process.env).providers;
+  const settings = parseServerConfig(process.env);
+  const { calendar, whatsapp } = settings.providers;
   return <PortalShell kind="admin" account={account} title={copy.integrations} description={copy.integrationDescription} activePath="/admin/integrations" showAccount={false}>
-    <CalendarConnectionPanel provider={calendar} outcome={(await searchParams).calendar} />
+    <CalendarConnectionPanel provider={calendar} verifyGoogleRooms={settings.environment === 'production' && calendar === 'google'} outcome={(await searchParams).calendar} />
     {whatsapp === 'manual' && <ManualWhatsApp staff />}
   </PortalShell>;
 }

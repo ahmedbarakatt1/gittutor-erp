@@ -19,6 +19,7 @@ const commandSignatures = [
   'read_payout_destination_for_server(uuid,uuid,uuid,text,uuid,text)', 'read_refund_destination_for_server(uuid,uuid,uuid,text,uuid,text)',
   'record_calendar_connection(uuid,uuid,uuid,text,text,jsonb,text)',
   'record_calendar_organizer(uuid,uuid,uuid,text,text,jsonb,text,text)',
+  'verify_calendar_organizer(uuid,uuid,integer,uuid)',
   'record_email_callback(uuid,text,uuid,text,timestamp with time zone)', 'record_file_object(uuid,uuid,uuid,jsonb)',
   'record_staff_invitation_delivery(uuid,integer,text,uuid,text)', 'record_whatsapp_event(text,text,jsonb)',
   'rotate_calendar_credentials(uuid,integer,uuid,uuid,jsonb,text,uuid,uuid)', 'route_notification_event(uuid,uuid)',

@@ -1,4 +1,4 @@
-import { afterEach,expect,test } from 'vitest';
+import { afterEach,expect,test,vi } from 'vitest';
 import { mkdtemp,rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -61,6 +61,53 @@ test('a deleted Google event cannot be recreated by a delayed job after its orga
     return new Response(null,{status:410});
   });
   expect(await provider.apply(d)).toMatchObject({ outcome: 'failed', safe_error_code: 'CALENDAR_EVENT_REVOKED' });
-  expect(await provider.reconcile({ ...d, action:'cancel' })).toMatchObject({ outcome: 'revoked', matches_desired: true });
+  expect(await provider.reconcile({ ...d, action:'cancel' })).toMatchObject({ outcome: 'absent', matches_desired: false });
   expect(methods).toEqual(['GET','GET']);
+});
+
+test('an unfinished first Google insert remains unconfirmed on cancel until the event can be deleted conditionally', async () => {
+  const d = desired(), cancel = { ...d, occurrence_version:3, action:'cancel' } as const;
+  let createStarted = false, deleted = false, resumeInsert!: () => void;
+  const networkGate = new Promise<void>(resolve => { resumeInsert = resolve; });
+  let stored: Record<string,unknown> | undefined;
+  const provider = createGoogleCalendarAdapter(async () => 'synthetic-token', async (_input,init) => {
+    if (init?.method === 'POST') {
+      createStarted = true;
+      await networkGate;
+      stored = { ...JSON.parse(String(init.body)), etag:'inserted-event' };
+      return Response.json(stored);
+    }
+    if (init?.method === 'DELETE') {
+      expect(new Headers(init.headers).get('if-match')).toBe('inserted-event');
+      deleted = true;
+      return new Response(null,{status:204});
+    }
+    if (deleted) return Response.json({ id: d.provider_event_id, status:'cancelled' });
+    return stored ? Response.json(stored) : new Response(null,{status:404});
+  });
+  const creation = provider.apply(d);
+  try {
+    await vi.waitFor(() => expect(createStarted).toBe(true));
+    expect(await provider.apply(cancel)).toMatchObject({outcome:'absent',matches_desired:false,safe_error_code:null});
+  } finally { resumeInsert(); await creation; }
+  expect(await provider.reconcile(cancel)).toMatchObject({outcome:'pending',matches_desired:false,join_url:null});
+  expect(await provider.apply(cancel)).toMatchObject({outcome:'revoked',matches_desired:true,safe_error_code:'CALENDAR_DELETION_CONFIRMED'});
+  expect(await provider.reconcile(cancel)).toMatchObject({outcome:'revoked',matches_desired:true,safe_error_code:'CALENDAR_DELETION_CONFIRMED'});
+});
+
+test.each([404,410])('a conditional Google deletion returning %s is only observed absence', async status => {
+  const d = desired();
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({id:d.provider_event_id,etag:'seen'}))
+    .mockResolvedValueOnce(new Response(null,{status}));
+  const result = await createGoogleCalendarAdapter(async () => 'synthetic-token',fetcher).apply({...d,action:'cancel'});
+  expect(result).toMatchObject({outcome:'absent',matches_desired:false,safe_error_code:null});
+  expect(new Headers(fetcher.mock.lastCall?.[1]?.headers).get('if-match')).toBe('seen');
+});
+
+test('an accepted deletion that Google has not completed retains an unknown outcome', async () => {
+  const d = desired();
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({id:d.provider_event_id,etag:'seen'}))
+    .mockResolvedValueOnce(new Response(null,{status:202}));
+  expect(await createGoogleCalendarAdapter(async () => 'synthetic-token',fetcher).apply({...d,action:'cancel'}))
+    .toMatchObject({outcome:'unknown',matches_desired:false,safe_error_code:'CALENDAR_OUTCOME_UNKNOWN'});
 });

@@ -5,7 +5,7 @@ import type { ServerConfig } from './config';
 import type { ProviderTokenKeys, ProviderTokenPayload } from './provider-tokens';
 
 type GoogleConfig = NonNullable<ServerConfig['google']>;
-const scope = z.object({ request_id: z.uuid(), connection_id: z.uuid(), actor_id: z.uuid(), session_id: z.uuid(), expires_at: z.iso.datetime({ offset: true }), calendar_source: z.enum(['primary','configured']).optional() }).strict();
+const scope = z.object({ request_id: z.uuid(), connection_id: z.uuid(), actor_id: z.uuid(), session_id: z.uuid(), expires_at: z.iso.datetime({ offset: true }), calendar_source: z.enum(['primary','configured']).optional(), verify_room: z.literal(true).optional() }).strict();
 const handshakeSchema = scope.extend({ state: z.string().regex(/^[A-Za-z0-9_-]{43}$/), code_verifier: z.string().regex(/^[A-Za-z0-9_-]{64}$/) }).strict();
 export const googleScopes = ['openid', 'email', 'https://www.googleapis.com/auth/calendar.events'] as const;
 function fail(): never { throw new Error('CALENDAR_AUTH_REQUIRED'); }

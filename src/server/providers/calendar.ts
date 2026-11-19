@@ -37,7 +37,11 @@ export function createGoogleCalendarAdapter(token:()=>Promise<string>,fetcher:ty
     return fetcher(url,{method,headers:{Authorization:`Bearer ${await token()}`,'Content-Type':'application/json',...(etag?{'If-Match':etag}:{})},...(event?{body:JSON.stringify(event)}:{}),signal:AbortSignal.timeout(10000)});
   }
   function failure(d:CalendarDesired,status:number){return observation(d,status===401||status===403?'failed':'unknown',{safe_error_code:status===401||status===403?'CALENDAR_AUTHORIZATION_REQUIRED':'CALENDAR_OUTCOME_UNKNOWN'});}
-  function parsed(d:CalendarDesired,event:GoogleEvent){if(event.id!==d.provider_event_id)return observation(d,'unknown',{safe_error_code:'CALENDAR_IDENTITY_MISMATCH'});if(event.status==='cancelled')return observation(d,'revoked',{matches_desired:d.action==='cancel'});
+  function confirmedDeletion(d:CalendarDesired) {
+    return observation(d,'revoked',{matches_desired:d.action==='cancel',safe_error_code:'CALENDAR_DELETION_CONFIRMED'});
+  }
+  function parsed(d:CalendarDesired,event:GoogleEvent){if(event.id!==d.provider_event_id)return observation(d,'unknown',{safe_error_code:'CALENDAR_IDENTITY_MISMATCH'});if(event.status==='cancelled')return confirmedDeletion(d);
+    if (d.action === 'cancel') return observation(d,'pending',{etag:event.etag??null});
     const matches=event.extendedProperties?.private?.git_tutor_occurrence_version===String(d.occurrence_version)&&event.extendedProperties.private.git_tutor_meeting_generation===String(d.meeting_generation)&&Date.parse(event.start?.dateTime??'')===Date.parse(d.start_at)&&Date.parse(event.end?.dateTime??'')===Date.parse(d.end_at);
     const state=event.conferenceData?.createRequest?.status?.statusCode;
     if(state==='failure')return observation(d,'failed',{safe_error_code:'CALENDAR_CONFERENCE_FAILED',etag:event.etag??null});
@@ -49,7 +53,8 @@ export function createGoogleCalendarAdapter(token:()=>Promise<string>,fetcher:ty
   async function read(d:CalendarDesired) {
     const response = await request(d,'GET');
     if (response.status === 404) return {result:observation(d,'absent'),event:null};
-    if (response.status === 410) return {result:observation(d,'revoked',{matches_desired:d.action==='cancel'}),event:null};
+    if (response.status === 410) return {result:d.action==='cancel'
+      ? observation(d,'absent') : observation(d,'failed',{safe_error_code:'CALENDAR_EVENT_REVOKED'}),event:null};
     if (!response.ok) return {result:failure(d,response.status),event:null};
     const event = await response.json() as GoogleEvent;
     return {result:parsed(d,event),event};
@@ -66,7 +71,13 @@ export function createGoogleCalendarAdapter(token:()=>Promise<string>,fetcher:ty
       if (existing.event && existing.result.outcome !== 'revoked' && !existing.event.etag) {
         return observation(d,'unknown',{safe_error_code:'CALENDAR_ETAG_UNAVAILABLE'});
       }
-      if(d.action==='cancel'){if(existing.result.outcome==='absent'||existing.result.outcome==='revoked')return observation(d,'revoked',{matches_desired:true});const deleted=await request(d,'DELETE',undefined,existing.event?.etag);return deleted.ok||[404,410].includes(deleted.status)?observation(d,'revoked',{matches_desired:true}):failure(d,deleted.status);}
+      if (d.action==='cancel') {
+        if (existing.result.outcome==='absent'||existing.result.outcome==='revoked') return existing.result;
+        const deleted=await request(d,'DELETE',undefined,existing.event?.etag);
+        if (deleted.status===200||deleted.status===204) return confirmedDeletion(d);
+        if (deleted.status===404||deleted.status===410) return observation(d,'absent');
+        return failure(d,deleted.status);
+      }
       if(existing.result.outcome==='revoked')return observation(d,'failed',{safe_error_code:'CALENDAR_EVENT_REVOKED'});
       const event:GoogleEvent={...(existing.event??{}),id:d.provider_event_id,summary:d.title,description:'Access your current Git Tutor session through your authorized portal.',start:{dateTime:d.start_at,timeZone:'Africa/Cairo'},end:{dateTime:d.end_at,timeZone:'Africa/Cairo'},attendees:[{email:d.tutor_email}],visibility:'private',guestsCanInviteOthers:false,guestsCanModify:false,guestsCanSeeOtherGuests:false,extendedProperties:{private:{git_tutor_occurrence_id:d.occurrence_id,git_tutor_occurrence_version:String(d.occurrence_version),git_tutor_meeting_generation:String(d.meeting_generation)}},conferenceData:{createRequest:{requestId:d.conference_request_id,conferenceSolutionKey:{type:'hangoutsMeet'}}}};
       const response=await request(d,existing.event?'PUT':'POST',event,existing.event?.etag);if(response.status===409)return adapter.reconcile(d);if(!response.ok)return failure(d,response.status);return parsed(d,await response.json() as GoogleEvent);

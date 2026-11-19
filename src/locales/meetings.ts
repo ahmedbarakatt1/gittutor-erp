@@ -11,6 +11,8 @@ export const meetingCopy = {
   states: { not_connected: 'Not connected', connected: 'Connected', preview_connected: 'Organizer connected for testing', reauthorization_required: 'Authorization needs renewal', revoked: 'Revoked', simulated: 'Simulated', verification_required: 'Verification required', verified: 'Verified' } as Record<string, string>,
   oauthResults: {
     connected: 'Google authorized this organizer account.',
+    verified: 'Google Meet was verified. This organizer can host sessions.',
+    check_required: 'Google authorized this account. The room check could not finish. Use Manage to reconnect and verify before assigning a lesson.',
     conflict: 'That Google account is already linked, or it differs from the one you selected to reconnect.',
     reauthorize: 'Google authorization was incomplete. Select the organizer and try again.',
     stale: 'This organizer changed while you were connecting it. Refresh the accounts and try again.',

@@ -10,7 +10,7 @@ import styles from './calendar-connection.module.css';
 
 type ConnectAction = { action: 'add' } | { action: 'reconnect'; connection_id: string; expected_version: number };
 
-export function CalendarConnectionPanel({ provider, outcome }: { provider: 'fake' | 'google'; outcome?: string }) {
+export function CalendarConnectionPanel({ provider, outcome, verifyGoogleRooms }: { provider: 'fake' | 'google'; outcome?: string; verifyGoogleRooms: boolean }) {
   const records = usePaymentRecord<CalendarConnection[]>('calendar/connections', true);
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -24,7 +24,7 @@ export function CalendarConnectionPanel({ provider, outcome }: { provider: 'fake
     setPending(true);
     setError('');
     setFeedback('');
-    const signature = JSON.stringify(action);
+    const signature = JSON.stringify(verifyGoogleRooms ? { ...action, verify_room: true } : action);
     const storageKey = `git-tutor-calendar:${provider}:${signature}`;
     try {
       if (operation.current?.signature !== signature) {
@@ -64,17 +64,19 @@ export function CalendarConnectionPanel({ provider, outcome }: { provider: 'fake
 
   const rows = records.data;
   const hasProvider = rows?.some(row => row.mode === provider && row.connection_id);
-  const addLabel = provider === 'google' ? 'Add Google account' : hasProvider ? 'Add simulated organizer' : copy.connectFake;
+  const addLabel = verifyGoogleRooms ? 'Add and verify Google account' :
+    provider === 'google' ? 'Add Google account' : hasProvider ? 'Add simulated organizer' : copy.connectFake;
   const callbackMessage = typeof outcome === 'string' && Object.hasOwn(copy.oauthResults, outcome) ? copy.oauthResults[outcome] : undefined;
   return <section className={styles.panel} aria-labelledby="organizers-heading">
     <header className={styles.header}>
       <div><h2 id="organizers-heading">Meet organizers</h2>
-        <p>Each organizer can host one session at a time. Connect another account to run lessons in parallel.</p></div>
+        <p>Each organizer can host one session at a time. Connect another account to run lessons in parallel.</p>
+        {verifyGoogleRooms && <p>Verification creates and removes a private test event on the selected calendar. It has no guests. Only verified accounts can host lessons.</p>}</div>
       <button type="button" className={styles.add} disabled={!rows || pending} onClick={() => void connect({ action: 'add' })}>
         <span aria-hidden="true">+</span> {addLabel}
       </button>
     </header>
-    {callbackMessage && <p role={outcome === 'connected' ? 'status' : 'alert'}>{callbackMessage}</p>}
+    {callbackMessage && <p role={outcome === 'connected' || outcome === 'verified' ? 'status' : 'alert'}>{callbackMessage}</p>}
     {feedback && <p role="status">{feedback}</p>}
     {error && <p role="alert">{error}</p>}
     {records.error && <p role="alert">{records.error} <button className={styles.secondary} type="button" onClick={records.reload}>Try again</button></p>}
@@ -103,7 +105,7 @@ export function CalendarConnectionPanel({ provider, outcome }: { provider: 'fake
               <div className={styles.actions}>
                 {canReconnect && <button type="button" disabled={pending} className={styles.secondary}
                   onClick={() => void connect({ action: 'reconnect', connection_id: id, expected_version: row.version })}>
-                  {row.mode === 'google' ? copy.reconnect : 'Reconnect simulated calendar'}
+                  {verifyGoogleRooms && row.mode === 'google' ? 'Reconnect and verify Google Meet' : row.mode === 'google' ? copy.reconnect : 'Reconnect simulated calendar'}
                 </button>}
                 {row.state !== 'revoked' && <IdentityForm key={row.version} action="calendar/connection/revoke"
                   submitLabel={copy.revoke} successMessage={copy.revoked} resettable={false} onSaved={records.reload}

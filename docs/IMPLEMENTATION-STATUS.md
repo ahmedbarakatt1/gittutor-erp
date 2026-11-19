@@ -14,6 +14,18 @@ The public homepage, subject help and support now use accessible social icons an
 | `pnpm test:unit`, document and evidence validation | 502 unit tests passed across 73 files. Full lint, TypeScript and the optimized Next.js build passed. The evidence register remains valid with three formal passes and 144 unrun entries. |
 | Hosted rollback rehearsals for `20261119170000` | The migration ran inside rolled-back transactions on both named hosted projects. The rehearsal compared account, job, import, enrollment and posting counts and original organizer/room identities. Production worker grants matched 37 reviewed functions. |
 
+The first organizer release (`679e277`) reached the testing site and the protected production host. The initial organizer migration was applied to both databases. On the testing site, an authenticated administrator opened Google's account chooser with the correct callback. Playwright CLI session `nov19-organizer-review` loaded Support and Integrations at 390 and 1440 pixels. All four page loads returned HTTP 200, with zero browser errors, failed requests or horizontal overflow. The four screenshots and inspection log are kept in the private operator workspace under `.local/nov19-cli-check/`.
+
+The [first full CI run for the organizer pool](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44559965934) stopped at `pnpm test:integration` with 313 of 315 passing. Two test fixtures tried to switch the database login directly to the worker role. The corrected fixtures use the actual worker privileges. Further scheduling checks cover cancelling while an event is being created and preserving the capacity of a legacy room with an unresolved reschedule.
+
+| Follow-up verification | Result |
+| --- | --- |
+| Disposable PostgreSQL 17, fresh synthetic restore | Verified-only production selection, identity and credential version checks, replay and wake-up after verification, cancellation during a delayed event creation, and quarantine of a prior room with an uncertain interval passed. |
+| Eight focused OAuth, provider, worker and configuration suites | 100 tests passed with simulated Google responses. These include a no-guest capability probe, confirmed cleanup and a cancellation while a previous event creation is in flight. |
+| `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` | Passed. The full unit suite executed 540 tests in 74 files. |
+| Hosted rollback rehearsal and dry-run for `20261119173000` | Passed on both named projects. Checked preserved counts and original organizer and room identities, zero exposed private tables and the exact 38-function worker boundary. The deployment plan contained one migration and zero seeds. |
+| `python tools/verify-pack.py` and `pnpm exec tsx tools/validate-evidence.ts fixtures/acceptance-cases.json` | Document and fixture checks passed. The formal register contains three evidenced passes and 144 unrun cases. |
+
 One approved owner invitation was accepted by production Auth. Mailjet reported one matching message and a sent event. Owner inbox placement and confirmation require the recipient. Public signup stays closed. The protected production host serves the password reset form. The default SMTP testing project declined a custom recovery template. The callback supports its verified PKCE recovery flow as well as the branded token-hash links used by production. No second invitation or reset was sent. The live two-instructor rehearsal still needs a second independently consenting Google account and the production worker.
 
 ## PDF quizzes, private grades and PR review — 19 November 2026

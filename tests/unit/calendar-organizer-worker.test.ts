@@ -28,6 +28,23 @@ test('a capacity wait completes the lease without opening a provider connection 
   expect(factory).not.toHaveBeenCalled();
 });
 
+test('reconciliation submits an absent Google cancellation for transactional release checks', async () => {
+  const job = makeJob();
+  const eventId = 'gt' + job.aggregate_id.replaceAll('-','');
+  const d: CalendarDesired = { occurrence_id:job.aggregate_id, occurrence_version:2, connection_id:randomUUID(), connection_version:1,
+    credential_version:randomUUID(), calendar_id:'primary', provider_event_id:eventId, meeting_generation:1, conference_request_id:randomUUID(),
+    action:'cancel', start_at:'2030-01-01T10:00:00Z', end_at:'2030-01-01T11:00:00Z', tutor_email:'tutor@example.test', title:'Git Tutor session' };
+  const database = {query:vi.fn().mockResolvedValueOnce({rows:[{result:{state:'ready',mode:'google',desired:d}}]})
+    .mockResolvedValueOnce({rows:[{result:{applied:true,outcome:'absent'}}]})};
+  const observation = {outcome:'absent' as const,provider_event_id:eventId,observed_at:new Date().toISOString(),
+    matches_desired:false,etag:null,safe_error_code:null,join_url:null};
+  const provider = {apply:vi.fn(),reconcile:vi.fn().mockResolvedValue(observation)};
+  const result = await calendarHandler(database,() => provider).reconcile(job);
+  expect(result.outcome).toBe('completed');
+  expect(database.query).toHaveBeenCalledWith(expect.stringContaining('finalize_calendar_sync'),expect.arrayContaining([JSON.stringify(observation)]));
+  expect(provider.apply).not.toHaveBeenCalled();
+});
+
 test('parallel jobs use the assigned Google credential for every read and write on that organizer’s primary calendar', async () => {
   const config = parseServerConfig({ APP_ENV: 'test', CALENDAR_ADAPTER: 'google', SECRET_ENCRYPTION_KEY: 'a'.repeat(64),
     GOOGLE_OAUTH_CLIENT_ID: 'synthetic', GOOGLE_OAUTH_CLIENT_SECRET: 'synthetic', GOOGLE_CALENDAR_ID: 'old@example.test',

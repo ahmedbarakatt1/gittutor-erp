@@ -42,7 +42,6 @@ export async function exerciseCalendarBookingPilot(db: Client, sourceId: string,
     [grant,ready.desired.connection_version,job,lease])).rows[0].ok,true);
   if (anotherGrant) {
     await db.query('savepoint denied_cross_account');
-    await db.query('set local role git_tutor_worker');
     await assert.rejects(db.query('select app_private.get_calendar_credentials($1,1,$2,$3)',[anotherGrant,job,lease]),/STATE_CONFLICT/);
     await db.query('rollback to savepoint denied_cross_account');
   }

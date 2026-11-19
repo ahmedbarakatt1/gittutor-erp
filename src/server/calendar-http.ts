@@ -10,13 +10,14 @@ import { createDatabasePool, databaseUrl } from './database';
 import { getCalendarConnectionRequest, listCalendarConnections, invokeMeetingCommandWithStatus } from '../modules/teaching/meetings';
 import { createProviderTokenCipher, type ProviderTokenKeys } from './provider-tokens';
 import { createOAuthHandshake, readOAuthHandshake, googleAuthorizationUrl, exchangeGoogleCode } from './google-oauth';
+import { verifyGoogleOrganizer } from './google-organizer-probe';
 import type { ServerConfig } from './config';
 
 const legacyCookieName = 'git_tutor_google_oauth', cookiePath = '/api/calendar';
 function stateCookieName(state: string) { return `${legacyCookieName}_${state}`; }
 const connectInput = z.union([
-  z.object({ action: z.literal('add') }).strict(),
-  z.object({ action: z.literal('reconnect'), connection_id: z.uuid(), expected_version: z.int().positive().max(2147483647) }).strict(),
+  z.object({ action: z.literal('add'), verify_room: z.literal(true).optional() }).strict(),
+  z.object({ action: z.literal('reconnect'), connection_id: z.uuid(), expected_version: z.int().positive().max(2147483647), verify_room: z.literal(true).optional() }).strict(),
   z.object({}).strict().transform(() => ({ action: 'legacy' as const })),
 ]);
 type ConnectInput = z.output<typeof connectInput>;
@@ -51,6 +52,8 @@ export async function connectCalendar(request: NextRequest) {
     if (!key || key.length > 200 || !input.success) throw new DomainError('VALIDATION_ERROR');
     const current = await actor(client);
     const mode = config.providers.calendar;
+    const verifyRoom = input.data.action !== 'legacy' && input.data.verify_room === true;
+    if (verifyRoom && (mode !== 'google' || config.environment !== 'production')) throw new DomainError('VALIDATION_ERROR');
     const target = input.data.action === 'legacy' && mode === 'google' ? await legacyGoogleTarget(client) : input.data;
     const args = target.action === 'reconnect'
       ? { p_connection_id: target.connection_id, p_expected_version: target.expected_version, p_idempotency_key: key }
@@ -66,11 +69,38 @@ export async function connectCalendar(request: NextRequest) {
     const command = await invokeMeetingCommandWithStatus(client, rpc, args);
     const created = z.object({ request_id: z.uuid(), connection_id: z.uuid(), expires_at: z.iso.datetime({ offset: true }) }).parse(command.data);
     if (target.action === 'reconnect' && target.connection_id !== created.connection_id) throw new DomainError('DEPENDENCY_UNAVAILABLE');
-    const handshake = createOAuthHandshake(keys(config), { ...created, ...current, calendar_source: target.action === 'legacy' ? 'configured' : 'primary' });
+    const handshake = createOAuthHandshake(keys(config), { ...created, ...current,
+      calendar_source: target.action === 'legacy' ? 'configured' : 'primary', ...(verifyRoom && {verify_room:true as const}) });
     const response = NextResponse.json({ data: { mode: 'google', authorization_url: googleAuthorizationUrl(config.google, handshake), expires_at: created.expires_at } });
     response.cookies.set(stateCookieName(handshake.state), handshake.cookie, { httpOnly: true, secure: new URL(config.app_base_url).protocol === 'https:', sameSite: 'lax', path: cookiePath, expires: new Date(created.expires_at) });
     return transport.finish(secure(response));
   } catch (error) { const safe = safeError(error), response = secure(NextResponse.json({ error: safe }, { status: safe.status })); return transport ? transport.finish(response) : response; }
+}
+
+async function verifySavedOrganizer(database: Pool, grant: {
+  requestId: string;
+  connectionId: string;
+  version: number;
+  credentialVersion: string;
+  calendarId: string;
+  accessToken: string;
+}) {
+  try {
+    const passed = await verifyGoogleOrganizer({
+      probe_id: grant.requestId, calendar_id: grant.calendarId, access_token: grant.accessToken,
+    });
+    if (passed !== true) return false;
+    const verified = await database.query('select app_private.verify_calendar_organizer($1,$2,$3,$4) data', [
+      grant.requestId, grant.connectionId, grant.version, grant.credentialVersion,
+    ]);
+    const result = z.object({
+      connection_id: z.literal(grant.connectionId), version: z.literal(grant.version), integration_state: z.literal('verified'),
+    }).strict();
+    return verified.rowCount === 1 && result.safeParse(verified.rows[0]?.data).success;
+  } catch {
+    // The grant is already saved. A failed probe, cleanup, or stale proof must leave verification pending.
+    return false;
+  }
 }
 
 export async function completeCalendarConnection(request: NextRequest) {
@@ -95,8 +125,24 @@ export async function completeCalendarConnection(request: NextRequest) {
     const recorded = await workerPool.query('select app_private.record_calendar_organizer($1,$2,$3,$4,$5,$6::jsonb,$7,$8) data', [
       pending.request_id, pending.connection_id, credentialVersion, granted.organizer_email, calendarId, JSON.stringify(envelope), envelope.kid, granted.google_subject,
     ]);
-    if (recorded.rowCount !== 1 || !z.object({ connection_id: z.literal(pending.connection_id), version: z.number().int().positive(), integration_state: z.literal('verification_required') }).strict().safeParse(recorded.rows[0].data).success) throw new DomainError('DEPENDENCY_UNAVAILABLE');
-    const response = secure(NextResponse.redirect(new URL('/admin/integrations?calendar=connected', config.app_base_url), 303));
+    const saved = z.object({
+      connection_id: z.literal(pending.connection_id),
+      version: z.int().positive(),
+      calendar_id: z.string().min(1).max(500).optional(),
+      verification_allowed: z.boolean().optional(),
+      integration_state: z.literal('verification_required'),
+    }).strict().safeParse(recorded.rows[0]?.data);
+    if (recorded.rowCount !== 1 || !saved.success) throw new DomainError('DEPENDENCY_UNAVAILABLE');
+    let outcome = 'connected';
+    if (pending.verify_room) {
+      const verified = config.environment === 'production' && saved.data.verification_allowed === true &&
+        saved.data.calendar_id && await verifySavedOrganizer(workerPool, {
+          requestId: pending.request_id, connectionId: pending.connection_id, version: saved.data.version,
+          credentialVersion, calendarId: saved.data.calendar_id, accessToken: granted.tokens.access_token,
+        });
+      outcome = verified ? 'verified' : 'check_required';
+    }
+    const response = secure(NextResponse.redirect(new URL(`/admin/integrations?calendar=${outcome}`, config.app_base_url), 303));
     response.cookies.set(consumedCookieName, '', { httpOnly: true, secure: new URL(config.app_base_url).protocol === 'https:', sameSite: 'lax', path: cookiePath, maxAge: 0 });
     return transport.finish(response);
   } catch (error) {

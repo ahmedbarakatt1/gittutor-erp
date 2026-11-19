@@ -5,12 +5,13 @@ import { POST as connect } from '../../src/app/api/calendar/connect/route';
 import { GET as callback } from '../../src/app/api/calendar/google/callback/route';
 import { findMeetingReadRoute } from '../../src/server/meeting-http';
 
-const port = vi.hoisted(() => ({ rpc: vi.fn(), query: vi.fn(), mode: 'google', admin: true }));
+const port = vi.hoisted(() => ({ rpc: vi.fn(), query: vi.fn(), probe:vi.fn(), mode: 'google', environment:'test', admin: true }));
 vi.mock('server-only', () => ({}));
+vi.mock('@/server/google-organizer-probe', () => ({verifyGoogleOrganizer:port.probe}));
 vi.mock('@/server/database', () => ({ createDatabasePool: () => ({ query: port.query }), databaseUrl: vi.fn() }));
 vi.mock('@/server/supabase', () => ({ requestSupabase: () => ({
   client: { rpc: port.rpc, auth: { getClaims: async () => ({ data: { claims: { sub: actor, session_id: session } } }) } },
-  config: { providers: { calendar: port.mode }, app_base_url: origin, isolated: true, secret_encryption_key: 'a'.repeat(64),
+  config: { providers: { calendar: port.mode }, app_base_url: origin, environment:port.environment, isolated: port.environment==='test', secret_encryption_key: 'a'.repeat(64),
     secret_encryption_key_id: 'v1', google: { client_id: 'synthetic-id', client_secret: 'synthetic-secret',
       redirect_uri: origin + '/api/calendar/google/callback', calendar_id: 'legacy@example.test' } },
   finish: (response: NextResponse) => response,
@@ -27,7 +28,7 @@ function post(body: unknown) {
   }, body: JSON.stringify(body) }));
 }
 beforeEach(() => {
-  vi.resetAllMocks(); port.admin = true; port.mode = 'google';
+  vi.resetAllMocks(); port.admin = true; port.mode = 'google'; port.environment='test';
   const pending = { request_id: requestId, connection_id: target, expires_at: new Date(Date.now() + 300000).toISOString() };
   port.rpc.mockImplementation(async (name: string) => {
     if (name === 'get_my_account') return { data: { account_id: actor, verified: true, roles: [port.admin ? 'admin' : 'tutor'], locale: 'en', authorized_learner_ids: [] } };
@@ -129,4 +130,46 @@ test('the organizer list accepts only sanitized per-connection rows', async () =
   expect(await route!.run({ rpc: port.rpc }, {})).toEqual([summary]);
   port.rpc.mockResolvedValueOnce({ data: [{ ...summary, google_subject: subject }] });
   await expect(route!.run({ rpc: port.rpc }, {})).rejects.toThrow('DEPENDENCY_UNAVAILABLE');
+});
+
+test('the production organizer check uses the saved calendar and only marks the exact verified grant after cleanup', async () => {
+  port.environment = 'production';
+  port.query.mockResolvedValueOnce({rowCount:1,rows:[{data:{connection_id:target,version:8,calendar_id:'saved-calendar@example.test',verification_allowed:true,integration_state:'verification_required'}}]})
+    .mockResolvedValueOnce({rowCount:1,rows:[{data:{connection_id:target,version:8,integration_state:'verified'}}]});
+  port.probe.mockResolvedValue(true);
+  const response = await grant({action:'reconnect',connection_id:target,expected_version:7,verify_room:true});
+  expect(response.headers.get('location')).toBe(origin+'/admin/integrations?calendar=verified');
+  expect(port.probe).toHaveBeenCalledWith({probe_id:requestId,calendar_id:'saved-calendar@example.test',access_token:'private-access'});
+  const credentialVersion = port.query.mock.calls[0][1][2];
+  expect(port.query.mock.calls[1]).toEqual([expect.stringContaining('verify_calendar_organizer'),[requestId,target,8,credentialVersion]]);
+  expect(port.probe.mock.invocationCallOrder[0]).toBeLessThan(port.query.mock.invocationCallOrder[1]);
+  expect(JSON.stringify([...response.headers])).not.toMatch(/saved-calendar|private-access|private-refresh/);
+});
+
+test.each(['test','development','staging'])('the explicit production probe is unavailable in %s', async environment => {
+  port.environment = environment;
+  expect((await post({action:'add',verify_room:true})).status).toBe(400);
+  expect(port.probe).not.toHaveBeenCalled();
+});
+
+test('ordinary production consent still saves the account without authorizing a room check', async () => {
+  port.environment = 'production';
+  const response = await grant({action:'add'});
+  expect(response.headers.get('location')).toBe(origin+'/admin/integrations?calendar=connected');
+  expect(port.probe).not.toHaveBeenCalled();
+  expect(port.query).toHaveBeenCalledTimes(1);
+});
+
+test.each(['inconclusive','probe-error','stale-grant','missing-calendar','preview-database'])('a saved account needs another check after %s', async problem => {
+  port.environment='production';
+  port.query.mockResolvedValueOnce({rowCount:1,rows:[{data:{connection_id:target,version:8,verification_allowed:problem!=='preview-database',integration_state:'verification_required',
+    ...(problem==='missing-calendar'?{}:{calendar_id:'primary'})}}]});
+  port.probe.mockResolvedValue(problem==='stale-grant');
+  if (problem==='probe-error') port.probe.mockRejectedValueOnce(new Error('sensitive upstream body'));
+  if (problem==='stale-grant') port.query.mockRejectedValueOnce(new Error('VERSION_CONFLICT'));
+  const response = await grant({action:'add',verify_room:true});
+  expect(response.headers.get('location')).toBe(origin+'/admin/integrations?calendar=check_required');
+  expect(port.query.mock.calls[0][0]).toContain('record_calendar_organizer');
+  expect(port.query).toHaveBeenCalledTimes(problem==='stale-grant'?2:1);
+  expect(port.probe).toHaveBeenCalledTimes(['missing-calendar','preview-database'].includes(problem)?0:1);
 });
