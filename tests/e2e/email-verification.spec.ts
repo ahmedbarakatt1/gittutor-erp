@@ -158,8 +158,13 @@ test('a learner can reset a password through the emailed recovery link', async (
   expect(created.error?.code).toBeUndefined();
   await page.goto('/login');
   await page.getByRole('link', { name: 'Forgot your password?' }).click();
-  await page.getByLabel('Email address').fill(email);
-  await page.getByRole('button', { name: 'Send reset link' }).click();
+  const resetForm = page.locator('form[action="/api/auth/recover"]');
+  await resetForm.getByLabel('Email address').fill(email);
+  const [request] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/recover' && response.request().method() === 'POST'),
+    resetForm.getByRole('button', { name: 'Send reset link' }).click(),
+  ]);
+  expect(request.status()).toBe(202);
   await expect(page.getByRole('status')).toContainText('check your inbox');
   const link = await verificationLink(email, 'recovery');
   await followVerification(page, link, '/auth/set-password');
