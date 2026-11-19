@@ -24,6 +24,8 @@ Mailjet delivery/bounce callbacks and automated provider reconciliation are **no
 
 ## Remaining activation checks
 
+If the owner selects a domain they control, verify it in Mailjet and set both the worker and Supabase Auth to the approved address on that domain. Merge Mailjet's SPF authorization into the domain's existing SPF record, publish the DKIM record shown for that domain and confirm both in Mailjet. Set up the domain's DMARC policy and reporting with its DNS owner. Inspect a controlled message's authentication results for DMARC alignment with the visible From domain, then verify inbox placement and the Auth link at the intended recipient. [Mailjet SPF and DKIM guide](https://documentation.mailjet.com/hc/en-us/articles/360049641733-Authenticating-Domains-with-SPF-and-DKIM-A-Complete-Guide), [Mailjet DMARC guide](https://documentation.mailjet.com/hc/en-us/articles/20531905163419-Understanding-DMARC).
+
 1. Mailjet is selected and clean Auth SMTP settings are saved. Resolve or explicitly assess the Spam result before representing delivery as reliable.
 2. Privately inject the Mailjet keys into the selected server/worker environment. Recheck the intended sender and account limits.
 3. Owner-only Auth delivery tests are approved and complete: both received in Spam. Eventual worker-host tests need their own concrete recipient/content scope; preserve unknown outcomes without resending.

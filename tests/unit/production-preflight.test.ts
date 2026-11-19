@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { parseEnv } from 'node:util';
+import { parseServerConfig } from '../../src/server/config';
 import { inspectProductionConfiguration, inspectProductionDatabase } from '../../tools/production-preflight-model';
 import { workerRpcOwners } from '../../tools/production-worker-boundary';
 
@@ -19,6 +22,15 @@ const clean = () => ({ environment: 'production', fixture_marker: null, fixture_
 });
 
 describe('production activation preflight', () => {
+  it('boots the published runtime template with the selected Mailjet sender', async () => {
+    const template = parseEnv(await readFile('deploy/production.env.example', 'utf8'));
+    const secrets: Record<string, string> = { ...configured(), MAILJET_API_KEY: 'a'.repeat(32), MAILJET_SECRET_KEY: 'b'.repeat(32) };
+    const env = Object.fromEntries(Object.entries(template).map(([key, value]) =>
+      [key, !value || value.includes('YOUR_') ? secrets[key] : value]));
+    expect(parseServerConfig(env).mailjet).toEqual({
+      from: secrets.EMAIL_FROM, api_key: secrets.MAILJET_API_KEY, secret_key: secrets.MAILJET_SECRET_KEY,
+    });
+  });
   it('separates valid configuration from actual target/provider verification', () => {
     const report = inspectProductionConfiguration(configured());
     expect(report.every(check => check.passed)).toBe(true);

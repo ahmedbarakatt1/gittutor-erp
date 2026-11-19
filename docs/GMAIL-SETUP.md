@@ -4,7 +4,7 @@ Latest15November decision: the owner subsequently instructed **use mailjet**. Cl
 
 The owner selected Gmail on15November2026. The application now supports `EMAIL_ADAPTER=gmail`, a consumer Gmail sender and a separate Google App Password. It uses pinned Nodemailer10.5.0, certificate-validated TLS to `smtp.gmail.com:465`, finite timeouts, no pooling or automatic resend, and the existing customer-content allowlist. Files, arbitrary headers, CC and BCC are not accepted from notification input. SMTP acceptance records **sent**, not verified delivery.
 
-Current execution: the App Password is saved in Windows-encrypted private storage; Gmail SMTP authentication passed; one explicitly approved owner-only message was accepted, and the owner confirmed receipt in Inbox. Clean production Auth SMTP settings were saved/read back, with signup restrictions and the existing rate limit preserved. Supabase invitation/recovery delivery and the eventual worker host still require their own checks. [Exact evidence](evidence/gmail-smtp-20261115.md).
+During the Gmail rehearsal, SMTP authentication succeeded and one approved owner-only message reached the Inbox. The subsequent Mailjet Auth invitation and recovery emails reached Spam. Final-host Auth link journeys and worker email delivery still need verification. [Gmail evidence](evidence/gmail-smtp-20261115.md) · [Mailjet Auth evidence](evidence/auth-mailjet-20261116.md)
 
 ## Configure the credential privately
 
@@ -25,10 +25,10 @@ Google also lists security-key-only2-Step Verification, organizational accounts 
 
 The owner explicitly approved and received the first message, subject **Git Tutor email setup test**, body **This is the approved Git Tutor email setup test. No customer records or tutor compensation are included.** It was sent only to the owner. Record SMTP acceptance separately from recipient-confirmed Inbox receipt. This approval covers that one message; do not repeat it or infer approval for other recipients/invitations.
 
-Supabase Auth email has a separate SMTP configuration: host `smtp.gmail.com`, port465, sender/user equal to the Gmail account, password equal to its App Password. These settings are saved on the clean production project; origins remain unchanged and signup remains closed. After the production host/origin is selected, separately approve and test an owner invitation and sign-in/password flow. App notification success does not prove Auth SMTP delivery.
+For an explicitly selected Gmail rollback, Supabase Auth uses host `smtp.gmail.com`, port 465, the Gmail account as sender and user, and its App Password. The clean production Auth project currently uses Mailjet. Test the invitation and password flows on the permanent production origin for whichever transport the owner deploys.
 
 Gmail has no provider send-idempotency key or signed delivery/bounce callbacks here. The stable `Message-ID` identifies an attempt for inspection; it does not prevent duplicate delivery. A lost acknowledgement remains **unknown** and cannot be blindly retried. Automated reconciliation intentionally remains unknown. Do not mark an email delivered from SMTP acceptance or treat an empty search as proof it was never sent. The existing admin operations queue shows unresolved attempts for investigation; an evidenced Gmail resolution procedure remains part of live readiness.
 
-Personal Gmail has sending limits and is intended for a small initial operational workload, not campaigns. [Gmail sending limits](https://support.google.com/mail/answer/22839). No paid mailbox, domain, Workspace upgrade or Resend activation is required for this selected sender route.
+Personal Gmail has sending limits. The rollback configuration uses the existing Gmail account and App Password. [Gmail sending limits](https://support.google.com/mail/answer/22839)
 
 Official implementation references: [Nodemailer SMTP](https://nodemailer.com/smtp), [Gmail configuration](https://nodemailer.com/usage/using-gmail), [message options](https://nodemailer.com/message). The installed package includes its own TypeScript declarations; no external DefinitelyTyped package is needed.

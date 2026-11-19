@@ -6,7 +6,7 @@ $tutorWorkspace = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $tutorPrivateDirectory = Join-Path $tutorWorkspace '.local/production-setup'
 $tutorSecretPath = Join-Path $tutorPrivateDirectory 'gmail-app-password.dpapi'
 if (-not (Test-Path -LiteralPath (Join-Path $tutorWorkspace 'AGENTS.md'))) { throw 'Run this from the Git Tutor repository.' }
-$tutorSecurePassword = Read-Host 'Paste the Google App Password for gittutor2@gmail.com (input is hidden)' -AsSecureString
+$tutorSecurePassword = Read-Host 'Paste the Google App Password for your configured Gmail sender (input is hidden)' -AsSecureString
 $tutorPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($tutorSecurePassword)
 try {
     $tutorPlainPassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($tutorPointer).Replace(' ', '')

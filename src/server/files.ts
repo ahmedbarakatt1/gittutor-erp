@@ -74,6 +74,28 @@ export function createPrivateObjectStore(config: ServerConfig) {
 }
 
 export function createFileContentService(database: Pick<Pool, 'query'>, config: ServerConfig, storage = createPrivateObjectStore(config)) {
+  // A cold service can verify an existing immutable manifest through storage.put.
+  // Joining the same promise also covers concurrent, out-of-order first chunks.
+  const manifests = new Map<string, Promise<void>>();
+  function ensureChunkManifest(prepared: z.infer<typeof upload>, keys: string[]) {
+    const key = `${prepared.file_id}/parts/${prepared.checksum_sha256}/cleanup.json`;
+    const existing = manifests.get(key);
+    if (existing) return existing;
+    const bytes = new TextEncoder().encode(JSON.stringify({
+      version: 1, kind: 'file_chunk_cleanup_candidate', file_id: prepared.file_id,
+      checksum_sha256: prepared.checksum_sha256, size_bytes: prepared.size_bytes, part_keys: keys,
+    }));
+    const verification = storage.put({
+      object_key: key, size_bytes: bytes.byteLength,
+      checksum_sha256: createHash('sha256').update(bytes).digest('hex'), detected_type: 'application/json',
+    }, bytes).catch(error => {
+      if (manifests.get(key) === verification) manifests.delete(key);
+      throw error;
+    });
+    if (manifests.size >= 256) manifests.delete(manifests.keys().next().value!);
+    manifests.set(key, verification);
+    return verification;
+  }
   async function query(sql: string, values: unknown[]) {
     try { const result = await database.query(sql, values); if (result.rowCount !== 1) throw new Error(); return result.rows[0].data as unknown; }
     catch (error) { throw new FileRpcError(error instanceof Error && safeCodes.has(error.message) ? error.message : 'DEPENDENCY_UNAVAILABLE'); }
@@ -119,8 +141,7 @@ export function createFileContentService(database: Pick<Pool, 'query'>, config: 
         await cleanupParts(fileId, keys);
         return result;
       }
-      const manifest = new TextEncoder().encode(JSON.stringify({ version: 1, kind: 'file_chunk_cleanup_candidate', file_id: fileId, checksum_sha256: prepared.checksum_sha256, size_bytes: prepared.size_bytes, part_keys: keys }));
-      await storage.put({ object_key: `${fileId}/parts/${prepared.checksum_sha256}/cleanup.json`, size_bytes: manifest.byteLength, checksum_sha256: createHash('sha256').update(manifest).digest('hex'), detected_type: 'application/json' }, manifest);
+      await ensureChunkManifest(prepared, keys);
       await storage.putPart(keys[range.start / fileChunkBytes], bytes);
       if (range.end !== range.total - 1) return { file_id: fileId, upload_state: 'uploading' };
       const whole = new Uint8Array(prepared.size_bytes);

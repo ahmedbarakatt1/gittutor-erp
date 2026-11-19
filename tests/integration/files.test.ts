@@ -29,21 +29,23 @@ test('25 MiB private uploads survive bounded chunk retries and retain scan and c
   const width=3*1024*1024,first={start:0,end:width-1,total:bytes.length};
   await expect(infra.content.uploadChunk(f.students[1],id,bytes.subarray(0,width),first)).rejects.toThrow('NOT_FOUND');
   await expect(infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),{...first,total:bytes.length-1})).rejects.toThrow('FILE_SIZE_MISMATCH');
-  const firstResult=await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first);
-  expect(firstResult).toEqual({file_id:id,upload_state:'uploading'});
+  const second={start:width,end:2*width-1,total:bytes.length};
+  expect(await infra.content.uploadChunk(f.students[0],id,bytes.subarray(width,2*width),second)).toEqual({file_id:id,upload_state:'uploading'});
   const storage=createClient(infra.config.url,infra.config.secret_key).storage.from('git-tutor-private');
   const candidate=await storage.download(`${id}/parts/${checksum}/cleanup.json`);
   expect(candidate.error).toBeNull();
   const manifest=JSON.parse(await candidate.data!.text());
   expect(manifest).toMatchObject({version:1,kind:'file_chunk_cleanup_candidate',file_id:id,checksum_sha256:checksum,size_bytes:bytes.length});
   expect(manifest.part_keys).toEqual(Array.from({length:9},(_,index)=>`${id}/parts/${checksum}/${index}`));
+  const firstResult=await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first);
+  expect(firstResult).toEqual({file_id:id,upload_state:'uploading'});
   expect(await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first)).toEqual(firstResult);
   expect(JSON.stringify(firstResult)).not.toMatch(/object_key|lease_token|authorization_id|tutor_fee/);
   await expect(infra.content.download(f.students[0],id)).rejects.toThrow('NOT_FOUND');
   await expect(invokeFileCommandWithStatus(f.students[0],'finalize_file_upload',{p_file_id:id,p_checksum_sha256:checksum,p_idempotency_key:randomUUID()})).rejects.toThrow('UPLOAD_REQUIRED');
   const corrupted=Buffer.from(bytes.subarray(0,width)); corrupted[100]=0;
   await infra.content.uploadChunk(f.students[0],id,corrupted,first);
-  for(let start=width;start+width<bytes.length;start+=width){
+  for(let start=2*width;start+width<bytes.length;start+=width){
    const end=Math.min(start+width,bytes.length)-1;
    const result=await infra.content.uploadChunk(f.students[0],id,bytes.subarray(start,end+1),{start,end,total:bytes.length});
    expect(result.upload_state).toBe('uploading');
