@@ -16,6 +16,7 @@ import { meetingCopy } from '@/locales/meetings';
 import { financeCopy } from '@/locales/finance';
 import { payrollCopy } from '@/locales/payroll';
 import { operationsCopy } from '@/locales/teaching-operations';
+import { quizCopy } from '@/locales/quizzes';
 
 function navigationFor(kind: PortalKind, learnerWorkspace: boolean, otherWorkspaces: PortalKind[]): NavigationGroup[] {
   const n = copy.navigation;
@@ -41,7 +42,7 @@ function navigationFor(kind: PortalKind, learnerWorkspace: boolean, otherWorkspa
       { label: n.manage, links: [local('/access', n.staff), local('/integrations', meetingCopy.integrations), updates, local('/notifications-operations', n.notifications)] }
     );
   } else if (kind === 'learn') {
-    if (learnerWorkspace) groups.push({ label: n.sessions, links: [requests, local('/bookings', bookingCopy.nav), local('/files', fileCopy.nav), packages] });
+    if (learnerWorkspace) groups.push({ label: n.sessions, links: [requests, local('/bookings', bookingCopy.nav), local('/grades', quizCopy.studentNav), local('/files', fileCopy.nav), packages] });
     groups.push(
       { label: n.money, links: [payments, refunds] },
       { label: n.service, links: [...(learnerWorkspace ? [account, local('#learners', copy.portal.learnerTitle)] : []),
@@ -49,7 +50,7 @@ function navigationFor(kind: PortalKind, learnerWorkspace: boolean, otherWorkspa
     );
   } else if (kind === 'tutor') {
     groups.push(
-      { label: n.sessions, links: [local('/schedule', bookingStaffCopy.tutorNav), teaching, pay] },
+      { label: n.sessions, links: [local('/schedule', bookingStaffCopy.tutorNav), local('/quizzes', quizCopy.tutorNav), teaching, pay] },
       { label: n.workspace, links: [account, updates, exports] }
     );
   } else {

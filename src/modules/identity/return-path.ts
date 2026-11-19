@@ -37,7 +37,7 @@ export function customerReturnPath(value: unknown): string | undefined {
     }
     return `/learn/requests${result.size ? `?${result}` : ''}`;
   }
-  if (value === '/learn/payments' || value === '/learn/refunds') return value;
+  if (value === '/learn/payments' || value === '/learn/refunds' || value === '/learn/grades') return value;
   const payment = /^(\/learn\/(?:refunds|payments(?:\/(?:charges|transfers|plans|enrollment-transfer-consents))?))\/([^/?#]+)$/.exec(value);
   if (payment) return z.uuid().safeParse(payment[2]).success ? value : undefined;
   const detail = /^\/learn\/packages\/([^/?#]+)$/.exec(value);

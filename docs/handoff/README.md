@@ -2,6 +2,8 @@
 
 **Internal engineering and operations guide · 18 November 2026**
 
+The 19 November update adds session PDF quizzes and private student grades. The November 18 printable report is a dated snapshot. Use the [quiz workflow and API](../T08-LEARNING-RECORD-CONTRACT.md) and [current implementation record](../IMPLEMENTATION-STATUS.md) alongside it.
+
 Start here if you are taking responsibility for the site, supporting a booking, or preparing Git Tutor for paying customers. The public site accepts a learner's own course material. Staff match that request to a scheduled lesson. Three different decisions follow: the learner accepts the quote, staff establish eligible funding, and the system confirms the seat. Teaching, attendance, earnings and payout each have their own records. A colleague investigating an issue should first identify which of those decisions has actually occurred.
 
 [Complete printable report](../../output/pdf/Git-Tutor-Handoff.pdf) · [Shared testing site](https://gittutor-erp-rho.vercel.app/login) · [Private repository](https://github.com/ahmedbarakatt1/gittutor-erp) · [Implementation record](../IMPLEMENTATION-STATUS.md)

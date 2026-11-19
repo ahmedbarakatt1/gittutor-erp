@@ -1,5 +1,31 @@
 # Implementation status
 
+## PDF quizzes, private grades and PR review — 19 November 2026
+
+Tutors can assign a clean session PDF, set the total points, and publish or correct an individual learner's grade at `/tutor/quizzes`. Confirmed students and currently authorized guardians can download the quiz and see its score at `/learn/grades`. Ungraded work is distinct from a zero. Corrections append revisions. Removing file access does not erase the grade. [Workflow and API contract](T08-LEARNING-RECORD-CONTRACT.md).
+
+| Review item | Decision and change |
+| --- | --- |
+| Matching after price changes and when a session fills | Use the signed-off occurrence pricing and the same admission rules as booking. Staff see remaining seats and can recognize an existing booking. The advertised 90–105 minute duration is retained as a versioned request policy. Public tuition copy and catalog defaults use the existing customer tariff. |
+| Access to request materials | Closed requests disappear from customer-service reads and downloads. Administrators retain authorized history. A confirmation locks the matched session so teaching materials cannot be moved away from the assigned tutor. |
+| Duplicate holds | The current database already raises a conflict. Map the historical duplicate error to HTTP 409 as well. |
+| Private file pipeline | Forward migrations explicitly define upload authorization and finalization. Shared handout access checks current tutor assignment. The chunk service reuses an already verified cleanup manifest; a nonzero first chunk, a retry, or a server restart still has cleanup coverage. |
+| Production email and scoped Meet pilot | The production template selects Mailjet and Gmail is available for an explicit rollback. Both use one SMTP outcome classifier. The configuration tool asks for the sender. Keep the designated-learner Meet pilot and its database safeguards in the migration history. |
+| Handoff binary and PR history | Retained the PDF the owner explicitly requested as a single forwardable file. Applied migrations and prior commits remain intact. Changes and verification are recorded here. |
+
+A fresh Docker Supabase project with its own network, loopback ports, empty volumes and synthetic accounts was used for integrated checks. The existing local databases and imported workbook records were excluded from these runs. A first, earlier working-copy migration snapshot failed the closed-request file check; the complete final migration chain on a second fresh stack passed it. The release register and commercial launch decision are tracked separately.
+
+| Executed verification | Result |
+| --- | --- |
+| `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` | Passed, including 470 unit tests and both new page routes in the production build. |
+| `vitest run tests/integration/{quizzes,requests,files,calendar-preview-connection,review-evidence-concurrency,review-authorization}.test.ts` | All 13 tests passed on the fresh final schema. Covers revised pricing and actual quotes, full seats, expired holds, closed files, confirmed requests, scoped PDF downloads, private zero/updated grades, guardian revocation, grade races, chunk retries and the two payment P0 assertions (GT-1403 and GT-1405). |
+| `playwright test tests/e2e/quizzes.spec.ts --project=desktop` | Passed the upload → scan → publication → download → zero grade → corrected grade walkthrough with separate authenticated accounts. |
+| `playwright test tests/e2e/requests.spec.ts tests/e2e/quizzes.spec.ts` | All six desktop and mobile checks passed on the final fresh stack. Both screen sizes covered the new grade journey, the material request and independently accepted revised quote, and an interrupted retry. |
+| `node --import tsx tools/supabase-local.ts verify`, `python tools/verify-pack.py`, `pnpm exec tsx tools/validate-evidence.ts fixtures/acceptance-cases.json` | Database verification passed for 159 migrations, 242 private RLS tables and 756 function boundaries. Document, fixture and evidence validators passed. The formal register still has 147 cases marked not run. |
+| `node --max-old-space-size=384 --import tsx .local/production-setup/verify-owner-auth-test.ts` | Read-only production check observed one unconfirmed owner, zero staff grants, zero imports, zero financial postings, zero queued jobs and zero unsafe private tables. |
+
+The final commercial host, live scanner, permanent sign-in origin, group Meet rehearsal, reviewed receiving accounts and commercial policies, and off-device restore arrangements still require the steps in [production inputs](PRODUCTION-INPUTS.md). None of the synthetic grade and payment checks sends live email or moves money.
+
 ## Repository cleanup and colleague handoff — 18 November 2026
 
 The printable edition now opens with a colleague note containing links to the private repository, testing site, pull request and status document, followed by four production priorities. The single PDF contains 45 pages. The original report retains its printed numbering from 1 to 44. `python .local/handoff-build/package_note.py` verified all 44 original pages against the previous PDF for identical text, rendered pixels, bookmark targets and link destinations. The four new web link targets and the jump to the report contents were checked, and the rendered note was visually reviewed.

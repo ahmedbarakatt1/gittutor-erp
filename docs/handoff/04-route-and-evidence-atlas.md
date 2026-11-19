@@ -2,7 +2,7 @@
 
 Use this index when a colleague gives you a URL, a role or a symptom. Each Source link opens the actual entry point. Follow its component import or route dispatch to the domain module, then examine the transaction and the relevant tests. A route existing in the repository does not grant access to a user or establish that its live provider is enabled.
 
-At handoff there are **73 page entry points and 20 HTTP route modules**. Several HTTP modules dispatch many operations. Brackets denote a dynamic segment, and a catch-all can consume more than one segment. Page routes below use examples of URL patterns without any real record identifiers. The public home contains the how-it-works and FAQ sections. The specification's standalone policy pages still need a product and content decision before public launch. [App source](../../src/app) · [API contracts](../05-api-contracts.md)
+As of 19 November there are **75 page entry points and 20 HTTP route modules**. Several HTTP modules dispatch many operations. Brackets denote a dynamic segment, and a catch-all can consume more than one segment. Page routes below use examples of URL patterns without any real record identifiers. The public home contains the how-it-works and FAQ sections. The specification's standalone policy pages still need a product and content decision before public launch. [App source](../../src/app) · [API contracts](../05-api-contracts.md)
 
 ## Public site and account screens
 
@@ -29,6 +29,7 @@ At handoff there are **73 page entry points and 20 HTTP route modules**. Several
 | `/learn/bookings` | Choose an eligible learner, review a matched slot, reserve a seat and inspect reservations or waitlist offers. | [Source](../../src/app/learn/bookings/page.tsx) |
 | `/learn/bookings/[id]` | Enrollment detail. The next action depends on quote, hold, funding and meeting state. Files, changes and terms are accessible here. | [Source](../../src/app/learn/bookings/%5Bid%5D/page.tsx) |
 | `/learn/files` | View authorized private preparation files and published resources for teaching sessions. | [Source](../../src/app/learn/files/page.tsx) |
+| `/learn/grades` | Download available quiz PDFs across confirmed sessions and view private scores for each authorized learner. | [Source](../../src/app/learn/grades/page.tsx) |
 | `/learn/packages` | Browse available contracts and purchased credits for the selected learner. | [Source](../../src/app/learn/packages/page.tsx) |
 | `/learn/packages/[id]` | Inspect quantities and value, movements, expiry, permitted renewal or transfer actions. | [Source](../../src/app/learn/packages/%5Bid%5D/page.tsx) |
 | `/learn/payments` | Find customer obligations, receipts, payment plans and owned transfers within scope. | [Source](../../src/app/learn/payments/page.tsx) |
@@ -50,6 +51,7 @@ At handoff there are **73 page entry points and 20 HTTP route modules**. Several
 | `/tutor` | Teaching workspace and tutor profile. Imported teaching history is available where the account has mappings. | [Source](../../src/app/tutor/page.tsx) |
 | `/tutor/schedule` | Availability and assigned occurrences, teaching terms, files and meeting access. | [Source](../../src/app/tutor/schedule/page.tsx) |
 | `/tutor/teaching` | Operational issues, reassignment and teaching follow-up for the tutor's permitted sessions. | [Source](../../src/app/tutor/teaching/page.tsx) |
+| `/tutor/quizzes` | Assign a checked PDF to a teaching session, publish a learner's score and make a versioned correction. | [Source](../../src/app/tutor/quizzes/page.tsx) |
 | `/tutor/pay` | Own earnings, adjustments, payout history and destination workflow. | [Source](../../src/app/tutor/pay/page.tsx) |
 | `/tutor/notifications` | The tutor's operational messages. | [Source](../../src/app/tutor/notifications/page.tsx) |
 | `/tutor/exports` | Authorized tutor exports, including own records where the export scope permits. | [Source](../../src/app/tutor/exports/page.tsx) |

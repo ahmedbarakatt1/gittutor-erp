@@ -11,7 +11,7 @@ import styles from './payments.module.css';
 import formStyles from '../auth.module.css';
 
 type Page<T> = { items: T[]; next_cursor: string | null };
-export function usePaymentRecord<T>(path: string | null) {
+export function usePaymentRecord<T>(path: string | null, keepDataOnRefresh = false) {
   const [state, setState] = useState<{ path: string | null; data?: T; error?: string }>({ path });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -24,7 +24,7 @@ export function usePaymentRecord<T>(path: string | null) {
     }).catch(() => { if (!controller.signal.aborted) setState({ path, error: copy.failed }); });
     return () => controller.abort();
   }, [path, attempt]);
-  return { data: state.path === path ? state.data : undefined, error: state.path === path ? state.error : undefined, reload: () => { setState({ path }); setAttempt(value => value + 1); } };
+  return { data: state.path === path ? state.data : undefined, error: state.path === path ? state.error : undefined, reload: () => { if (!keepDataOnRefresh) setState({ path }); setAttempt(value => value + 1); } };
 }
 export function usePaymentList<T>(path: string | null, pageField?: string, cursorParameter = 'cursor') {
   const [state, setState] = useState<{ path: string | null; page?: Page<T>; error?: string }>({ path });

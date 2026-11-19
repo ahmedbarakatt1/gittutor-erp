@@ -5,6 +5,7 @@ import { CustomerTutorReassignments } from '../teaching/customer-tutor-reassignm
 import Link from 'next/link';
 import { SessionMaterials } from '../files/materials';
 import { LearningRecordPanel } from '../teaching/learning-records';
+import { quizCopy } from '@/locales/quizzes';
 import { MeetingPanel } from '../teaching/meeting-panel';
 import { useState, type ReactNode } from 'react';
 import type { CustomerEnrollment, PublicOccurrence } from '@/modules/booking/queries';
@@ -122,6 +123,7 @@ function Reservation({ item, title, onSaved }: { item: CustomerEnrollment; title
     <BookingFunding item={item} onSaved={onSaved} />
     <div className={detail.sections}>
       <Disclosure label={copy.materials}>
+        {confirmed && <p><Link href="/learn/grades">{quizCopy.studentNav}</Link></p>}
         <SessionMaterials enrollmentId={item.enrollment_id} occurrenceId={occurrence.occurrence_id} allowPreparationUpload />
       </Disclosure>
       {!item.is_provisional && !pendingTransfer && (held || confirmed) && <Disclosure label={copy.packageCredits}>

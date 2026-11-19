@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { FileView, PublicFilePurpose } from '@/modules/files/queries';
 import { fileChunkBytes, fileRanges } from '@/modules/files/transport';
 import { fileCopy as copy } from '@/locales/files';
+import { quizCopy } from '@/locales/quizzes';
 import { useHydrated } from '../use-hydrated';
 import styles from './files.module.css';
 import formStyles from '../auth.module.css';
@@ -18,12 +19,13 @@ function fileType(file: File) { if (!file.type) { const extensions: Record<strin
 function hexadecimal(bytes: ArrayBuffer) { return Array.from(new Uint8Array(bytes), value => value.toString(16).padStart(2, '0')).join(''); }
 
 /** No bytes or filenames persist in browser storage. A reselected identical file retains its logical retry keys. */
-export function FileUpload({ purpose, parentId, evidenceAction, operationScope, onUploaded, onReady }: { purpose: UploadPurpose; parentId: string | null; evidenceAction?: string; operationScope?: string; onUploaded?: (id: string) => void; onReady?: (file: FileView) => void }) {
+export function FileUpload({ purpose, parentId, evidenceAction, operationScope, pdfOnly = false, onUploaded, onReady }: { purpose: UploadPurpose; parentId: string | null; evidenceAction?: string; operationScope?: string; pdfOnly?: boolean; onUploaded?: (id: string) => void; onReady?: (file: FileView) => void }) {
   const id = useId(), hydrated = useHydrated(), [selected, setSelected] = useState<File | null>(null), [phase, setPhase] = useState<Phase>('idle'), [error, setError] = useState(''), [requestId, setRequestId] = useState('');
   const [fileId, setFileId] = useState(''), [record, setRecord] = useState<FileView | null>(null), [refresh, setRefresh] = useState(0);
   const operation = useRef<Operation | null>(null), uploadAbort = useRef<AbortController | null>(null), readyCallback = useRef(onReady), delivered = useRef('');
   const busy = phase !== 'idle', maximum = ['private_preparation', 'shared_handout', 'request_material', 'statement_evidence'].includes(purpose) ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
-  const hint = purpose === 'statement_evidence' ? copy.statementLimits : maximum > 5 * 1024 * 1024 ? copy.teachingLimits : copy.receiptLimits;
+  const types = pdfOnly ? ['application/pdf'] : accepted(purpose);
+  const hint = pdfOnly ? quizCopy.pdfLimits : purpose === 'statement_evidence' ? copy.statementLimits : maximum > 5 * 1024 * 1024 ? copy.teachingLimits : copy.receiptLimits;
   useEffect(() => { readyCallback.current = onReady; }, [onReady]);
   useEffect(() => () => { uploadAbort.current?.abort(); }, []);
   useEffect(() => {
@@ -45,7 +47,7 @@ export function FileUpload({ purpose, parentId, evidenceAction, operationScope, 
     if (!selected || !hydrated || busy) return;
     setError(''); setRequestId('');
     if (selected.size < 1 || selected.size > maximum) { setError(copy.tooLarge); return; }
-    const declaredType = fileType(selected); if (!accepted(purpose).includes(declaredType)) { setError(copy.invalidType); return; }
+    const declaredType = fileType(selected); if (!types.includes(declaredType)) { setError(copy.invalidType); return; }
     const controller = new AbortController(); uploadAbort.current = controller;
     try {
       setPhase('hashing'); const bytes = await selected.arrayBuffer(), checksum = hexadecimal(await crypto.subtle.digest('SHA-256', bytes));
@@ -82,7 +84,7 @@ export function FileUpload({ purpose, parentId, evidenceAction, operationScope, 
     finally { if (!controller.signal.aborted) setPhase('idle'); }
   }
   return <div className={styles.upload} role="group" aria-labelledby={`${id}-title`} aria-busy={busy}>
-    <h3 id={`${id}-title`}>{copy.uploadTitle}</h3><label htmlFor={id}>{copy.choose}</label><input id={id} type="file" accept={accepted(purpose).join(',')} disabled={!hydrated || busy || Boolean(fileId)} aria-describedby={`${id}-hint`} onChange={event => { setSelected(event.target.files?.[0] || null); setError(''); }} /><p id={`${id}-hint`} className={styles.phase}>{hint}</p>
+    <h3 id={`${id}-title`}>{copy.uploadTitle}</h3><label htmlFor={id}>{copy.choose}</label><input id={id} type="file" accept={types.join(',')} disabled={!hydrated || busy || Boolean(fileId)} aria-describedby={`${id}-hint`} onChange={event => { setSelected(event.target.files?.[0] || null); setError(''); }} /><p id={`${id}-hint`} className={styles.phase}>{hint}</p>
     {phase !== 'idle' && <p role="status" className={styles.phase}>{copy[phase]}</p>}
     {error && <div role="alert" className={formStyles.error}><p>{error}</p>{requestId && <p>{copy.requestReference}: {requestId}</p>}</div>}
     {!fileId && <button type="button" className={formStyles.primary} disabled={!hydrated || busy || !selected} onClick={() => void upload()}>{error ? copy.retry : copy.upload}</button>}
