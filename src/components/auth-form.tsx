@@ -14,7 +14,7 @@ function navigateAfterAuthentication(path: string) {
   window.location.assign(new URL(path, window.location.origin).href);
 }
 
-export function AuthForm({ mode, unavailable = false, forbidden = false, returnTo }: { mode: 'login' | 'signup'; unavailable?: boolean; forbidden?: boolean; returnTo?: string }) {
+export function AuthForm({ mode, unavailable = false, forbidden = false, returnTo }: { mode: 'login' | 'signup' | 'recover'; unavailable?: boolean; forbidden?: boolean; returnTo?: string }) {
   const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +24,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const text = copy[mode];
+  const [recoveryRequested, setRecoveryRequested] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +34,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
     const password = String(data.get('password') ?? '');
     const invalid = {
       email: !email || !emailRef.current?.validity.valid ? copy.error.invalidEmail : undefined,
-      password: !password ? copy.error.requiredPassword : mode === 'signup' && password.length < 12 ? copy.error.shortPassword : undefined,
+      password: !password && mode !== 'recover' ? copy.error.requiredPassword : mode === 'signup' && password.length < 12 ? copy.error.shortPassword : undefined,
     };
     setFieldErrors(invalid);
     setError('');
@@ -48,12 +49,16 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(mode === 'recover' ? { email } : { email, password }),
       });
       const result = await response.json() as ApiResult;
       if (!response.ok) {
         setError(result.message || copy.error.generic);
         setReference(result.request_id || '');
+        return;
+      }
+      if (mode === 'recover') {
+        setRecoveryRequested(true);
         return;
       }
       if (mode === 'signup' && result.data?.verification_required) {
@@ -73,6 +78,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
     }
   }
 
+  if (recoveryRequested) return <p role="status">{copy.recover.received}</p>;
   return (
     <form className={styles.form} method="post" action={`/api/auth/${mode}`} onSubmit={submit} noValidate aria-busy={!hydrated || pending}>
       <fieldset className={styles.formFields} disabled={!hydrated || pending}>
@@ -81,14 +87,14 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
         <input ref={emailRef} id="email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} />
         {fieldErrors.email && <p className={styles.fieldError} id="email-error" role="alert">{fieldErrors.email}</p>}
       </div>
-      <div className={styles.field}>
+      {mode !== 'recover' && <div className={styles.field}>
         <label htmlFor="password">{copy.password}</label>
         <div className={styles.passwordRow}>
           <input ref={passwordRef} id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required minLength={mode === 'signup' ? 12 : undefined} maxLength={256} aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'password-error' : mode === 'signup' ? 'password-hint' : undefined} />
           <button type="button" onClick={() => setShowPassword(!showPassword)} aria-controls="password" aria-label={showPassword ? copy.hidePassword : copy.showPassword}>{showPassword ? copy.hide : copy.show}</button>
         </div>
         {fieldErrors.password ? <p className={styles.fieldError} id="password-error" role="alert">{fieldErrors.password}</p> : mode === 'signup' && <p className={styles.hint} id="password-hint">{copy.passwordHint}</p>}
-      </div>
+      </div>}
       {error && <div className={styles.error} role="alert"><p>{error}</p>{reference && <p className={styles.hint}>{copy.error.reference}: <span className={styles.reference}>{reference}</span></p>}</div>}
       <button className={styles.primary} disabled={!hydrated || pending} type="submit">{pending ? text.pending : text.submit}</button>
       </fieldset>

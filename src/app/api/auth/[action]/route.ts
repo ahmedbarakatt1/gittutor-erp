@@ -10,9 +10,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   let context: ReturnType<typeof requestSupabase> | undefined;
   try {
     const { action } = await params;
-    if (!["login", "signup", "logout", "password"].includes(action)) throw new DomainError("NOT_FOUND");
+    if (!["login", "signup", "logout", "password", "recover"].includes(action)) throw new DomainError("NOT_FOUND");
     context = requestSupabase(request);
     if (!allowedOrigin(request.headers.get("origin"), context.config.app_base_url, context.config.isolated)) throw new DomainError("FORBIDDEN");
+    if (action === "recover") {
+      const input = loginInput.pick({ email: true }).safeParse(await readJson(request));
+      if (!input.success) throw new DomainError("VALIDATION_ERROR");
+      const { error } = await context.client.auth.resetPasswordForEmail(input.data.email.trim().toLowerCase(), {
+        redirectTo: new URL("/auth/callback", context.config.app_base_url).href,
+      });
+      // The public response is independent of account existence and per-recipient throttling.
+      if (error) console.warn("auth_recovery_request_unconfirmed", { request_id: requestId });
+      return context.finish(NextResponse.json({ data: { request_received: true }, request_id: requestId },
+        { status: 202, headers: { "Cache-Control": "private, no-store" } }));
+    }
     const verified = await context.client.auth.getClaims();
     if (action === "password") {
       if (verified.error || !verified.data?.claims.sub) throw new DomainError("AUTH_REQUIRED");

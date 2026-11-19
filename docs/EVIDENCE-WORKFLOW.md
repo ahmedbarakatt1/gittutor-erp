@@ -62,6 +62,8 @@ GT-1317 retains its separate formal limitation. Its test demonstrates one real c
 
 The 19 November local attempt failed at synthetic sign-in before any case reached its assertions. A direct Auth check returned HTTP 504 while PostgreSQL remained reachable. The failed run remains available in the [original immutable report](evidence/acceptance/a4c588b8-ef3d-4707-86c2-960a55abb994.json).
 
+The [clean financial run](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44551937648) exercised 53 assertions on revision `41231df2c12f37948165805f04a89ace6f6bc291`. The [unaltered report](evidence/acceptance/21568a3d-5694-4bbd-b0d4-3263b6d2b443.json) supports three catalogue passes. GT-1317 retains the timing limitation above.
+
 ## Validator verification, 2026-11-11
 
 - `pnpm exec vitest run tests/unit/evidence.test.ts`: RED against the intentional stub, **33 failed**, exit 1; retained local output `.local/evidence-red.log`. This confirmed unsupported passes were not yet rejected.

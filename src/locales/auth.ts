@@ -32,6 +32,15 @@ export const authCopy = {
     alternative: 'Already have an account?',
     link: 'Sign in',
   },
+  recover: {
+    title: 'Reset your password.',
+    description: 'Enter the email address you use for Git Tutor.',
+    submit: 'Send reset link',
+    pending: 'Requesting a link…',
+    alternative: 'Remember your password?',
+    link: 'Sign in',
+    received: 'If this address has a Git Tutor account, check your inbox and spam folder for a reset link.',
+  },
   verification: {
     title: 'Check your email.',
     description: 'If your account is eligible, a verification message will arrive at the address you entered. Open its link to verify your email, then sign in.',
@@ -40,7 +49,7 @@ export const authCopy = {
   },
   passwordSetup: {
     title: 'Set your password.',
-    description: 'Choose a password for your verified account. You will review and accept your staff invitation next.',
+    description: 'Choose a password for your verified Git Tutor account.',
     confirm: 'Confirm password',
     mismatch: 'The passwords do not match. Enter the same password again.',
     submit: 'Save password and continue',
