@@ -1,0 +1,38 @@
+name: Private scanner image rehearsal
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+permissions:
+  contents: read
+jobs:
+  scan:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'verify-private-scanner'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build the pinned Linux amd64 worker image
+        run: docker build --platform linux/amd64 --file deploy/vercel-scanner/Dockerfile --tag git-tutor-scanner:check .
+      - name: Check the production startup boundary and test synthetic bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' git-tutor-scanner:check)" = linux/amd64
+          if docker run --rm --network none -e APP_ENV=development git-tutor-scanner:check > guard.log 2>&1; then
+            echo 'Development environment unexpectedly accepted' >&2
+            exit 1
+          fi
+          grep -q PRODUCTION_SCANNER_REQUIRES_PRODUCTION guard.log
+          docker create --name scanner-check --memory=4g --cpus=2 --pids-limit=150 --security-opt no-new-privileges \
+            git-tutor-scanner:check --verify-scanner
+          test -z "$(docker port scanner-check)"
+          docker start scanner-check
+          docker logs --follow scanner-check &
+          observer=$!
+          status=$(docker wait scanner-check)
+          wait "$observer"
+          test "$status" = 0
+          docker logs scanner-check 2>&1 | grep -F 'private_scanner_self_test_passed'

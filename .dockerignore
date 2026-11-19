@@ -15,3 +15,9 @@
 !contracts/
 !contracts/runtime/
 !contracts/runtime/**
+!deploy/
+!deploy/vercel-scanner/
+!deploy/vercel-scanner/Dockerfile
+!deploy/vercel-scanner/clamd.conf
+!deploy/vercel-scanner/freshclam.conf
+!deploy/vercel-scanner/supervise.mjs
