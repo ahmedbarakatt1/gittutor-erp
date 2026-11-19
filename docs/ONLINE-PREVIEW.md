@@ -12,6 +12,10 @@ The ordinary pilot uses simulated provider operations and manual reconciliation.
 
 Sign in with an assigned tutor account, open [Quizzes and grades](https://gittutor-erp-rho.vercel.app/tutor/quizzes), choose a practice session with a confirmed learner, upload a PDF, and wait for its scan to clear. Publish the quiz with its maximum score. In a separate browser profile, sign in as that learner, open [My grades](https://gittutor-erp-rho.vercel.app/learn/grades) and download the quiz. Enter or correct a score as the tutor and refresh the learner's dashboard. An ungraded quiz is labelled separately from a zero.
 
+## Contact and meeting accounts
+
+The [public support page](https://gittutor-erp-rho.vercel.app/support) links to Git Tutor on TikTok, Instagram and WhatsApp with recognizable icons. Phone and WhatsApp use +20 15 08823452. Staff reply in the WhatsApp business app. Administrators use [Integrations](https://gittutor-erp-rho.vercel.app/admin/integrations) to manage organizer accounts. Adding a Google account requires that organizer to complete consent.
+
 ## Operating references
 
 - [Hosting and deployment](DEPLOYMENT.md) documents the web and worker configuration.

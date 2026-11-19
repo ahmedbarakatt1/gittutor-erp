@@ -6,11 +6,11 @@ import { CalendarConnectionPanel } from '@/components/teaching/calendar-connecti
 import { ManualWhatsApp } from '@/components/support/manual-whatsapp';
 import { meetingCopy as copy } from '@/locales/meetings';
 export const metadata: Metadata = { title: 'Integrations | Git Tutor', robots: { index: false, follow: false } };
-export default async function IntegrationsPage() {
+export default async function IntegrationsPage({ searchParams }: { searchParams: Promise<{ calendar?: string }> }) {
   const account = await requireAccount('admin');
   const { calendar, whatsapp } = parseServerConfig(process.env).providers;
   return <PortalShell kind="admin" account={account} title={copy.integrations} description={copy.integrationDescription} activePath="/admin/integrations" showAccount={false}>
-    <CalendarConnectionPanel provider={calendar} />
+    <CalendarConnectionPanel provider={calendar} outcome={(await searchParams).calendar} />
     {whatsapp === 'manual' && <ManualWhatsApp staff />}
   </PortalShell>;
 }

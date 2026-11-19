@@ -1,0 +1,22 @@
+.panel { margin-block: 1.25rem 2rem; padding-block-start: 1rem; border-block-start: 1px solid var(--border); }
+.header, .summary, .account, .accountName { display: flex; align-items: center; justify-content: space-between; gap: .6rem 1rem; }
+.header { flex-wrap: wrap; }
+.header h2, .accountBody p, .header p { margin: 0; }
+.header p { margin-block-start: .25rem; max-width: 53ch; }
+.add, .secondary, .manage summary { font: inherit; cursor: pointer; min-height: 44px; border-radius: var(--radius-control); }
+.add { background: var(--ink); border: 1px solid var(--ink); color: var(--surface); font-weight: 650; padding: .5rem 1rem; }
+.add span { margin-inline-end: .2rem; }
+.secondary, .manage summary { color: var(--ink); background: transparent; border: 1px solid var(--border); padding: .5rem .75rem; }
+.add:disabled { opacity: .6; cursor: wait; }
+.summary { margin-block: 1.2rem .6rem; font-size: .9rem; }
+.list { list-style: none; padding: 0; margin: 0; border-block-start: 1px solid var(--border); }
+.account { padding-block: .85rem; border-block-end: 1px solid var(--border); align-items: flex-start; flex-wrap: wrap; }
+.accountName { justify-content: flex-start; flex-wrap: wrap; }
+.accountBody { min-width: 0; overflow-wrap: anywhere; }
+.accountBody p { margin-block: .25rem; }
+.state { padding: .15rem .5rem; border: 1px solid var(--border); border-radius: var(--radius-control); font-size: .8rem; }
+.manage summary { width: fit-content; margin-inline-start: auto; }
+.actions { display: grid; gap: .65rem; margin-block: .5rem; max-width: 26rem; }
+.actions p { margin: 0; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 40rem) { .header { align-items: flex-start; } .manage[open] { inline-size: 100%; } .manage[open] summary { margin-inline-start: 0; } }

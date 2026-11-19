@@ -1,5 +1,21 @@
 # Implementation status
 
+## Multiple Meet organizers and social links — 19 November 2026
+
+The admin integrations page lists individual organizer accounts. **Add Google account** starts consent for another account using the same Google Cloud web client. **Manage** reconnects or revokes a specific organizer. Separate OAuth browser tabs retain their own requests. Verified Google identity, connection version and worker lease bind both stored credentials and provider updates. Existing rooms retain their original organizer. A connected instructor's own account is preferred when available. When organizers are occupied, a lesson waits for a free interval. The designated live pilot still uses only its approved organizer and learner. [Operator instructions](GOOGLE-CALENDAR-SETUP.md) · [Scheduling contract](T07-INTEGRATION-CONTRACT.md).
+
+The public homepage, subject help and support now use accessible social icons and labels. The shared contact area includes TikTok, Instagram, WhatsApp and phone. The [testing support page](https://gittutor-erp-rho.vercel.app/support) served the new TikTok address, correct WhatsApp number and icon asset. The phone number stays together on narrow screens.
+
+| Check executed | Result |
+| --- | --- |
+| `playwright test tests/e2e/public-contact.spec.ts` and manual-support unit checks | Four desktop/phone browser cases and two manual-support unit checks passed. Six screenshots reviewed at 360 and 1440 pixels. The mobile review caught and corrected the split phone number. |
+| Native PostgreSQL 17, disposable restored synthetic database and two independent worker connections | Two overlapping lessons acquired different organizers, the third waited and a back-to-back lesson reused an organizer. Cancellation retained capacity until provider acknowledgement and then woke waiters. Rescheduling kept the room identity. Revoking one account left the other working. Distinct Google subjects, duplicate identity/calendar rejection, grant replay, stale/wrong-account reconnection, historical calendar IDs, scoped pilot and cross-account credential denial were exercised. |
+| Seven focused provider, worker, OAuth, configuration and HTTP suites | 64 tests passed with simulated Google. Includes stale Google update/delete handling, conditional writes, independent consent cookies and account-specific credentials. |
+| `pnpm test:unit`, document and evidence validation | 502 unit tests passed across 73 files. Full lint, TypeScript and the optimized Next.js build passed. The evidence register remains valid with three formal passes and 144 unrun entries. |
+| Hosted rollback rehearsals for `20261119170000` | The migration ran inside rolled-back transactions on both named hosted projects. The rehearsal compared account, job, import, enrollment and posting counts and original organizer/room identities. Production worker grants matched 37 reviewed functions. |
+
+One approved owner invitation was accepted by production Auth. Mailjet reported one matching message and a sent event. Owner inbox placement and confirmation require the recipient. Public signup stays closed. The protected production host serves the password reset form. The default SMTP testing project declined a custom recovery template. The callback supports its verified PKCE recovery flow as well as the branded token-hash links used by production. No second invitation or reset was sent. The live two-instructor rehearsal still needs a second independently consenting Google account and the production worker.
+
 ## PDF quizzes, private grades and PR review — 19 November 2026
 
 Tutors can assign a clean session PDF, set the total points, and publish or correct an individual learner's grade at `/tutor/quizzes`. Confirmed students and currently authorized guardians can download the quiz and see its score at `/learn/grades`. Ungraded work is distinct from a zero. Corrections append revisions. Removing file access does not erase the grade. [Workflow and API contract](T08-LEARNING-RECORD-CONTRACT.md).

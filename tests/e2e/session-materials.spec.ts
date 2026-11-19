@@ -169,7 +169,7 @@ test('actual private preparation retries safely, publishes a separate class reso
     await peer.reload(); await expect(section(peer, 'Class resources').getByRole('heading', { name: 'class-handout.pdf', exact: true })).toHaveCount(0);
     await login(operator, 'admin_a'); await operator.goto('/admin/integrations');
     const connected = operator.waitForResponse(response => new URL(response.url()).pathname === '/api/calendar/connect' && response.request().method() === 'POST');
-    await operator.getByRole('button', { name: 'Connect simulated calendar', exact: true }).click();
+    await operator.getByRole('button', { name: /^(Connect simulated calendar|Add simulated organizer)$/ }).click();
     expect((await connected).status()).toBe(200);
     await expect(operator.getByRole('status').filter({ hasText: 'The simulated organizer is connected.' })).toBeVisible();
     expect((await provisionFakeMeeting(f, held.occurrenceId)).meeting_status).toBe('ready');

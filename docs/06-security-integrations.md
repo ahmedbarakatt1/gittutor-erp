@@ -52,7 +52,7 @@ Define typed server-only adapters for calendar, transactional email, WhatsApp, s
 | `GMAIL_SMTP_USER`, `GMAIL_APP_PASSWORD` | Owner-selected consumer Gmail sender and private App Password; see [Gmail setup](GMAIL-SETUP.md) |
 | `EMAIL_FROM`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` | Selected Mailjet sender and private API/secret pair; [Mailjet setup](MAILJET-SETUP.md) records Auth settings and remaining delivery gates |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional server credential chain inputs when workload identity is unavailable |
-| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Approved organizer OAuth configuration |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Shared Google web client. Each additional account grants its own primary calendar. The calendar ID is optional for legacy initial setup. |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_GRAPH_VERSION` | Cloud mode only. Live business account, send credentials, webhook verification and Graph API version |
 
 Persist refresh tokens encrypted in `provider_connections`. Verify required settings at process startup. A public/publishable Supabase key is the browser credential. Privileged keys stay server-side and user financial commands always carry the user's JWT. [Supabase SSR client configuration](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
