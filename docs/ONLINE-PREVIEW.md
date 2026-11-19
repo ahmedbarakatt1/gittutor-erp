@@ -8,6 +8,10 @@ Ask the owner for access to the appropriate test role through a private channel.
 
 The ordinary pilot uses simulated provider operations and manual reconciliation. One designated one-to-one booking was authorized for real Google Meet and both participants joined. Customer and staff pages enforce role and record scope. The current launch decision, exact checks and limitations are in [implementation status](IMPLEMENTATION-STATUS.md).
 
+## Test PDF quizzes and grades
+
+Sign in with an assigned tutor account, open [Quizzes and grades](https://gittutor-erp-rho.vercel.app/tutor/quizzes), choose a practice session with a confirmed learner, upload a PDF, and wait for its scan to clear. Publish the quiz with its maximum score. In a separate browser profile, sign in as that learner, open [My grades](https://gittutor-erp-rho.vercel.app/learn/grades) and download the quiz. Enter or correct a score as the tutor and refresh the learner's dashboard. An ungraded quiz is labelled separately from a zero.
+
 ## Operating references
 
 - [Hosting and deployment](DEPLOYMENT.md) documents the web and worker configuration.

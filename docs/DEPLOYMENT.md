@@ -1,6 +1,6 @@
 # Deploying Git Tutor
 
-The [hosted testing preview](ONLINE-PREVIEW.md) uses its own authorized historical and practice records. The clean production project has separate credentials and data. The latest release decision and environment checks are in [implementation status](IMPLEMENTATION-STATUS.md). Mailjet is the selected email provider. The owner chose free services and deferred the [commercial host proposal](FREE-SERVICE-PLAN.md). Review [production inputs](PRODUCTION-INPUTS.md) before switching environments.
+The [hosted testing preview](ONLINE-PREVIEW.md) uses its own authorized historical and practice records. The clean production project has separate credentials and data. The latest release decision and environment checks are in [implementation status](IMPLEMENTATION-STATUS.md). Mailjet is the selected email provider. The owner selected Vercel for production on 19 November. The commercial project uses dedicated settings on the current team. The earlier Oracle option is recorded in the [hosting decision](FREE-SERVICE-PLAN.md). Review [production inputs](PRODUCTION-INPUTS.md) before switching environments.
 
 ## Vercel testing environment
 
@@ -12,7 +12,7 @@ Use Vercel CLI 65.16.0 with `--global-config 'D:/GitTutor System/.local/vercel-b
 
 Root `vercel.json` remains the web template. The isolated pilot source uses the daemon example with one1GiB `fra1` instance and120-second shutdown grace. Its private deployment configuration is `.local/hosted-preview/normal-vercel.json`; preserve that explicit choice on subsequent pilot deploys. `.vercelignore` limits uploads to application/build inputs and runtime contracts, excluding the workbook, `.local`, credentials, authored compensation, tests and browser sessions. A regression verifies directory traversal as well as leaf files. The exact injected Vercel observability key is discarded by server configuration without widening the customer DTO. Full CI passed on `d17bec41a214e37dd75d7ac4cf92d11143169391`; subsequent focused changes and actual hosted journey results are recorded in IMPLEMENTATION-STATUS. Current-plan testing does not establish commercial production eligibility or uninterrupted worker capacity.
 
-Connect the private `ahmedbarakatt1/gittutor-erp` repository to the selected Vercel team. Review `codex/production-readiness` before selecting a production branch; do not promote an unverified revision automatically. Use these project settings:
+Connect the `ahmedbarakatt1/gittutor-erp` repository to the selected Vercel team. Review `codex/production-readiness` before selecting a production branch; do not promote an unverified revision automatically. Use these project settings:
 
 | Setting | Value |
 |---|---|
@@ -96,7 +96,7 @@ node --env-file=C:/private/git-tutor-runtime.env --env-file=C:/private/git-tutor
 node --env-file=C:/private/git-tutor-runtime.env --env-file=C:/private/git-tutor-preflight.env --import tsx tools/production-preflight.ts
 ```
 
-Configuration-only success means `configuration_valid_target_unverified`. The full command uses read-only transactions and rejects preview origins, fake adapters, mismatched projects, insecure/privileged worker connections, test identities/fixtures, migration mismatch, unsafe raw-table grants and missing row security. It verifies all35 exact worker RPC signatures, required owners and effective execution including PUBLIC/inherited permissions; missing or extra application RPC access blocks promotion. Output contains fixed check names and booleans, never credential values or database errors. Exit1 blocks promotion. A passing technical report still says `technical_checks_passed_activation_pending`: it does not approve commercial policy, verify provider credentials or close hosted recovery and data-review gates. Repeat complete role, private-file and revocation checks in staging; static configuration cannot prove them.
+Configuration-only success means `configuration_valid_target_unverified`. The full command uses read-only transactions and rejects preview origins, fake adapters, mismatched projects, insecure/privileged worker connections, test identities/fixtures, migration mismatch, unsafe raw-table grants and missing row security. It verifies the exact worker RPC signatures listed in the production preflight, required owners and effective execution including PUBLIC/inherited permissions; missing or extra application RPC access blocks promotion. Output contains fixed check names and booleans, never credential values or database errors. Exit1 blocks promotion. A passing technical report still says `technical_checks_passed_activation_pending`: it does not approve commercial policy, verify provider credentials or close hosted recovery and data-review gates. Repeat complete role, private-file and revocation checks in staging; static configuration cannot prove them.
 
 ## Real data cutover
 

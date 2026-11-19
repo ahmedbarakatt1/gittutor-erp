@@ -1,5 +1,11 @@
 # Release readiness
 
+## Current release decision, 19 November 2026
+
+PDF quizzes, tutor grading and the learner dashboard are deployed on the [testing site](ONLINE-PREVIEW.md). Both portal pages and their authenticated data requests were checked against the hosted deployment. The complete PDF and grade walkthrough also passed against a disposable database on desktop and mobile. The owner selected Vercel and staff-handled WhatsApp for production. The separate production database contains no imported learners, financial postings or queued pilot work. The dedicated Vercel project uses production-only settings and team sign-in on all URLs.
+
+The [current inputs and responsibilities](PRODUCTION-INPUTS.md) and the [execution record](IMPLEMENTATION-STATUS.md) govern commercial release. The group Meet rehearsal, real owner sign-in and recovery, hosted worker/scanner, financial approval and off-device recovery remain open.
+
 ## Decision recorded on 18 November 2026
 
 The public site and four portals are ready for controlled testing on the [hosted preview](ONLINE-PREVIEW.md). Commercial activation remains pending. The [last full application verification](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44345460137) passed the database checks, unit and integration suites, 168 browser cases and the build. Two optional guided-demo cases were skipped in that run. The designated Meet pilot admitted the tutor and learner. Owner-only Mailjet Auth messages arrived in Spam. A clean production database has been provisioned separately.

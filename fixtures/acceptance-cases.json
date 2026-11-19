@@ -4770,10 +4770,22 @@
           "allocations_against_superseded_evidence": 0
         }
       },
-      "implementation_status": "planned",
-      "execution_status": "not_run",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence_required": true,
-      "execution_evidence": null
+      "execution_evidence": {
+        "run_id": "21568a3d-5694-4bbd-b0d4-3263b6d2b443",
+        "test_command": "node node_modules/vitest/vitest.mjs run --config tools/evidence/financial.config.ts --reporter=json --outputFile=.local/financial-vitest-21568a3d-5694-4bbd-b0d4-3263b6d2b443.json tests/integration/package-concurrency.test.ts tests/integration/review-evidence-concurrency.test.ts tests/integration/review-authorization.test.ts tests/integration/revenue-recognition-boundaries.test.ts",
+        "git_commit": "41231df2c12f37948165805f04a89ace6f6bc291",
+        "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+        "started_at": "2026-11-19T15:12:40.270Z",
+        "finished_at": "2026-11-19T15:13:04.975Z",
+        "exit_code": 0,
+        "provider_mode": "fake",
+        "database_migration_version": "20261119142209",
+        "artifact_path": "docs/evidence/acceptance/21568a3d-5694-4bbd-b0d4-3263b6d2b443.json",
+        "artifact_sha256": "0345bff45833a6121af25ba40a7ada9133539f908a8b1d5d877d11b213535c18"
+      }
     },
     {
       "id": "GT-1404",
@@ -4855,10 +4867,22 @@
           "unauthorized_allocations": 0
         }
       },
-      "implementation_status": "planned",
-      "execution_status": "not_run",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence_required": true,
-      "execution_evidence": null
+      "execution_evidence": {
+        "run_id": "21568a3d-5694-4bbd-b0d4-3263b6d2b443",
+        "test_command": "node node_modules/vitest/vitest.mjs run --config tools/evidence/financial.config.ts --reporter=json --outputFile=.local/financial-vitest-21568a3d-5694-4bbd-b0d4-3263b6d2b443.json tests/integration/package-concurrency.test.ts tests/integration/review-evidence-concurrency.test.ts tests/integration/review-authorization.test.ts tests/integration/revenue-recognition-boundaries.test.ts",
+        "git_commit": "41231df2c12f37948165805f04a89ace6f6bc291",
+        "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+        "started_at": "2026-11-19T15:12:40.270Z",
+        "finished_at": "2026-11-19T15:13:04.975Z",
+        "exit_code": 0,
+        "provider_mode": "fake",
+        "database_migration_version": "20261119142209",
+        "artifact_path": "docs/evidence/acceptance/21568a3d-5694-4bbd-b0d4-3263b6d2b443.json",
+        "artifact_sha256": "0345bff45833a6121af25ba40a7ada9133539f908a8b1d5d877d11b213535c18"
+      }
     },
     {
       "id": "GT-1406",
@@ -5588,10 +5612,22 @@
           "cash_change_from_consumption_minor": 0
         }
       },
-      "implementation_status": "planned",
-      "execution_status": "not_run",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence_required": true,
-      "execution_evidence": null
+      "execution_evidence": {
+        "run_id": "21568a3d-5694-4bbd-b0d4-3263b6d2b443",
+        "test_command": "node node_modules/vitest/vitest.mjs run --config tools/evidence/financial.config.ts --reporter=json --outputFile=.local/financial-vitest-21568a3d-5694-4bbd-b0d4-3263b6d2b443.json tests/integration/package-concurrency.test.ts tests/integration/review-evidence-concurrency.test.ts tests/integration/review-authorization.test.ts tests/integration/revenue-recognition-boundaries.test.ts",
+        "git_commit": "41231df2c12f37948165805f04a89ace6f6bc291",
+        "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+        "started_at": "2026-11-19T15:12:40.270Z",
+        "finished_at": "2026-11-19T15:13:04.975Z",
+        "exit_code": 0,
+        "provider_mode": "fake",
+        "database_migration_version": "20261119142209",
+        "artifact_path": "docs/evidence/acceptance/21568a3d-5694-4bbd-b0d4-3263b6d2b443.json",
+        "artifact_sha256": "0345bff45833a6121af25ba40a7ada9133539f908a8b1d5d877d11b213535c18"
+      }
     },
     {
       "id": "GT-1601",
