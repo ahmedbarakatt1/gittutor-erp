@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "test:recovery:payout": "tsx --conditions=react-server tools/recovery-rehearsal.ts --unknown-payout",
     "test:e2e": "playwright test",
     "db:start": "powershell -NoProfile -File tools/db-start.ps1 && tsx tools/supabase-local.ts bootstrap",
     "db:migrate": "tsx tools/db-migrate.ts && tsx tools/supabase-local.ts migrate",
