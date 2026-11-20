@@ -1,5 +1,26 @@
 # Implementation status
 
+## Mobile admin overview — 20 November 2026
+
+The admin workbook overview groups six reported counts under short labels and gives the request queue a prominent action. At narrow widths, **Session outcomes** and **Session activity** share one chart area with a keyboard-operable switch. Selecting a chart value still opens the underlying records. Wide workspaces show all available charts side by side. The dashboard uses the existing role-scoped data and handles zero or one chart without displaying a switch.
+
+The signed-in baseline on the testing site at 390 × 844 CSS pixels was 1,355px tall. The request queue action started at y=265, the six figures at y=367, and the first chart at y=563. Measurements use geometry and counts only.
+
+Revision `1a6466c` shows the subject of the first request in the queue shortcut. The server requests one item through the existing staff queue query after checking admin access. An empty queue and an unavailable preview have distinct text, and both preserve the link to the full queue. Only the subject from the queue response is passed into the overview.
+
+Local verification passed with `vitest run tests/unit` (540 tests in 74 files), scoped ESLint, `git diff --check`, and `next build`, including TypeScript checking. The admin rendering test covers the chart switch, initial panel, queue query limit and omission of the request’s private preparation notes from the overview.
+
+Signed-in Playwright checks ran against the stable testing URL before and after deployment (`node .local/nov20-site-spacing/admin-scan.cjs`, then the same command with `after`). The numbers below are CSS pixels.
+
+| Screen width | Page height before → after | Queue action before → after | Figures, bottom edge after | First chart, bottom edge after |
+| ---: | ---: | ---: | ---: | ---: |
+| 320 | 1,418 → 1,221 | 324 → 299 | 577 | 906 |
+| 390 | 1,355 → 1,066 | 265 → 240 | 470 | 755 |
+| 710 | 1,010 → 977 | 245 → 220 | 432 | 702 |
+| 1,440 | 964 → 964 | 249 → 224 | 383 | 659 |
+
+All six figures were present at each width, and the layouts fit in both reading directions. At 390 × 844 the queue, figures and full first chart were visible before scrolling. The shorter 320 × 720 screen shows the chart selector and part of the first chart before scrolling. The browser verified the displayed queue subject against the first item of the signed-in queue API, used Enter to select each chart, opened its underlying records and followed the queue shortcut. No page errors occurred. A separate anonymous check in Playwright CLI session `admin-scan` confirmed the sign-in redirect. The local review screenshot masks the request topic and dashboard values.
+
 ## Responsive spacing across the site — 20 November 2026
 
 The Support page’s spacing approach now extends to Subjects, pricing, public profiles, the home page, account forms and the four portal dashboards. On Subjects the first screen offers both a suggested subject and a way to request an unlisted topic. The pricing page places the session request alongside the tuition explanation. All four study areas and their examples, the four tuition rates and the per-student, per-session unit are present.
