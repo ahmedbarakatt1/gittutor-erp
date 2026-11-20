@@ -1,5 +1,18 @@
 # Implementation status
 
+## Public support page spacing — 20 November 2026
+
+Revision `ace0701` gives website conversations and WhatsApp separate headings, explanations and actions. The header keeps the logo and navigation together. The contact icons sit in a footer that reaches the bottom on short pages and follows the conversation on longer pages. The public page retains its privacy guidance after a conversation opens.
+
+| Executed check | Result |
+| --- | --- |
+| Playwright CLI session `support-spacing` at 320, 360, 390, 710 and 1440 CSS pixels | No horizontal overflow, browser errors or failed requests on the entry page. All contact links measured at least 44 pixels tall. At the reported 710 × 884 viewport the old contact group ended at y=507. The new group ended at y=857 and the footer at y=884. Reviewed the desktop, tablet and phone screenshots and adjusted the narrow-screen footer wrapping. |
+| `playwright test tests/e2e/support-ui.spec.ts tests/e2e/public-contact.spec.ts` with manual WhatsApp | Four desktop/mobile cases passed, covering the contact destinations and icons, a failed support request, retry and opening the conversation inbox. |
+| `playwright test tests/e2e/support-ui.spec.ts` in the default fake mode | Both desktop and mobile passed in the repository's test server. The session and inbox responses in these layout cases are simulated. |
+| `vitest run tests/unit/manual-whatsapp-ui.test.ts tests/unit/manual-whatsapp-http.test.ts`, scoped ESLint, TypeScript and `next build` | Four unit tests passed. Lint, type checking and the optimized build passed. The scoped design detector reported zero findings. |
+
+The [public testing page](https://gittutor-erp-rho.vercel.app/support) and the protected production web project were promoted after checking their release revision, Support, contact icon asset, password-recovery page and health endpoint. Playwright repeated the five viewport checks on the stable testing URL. Anonymous access to production Support still redirected to Vercel team sign-in. Screenshots and inspection logs are in the operator workspace under `.local/nov20-support/`.
+
 ## Multiple Meet organizers and social links — 19 November 2026
 
 **Release verification passed.** At revision `e222cd2`, GitHub ran `pnpm test:unit` (540 passed), `pnpm test:integration` (316 passed) and `pnpm test:e2e` (176 passed, two optional cases skipped). Both desktop and mobile completed the emailed password reset, the independent-organizer workflow and the social icon checks. Database verification, lint, TypeScript and the production build also passed. The application code matches hosted revision `c28fcf8`. The later changes concern the browser test and this record. [Successful full run](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44573572168).
