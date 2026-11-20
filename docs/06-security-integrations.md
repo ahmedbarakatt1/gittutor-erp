@@ -6,7 +6,8 @@ Implements R02, R06–R09, R11–R18. The application uses the database boundari
 
 | Surface | Mandatory implementation contract |
 |---|---|
-| Public reads | Grant `anon` and `authenticated` execution on `api.list_public_offers` and `api.get_public_tutor`, both sanitized |
+| Public website | Generic subject descriptions and published prices are readable while signed out |
+| Available sessions and approved tutor profiles | Both catalog functions require a verified, active account and grant execution only to `authenticated` |
 | Other API functions | Revoke `EXECUTE` from `PUBLIC` and `anon`, grant only named functions to `authenticated` |
 | Base tables | Unexposed `app_private` and `finance_private`, zero browser grants, explicit RLS |
 | Sensitive RPC ownership | Dedicated `NOLOGIN`, `NOBYPASSRLS` owner with grants for its command family, separate table ownership |
@@ -20,6 +21,19 @@ The exposed definer RPC is a deliberate boundary allowing authorized commands wh
 Server identity verification uses signed claims. Authorization reads current database roles and relationships. User-editable metadata is unsuitable for role decisions. A private session-check helper validates `auth.uid()` and the signed `session_id` against `auth.sessions`, plus current application account status, for sensitive commands and file access. App logout revokes the corresponding session before returning success. Reuse of the old token then fails the next protected operation. [Supabase sessions](https://supabase.com/docs/guides/auth/sessions)
 
 Static FAQs remain publicly readable. Website chat can create a Supabase anonymous Auth session. Anonymous users receive only own-conversation commands. All other account and business commands explicitly require a verified non-anonymous account. Upgrading identity or linking a WhatsApp thread requires a verified account and a single-use, expiring thread challenge. Shared phone numbers never authorize a learner relationship.
+
+## Access by workspace
+
+| Who is using the site | Records available |
+|---|---|
+| Visitor | Generic subjects, published tuition, contact details and public help. Session availability and tutor profile links lead to sign-in. |
+| Learner | Own requests, bookings, released materials and grades, and customer payment information. |
+| Guardian | Linked learners, within the specific permissions currently granted for each learner. |
+| Tutor | Assigned teaching work and enrolled learners within that assignment. The tutor pay view covers the tutor's own compensation. |
+| Customer service | Operational requests and records within service permissions and assignment. Customer service has no access to confidential tutor compensation. |
+| Admin | Administrative records and authorized finance functions while the account has an active admin role. |
+
+Each portal requests its own imported workbook projection through `get_workspace_operations`. The database checks the role and applies relationship filters. An account with several roles sees learner-scoped data in its learner portal. An API request that omits the workspace selects the learner view.
 
 ## Private files and exports
 

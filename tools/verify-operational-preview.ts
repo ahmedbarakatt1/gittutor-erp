@@ -111,7 +111,7 @@ try {
   assert.equal((await database.query('select fixture_marker from app_private.environment_metadata')).rows[0].fixture_marker, operationalPreviewMarker);
   await login(admin, 'owner'); await login(learner, 'student:5'); await login(tutor, 'tutor:5'); await login(service, 'service'); checks.push('four actual-data preview roles sign in');
   for (const [page, role] of [[learner, 'customer'], [service, 'service'], [tutor, 'tutor'], [admin, 'owner']] as const) {
-    const response = await page.request.get('/api/v1/workflow-operations'); assert.equal(response.status(), 200, `Operational ${role} read`);
+    const response = await page.request.get(`/api/v1/workflow-operations?workspace=${role === 'owner' ? 'admin' : role === 'customer' ? 'learn' : role}`); assert.equal(response.status(), 200, `Operational ${role} read`);
     const data = await response.json(); if (role === 'customer' || role === 'service') customerSafe(data);
     if (role !== 'owner') assert.equal((await page.request.get('/api/v1/workflow-import')).status(), role === 'service' || role === 'tutor' || role === 'customer' ? 403 : 200);
   }

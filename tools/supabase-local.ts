@@ -409,8 +409,7 @@ async function verify() {
       from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner join pg_language l on l.oid=p.prolang
       where n.nspname in ('api','app_private','finance_private')`);
     for (const fn of functions.rows) {
-      const publicRead = fn.nspname === 'api' && ['list_public_offers', 'get_public_tutor'].includes(fn.proname);
-      if (fn.anonymous && !publicRead) throw new Error(`SUPABASE_ANON_FUNCTION_INVALID:${fn.proname}`);
+      if (fn.anonymous) throw new Error(`SUPABASE_ANON_FUNCTION_INVALID:${fn.proname}`);
       if (fn.nspname !== 'api' && fn.authenticated) throw new Error(`SUPABASE_PRIVATE_FUNCTION_INVALID:${fn.proname}`);
       if (fn.nspname === 'app_private' && fn.proname.startsWith('booking_') && fn.worker) throw new Error(`SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID:${fn.proname}`);
       if (fn.proname === 'process_occurrence_booking_due' && (fn.nspname !== 'app_private' || !fn.worker || fn.signature !== 'app_private.process_occurrence_booking_due(uuid,text)' || fn.rolname !== 'git_tutor_commands' || fn.executors.some((role: string) => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID');

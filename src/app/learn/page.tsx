@@ -12,9 +12,9 @@ export const metadata: Metadata = { title: 'Your learning | Git Tutor', robots: 
 export default async function LearnerPage({ searchParams }: { searchParams: Promise<{ staff_invitation_id?: string }> }) {
   const account = await requireAccount('student');
   const invitationId = (await searchParams).staff_invitation_id;
-  const operations = await getWorkflowOperations(await serverSupabase());
+  const operations = await getWorkflowOperations(await serverSupabase(), 'learn');
   if (operations.enabled) return <PortalShell kind="learn" account={account} title="Your learning overview" description="Your lessons, package history and next steps." showAccount={false} activePath="/learn" primaryAction={<RequestEntry />}>
-    <OperationalWorkspace view="overview" />
+    <OperationalWorkspace workspace="learn" view="overview" />
     <details id="learners" className={styles.accountTools} open={typeof invitationId === 'string' && Boolean(invitationId)}>
       <summary>Linked learners and account requests</summary>
       <GuardianWorkspace staffInvitationId={typeof invitationId === 'string' ? invitationId : undefined} />

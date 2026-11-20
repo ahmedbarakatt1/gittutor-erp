@@ -20,7 +20,7 @@ export default async function TutorPage() {
   const client = await serverSupabase();
   const from = new Date().toISOString();
   const [operations, sessions] = await Promise.all([
-    getWorkflowOperations(client),
+    getWorkflowOperations(client, 'tutor'),
     Promise.all((['confirmed', 'forming'] as const).map(state => listTutorOccurrences(client, { from, state, limit: 2 })))
       .then(pages => pages.flatMap(page => page.items.map(item => item.occurrence))
         .sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at) || a.occurrence_id.localeCompare(b.occurrence_id)).slice(0, 2))
@@ -39,7 +39,7 @@ export default async function TutorPage() {
       </Link>
     </li>)}</ul>
   </section>;
-  const overview = renderDashboardOverview(operations, schedule);
+  const overview = renderDashboardOverview('tutor', operations, schedule);
   if (overview) return <PortalShell kind="tutor" account={account} title="Your teaching overview" description="Your assigned sessions and workbook figures." showAccount={false} activePath="/tutor" primaryAction={upcoming}>
     {overview}
     <details className={styles.accountTools}>

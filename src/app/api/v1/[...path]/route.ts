@@ -13,7 +13,7 @@ import { meetingCommandRoutes, findMeetingReadRoute } from "@/server/meeting-htt
 import { invokeFileCommandWithStatus, type FileCommandName } from "@/modules/files/commands";
 import { fileCommandRoutes, findFileReadRoute } from "@/server/file-http";
 import { NextRequest, NextResponse } from "next/server";
-import { publicSupabase, requestSupabase } from "@/server/supabase";
+import { requestSupabase } from "@/server/supabase";
 import { allowedOrigin, DomainError, readJson, safeError } from "@/server/http";
 import { invokeIdentityCommandWithStatus, type IdentityCommandName } from "@/modules/identity/commands";
 import { getApplicationSubjects, getLearnerSummary, getMyGuardianLinks, getMyVerifiedContacts, getStaffInvitations, getStaffRoleGrants, getTutorApplications, getTutorProfile } from "@/modules/identity/queries";
@@ -239,15 +239,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       options.active = filters.get("active") === "true";
     }
     context = requestSupabase(request);
-    if (route === "public/offers") {
-      return context.finish(NextResponse.json({ data: await listPublicOffers(publicSupabase(), options), request_id: requestId }));
-    }
-    if (path.length === 3 && path[0] === "public" && path[1] === "tutors") {
-      return context.finish(NextResponse.json({ data: await getPublicTutor(publicSupabase(), path[2]), request_id: requestId }));
-    }
-    if (path[0] === "public") throw new DomainError("NOT_FOUND");
     const { data, error } = await context.client.auth.getClaims();
     if (error || !data?.claims.sub) throw new DomainError("AUTH_REQUIRED");
+    if (route === "public/offers") {
+      return context.finish(NextResponse.json({ data: await listPublicOffers(context.client, options), request_id: requestId }));
+    }
+    if (path.length === 3 && path[0] === "public" && path[1] === "tutors") {
+      return context.finish(NextResponse.json({ data: await getPublicTutor(context.client, path[2]), request_id: requestId }));
+    }
+    if (path[0] === "public") throw new DomainError("NOT_FOUND");
     let result: unknown;
     if (route === "me/package-learners") result = await listMyPackageLearners(context.client, pageOptions);
     else if (route === "me/package-contracts") result = await listPackageContracts(context.client, { ...options, learner_id: filters.get("learner_id") || "" });

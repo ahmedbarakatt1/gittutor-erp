@@ -5,16 +5,18 @@ import { PublicShell, CatalogUnavailable, formatTuition } from '@/components/cat
 import { OfferTerms } from '@/components/catalog/offer-terms';
 import { PublicSchedule } from '@/components/booking/public-schedule';
 import { catalogCopy as copy } from '@/locales/catalog';
-import { publicSupabase } from '@/server/supabase';
+import { requireAccount } from '@/server/auth';
+import { serverSupabase } from '@/server/supabase';
 import { listPublicOffers, type PublicOffer } from '@/modules/catalog/queries';
 import styles from '@/components/catalog/catalog.module.css';
 
 export const metadata: Metadata = { title: 'Offer and terms | Git Tutor' };
 export default async function OfferPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await requireAccount(undefined, `/offers/${id}`);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   let offer: PublicOffer | undefined; let unavailable = false;
-  try { offer = (await listPublicOffers(publicSupabase(), { offer_id: id, limit: 1 })).items[0]; } catch { unavailable = true; }
+  try { offer = (await listPublicOffers(await serverSupabase(), { offer_id: id, limit: 1 })).items[0]; } catch { unavailable = true; }
   if (!unavailable && !offer) notFound();
   return <PublicShell active="offers">
     <p className={styles.breadcrumb}><Link href="/offers" className={styles.textLink}>{copy.back}</Link></p>

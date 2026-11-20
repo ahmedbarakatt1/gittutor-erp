@@ -16,7 +16,7 @@ test('loading and refreshing workbook history preserves current workflow input',
   let release: () => void = () => {};
   let gate = new Promise<void>(resolve => { release = resolve; });
   let unavailable = false;
-  await page.route('**/api/v1/workflow-operations', async route => {
+  await page.route('**/api/v1/workflow-operations?workspace=admin', async route => {
     await gate;
     await route.fulfill(unavailable ? { status: 503, json: { code: 'UNAVAILABLE' } } : { json: { data } });
   });
@@ -43,7 +43,7 @@ test('loading and refreshing workbook history preserves current workflow input',
     await expect(field).toHaveValue('completed');
   } finally {
     release();
-    await page.unroute('**/api/v1/workflow-operations');
+    await page.unroute('**/api/v1/workflow-operations?workspace=admin');
   }
 });
 
@@ -65,7 +65,7 @@ test('reported chart drilldowns open their matching source rows and preserve cur
   }));
   const data = workflowOperationsSchema.parse({ enabled: true, role: 'owner', mapping_options: { learners: [], tutors: [] },
     sections: [{ key: 'sessions', title: 'Synthetic session history', description: 'Presentation fixture', metrics: [], records }] });
-  await page.route('**/api/v1/workflow-operations', route => route.fulfill({ json: { data } }));
+  await page.route('**/api/v1/workflow-operations?workspace=admin', route => route.fulfill({ json: { data } }));
   await page.goto('/admin/sessions');
   const history = page.locator('[data-workflow-operations]');
   const current = page.getByLabel('Session status', { exact: true });

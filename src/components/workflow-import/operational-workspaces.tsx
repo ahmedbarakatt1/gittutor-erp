@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { workflowOperationsSchema, type WorkflowOperationsData, type WorkflowOperationsRecord, type WorkflowOperationsSection } from '@/modules/workflow-import/operational-model';
+import { workflowOperationsSchema, type WorkflowOperationsData, type WorkflowOperationsRecord, type WorkflowOperationsSection, type WorkbookWorkspace } from '@/modules/workflow-import/operational-model';
 import { formatFinanceAmount } from '@/modules/shared/format';
 import { IdentityForm, TextField } from '../identity-form';
 import { usePaymentRecord } from '../payments/shared';
@@ -17,12 +17,12 @@ type Field = WorkflowOperationsRecord['fields'][number];
 export const OperationalWorkspace = WorkflowOperationsWorkspace;
 
 /** Imported facts are read through the same current-role boundary as their workspace. */
-export function WorkflowOperationsWorkspace({ view, children, collapsed = false, initialData, overviewAction }: {
-  view: View; children?: ReactNode; collapsed?: boolean; initialData?: EnabledData; overviewAction?: ReactNode;
+export function WorkflowOperationsWorkspace({ workspace, view, children, collapsed = false, initialData, overviewAction }: {
+  workspace: WorkbookWorkspace; view: View; children?: ReactNode; collapsed?: boolean; initialData?: EnabledData; overviewAction?: ReactNode;
 }) {
   const [refreshRequested, setRefreshRequested] = useState(false);
   const useInitialRead = initialData !== undefined && !refreshRequested;
-  const record = usePaymentRecord<unknown>(useInitialRead ? null : 'workflow-operations');
+  const record = usePaymentRecord<unknown>(useInitialRead ? null : `workflow-operations?workspace=${workspace}`);
   const response = useInitialRead ? initialData : record.data;
   const parsed = useMemo(() => response === undefined ? null : workflowOperationsSchema.safeParse(response), [response]);
   const data = parsed?.success && parsed.data.enabled ? parsed.data : null;

@@ -35,7 +35,7 @@ function sourceRow(n: number, date: string | null, title: string): WorkflowOpera
 function data(view: 'sessions' | 'overview' | 'payments', records: WorkflowOperationsRecord[]): WorkflowOperationsData {
   return { enabled: true, role: 'owner', mapping_options: { learners: [], tutors: [] }, sections: [{ key: view, title: 'Workbook records', description: 'Historical reports', metrics: [], records }] };
 }
-const render = (view: 'sessions' | 'overview' | 'payments', collapsed = false) => renderToStaticMarkup(createElement(WorkflowOperationsWorkspace, { view, collapsed }, createElement('button', null, 'Continue current workflow')));
+const render = (view: 'sessions' | 'overview' | 'payments', collapsed = false) => renderToStaticMarkup(createElement(WorkflowOperationsWorkspace, { workspace: 'admin', view, collapsed }, createElement('button', null, 'Continue current workflow')));
 beforeEach(() => { state.data = undefined; state.reads.length = 0; });
 
 test('tutor overview shows the next two assigned lessons in Cairo time and keeps fee agreements out of the preview', async () => {

@@ -12,7 +12,7 @@ The implementation provides a responsive public website and four portal experien
 
 | ID | Required behavior | Completion evidence |
 |---|---|---|
-| R01 | Public home, subjects, tutors, private/group offers, pricing, how it works, FAQs, support, tutor application and policy pages. Responsive, accessible, externalized copy and RTL-capable layout. | A visitor browses and enters a correctly priced booking journey on desktop and mobile. |
+| R01 | Visitors can browse generic subjects, published prices, FAQs, support, tutor application and policy information. Reading available sessions, published offer details and tutor profiles requires a verified account. Responsive, accessible, externalized copy and RTL-capable layout. | A visitor browses, signs in and enters a correctly priced booking journey on desktop and mobile. |
 | R02 | Verified account identity, admin-assigned staff roles, linked guardian consent and per-record authorization. | Separate accounts pass allowed-action and denied-object tests, including revocation. |
 | R03 | Versioned offers, group tiers, private pricing, exact tutor agreements and role-scoped projections. | Quotes and internal calculations match the supplied tiers. Customer outputs pass sensitive-field tests. |
 | R04 | Tutor availability, private reservations, group formation, holds, confirmation and waitlists. | Concurrent final-seat requests yield one reservation. Changes retain the agreed policy. |

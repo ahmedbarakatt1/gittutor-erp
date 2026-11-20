@@ -21,6 +21,8 @@ export function customerReturnPath(value: unknown): string | undefined {
   const booking = bookingReturnPath(value);
   if (booking) return booking;
   if (typeof value !== 'string' || value.length > 500 || /\s/.test(value)) return undefined;
+  const catalog = /^\/(offers|tutors)\/([^/?#]+)$/.exec(value);
+  if (catalog) return z.uuid().safeParse(catalog[2]).success ? value : undefined;
   if (/^\/learn\/requests(?:\?[^?#]*)?$/.test(value)) {
     const params = new URLSearchParams(value.split('?')[1] || '');
     if (new Set(params.keys()).size !== params.size || [...params.keys()].some(key => !['topic', 'request'].includes(key))) return undefined;

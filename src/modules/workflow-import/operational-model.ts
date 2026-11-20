@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { workflowTables } from './model';
 
+export const workbookWorkspaceSchema = z.enum(['learn', 'tutor', 'service', 'admin']);
+export type WorkbookWorkspace = z.infer<typeof workbookWorkspaceSchema>;
 const id = z.uuid();
 const scalar = z.union([z.string().max(20000), z.number().finite().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER), z.boolean(), z.null()]);
 export const workflowSectionKeys = ['sessions', 'customers', 'packages', 'payments', 'finance', 'tutor_pay', 'students', 'team', 'campaigns', 'overview'] as const;

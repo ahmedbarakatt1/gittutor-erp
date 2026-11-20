@@ -12,5 +12,5 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const offer = valid(query.offer); const occurrence = offer ? valid(query.occurrence) : undefined;
   const selection = new URLSearchParams(); if (offer) selection.set('offer', offer); if (occurrence) selection.set('occurrence', occurrence);
   const account = await requireAccount('student', `/learn/bookings${selection.size ? `?${selection}` : ''}`);
-  return <PortalShell kind="learn" account={account} title={copy.title} description={copy.description} activePath="/learn/bookings" showAccount={false}><WorkflowOperationsWorkspace view="sessions" collapsed={Boolean(offer || occurrence)}><CustomerBookings offerId={valid(query.offer)} initialOccurrence={valid(query.occurrence)} /></WorkflowOperationsWorkspace></PortalShell>;
+  return <PortalShell kind="learn" account={account} title={copy.title} description={copy.description} activePath="/learn/bookings" showAccount={false}><WorkflowOperationsWorkspace workspace="learn" view="sessions" collapsed={Boolean(offer || occurrence)}><CustomerBookings offerId={valid(query.offer)} initialOccurrence={valid(query.occurrence)} /></WorkflowOperationsWorkspace></PortalShell>;
 }

@@ -309,7 +309,7 @@ describe('T02 verified identity and current database authorization', () => {
       has_table_privilege('git_tutor_worker','app_private.staff_invitations','SELECT') as worker_table`);
     expect(privileges.rows[0]).toEqual({ auth_bridge: false, accounts: false, update_results: false, worker_table: false });
     const functions = await database.query("select p.oid::regprocedure::text signature,p.proname,p.proconfig,r.rolname from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='api'");
-    const readOwners: Record<string,string> = { 'api.get_workflow_import()': 'git_tutor_workflow_reader', 'api.get_workflow_operations()': 'git_tutor_operational_reader' };
+    const readOwners: Record<string,string> = { 'api.get_workflow_import()': 'git_tutor_workflow_reader', 'api.get_workflow_operations()': 'git_tutor_operational_reader', 'api.get_workspace_operations(text)': 'git_tutor_operational_reader' };
     expect(functions.rows.length).toBeGreaterThan(0);
     expect(functions.rows.every(row => row.rolname === (readOwners[row.signature] ?? 'git_tutor_commands') && row.proconfig.includes('search_path=""'))).toBe(true);
   });

@@ -71,11 +71,23 @@ test('booking and schedule workspaces require a verified session', async ({ page
   }
 });
 
-test('a public scheduled-session selection survives verified sign-in', async ({ page }) => {
-  await page.goto(`/offers/${catalogFixtureIds.group2_offer}`); const choice = page.getByRole('link', { name: 'Choose this session', exact: true }).first(); await expect(choice).toBeVisible(); const destination = await choice.getAttribute('href'); expect(destination).toMatch(/^\/learn\/bookings\?offer=/);
-  await choice.click(); await expect(page).toHaveURL(/\/login\?return_to=/);
-  const actor = loadLocalSupabase().actors.learner_d; await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await page.waitForURL(`${baseURL}${destination}`, { timeout: 15_000 }); await expect(page.getByRole('heading', { name: 'Choose a session', exact: true })).toBeVisible();
+test('a protected offer returns after sign-in and preserves the selected session at booking', async ({ page }) => {
+  const offerPath = `/offers/${catalogFixtureIds.group2_offer}`;
+  await page.goto(offerPath);
+  await expect(page).toHaveURL(/\/login\?return_to=/);
+  expect(new URL(page.url()).searchParams.get('return_to')).toBe(offerPath);
+  const actor = loadLocalSupabase().actors.learner_d;
+  await page.getByLabel('Email address', { exact: true }).fill(actor.email);
+  await page.getByLabel('Password', { exact: true }).fill(actor.password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.waitForURL(`${baseURL}${offerPath}`);
+  const choice = page.getByRole('link', { name: 'Choose this session', exact: true }).first();
+  await expect(choice).toBeVisible();
+  const destination = await choice.getAttribute('href');
+  expect(destination).toMatch(/^\/learn\/bookings\?offer=/);
+  await choice.click();
+  await page.waitForURL(`${baseURL}${destination}`);
+  await expect(page.getByRole('heading', { name: 'Choose a session', exact: true })).toBeVisible();
   const selected = new URL(destination!, baseURL).searchParams.get('occurrence'); const request = await page.request.get(`/api/v1/booking/occurrences?offer_id=${catalogFixtureIds.group2_offer}&occurrence_id=${selected}`); expect(request.status()).toBe(200); expect((await request.json()).data.items).toHaveLength(1);
 });
 
@@ -122,7 +134,9 @@ test('administrator schedules and approves exact teaching terms; guardian reserv
     expect(assetViolations, 'Every actual customer-downloaded script must exclude confidential field definitions').toEqual([]);
     expect((await guardian.request.get(`/api/v1/occurrences/${occurrenceId}/fee-agreements`)).status()).toBe(403);
     const unrelated = await stranger.newPage(); await login(unrelated, 'learner_c'); for (const id of enrollmentIds) expect((await stranger.request.get(`/api/v1/enrollments/${id}`)).status()).toBe(404);
-    const publicResponse = await browser.newContext({ baseURL }); try { const response = await publicResponse.request.get(`/api/v1/public/offers?offer_id=${catalogFixtureIds.group2_offer}`); expect(response.status()).toBe(200); expect(await response.text()).not.toMatch(privateFields); } finally { await publicResponse.close(); }
+    const memberOffer = await guardian.request.get(`/api/v1/public/offers?offer_id=${catalogFixtureIds.group2_offer}`);
+    expect(memberOffer.status()).toBe(200);
+    expect(await memberOffer.text()).not.toMatch(privateFields);
     await mkdir('.local/ui-review', { recursive: true }); await admin.storageState({ path: `.local/ui-review/t04-${info.project.name}-admin.json` }); await guardian.storageState({ path: `.local/ui-review/t04-${info.project.name}-guardian.json` }); await writeFile(`.local/ui-review/t04-${info.project.name}-booking.json`, JSON.stringify({ occurrenceId, enrollmentIds, offerId: catalogFixtureIds.group2_offer }));
   } finally { await Promise.all([admin.close(), guardian.close(), stranger.close()]); await fixture.close(); }
 });
