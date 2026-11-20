@@ -60,7 +60,7 @@ function navigationFor(kind: PortalKind, learnerWorkspace: boolean, otherWorkspa
   return groups;
 }
 
-export function PortalShell({ kind, account, children, title, description, activePath, showAccount = true }: { kind: PortalKind; account: Account; children?: ReactNode; title?: string; description?: string; activePath?: string; showAccount?: boolean }) {
+export function PortalShell({ kind, account, children, title, description, activePath, showAccount = true, primaryAction }: { kind: PortalKind; account: Account; children?: ReactNode; title?: string; description?: string; activePath?: string; showAccount?: boolean; primaryAction?: ReactNode }) {
   const text = copy.portal[kind];
   const learnerWorkspace = account.roles.some(role => role === 'student' || role === 'guardian');
   const authorizedWorkspaces: PortalKind[] = [];
@@ -81,8 +81,11 @@ export function PortalShell({ kind, account, children, title, description, activ
     <div className={styles.portalLayout}>
       <PortalNavigation key={activePath || kind} workspace={text.workspace} groups={groups} activePath={activePath || `/${kind}`} />
       <main id="account" className={styles.portalMain}>
-        <h1>{title || text.title}</h1>
-        <p className={styles.description}>{description || text.description}</p>
+        <header className={styles.portalIntro}>
+          <h1>{title || text.title}</h1>
+          <p className={styles.description}>{description || text.description}</p>
+        </header>
+        {primaryAction}
         {showAccount && <section className={styles.accountGrid} aria-labelledby="account-heading">
           <h2 id="account-heading">{copy.portal.account}</h2>
           <dl>

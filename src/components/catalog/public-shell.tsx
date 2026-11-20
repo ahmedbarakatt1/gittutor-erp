@@ -9,13 +9,13 @@ import { PublicContactLinks } from '../public-contact';
 export function PublicShell({ children, active }: { children: ReactNode; active?: 'subjects' | 'offers' }) {
   return <div className={styles.shell}>
     <a className="skip-link" href="#main">{copy.skip}</a>
-    <header className={styles.header}><Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo /></Link><nav aria-label={copy.navigation}>
+    <header className={styles.header}><div className={styles.frame}><Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo compact /></Link><nav aria-label={copy.navigation}>
       <Link href="/subjects" aria-current={active === 'subjects' ? 'page' : undefined}>{copy.subjects}</Link>
       <Link href="/offers" aria-current={active === 'offers' ? 'page' : undefined}>{copy.offers}</Link>
       <Link href="/login">{copy.account}</Link>
-    </nav></header>
-    <main id="main" className={styles.main}>{children}</main>
-    <footer className={styles.footer}><div><p>{copy.footer}</p><PublicContactLinks /></div><Link className={styles.textLink} href="/apply-to-teach">{copy.teach}</Link></footer>
+    </nav></div></header>
+    <main id="main" className={`${styles.main} ${styles.frame}`}>{children}</main>
+    <footer className={styles.footer}><div className={styles.frame}><div><p>{copy.footer}</p><PublicContactLinks /></div><Link className={styles.textLink} href="/apply-to-teach">{copy.teach}</Link></div></footer>
   </div>;
 }
 

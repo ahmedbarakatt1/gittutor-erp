@@ -39,4 +39,8 @@
 .reference { font-size: .9rem; overflow-wrap: anywhere; color: var(--muted); }
 .dateInput { min-inline-size: 0; inline-size: 100%; }
 @media(max-width: 760px) { .columns { grid-template-columns: 1fr; gap: 1.5rem; } .interval { grid-template-columns: 1fr 1fr; } .interval > :first-child { grid-column: 1 / -1; } .recordList { max-block-size: 15rem; } }
-@media(max-width: 440px) { .sessionRow { grid-template-columns: 1fr; } .facts > div { grid-template-columns: 1fr; gap: .3rem; } .private { padding: 1rem; } }
+@media (max-width: 440px) {
+  .sessionRow { grid-template-columns: 1fr; }
+  .facts > div { grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.75rem), 1fr)); gap: .3rem 1rem; }
+  .private { padding: 1rem; }
+}

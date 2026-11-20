@@ -23,14 +23,20 @@ const bodyFrom = (form: FormData) => Object.fromEntries(['topic', 'course', 'des
 export function RequestWorkspace({ view = 'learn', selectedId, initialTopic = '' }: { view?: 'learn' | 'service' | 'admin'; selectedId?: string; initialTopic?: string }) {
   const staff = view !== 'learn', path = `/${view}/requests`;
   const requests = usePaymentList<TutoringRequestView>(staff ? 'requests/queue' : 'requests');
-  return <div className={styles.workspace}>
-    <aside className={styles.history} aria-label={staff ? 'Request queue' : 'Your requests'}>
-      <div className={styles.heading}><h2>{staff ? 'Request queue' : 'Your requests'}</h2>{!staff && <Link href={path}>New request</Link>}</div>
+  const queueFirst = staff && !selectedId;
+  const historyTitle = staff ? 'Request queue' : 'Your requests';
+  const history = <aside className={styles.history} aria-label={historyTitle}>
+      <div className={styles.heading}><h2 id="request-history" tabIndex={-1}>{historyTitle}</h2>{!staff && <Link href={selectedId ? path : '#request-content'}>New request</Link>}</div>
       <PaymentReadState pending={!requests.items} {...requests} />
       {requests.items?.length === 0 && <p className={styles.empty}>{staff ? 'New requests will appear here when customers submit their material.' : 'Start with your topic. You can add your slides before sending the request.'}</p>}
       <ul className={styles.list}>{requests.items?.map(request => <li key={request.request_id}><Link aria-current={selectedId === request.request_id ? 'page' : undefined} href={`${path}?request=${request.request_id}`}><strong>{request.topic}</strong><span>{request.learner.display_name}</span><span className={styles.status}>{states[request.state]}</span><small>{cairoDate(request.created_at)}</small></Link></li>)}</ul>
-    </aside>
-    <div className={styles.content}>{selectedId ? <RequestDetail key={selectedId} id={selectedId} view={view} onChange={requests.reload} /> : staff ? <section className={styles.empty}><h2>Review a tutoring request</h2><p>Open a request to read the student’s brief and material, reply, or propose a scheduled session.</p></section> : <CreateRequest initialTopic={initialTopic} />}</div>
+    </aside>;
+  const content = <div className={styles.content} id="request-content" tabIndex={-1}>
+    {!queueFirst && <a className={styles.historyShortcut} href="#request-history">{historyTitle}</a>}
+    {selectedId ? <RequestDetail key={selectedId} id={selectedId} view={view} onChange={requests.reload} /> : staff ? <section className={styles.empty}><h2>Review a tutoring request</h2><p>Open a request to read the student’s brief and material, reply, or propose a scheduled session.</p></section> : <CreateRequest initialTopic={initialTopic} />}
+  </div>;
+  return <div className={styles.workspace}>
+    {queueFirst ? <>{history}{content}</> : <>{content}{history}</>}
   </div>;
 }
 

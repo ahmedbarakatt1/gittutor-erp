@@ -3,9 +3,8 @@ import { sessionLength } from '@/modules/catalog/public-tuition';
 import type { Metadata } from 'next';
 import { PublicShell } from '@/components/catalog/public-shell';
 import { TuitionComparison } from '@/components/catalog/tuition-comparison';
-import styles from '@/components/catalog/catalog.module.css';
 
 export const metadata: Metadata = { title: 'Session pricing | Git Tutor', description: `View individual and group tuition per student. Sessions last ${sessionLength}.` };
 export default function PricingPage() {
-  return <PublicShell active="offers"><div className={styles.intro}><h1>Clear prices.<br />Your course, your pace.</h1><p>Bring the material you need help with. Our pricing follows the study format you choose.</p></div><TuitionComparison /></PublicShell>;
+  return <PublicShell active="offers"><TuitionComparison /></PublicShell>;
 }

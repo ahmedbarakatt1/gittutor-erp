@@ -15,8 +15,10 @@ export function AuthPage({ mode, unavailable, forbidden, returnTo }: { mode: 'lo
         <h1 id="auth-heading">{text.title}</h1>
         <p className={styles.description}>{text.description}</p>
         <AuthForm mode={mode} unavailable={unavailable} forbidden={forbidden} returnTo={returnTo} />
-        {mode === 'login' && <Link href="/auth/recover">Forgot your password?</Link>}
-        <p className={styles.alternative}>{text.alternative} <Link href={mode === 'login' ? '/signup' : '/login'}>{text.link}</Link></p>
+        <div className={styles.authLinks}>
+          {mode === 'login' && <Link href="/auth/recover">Forgot your password?</Link>}
+          <p className={styles.alternative}>{text.alternative} <Link href={mode === 'login' ? '/signup' : '/login'}>{text.link}</Link></p>
+        </div>
       </section>
   </main>;
 }

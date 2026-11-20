@@ -15,7 +15,9 @@ test('subjects are flexible starting points for private requests with the suppli
   await expect(main.getByRole('heading', { name: 'Calculus', exact: true })).toHaveCount(0);
   await expect(main).not.toContainText(/\d+ published offers?|synthetic|test fixture|browser fixture/i);
   await expect(main.getByRole('link', { name: 'See individual and group pricing' })).toHaveAttribute('href', '/offers');
-  await expect(main.getByRole('link', { name: 'Request help with another subject' })).toHaveAttribute('href', '/learn/requests');
+  const openTopic = main.getByRole('link', { name: 'Request help with another subject' });
+  await expect(openTopic).toHaveAttribute('href', '/learn/requests');
+  await expect(openTopic).toBeInViewport();
   await expect(main.getByRole('link', { name: 'Ask us on WhatsApp' })).toHaveAttribute('href', 'https://wa.me/201508823452');
   const footer = page.getByRole('contentinfo');
   await expect(footer.getByRole('link', { name: 'WhatsApp', exact: true })).toHaveAttribute('href', 'https://wa.me/201508823452');
@@ -32,7 +34,9 @@ test('subjects are flexible starting points for private requests with the suppli
   for (const amount of ['650', '575', '550', '500']) await expect(prices).toContainText(amount);
   await expect(page.getByRole('main')).toContainText('90–105 minutes');
   await expect(page.getByRole('combobox')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Request a session', exact: true })).toHaveAttribute('href', '/learn/requests');
+  const request = page.getByRole('link', { name: 'Request a session', exact: true });
+  await expect(request).toHaveAttribute('href', '/learn/requests');
+  await expect(request).toBeInViewport();
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Instagram', exact: true })).toHaveAttribute('href', 'https://www.instagram.com/gittutor/');
 });

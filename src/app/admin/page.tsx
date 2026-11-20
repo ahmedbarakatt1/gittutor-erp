@@ -22,7 +22,7 @@ const dailyOperations = [
 export default async function AdminPage() {
   const account = await requireAccount('admin');
   const operations = await getWorkflowOperations(await serverSupabase());
-  if (!operations.enabled) return <PortalShell kind="admin" account={account}><RequestEntry staff="admin" /><TutorApplicationReview /><StaffAccessWorkspace /></PortalShell>;
+  if (!operations.enabled) return <PortalShell kind="admin" account={account} primaryAction={<RequestEntry staff="admin" />}><TutorApplicationReview /><StaffAccessWorkspace /></PortalShell>;
   const overview = operations.sections.find(section => section.key === 'overview');
   const initialData = {
     enabled: operations.enabled, role: operations.role, sections: overview ? [overview] : [],

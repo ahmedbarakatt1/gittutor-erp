@@ -13,7 +13,7 @@ export default function HomePage() {
     <>
       <a className="skip-link" href="#main">{copy.navigation.skip}</a>
       <header className="site-header container" id="top">
-        <a className="brand-link" href="#top" aria-label={copy.brand}><BrandLogo /></a>
+        <a className="brand-link" href="#top" aria-label={copy.brand}><BrandLogo compact /></a>
         <nav aria-label={copy.navigation.label}>
           <Link href="/subjects">{copy.navigation.subjects}</Link>
           <a href="#formats">{copy.navigation.formats}</a>
