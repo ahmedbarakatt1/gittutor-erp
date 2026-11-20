@@ -25,6 +25,15 @@ test('customer material request goes through staff review into a separately cons
     await page.goto('/learn/requests');
     await page.getByLabel('Who is the session for?', { exact: true }).selectOption(f.learners[0]);
     await page.getByLabel('Subject or topic', { exact: true }).fill(topic);
+    const historyShortcut = page.getByRole('link', { name: 'Your requests', exact: true });
+    if (await historyShortcut.isVisible()) {
+      await historyShortcut.focus();
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#request-history')).toBeFocused();
+      await page.getByRole('link', { name: 'Back to request form', exact: true }).press('Enter');
+      await expect(page.locator('#request-content')).toBeFocused();
+      await expect(page.getByLabel('Subject or topic', { exact: true })).toHaveValue(topic);
+    }
     await page.getByLabel('Course or university (optional)', { exact: true }).fill('A course outside the example subject list');
     await page.getByLabel('What would you like help with?', { exact: true }).fill('Explain the lecture slides and work through the orbit examples.');
     await page.getByLabel('Preferred days and times', { exact: true }).fill('Sunday after 6 pm, Egypt time.');

@@ -26,7 +26,12 @@ export function RequestWorkspace({ view = 'learn', selectedId, initialTopic = ''
   const queueFirst = staff && !selectedId;
   const historyTitle = staff ? 'Request queue' : 'Your requests';
   const history = <aside className={styles.history} aria-label={historyTitle}>
-      <div className={styles.heading}><h2 id="request-history" tabIndex={-1}>{historyTitle}</h2>{!staff && <Link href={selectedId ? path : '#request-content'}>New request</Link>}</div>
+      <div className={styles.heading}>
+        <h2 id="request-history" tabIndex={-1}>{historyTitle}</h2>
+        {!staff && (selectedId
+          ? <Link href={path}>New request</Link>
+          : <a href="#request-content">Back to request form</a>)}
+      </div>
       <PaymentReadState pending={!requests.items} {...requests} />
       {requests.items?.length === 0 && <p className={styles.empty}>{staff ? 'New requests will appear here when customers submit their material.' : 'Start with your topic. You can add your slides before sending the request.'}</p>}
       <ul className={styles.list}>{requests.items?.map(request => <li key={request.request_id}><Link aria-current={selectedId === request.request_id ? 'page' : undefined} href={`${path}?request=${request.request_id}`}><strong>{request.topic}</strong><span>{request.learner.display_name}</span><span className={styles.status}>{states[request.state]}</span><small>{cairoDate(request.created_at)}</small></Link></li>)}</ul>

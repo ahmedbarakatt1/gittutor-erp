@@ -13,6 +13,12 @@ export default async function LearnerPage({ searchParams }: { searchParams: Prom
   const account = await requireAccount('student');
   const invitationId = (await searchParams).staff_invitation_id;
   const operations = await getWorkflowOperations(await serverSupabase());
-  if (operations.enabled) return <PortalShell kind="learn" account={account} title="Your learning overview" description="Your lessons, package history and next steps." showAccount={false} activePath="/learn" primaryAction={<RequestEntry />}><OperationalWorkspace view="overview" /><section id="learners" className={styles.section}><h2>Linked learners and account requests</h2><GuardianWorkspace staffInvitationId={typeof invitationId === 'string' ? invitationId : undefined} /></section></PortalShell>;
+  if (operations.enabled) return <PortalShell kind="learn" account={account} title="Your learning overview" description="Your lessons, package history and next steps." showAccount={false} activePath="/learn" primaryAction={<RequestEntry />}>
+    <OperationalWorkspace view="overview" />
+    <details id="learners" className={styles.accountTools} open={typeof invitationId === 'string' && Boolean(invitationId)}>
+      <summary>Linked learners and account requests</summary>
+      <GuardianWorkspace staffInvitationId={typeof invitationId === 'string' ? invitationId : undefined} />
+    </details>
+  </PortalShell>;
   return <PortalShell kind="learn" account={account} primaryAction={<RequestEntry />}><GuardianWorkspace staffInvitationId={typeof invitationId === 'string' ? invitationId : undefined} /></PortalShell>;
 }

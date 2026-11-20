@@ -74,6 +74,11 @@
 .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #285c40; }
 .status svg { inline-size: 18px; block-size: 18px; }
 .section { margin-block-start: var(--portal-section-gap); }
+.accountTools { margin-block-start: var(--portal-section-gap); border-block: 1px solid var(--border); }
+.accountTools > summary { min-block-size: 48px; padding-block: .75rem; font-weight: 750; cursor: pointer; }
+.accountTools > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.accountTools[open] { padding-block-end: var(--row-space); }
+.accountTools > .workflow:first-of-type { margin-block-start: 0; }
 .section > p { margin-block-start: var(--heading-gap); color: var(--muted); max-inline-size: 65ch; }
 .learnerList { list-style: none; margin-block-start: .5rem; }
 .learnerList li { padding-block: .625rem; border-block-end: 1px solid var(--border); display: flex; align-items: baseline; gap: .25rem 1.25rem; flex-wrap: wrap; }

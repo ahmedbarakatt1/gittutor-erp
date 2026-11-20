@@ -65,6 +65,9 @@ test('disabled imports preserve the current workspace without preview notices', 
 test('overview shows four newest dated records and leaves undated history behind them', () => {
   state.data = data('overview', [sourceRow(1, null, 'Undated record'), sourceRow(2, '2026-10-01', 'Old record'), sourceRow(3, '2026-10-05', 'Newest record'), sourceRow(4, '2026-10-03', 'Third record'), sourceRow(5, '2026-10-04', 'Second record'), sourceRow(6, '2026-10-02', 'Fourth record')]);
   const html = render('overview');
+  expect(html).toContain('Browse records');
+  expect(html).toMatch(/<details\b[^>]*id="[^"]+-register"[^>]*>/);
+  expect(html).not.toMatch(/<details\b[^>]*id="[^"]+-register"[^>]*\bopen(?:=|\s|>)/);
   expect(html.indexOf('Newest record')).toBeLessThan(html.indexOf('Second record'));
   expect(html.indexOf('Second record')).toBeLessThan(html.indexOf('Third record'));
   expect(html).toContain('Fourth record');

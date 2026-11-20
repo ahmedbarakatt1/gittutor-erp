@@ -48,7 +48,7 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ChartSelection | null>(null);
-  const [registerOpen, setRegisterOpen] = useState(section.key === 'overview' && !overviewAction);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const registrySummary = useRef<HTMLElement>(null);
   const id = useId();
   const charts = useMemo(() => workbookCharts(section.key, section.records), [section]);
@@ -95,6 +95,7 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
       <div><h2>{section.key === 'overview' ? 'Workbook overview' : section.title}</h2>
         <p className={styles.description}>Payments and completions are reported by the workbook.{charts.length > 0 && ' Select a chart value to see its source records.'}</p></div>
       <div className={styles.tools}>{hasWorkflow && <a href="#new-activity">Current workflow</a>}
+        {section.key === 'overview' && <button className={styles.button} type="button" onClick={openRegister} aria-controls={id + '-register'}>Browse records</button>}
         <button className={styles.button} type="button" onClick={onSaved}>Refresh records</button></div>
     </header>}
     {summaryMetrics.length > 0 && (section.key === 'finance' ? <details className={styles.balanceFigures}><summary>Reported balance figures <span>{summaryMetrics.length}</span></summary>{metrics}</details> : metrics)}
