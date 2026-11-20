@@ -10,6 +10,12 @@ vi.mock('../../src/components/payments/shared', () => ({
 }));
 vi.mock('../../src/server/auth', () => ({ requireAccount: async () => ({ roles: ['admin'] }) }));
 vi.mock('../../src/server/supabase', () => ({ serverSupabase: async () => ({}) }));
+vi.mock('../../src/modules/requests/queries', () => ({
+  listRequestQueue: async (_client: unknown, options: { limit: number }) => {
+    expect(options.limit).toBe(1);
+    return { items: [{ topic: 'Synthetic calculus request', description: 'Private preparation notes' }] };
+  },
+}));
 vi.mock('../../src/modules/workflow-import/operational-queries', () => ({ getWorkflowOperations: async () => state.data }));
 import AdminPage from '../../src/app/admin/page';
 import { WorkflowOperationsWorkspace } from '../../src/components/workflow-import/operational-workspaces';
@@ -45,6 +51,8 @@ test('admin overview renders its scoped figures on first paint and opens records
   expect(html).toMatch(/<figure[^>]*data-inactive="true"/);
   expect(html).toContain('Browse records');
   expect(html).toContain('Open request queue');
+  expect(html).toContain('First in queue · Synthetic calculus request');
+  expect(html).not.toContain('Private preparation notes');
   expect(html).toContain('Source records');
   expect(html).not.toContain('Search records');
   expect(html).not.toContain('Loading your records');

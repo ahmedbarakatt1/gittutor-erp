@@ -4,6 +4,9 @@
 .overviewToolbar :is(a, button):hover, .dailyOperations a:hover { color: var(--ink); }
 .overviewToolbar .refresh { margin-inline-start: auto; color: var(--muted); font-weight: 600; }
 .refresh svg, .chartPicker { display: none; }
+.overviewToolbar .queueAction { flex: 1 1 11rem; min-inline-size: 0; display: grid; align-content: center; gap: .125rem; padding-block: .375rem; text-decoration: none; }
+.queueAction span { text-decoration: underline; text-underline-offset: .2em; }
+.queueAction small { font-size: .8125rem; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
 .visuallyHidden { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .dailyOperations { margin-block-start: var(--portal-section-gap); padding-block-start: var(--row-space); border-block-start: 1px solid var(--border); }
 .dailyOperations h2 { margin-block-end: .5rem; }
@@ -128,6 +131,8 @@
 
 @container (max-width: 560px) {
   .overviewToolbar { gap: .25rem .625rem; }
+  .overviewToolbar .queueAction { flex-basis: 8rem; }
+  .queueAction small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .overviewToolbar > a { padding-inline: .75rem; color: white; background: var(--brand); border-radius: var(--radius-control); text-decoration: none; }
   .overviewToolbar > a:hover { background: var(--brand-hover); color: white; }
   .overviewToolbar .refresh { inline-size: 44px; justify-content: center; }
