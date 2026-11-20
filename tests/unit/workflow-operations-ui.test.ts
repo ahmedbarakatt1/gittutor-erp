@@ -20,6 +20,9 @@ vi.mock('../../src/modules/requests/queries', () => ({
 vi.mock('../../src/modules/workflow-import/operational-queries', () => ({ getWorkflowOperations: async () => state.data }));
 import AdminPage from '../../src/app/admin/page';
 import ServicePage from '../../src/app/service/page';
+import TutorPage from '../../src/app/tutor/page';
+import { listTutorOccurrences } from '../../src/modules/booking/queries';
+vi.mock('../../src/modules/booking/queries', () => ({ listTutorOccurrences: vi.fn() }));
 import { WorkflowOperationsWorkspace } from '../../src/components/workflow-import/operational-workspaces';
 import { workbookCharts } from '../../src/components/workflow-import/record-insights';
 
@@ -34,6 +37,45 @@ function data(view: 'sessions' | 'overview' | 'payments', records: WorkflowOpera
 }
 const render = (view: 'sessions' | 'overview' | 'payments', collapsed = false) => renderToStaticMarkup(createElement(WorkflowOperationsWorkspace, { view, collapsed }, createElement('button', null, 'Continue current workflow')));
 beforeEach(() => { state.data = undefined; state.reads.length = 0; });
+
+test('tutor overview shows the next two assigned lessons in Cairo time and keeps fee agreements out of the preview', async () => {
+  const response = data('overview', [sourceRow(1, '2026-10-01', 'Synthetic lesson')]);
+  if (!response.enabled) throw Error('Expected enabled fixture');
+  response.role = 'tutor';
+  state.data = response;
+  vi.mocked(listTutorOccurrences).mockImplementation(async (_client, options) => {
+    expect(options?.limit).toBe(2);
+    expect(Date.parse(options!.from!)).toBeGreaterThan(Date.now() - 60000);
+    const state = options?.state;
+    if (state !== 'forming' && state !== 'confirmed') throw Error('Expected an upcoming teaching state');
+    const days = state === 'forming' ? [2, 4] : [3, 5];
+    return { items: days.map(day => ({
+      occurrence: { occurrence_id: uuid(day), version: 1, offer_id: uuid(10), tutor: { tutor_id: uuid(11), display_name: 'Example tutor' },
+        start_at: `2027-01-0${day}T10:00:00Z`, end_at: `2027-01-0${day}T11:30:00Z`, time_zone: 'Africa/Cairo',
+        format: 'group', state, target_tier: 2, capacity: 2, available_seats: 0, waitlist_available: false,
+        customer_price_minor: 57500, currency: 'EGP', pricing_version_id: uuid(12), policy_version_id: uuid(13) },
+      fee_agreement: { fee_agreement_id: uuid(14), occurrence_id: uuid(day), occurrence_version: 1, tutor_id: uuid(11),
+        target_tier: 2, fee_minor: 991234, currency: 'EGP', duration_minutes: 90, compensation_policy_version_id: uuid(15),
+        purpose: 'initial', is_current: true, approved_at: '2026-11-20T10:00:00Z', accepted_at: null },
+      roster: [], pending_proposals: [],
+    })), next_cursor: null };
+  });
+  const page = await TutorPage();
+  const preview = renderToStaticMarkup(page.props.primaryAction);
+  expect(preview).toContain('12:00 Cairo');
+  expect(preview.indexOf(uuid(2))).toBeGreaterThan(-1);
+  expect(preview.indexOf(uuid(3))).toBeGreaterThan(preview.indexOf(uuid(2)));
+  expect(preview).not.toContain(uuid(4));
+  expect(preview).not.toContain('991234');
+  const dashboard = renderToStaticMarkup(page.props.children[0]);
+  expect(dashboard).toContain('/tutor/schedule');
+  expect(dashboard).toContain('Chart to display');
+  vi.mocked(listTutorOccurrences).mockResolvedValue({ items: [], next_cursor: null });
+  expect(renderToStaticMarkup((await TutorPage()).props.children[0])).toContain('No upcoming sessions in the next 90 days');
+  state.data = { enabled: false };
+  vi.mocked(listTutorOccurrences).mockRejectedValue(new Error('Unavailable'));
+  expect(renderToStaticMarkup((await TutorPage()).props.primaryAction)).toContain('Schedule preview unavailable');
+});
 
 test('service overview opens its staff queue and passes only the overview to the browser', async () => {
   const response = data('overview', [sourceRow(1, '2026-10-01', 'Synthetic lesson')]);

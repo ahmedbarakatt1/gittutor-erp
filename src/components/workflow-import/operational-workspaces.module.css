@@ -4,6 +4,12 @@
 .overviewToolbar :is(a, button):hover, .dailyOperations a:hover { color: var(--ink); }
 .overviewToolbar .refresh { margin-inline-start: auto; color: var(--muted); font-weight: 600; }
 .refresh svg, .chartPicker { display: none; }
+.upcoming { margin-block-end: .75rem; }
+.upcoming h2 { margin-block-end: .375rem; }
+.upcoming ul { list-style: none; margin: 0; padding: 0; }
+.upcoming li { border-block-end: 1px solid var(--border); }
+.upcoming a { min-block-size: 44px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .125rem .75rem; padding-block: .375rem; font-weight: 650; text-underline-offset: .2em; }
+.upcoming a span { color: var(--muted); font-size: .875rem; font-weight: 500; }
 .overviewToolbar .queueAction { flex: 1 1 11rem; min-inline-size: 0; display: grid; align-content: center; gap: .125rem; padding-block: .375rem; text-decoration: none; }
 .queueAction span { text-decoration: underline; text-underline-offset: .2em; }
 .queueAction small { font-size: .8125rem; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
