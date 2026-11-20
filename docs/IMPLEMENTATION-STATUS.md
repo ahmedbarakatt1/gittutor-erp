@@ -1,5 +1,40 @@
 # Implementation status
 
+## Responsive spacing across the site — 20 November 2026
+
+The Support page’s spacing approach now extends to Subjects, pricing, public profiles, the home page, account forms and the four portal dashboards. On Subjects the first screen offers both a suggested subject and a way to request an unlisted topic. The pricing page places the session request alongside the tuition explanation. All four study areas and their examples, the four tuition rates and the per-student, per-session unit are present.
+
+Dashboard headings, chart explanations and record rows have distinct spacing. Mobile navigation wraps into columns where space permits. Learners can move between an unfinished request and their request history, and staff see the queue first when they open the request workspace. On wide screens the list and request detail sit side by side. The changes use the existing role-specific views and customer response contracts.
+
+| Local check executed | Result |
+| --- | --- |
+| `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` (repository binaries) | Lint, type checks and the optimized build passed. All 540 tests in 74 unit test files passed. |
+| `playwright test tests/e2e/smoke.spec.ts tests/e2e/auth-input.spec.ts` | 14 desktop and mobile cases passed. These include the homepage, tuition privacy, FAQ, responsive and right-to-left layouts, and authentication input. |
+| `playwright test tests/e2e/subjects.spec.ts tests/e2e/public-contact.spec.ts tests/e2e/support-ui.spec.ts` | Six desktop and mobile cases passed, including selecting a subject, requesting an unlisted topic, public contacts, and the support conversation retry. |
+| Catalog viewport checks and scoped Impeccable detector | Subjects and pricing fit at 320, 360, 390, 768, 1024 and 1440 CSS pixels in both reading directions. At 360px the Subjects page fell from 2,428px to 1,609px. Scheduled and unscheduled offer detail and tutor profile layouts were checked with synthetic records at four widths. The local catalog API timed out during the separate data-backed detail check. The detector returned zero findings for the selected public and portal styles and components. |
+
+The first hosted review of `2fe2080` found longer dashboard pages after increasing the body text. Revision `c8d054f` keeps charts and counts visible, opens source records from a chart value or **Browse records**, and groups family account tools and the tutor profile in expandable sections on the workbook dashboards. A staff invitation link opens the family section automatically. The mobile request history and return links use native keyboard focus and preserve unsaved text.
+
+Playwright CLI session `public-site-spacing` checked the home, sign-in, signup, email verification and tutor application pages at 320, 390, 710 and 1440 CSS pixels. All 20 page-and-width combinations fit horizontally. A separate read from the shared testing catalog opened a published scheduled offer, an unscheduled offer and a tutor profile. All nine page-and-width combinations at 320, 390 and 1440px rendered their details without overflow or a page error. Screenshots and dimensions are stored locally under `.local/nov20-site-spacing/`.
+
+The table compares initial page height on the stable testing site at **390 × 844 CSS pixels**, using the same role accounts and leaving optional sections in their default state.
+
+| Page | Previous height | Released height | What the user can reach |
+| --- | ---: | ---: | --- |
+| Subjects | 2,396px | 1,560px | The unlisted-topic request starts at y=305, previously y=1,654. |
+| Pricing | 1,675px | 1,292px | The request action starts at y=317, previously y=1,286. |
+| Home | 5,360px | 4,881px | The session request starts at y=492, previously y=603. |
+| Learner overview | 3,865px | 1,457px | Request a session starts at y=381. Linked learners and account requests open on demand. |
+| Tutor overview | 3,099px | 1,149px | Charts stay visible, with the teaching profile available from its own control. |
+| Customer service overview | 1,896px | 1,393px | Open request queue starts at y=353. The queue itself starts at y=265, previously y=456. |
+| Admin overview | 1,264px | 1,355px | Larger labels and chart captions add 91px. The request action starts at y=265, previously y=264. |
+
+The final role check (`node .local/nov20-site-spacing/measure.cjs final --interactions`) measured 12 public and signed-in pages at 320, 390 and 1440px. All 36 views fit horizontally. All four mobile dashboard menus worked with a keyboard. **Browse records** opened and focused the source records in all four roles. The learner and tutor account sections opened to reveal their forms, closed again, and retained keyboard focus. The learner returned from history to an unsaved topic with zero API writes. Both staff queues appeared first at 390px in visual and keyboard reading order.
+
+Both Vercel web projects were promoted after checking the application revision and the staged Support, social icon, password recovery and health routes. The [testing site](https://gittutor-erp-rho.vercel.app/subjects) serves the revision above. Anonymous access to Subjects on the production project redirected to team sign-in.
+
+The follow-up `measure.cjs final-inner --inner` run brought total coverage to 17 distinct public and signed-in pages, each at all three widths. None of the 51 combinations had horizontal overflow, a visible error alert, or a pending loading indicator at measurement. At 390px the learner request, payments and packages pages grew by 93px, 68px and 27px respectively as explanations became easier to read. The tutor schedule grew by 122px (2.1%) and the quiz page stayed the same height. The keyboard request-history check waited for native scrolling to settle and confirmed that the heading was visible before returning to the same draft. Full dimensions are in the local evidence folder under `before-final-summary.md` and `before-inner-final-inner-summary.md`.
+
 ## Public support page spacing — 20 November 2026
 
 Revision `ace0701` gives website conversations and WhatsApp separate headings, explanations and actions. The header keeps the logo and navigation together. The contact icons sit in a footer that reaches the bottom on short pages and follows the conversation on longer pages. The public page retains its privacy guidance after a conversation opens.
