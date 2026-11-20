@@ -1,5 +1,9 @@
 # Implementation status
 
+## Production colleague invitation (21 November 2026)
+
+The owner requested an invitation for one colleague on production only. A read-only check confirmed the production project identity, zero active admins and no existing account or pending staff invitation for the recipient. Supabase Auth accepted one account invitation with the production callback. Mailjet reported one matching message as `sent`. The post-send check confirmed the recipient account exists and awaits email verification. No admin role has been granted. The existing owner still needs to complete verification and administrator activation before the normal staff role grant. The testing site was untouched. Recipient details and private operator receipts are excluded from the repository.
+
 ## Role access and the signed-out Subjects journey (20 November 2026)
 
 The owner approved generic subject descriptions and published tuition for visitors and required sign-in for session availability and tutor profiles. Before remediation, a fresh browser at `/subjects` rendered four generic subject areas, no record tables and no requests for records. The separate published-offer feed returned HTTP 200 while signed out. The workbook, request and grade APIs required sign-in. The signed-out checks found no evidence that the Subjects page itself served imported student records, grades or tutor compensation.
