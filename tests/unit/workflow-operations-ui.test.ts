@@ -4,6 +4,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { WorkflowOperationsData, WorkflowOperationsRecord } from '../../src/modules/workflow-import/operational-model';
 
 const state = vi.hoisted(() => ({ data: undefined as unknown, reads: [] as (string | null)[] }));
+vi.mock('server-only', () => ({}));
 // Supply the completed HTTP read; all schema validation and rendering remain real.
 vi.mock('../../src/components/payments/shared', () => ({
   usePaymentRecord: (path: string | null) => { state.reads.push(path); return { data: path ? state.data : undefined, reload: () => {} }; },
@@ -18,6 +19,7 @@ vi.mock('../../src/modules/requests/queries', () => ({
 }));
 vi.mock('../../src/modules/workflow-import/operational-queries', () => ({ getWorkflowOperations: async () => state.data }));
 import AdminPage from '../../src/app/admin/page';
+import ServicePage from '../../src/app/service/page';
 import { WorkflowOperationsWorkspace } from '../../src/components/workflow-import/operational-workspaces';
 import { workbookCharts } from '../../src/components/workflow-import/record-insights';
 
@@ -32,6 +34,25 @@ function data(view: 'sessions' | 'overview' | 'payments', records: WorkflowOpera
 }
 const render = (view: 'sessions' | 'overview' | 'payments', collapsed = false) => renderToStaticMarkup(createElement(WorkflowOperationsWorkspace, { view, collapsed }, createElement('button', null, 'Continue current workflow')));
 beforeEach(() => { state.data = undefined; state.reads.length = 0; });
+
+test('service overview opens its staff queue and passes only the overview to the browser', async () => {
+  const response = data('overview', [sourceRow(1, '2026-10-01', 'Synthetic lesson')]);
+  if (!response.enabled) throw Error('Expected enabled fixture');
+  response.role = 'service';
+  response.sections.push({ key: 'payments', title: 'Payment register', description: '', metrics: [], records: [] });
+  state.data = response;
+  const workspace = (await ServicePage()).props.children;
+  expect(workspace.props.initialData.role).toBe('service');
+  expect(workspace.props.initialData.sections.map((section: { key: string }) => section.key)).toEqual(['overview']);
+  const html = renderToStaticMarkup(workspace);
+  expect(html).toContain('href="/service/requests"');
+  expect(html).toContain('First in queue · Synthetic calculus request');
+  expect(html).toContain('aria-label="Chart to display"');
+  expect(html).not.toContain('/admin/requests');
+  expect(html).not.toContain('Private preparation notes');
+  state.data = { enabled: false };
+  expect(renderToStaticMarkup((await ServicePage()).props.primaryAction)).toContain('href="/service/requests"');
+});
 
 test('admin overview renders its scoped figures on first paint and opens records on demand', async () => {
   const response = data('overview', [sourceRow(1, '2026-10-01', 'Synthetic lesson')]);
