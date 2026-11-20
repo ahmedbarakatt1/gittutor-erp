@@ -1,6 +1,8 @@
 # Production inputs and activation
 
-Updated 19 November 2026. The owner selected Vercel, Supabase Free, Mailjet, the existing Google organizer and manual WhatsApp replies. The hosted pilot remains the place to test with existing practice accounts. The separate Vercel project is `gittutor-erp-production`. Vercel team authentication protects every URL on that project. Public signup is disabled on its clean Supabase project. [Testing preview](ONLINE-PREVIEW.md) · [Release record](IMPLEMENTATION-STATUS.md).
+Updated 20 November 2026. The owner selected Vercel, Supabase Free, Mailjet, the existing Google organizer and manual WhatsApp replies. The hosted pilot remains the place to test with existing practice accounts. The separate Vercel project is `gittutor-erp-production`. Vercel team authentication protects every URL on that project. Public signup is disabled on its clean Supabase project. [Testing preview](ONLINE-PREVIEW.md) · [Release record](IMPLEMENTATION-STATUS.md).
+
+The 20 November read-only production check found one invited owner who has yet to confirm sign-in, zero active administrators, zero connected organizers, zero approved or published commercial policies and zero scheduled sessions. Both access migrations have been applied to production. Its website remains team-protected. The 14 database checks cover schema, access and configuration. Commercial launch also needs the owner, worker, Google, finance and recovery steps below.
 
 | Area | Prepared | Next action and owner |
 | --- | --- | --- |

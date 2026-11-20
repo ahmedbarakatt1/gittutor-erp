@@ -12,7 +12,7 @@ Prepared 2026-11-11 from the T04 plan, business rules 2–4, data/API/UI/securit
 - Each enrollment has its own version. Ordinary hold creation, acceptance, expiry and promotion do not increment occurrence.version. Schedule/capacity/target/committed-roster changes and initial fee attachment do. A separate internal `occurrence.quote_terms_version` changes only for customer schedule/target/policy/price terms. Quote acceptance checks that counter and the current quote pointer; an unchanged-price capacity edit or initial fee attachment does not strand the quote. The quote's exposed occurrence_version remains creation provenance. A proposal pins the full occurrence version and an exact locked roster fingerprint of enrollment IDs, states, versions and quote IDs. Quote hashes never depend on unrelated temporary holds.
 - Published policy/pricing references, each quote, exact approved fee agreement, accepted proposal terms and acceptances are immutable. Record corrections in new versions. Customer projections never contain fee agreement IDs, compensation-policy IDs, fee/range/contribution, internal notes, contacts, destinations or credentials.
 - All mutations use current actor/session/role/relationship scope before replay, persistent key+canonical argument hash, target version where listed, atomic audit and outbox. New creations return 201, changes and replay 200; durable provider work returns 202 only where the result contract says queued work.
-- Public schedule discovery extends `list_public_offers`; only its existing grant and `get_public_tutor` remain anonymous. Authenticated schedule discovery uses its own narrow read.
+- Published session availability and approved tutor profiles require a verified account. Signed-in users also have a paginated schedule read.
 - T04 reaches `awaiting_T06_integration`, never verified funded confirmation. The real funding hook is unavailable and fails closed even with a zero deposit; no caller/test flag may assert funded status. T05 and T06 supply package/funds implementations, then all three suites run together.
 
 ## Primitive shapes
@@ -146,7 +146,7 @@ type FeeAgreement = {
 };
 ```
 
-Public occurrence fields are customer safe, not privileged aggregates. `available_seats` is a snapshot and zero for confirmed groups unless a future valid amendment flow permits entry; it is not a capacity guarantee. No learner roster is public. The public catalog availability object becomes `{scheduled_occurrences,next_start_at,next_occurrences:PublicOccurrence[],has_more:boolean}`, with next_occurrences limited to 5; logged-in users use paginated schedule discovery. Only eligible published/effective offers and operational future occurrences appear.
+Public occurrence fields are customer safe, not privileged aggregates. `available_seats` is a snapshot and zero for confirmed groups unless a future valid amendment flow permits entry; it is not a capacity guarantee. No learner roster is public. The verified-account catalog availability object is `{scheduled_occurrences,next_start_at,next_occurrences:PublicOccurrence[],has_more:boolean}`, with next_occurrences limited to 5; logged-in users use paginated schedule discovery. Only eligible published/effective offers and operational future occurrences appear.
 
 | GET route | RPC parameters | DTO |
 |---|---|---|

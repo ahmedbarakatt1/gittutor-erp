@@ -3732,7 +3732,7 @@
           "Privileged markers exist beside otherwise accessible customer records."
         ],
         "when": [
-          "Exercise every customer surface in the privacy fixture as student, authorized guardian and anonymous catalog visitor."
+          "Exercise the privacy fixture as a student and authorized guardian. A signed-out visitor can read generic subjects and published prices. Record feeds require sign-in."
         ]
       },
       "expected": {
@@ -5668,7 +5668,7 @@
     },
     {
       "id": "GT-1602",
-      "title": "Anonymous catalog reads expose only approved complete offers",
+      "title": "Catalog records require sign-in and expose only approved complete offers",
       "requirement_id": "R03",
       "related_requirement_ids": [
         "R01",
@@ -5678,7 +5678,7 @@
       "priority": "P0",
       "layer": "http_authorization",
       "supporting_layers": [],
-      "test_file": "tests/integration/catalog-publication.test.ts",
+      "test_file": "tests/integration/catalog-privacy.test.ts",
       "source_case_id": null,
       "scenario": {
         "fixture_ids": [
@@ -5690,15 +5690,16 @@
           "Approved, draft and incomplete-policy offers coexist."
         ],
         "when": [
-          "Request catalog records anonymously through the public read interface and attempt direct table access."
+          "Request records while signed out and again as a verified learner. Check the database role grants."
         ]
       },
       "expected": {
         "assertions": [
-          "Only the approved complete offer is returned through an explicit allowlist. Draft or incomplete offers and privileged financial fields remain inaccessible."
+          "The signed-out request returns no records. The verified learner sees only the approved complete offer through an explicit allowlist. Draft or incomplete offers and privileged financial fields remain inaccessible."
         ],
         "quantities": {
-          "public_offer_count": 1,
+          "signed_out_offer_count": 0,
+          "verified_offer_count": 1,
           "privileged_fields_found": 0
         }
       },

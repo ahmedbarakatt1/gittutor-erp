@@ -8,6 +8,10 @@ Ask the owner for access to the appropriate test role through a private channel.
 
 The ordinary pilot uses simulated provider operations and manual reconciliation. One designated one-to-one booking was authorized for real Google Meet and both participants joined. Customer and staff pages enforce role and record scope. The current launch decision, exact checks and limitations are in [implementation status](IMPLEMENTATION-STATUS.md).
 
+## Try Subjects as a visitor and a learner
+
+Open [Subjects](https://gittutor-erp-rho.vercel.app/subjects) in a private browser window. You can read the generic study areas and [published prices](https://gittutor-erp-rho.vercel.app/offers). Choose a subject, then sign in with a practice learner account. The request form reopens with your chosen topic. Available sessions and approved tutor profiles require sign-in. Open My bookings to see the practice booking assigned to your account.
+
 ## Test PDF quizzes and grades
 
 Sign in with an assigned tutor account, open [Quizzes and grades](https://gittutor-erp-rho.vercel.app/tutor/quizzes), choose a practice session with a confirmed learner, upload a PDF, and wait for its scan to clear. Publish the quiz with its maximum score. In a separate browser profile, sign in as that learner, open [My grades](https://gittutor-erp-rho.vercel.app/learn/grades) and download the quiz. Enter or correct a score as the tutor and refresh the learner's dashboard. An ungraded quiz is labelled separately from a zero.
