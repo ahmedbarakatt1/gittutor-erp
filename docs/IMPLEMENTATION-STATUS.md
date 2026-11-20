@@ -1,5 +1,26 @@
 # Implementation status
 
+## Customer service mobile dashboard — 20 November 2026
+
+Revision `aa55db2` brings the admin overview layout to customer service. The queue shortcut displays the first subject returned by the signed-in staff queue, or an empty or unavailable message. The dashboard uses the service role’s five workbook figures. Staff can switch between session outcomes and activity on a phone, select a chart value to inspect its source records, or open the full service queue. When workbook reporting is disabled, the queue remains accessible.
+
+The two staff dashboards now share a server-side overview loader. Each route verifies its own role before fetching data with the signed-in account. Initial rendering passes only the overview section, applicable review choices and the first request subject. The service shortcut leads to `/service/requests`.
+
+Local checks passed with `vitest run tests/unit` (541 tests across 74 files), scoped ESLint, `next build` including TypeScript checking, and `git diff --cached --check`. The added rendering test checks the service route, role, data projection, chart switch and queue fallback. An initial unit run needed a test-environment mock for the server-only import; the complete suite was rerun successfully.
+
+Signed-in Playwright checks on the stable testing site used the same customer service account before and after deployment (`node .local/nov20-site-spacing/service-scan.cjs`, then the same command with `after`). All positions and heights below are in CSS pixels.
+
+| Width | Page height before → after | Queue top before → after | Figures top before → after | First chart bottom after |
+| ---: | ---: | ---: | ---: | ---: |
+| 320 | 1,480 → 983 | 441 → 275 | 702 → 410 | 882 |
+| 390 | 1,393 → 856 | 353 → 240 | 615 → 327 | 755 |
+| 710 | 990 → 845 | 252 → 220 | 507 → 289 | 639 |
+| 1,440 | 989 → 900 | 266 → 224 | 510 → 303 | 659 |
+
+All five figures remained present. The queue and figures fit before scrolling even at 320 × 720. At 390 × 844 the complete first chart also fit. The browser compared the preview with the first record in the staff queue, switched charts by keyboard, opened the underlying records from a chart value, and followed the shortcut to the service queue. No horizontal overflow occurred at the four widths in either reading direction. The review screenshot in `.local/nov20-site-spacing/` masks the request subject and dashboard values.
+
+Both web projects were promoted after the staged checks. The anonymous Playwright CLI session `service-overview` confirmed the [testing dashboard](https://gittutor-erp-rho.vercel.app/service) redirects to account sign-in. The protected production URL redirected to team sign-in.
+
 ## Mobile admin overview — 20 November 2026
 
 The admin workbook overview groups six reported counts under short labels and gives the request queue a prominent action. At narrow widths, **Session outcomes** and **Session activity** share one chart area with a keyboard-operable switch. Selecting a chart value still opens the underlying records. Wide workspaces show all available charts side by side. The dashboard uses the existing role-scoped data and handles zero or one chart without displaying a switch.
