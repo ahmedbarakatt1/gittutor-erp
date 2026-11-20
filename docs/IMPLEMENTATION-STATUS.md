@@ -1,5 +1,24 @@
 # Implementation status
 
+## Tutor mobile dashboard — 20 November 2026
+
+Revision `3670515` puts the tutor’s next two assigned lessons ahead of the workbook overview. The dashboard reads forming and confirmed occurrences through the authenticated tutor schedule query, takes two from each ordered result, and displays the earliest two across both states within the schedule’s 90-day window. Each lesson shows its Cairo start time, format and status and links to its own schedule entry. An empty schedule and an unavailable preview have distinct messages and a full-schedule link. The schedule still works when workbook reporting is disabled.
+
+The tutor overview uses the same mobile chart switch and compact figures as the staff dashboards, with the instructor’s own workbook scope. Session outcomes and activity drill down to source records. The teaching profile remains available below the workbook dashboard. Only the displayed lesson details and occurrence links from the schedule read are rendered; the schedule preview omits rosters and compensation agreements.
+
+Local verification passed with scoped ESLint, `git diff --cached --check`, `next build` (including TypeScript), and `vitest run tests/unit` (542 tests across 74 files). The new test exercises two interleaved result sets, Cairo time, the correct lesson links, privacy, an empty schedule and an unavailable provider. The first build identified an incomplete test fixture; the typed fixture, full suite and build were subsequently verified.
+
+Playwright measured the [shared tutor dashboard](https://gittutor-erp-rho.vercel.app/tutor) before and after deployment using the same tutor account (`node .local/nov20-site-spacing/tutor-scan.cjs`, then `after`). The updated dashboard displayed two assigned lessons. The browser verified their order and links against the tutor schedule API, opened the first lesson’s workspace and the full schedule, switched both charts by keyboard, and opened the records behind a chart value. No page errors or horizontal overflow occurred. Layout checks covered both reading directions.
+
+| Width | Page height before → after | Bottom of three figures | Bottom of first chart |
+| ---: | ---: | ---: | ---: |
+| 320 | 1,184 → 1,152px | 649px | 979px |
+| 390 | 1,149 → 961px | 502px | 788px |
+| 710 | 878 → 920px | 493px | 734px |
+| 1,440 | 900 → 961px | 507px | 753px |
+
+Both upcoming lessons, the three figures and the full first chart fit at 390 × 844. At 320 × 720 the lessons and figures fit before scrolling. The wider layouts show both charts together and gain 42–61px in height to show the new session list. Both Vercel projects were promoted after staging checks. Anonymous tutor access on the testing site redirected to account sign-in (Playwright CLI session `tutor-overview`), and the protected production route redirected to team sign-in.
+
 ## Customer service mobile dashboard — 20 November 2026
 
 Revision `aa55db2` brings the admin overview layout to customer service. The queue shortcut displays the first subject returned by the signed-in staff queue, or an empty or unavailable message. The dashboard uses the service role’s five workbook figures. Staff can switch between session outcomes and activity on a phone, select a chart value to inspect its source records, or open the full service queue. When workbook reporting is disabled, the queue remains accessible.
