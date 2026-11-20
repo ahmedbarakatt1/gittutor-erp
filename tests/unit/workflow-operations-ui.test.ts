@@ -41,6 +41,8 @@ test('admin overview renders its scoped figures on first paint and opens records
   expect(state.reads).toEqual([null]);
   expect(html).toContain('Session outcomes');
   expect(html).toContain('Session activity');
+  expect(html).toContain('aria-label="Chart to display"');
+  expect(html).toMatch(/<figure[^>]*data-inactive="true"/);
   expect(html).toContain('Browse records');
   expect(html).toContain('Open request queue');
   expect(html).toContain('Source records');

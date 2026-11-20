@@ -28,7 +28,7 @@ export default async function AdminPage() {
     enabled: operations.enabled, role: operations.role, sections: overview ? [overview] : [],
     mapping_options: overview?.records.some(row => row.review.can_review) ? operations.mapping_options : { learners: [], tutors: [] },
   } satisfies typeof operations;
-  return <PortalShell kind="admin" account={account} title="Your business overview" description="Payments and completions are reported by the workbook. Select a chart value to see its source records." showAccount={false} activePath="/admin">
+  return <PortalShell kind="admin" account={account} title="Your business overview" description="Session, package and headcount figures from the workbook." showAccount={false} activePath="/admin">
     <OperationalWorkspace view="overview" initialData={initialData} overviewAction={<Link href="/admin/requests">Open request queue</Link>} />
     <nav className={styles.dailyOperations} aria-labelledby="daily-operations-title">
       <h2 id="daily-operations-title">Daily operations</h2>

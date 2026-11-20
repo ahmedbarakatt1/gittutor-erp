@@ -40,6 +40,11 @@ export function WorkflowOperationsWorkspace({ view, children, collapsed = false,
   </>;
 }
 
+const overviewLabels: Record<string, string> = {
+  source_sessions: 'Sessions', scheduled_sessions: 'Scheduled', completed_sessions: 'Completed',
+  source_packages: 'Packages', source_students: 'Learners', source_tutors: 'Tutors',
+};
+
 function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }: { section: WorkflowOperationsSection; data: EnabledData; onSaved: () => void; hasWorkflow: boolean; overviewAction?: ReactNode }) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -81,8 +86,8 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
     openRegister();
   }
   const summaryMetrics = section.metrics.filter(metric => metric.key !== 'source_records');
-  const metrics = <dl className={styles.metrics}>{summaryMetrics.map(metric => <div key={metric.key}>
-    <dt>{metric.label}</dt>
+  const metrics = <dl className={styles.metrics} aria-label={overviewAction ? 'Workbook figures' : undefined}>{summaryMetrics.map(metric => <div key={metric.key}>
+    <dt>{overviewAction ? overviewLabels[metric.key] ?? metric.label : metric.label}</dt>
     <dd>{metric.value === null ? 'Not recorded' : metric.unit === 'money' ? formatFinanceAmount(metric.value) : metric.value.toLocaleString('en-GB') + (metric.unit === 'hours' ? ' h' : '')}</dd>
   </div>)}</dl>;
   return <section className={styles.workspace} aria-label={section.title} data-workflow-view={section.key} data-workflow-operations>
@@ -90,7 +95,10 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
       <h2 className={styles.visuallyHidden}>Workbook overview</h2>
       {overviewAction}
       <button type="button" onClick={openRegister} aria-controls={id + '-register'}>Browse records</button>
-      <button type="button" className={styles.refresh} onClick={onSaved}>Refresh records</button>
+      <button type="button" className={styles.refresh} onClick={onSaved} title="Refresh records">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5 8a8 8 0 0 1 13-3l2 3M4 16l2 3a8 8 0 0 0 13-3"/></svg>
+        <span>Refresh records</span>
+      </button>
     </header> : <header className={styles.header}>
       <div><h2>{section.key === 'overview' ? 'Workbook overview' : section.title}</h2>
         <p className={styles.description}>Payments and completions are reported by the workbook.{charts.length > 0 && ' Select a chart value to see its source records.'}</p></div>
@@ -99,7 +107,7 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
         <button className={styles.button} type="button" onClick={onSaved}>Refresh records</button></div>
     </header>}
     {summaryMetrics.length > 0 && (section.key === 'finance' ? <details className={styles.balanceFigures}><summary>Reported balance figures <span>{summaryMetrics.length}</span></summary>{metrics}</details> : metrics)}
-    <WorkbookCharts charts={charts} selected={selected} onSelect={drillDown} recordsId={id + '-register'} />
+    <WorkbookCharts charts={charts} selected={selected} onSelect={drillDown} recordsId={id + '-register'} compactOverview={Boolean(overviewAction)} />
     <details id={id + '-register'} className={styles.register} open={registerOpen} onToggle={event => setRegisterOpen(event.currentTarget.open)}>
       <summary ref={registrySummary}><span className={styles.chevron} aria-hidden="true" /><span>Source records</span><span className={styles.recordCount} aria-live="polite">{filtered ? rows.length + ' of ' : ''}{section.records.length}</span></summary>
       {(!overviewAction || registerOpen) && <div className={styles.registerBody}>
