@@ -1,5 +1,6 @@
+import { StaffMessage } from '@/components/ar-staff-label';
+import { pageMetadata } from '@/server/page-metadata';
 import { RequestEntry } from '@/components/requests/entry';
-import type { Metadata } from 'next';
 import { PortalShell } from '@/components/portal-shell';
 import { requireAccount } from '@/server/auth';
 import { loadStaffOverview } from '@/components/workflow-import/staff-overview';
@@ -7,7 +8,7 @@ import Link from 'next/link';
 import styles from '@/components/workflow-import/operational-workspaces.module.css';
 import { StaffAccessWorkspace, TutorApplicationReview } from '@/components/identity-workspaces';
 
-export const metadata: Metadata = { title: 'Administration | Git Tutor', robots: { index: false, follow: false } };
+export const generateMetadata = pageMetadata({ title: 'Administration | Git Tutor', robots: { index: false, follow: false } });
 const dailyOperations = [
   ['/admin/schedule', 'Schedule lessons'],
   ['/admin/customers', 'Your students'],
@@ -24,8 +25,8 @@ export default async function AdminPage() {
   return <PortalShell kind="admin" account={account} title="Your business overview" description="Session, package and headcount figures from the workbook." showAccount={false} activePath="/admin">
     {overview}
     <nav className={styles.dailyOperations} aria-labelledby="daily-operations-title">
-      <h2 id="daily-operations-title">Daily operations</h2>
-      <ul>{dailyOperations.map(([href, label]) => <li key={href}><Link href={href}>{label}</Link></li>)}</ul>
+      <h2 id="daily-operations-title"><StaffMessage text="Daily operations" /></h2>
+      <ul>{dailyOperations.map(([href, label]) => <li key={href}><Link href={href}><StaffMessage text={label} /></Link></li>)}</ul>
     </nav>
   </PortalShell>;
 }

@@ -7,8 +7,19 @@ import { IdentityForm, TextField } from '../identity-form';
 import { SessionTime } from '../booking/shared';
 import styles from './meeting-panel.module.css';
 import formStyles from '../auth.module.css';
+import { meetingCopy as arabicMeetingCopy } from '@/locales/ar-transaction/meetings';
+import { useSiteLanguage } from '@/components/site-language';
+
+const textByLanguage = {
+  en: { copy },
+  ar: { copy: arabicMeetingCopy },
+};
+
 
 export function MeetingPanel({ occurrenceId, learnerId, view = 'customer', displayedSchedule }: { occurrenceId: string; learnerId?: string; view?: 'customer' | 'tutor' | 'admin'; displayedSchedule?: { start: string; end: string } }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   const query = `view=${view}${learnerId ? `&learner_id=${learnerId}` : ''}`, path = `occurrences/${occurrenceId}/meeting?${query}`;
   const [record, setRecord] = useState<{ path: string; data: MeetingView; received: number } | null>(null), [failed, setFailed] = useState(false), [attempt, setAttempt] = useState(0), [clock, setClock] = useState(0), [joining, setJoining] = useState(false), [joinError, setJoinError] = useState(''), [preview, setPreview] = useState(false);
   const data = record?.path === path ? record.data : undefined;

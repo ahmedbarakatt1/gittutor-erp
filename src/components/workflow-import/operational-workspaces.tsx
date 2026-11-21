@@ -1,5 +1,9 @@
 'use client';
 
+import { useSiteLanguage } from '../site-language';
+import { staffText } from '@/locales/ar-staff';
+import type { SiteLanguage } from '@/locales/language';
+import { useStaffText } from '@/components/ar-staff-label';
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { workflowOperationsSchema, type WorkflowOperationsData, type WorkflowOperationsRecord, type WorkflowOperationsSection, type WorkbookWorkspace } from '@/modules/workflow-import/operational-model';
@@ -20,6 +24,8 @@ export const OperationalWorkspace = WorkflowOperationsWorkspace;
 export function WorkflowOperationsWorkspace({ workspace, view, children, collapsed = false, initialData, overviewAction }: {
   workspace: WorkbookWorkspace; view: View; children?: ReactNode; collapsed?: boolean; initialData?: EnabledData; overviewAction?: ReactNode;
 }) {
+  const t = useStaffText();
+
   const [refreshRequested, setRefreshRequested] = useState(false);
   const useInitialRead = initialData !== undefined && !refreshRequested;
   const record = usePaymentRecord<unknown>(useInitialRead ? null : `workflow-operations?workspace=${workspace}`);
@@ -34,9 +40,9 @@ export function WorkflowOperationsWorkspace({ workspace, view, children, collaps
   }
   const history = section && data ? <WorkflowSection key={view} section={section} data={data} onSaved={reload} hasWorkflow={Boolean(children)} overviewAction={overviewAction} /> : null;
   return <>{!history && overviewAction && <div className={styles.tools}>{overviewAction}</div>}
-    {record.error || invalid ? <div className={styles.notice} role="alert"><p>Workbook records could not be loaded.</p><button className={styles.button} type="button" onClick={reload}>Try again</button></div> : history ? collapsed ? <details className={styles.history}><summary>Workbook history</summary>{history}</details> : history : response === undefined ? <p className={styles.empty} role="status">Loading your records…</p> : null}
+    {record.error || invalid ? <div className={styles.notice} role="alert"><p>{t("Workbook records could not be loaded.")}</p><button className={styles.button} type="button" onClick={reload}>{t("Try again")}</button></div> : history ? collapsed ? <details className={styles.history}><summary>{t("Workbook history")}</summary>{history}</details> : history : response === undefined ? <p className={styles.empty} role="status">{t("Loading your records…")}</p> : null}
     {/* Keep the workflow subtree mounted when the independent history read changes state. */}
-    {children && <section className={section ? styles.newActivity : undefined} id="new-activity">{section && <header><h2>{view === 'finance' ? 'Verified financial activity' : 'New activity and current workflows'}</h2><p className={styles.description}>Imported history stays separate from activity recorded here.</p></header>}{children}</section>}
+    {children && <section className={section ? styles.newActivity : undefined} id="new-activity">{section && <header><h2>{view === 'finance' ? t("Verified financial activity") : t("New activity and current workflows")}</h2><p className={styles.description}>{t("Imported history stays separate from activity recorded here.")}</p></header>}{children}</section>}
   </>;
 }
 
@@ -46,6 +52,8 @@ const overviewLabels: Record<string, string> = {
 };
 
 function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }: { section: WorkflowOperationsSection; data: EnabledData; onSaved: () => void; hasWorkflow: boolean; overviewAction?: ReactNode }) {
+  const t = useStaffText();
+
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [table, setTable] = useState('');
@@ -56,7 +64,9 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
   const [registerOpen, setRegisterOpen] = useState(false);
   const registrySummary = useRef<HTMLElement>(null);
   const id = useId();
-  const charts = useMemo(() => workbookCharts(section.key, section.records), [section]);
+  const language = useSiteLanguage();
+  const locale = language === 'ar' ? 'ar-EG' : 'en-GB';
+  const charts = useMemo(() => workbookCharts(section.key, section.records, language), [section, language]);
   const chart = charts.find(item => item.key === selected?.chart);
   const group = chart?.groups.find(item => item.key === selected?.group);
   const groupIds = useMemo(() => group ? new Set(group.ids) : null, [group]);
@@ -86,45 +96,45 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
     openRegister();
   }
   const summaryMetrics = section.metrics.filter(metric => metric.key !== 'source_records');
-  const metrics = <dl className={styles.metrics} aria-label={overviewAction ? 'Workbook figures' : undefined}>{summaryMetrics.map(metric => <div key={metric.key}>
-    <dt>{overviewAction ? overviewLabels[metric.key] ?? metric.label : metric.label}</dt>
-    <dd>{metric.value === null ? 'Not recorded' : metric.unit === 'money' ? formatFinanceAmount(metric.value) : metric.value.toLocaleString('en-GB') + (metric.unit === 'hours' ? ' h' : '')}</dd>
+  const metrics = <dl className={styles.metrics} aria-label={overviewAction ? t("Workbook figures") : undefined}>{summaryMetrics.map(metric => <div key={metric.key}>
+    <dt>{t(overviewAction ? overviewLabels[metric.key] ?? metric.label : metric.label)}</dt>
+    <dd>{metric.value === null ? t("Not recorded") : metric.unit === 'money' ? formatFinanceAmount(metric.value, locale) : metric.value.toLocaleString(locale) + (metric.unit === 'hours' ? t(' h') : '')}</dd>
   </div>)}</dl>;
-  return <section className={styles.workspace} aria-label={section.title} data-workflow-view={section.key} data-workflow-operations>
+  return <section className={styles.workspace} aria-label={t(section.title)} data-workflow-view={section.key} data-workflow-operations>
     {overviewAction ? <header className={styles.overviewToolbar}>
-      <h2 className={styles.visuallyHidden}>Workbook overview</h2>
+      <h2 className={styles.visuallyHidden}>{t("Workbook overview")}</h2>
       {overviewAction}
-      <button type="button" onClick={openRegister} aria-controls={id + '-register'}>Browse records</button>
-      <button type="button" className={styles.refresh} onClick={onSaved} title="Refresh records">
+      <button type="button" onClick={openRegister} aria-controls={id + '-register'}>{t("Browse records")}</button>
+      <button type="button" className={styles.refresh} onClick={onSaved} title={t("Refresh records")}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5 8a8 8 0 0 1 13-3l2 3M4 16l2 3a8 8 0 0 0 13-3"/></svg>
-        <span>Refresh records</span>
+        <span>{t("Refresh records")}</span>
       </button>
     </header> : <header className={styles.header}>
-      <div><h2>{section.key === 'overview' ? 'Workbook overview' : section.title}</h2>
-        <p className={styles.description}>Payments and completions are reported by the workbook.{charts.length > 0 && ' Select a chart value to see its source records.'}</p></div>
-      <div className={styles.tools}>{hasWorkflow && <a href="#new-activity">Current workflow</a>}
-        {section.key === 'overview' && <button className={styles.button} type="button" onClick={openRegister} aria-controls={id + '-register'}>Browse records</button>}
-        <button className={styles.button} type="button" onClick={onSaved}>Refresh records</button></div>
+      <div><h2>{section.key === 'overview' ? t("Workbook overview") : t(section.title)}</h2>
+        <p className={styles.description}>{t("Payments and completions are reported by the workbook.")}{charts.length > 0 && t(" Select a chart value to see its source records.")}</p></div>
+      <div className={styles.tools}>{hasWorkflow && <a href="#new-activity">{t("Current workflow")}</a>}
+        {section.key === 'overview' && <button className={styles.button} type="button" onClick={openRegister} aria-controls={id + '-register'}>{t("Browse records")}</button>}
+        <button className={styles.button} type="button" onClick={onSaved}>{t("Refresh records")}</button></div>
     </header>}
-    {summaryMetrics.length > 0 && (section.key === 'finance' ? <details className={styles.balanceFigures}><summary>Reported balance figures <span>{summaryMetrics.length}</span></summary>{metrics}</details> : metrics)}
+    {summaryMetrics.length > 0 && (section.key === 'finance' ? <details className={styles.balanceFigures}><summary>{t("Reported balance figures ")}<span>{summaryMetrics.length}</span></summary>{metrics}</details> : metrics)}
     <WorkbookCharts charts={charts} selected={selected} onSelect={drillDown} recordsId={id + '-register'} compactOverview={Boolean(overviewAction)} />
     <details id={id + '-register'} className={styles.register} open={registerOpen} onToggle={event => setRegisterOpen(event.currentTarget.open)}>
-      <summary ref={registrySummary}><span className={styles.chevron} aria-hidden="true" /><span>Source records</span><span className={styles.recordCount} aria-live="polite">{filtered ? rows.length + ' of ' : ''}{section.records.length}</span></summary>
+      <summary ref={registrySummary}><span className={styles.chevron} aria-hidden="true" /><span>{t("Source records")}</span><span className={styles.recordCount} aria-live="polite">{filtered ? rows.length.toLocaleString(locale) + t(' of ') : ''}{section.records.length.toLocaleString(locale)}</span></summary>
       {(!overviewAction || registerOpen) && <div className={styles.registerBody}>
         {section.records.length > 0 && <div className={styles.filters} data-compact-filters={overviewAction ? true : undefined}>
-          <label className={styles.search}>Search records<input type="search" value={query} maxLength={200} onChange={event => { setQuery(event.target.value); setPage(0); }} placeholder="Name, course or reference" /></label>
-          {overviewAction && <button className={styles.button} type="button" aria-expanded={filtersOpen} aria-controls={id + '-filters'} onClick={() => setFiltersOpen(!filtersOpen)}>Filters{advancedFilterCount > 0 && ' (' + advancedFilterCount + ')'}</button>}
+          <label className={styles.search}>{t("Search records")}<input type="search" value={query} maxLength={200} onChange={event => { setQuery(event.target.value); setPage(0); }} placeholder={t("Name, course or reference")} /></label>
+          {overviewAction && <button className={styles.button} type="button" aria-expanded={filtersOpen} aria-controls={id + '-filters'} onClick={() => setFiltersOpen(!filtersOpen)}>{t("Filters")}{advancedFilterCount > 0 && ' (' + advancedFilterCount + ')'}</button>}
           <div id={id + '-filters'} className={overviewAction ? styles.advancedFilters : styles.inlineFilters} hidden={Boolean(overviewAction) && !filtersOpen}>
-          {tables.length > 1 && <label><span id={id + '-source-label'}>Source</span><select aria-labelledby={id + '-source-label'} value={table} onChange={event => { setTable(event.target.value); setPage(0); }}><option value="">All sources</option>{tables.map(value => <option key={value} value={value}>{tableLabels[value]}</option>)}</select></label>}
-          {statuses.length > 0 && <label><span id={id + '-status-label'}>Reported status</span><select aria-labelledby={id + '-status-label'} value={status} onChange={event => { setStatus(event.target.value); setPage(0); }}><option value="">All statuses</option>{statuses.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
-          <label className={styles.check}><input type="checkbox" checked={reviewOnly} onChange={event => { setReviewOnly(event.target.checked); setPage(0); }} />Needs mapping review</label>
+          {tables.length > 1 && <label><span id={id + '-source-label'}>{t("Source")}</span><select aria-labelledby={id + '-source-label'} value={table} onChange={event => { setTable(event.target.value); setPage(0); }}><option value="">{t("All sources")}</option>{tables.map(value => <option key={value} value={value}>{t(tableLabels[value])}</option>)}</select></label>}
+          {statuses.length > 0 && <label><span id={id + '-status-label'}>{t("Reported status")}</span><select aria-labelledby={id + '-status-label'} value={status} onChange={event => { setStatus(event.target.value); setPage(0); }}><option value="">{t("All statuses")}</option>{statuses.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
+          <label className={styles.check}><input type="checkbox" checked={reviewOnly} onChange={event => { setReviewOnly(event.target.checked); setPage(0); }} />{t("Needs mapping review")}</label>
           </div>
         </div>}
-        {filtered && <div className={styles.activeFilter}><span role="status">{group && chart ? chart.title + ' · ' + group.label + ' · ' : ''}{rows.length} matching {rows.length === 1 ? 'record' : 'records'}</span><button type="button" onClick={resetFilters}>Clear filters</button></div>}
+        {filtered && <div className={styles.activeFilter}><span role="status">{group && chart ? chart.title + ' · ' + group.label + ' · ' : ''}{language === 'ar' ? 'السجلات المطابقة: ' + rows.length.toLocaleString(locale) : rows.length + ' matching ' + (rows.length === 1 ? 'record' : 'records')}</span><button type="button" onClick={resetFilters}>{t("Clear filters")}</button></div>}
         {visible.length ? <ul className={styles.records}>{visible.map(row => <li key={row.id + '-' + row.review.version}>
           <WorkflowRow row={row} view={section.key} data={data} onSaved={onSaved} groupName={id + '-row'} />
-        </li>)}</ul> : <p className={styles.empty}>{section.records.length ? 'No records match these filters.' : 'No workbook records are available for this view.'}</p>}
-        {pageCount > 1 && <nav className={styles.pagination} aria-label={section.title + ' pages'}><button className={styles.button} type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button><span aria-live="polite">Page {currentPage + 1} of {pageCount}</span><button className={styles.button} type="button" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Next</button></nav>}
+        </li>)}</ul> : <p className={styles.empty}>{section.records.length ? t("No records match these filters.") : t("No workbook records are available for this view.")}</p>}
+        {pageCount > 1 && <nav className={styles.pagination} aria-label={section.title + ' pages'}><button className={styles.button} type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>{t("Previous")}</button><span aria-live="polite">{t("Page ")}{(currentPage + 1).toLocaleString(locale)} {t('of')} {pageCount.toLocaleString(locale)}</span><button className={styles.button} type="button" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>{t("Next")}</button></nav>}
       </div>}
     </details>
   </section>;
@@ -140,45 +150,54 @@ const summaryFieldKeys: Partial<Record<View, string[]>> = {
 };
 
 function WorkflowRow({ row, view, data, onSaved, groupName }: { row: WorkflowOperationsRecord; view: View; data: EnabledData; onSaved: () => void; groupName: string }) {
+  const language = useSiteLanguage();
+  const t = useStaffText();
+
   const fields = view === 'payments' || view === 'tutor_pay' ? [...row.fields].sort((left, right) => Number(right.type === 'money') - Number(left.type === 'money')) : row.fields;
   const summaryFields = fields.filter(field => summaryFieldKeys[view]?.includes(field.key));
   const highlight = summaryFields.find(field => field.value !== null) ?? summaryFields[0];
   return <details name={groupName} className={styles.record}>
     <summary>
-      <span className={styles.rowIdentity}><strong>{row.title}</strong>{row.subtitle && <small>{row.subtitle}</small>}{highlight && row.reported_status && <small>{row.reported_status} · reported</small>}</span>
-      <span className={styles.rowStatus}>{highlight ? <><small>{highlight.label}</small><b>{formatValue(highlight)}</b></> : row.reported_status ? row.reported_status + ' · reported' : tableLabels[row.source_table]}</span>
-      <span className={styles.rowDate}>{row.date ? formatValue({ key: 'date', label: 'Date', type: 'date', value: row.date }) : 'Undated'}</span>
+      <span className={styles.rowIdentity}><strong>{row.title}</strong>{row.subtitle && <small>{row.subtitle}</small>}{highlight && row.reported_status && <small>{row.reported_status} · {t('reported')}</small>}</span>
+      <span className={styles.rowStatus}>{highlight ? <><small>{t(highlight.label)}</small><b>{formatValue(highlight, language)}</b></> : row.reported_status ? row.reported_status + ' · ' + t('reported') : t(tableLabels[row.source_table])}</span>
+      <span className={styles.rowDate}>{row.date ? formatValue({ key: 'date', label: 'Date', type: 'date', value: row.date }, language) : t("Undated")}</span>
       <span className={styles.chevron} aria-hidden="true" />
     </summary>
     <div className={styles.recordDetail}>
-      <p className={styles.source}>{tableLabels[row.source_table]} · row {row.source_row} · {row.review.state === 'needs_review' ? 'Needs mapping review' : row.review.state === 'linked' ? 'Linked record' : 'Mapping reviewed'}</p>
-      {row.actions.length > 0 && <div className={styles.actions}>{row.actions.map(action => <Link key={action.label + '-' + action.href} href={action.href}>{action.label}</Link>)}</div>}
+      <p className={styles.source}>{t(tableLabels[row.source_table])} · {t('row')} {row.source_row} · {row.review.state === 'needs_review' ? t("Needs mapping review") : row.review.state === 'linked' ? t("Linked record") : t("Mapping reviewed")}</p>
+      {row.actions.length > 0 && <div className={styles.actions}>{row.actions.map(action => <Link key={action.label + '-' + action.href} href={action.href}>{t(action.label)}</Link>)}</div>}
       {fields.length > 0 && <Fields fields={fields} />}
-      {row.issues.length > 0 && <details className={styles.details}><summary>Source issues ({row.issues.length})</summary><ul>{row.issues.map((issue, index) => <li key={issue + '-' + index}>{issue.replaceAll('_', ' ').replaceAll(':', ' · ')}</li>)}</ul></details>}
+      {row.issues.length > 0 && <details className={styles.details}><summary>{t("Source issues (")}{row.issues.length})</summary><ul>{row.issues.map((issue, index) => <li key={issue + '-' + index}>{issue.replaceAll('_', ' ').replaceAll(':', ' · ')}</li>)}</ul></details>}
       {row.review.can_review && data.role === 'owner' && <MappingReview row={row} options={data.mapping_options} onSaved={onSaved} />}
     </div>
   </details>;
 }
 
-function Fields({ fields }: { fields: Field[] }) { return <dl className={styles.fields}>{fields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{formatValue(field)}</dd></div>)}</dl>; }
-function formatValue(field: Field) {
-  if (field.value === null) return 'Not recorded';
-  if (field.type === 'money' && typeof field.value === 'number') return formatFinanceAmount(field.value);
-  if (typeof field.value === 'boolean') return field.value ? 'Yes' : 'No';
+function Fields({ fields }: { fields: Field[] }) {
+  const t = useStaffText();
+  const language = useSiteLanguage();
+  return <dl className={styles.fields}>{fields.map(field => <div key={field.key}><dt>{t(field.label)}</dt><dd>{formatValue(field, language)}</dd></div>)}</dl>; }
+function formatValue(field: Field, language: SiteLanguage) {
+  const locale = language === 'ar' ? 'ar-EG' : 'en-GB';
+  if (field.value === null) return staffText(language, 'Not recorded');
+  if (field.type === 'money' && typeof field.value === 'number') return formatFinanceAmount(field.value, locale);
+  if (typeof field.value === 'boolean') return staffText(language, field.value ? 'Yes' : 'No');
   if (field.type === 'date' && typeof field.value === 'string') {
     const date = workbookDateTime(field.value);
-    if (date === null) return field.value + ' (invalid date)';
-    return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Cairo' }).format(date);
+    if (date === null) return field.value + staffText(language, ' (invalid date)');
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Cairo' }).format(date);
   }
   return String(field.value);
 }
 
 function MappingReview({ row, options, onSaved }: { row: WorkflowOperationsRecord; options: EnabledData['mapping_options']; onSaved: () => void }) {
+  const t = useStaffText();
+
   const [learner, setLearner] = useState(row.links.learner_id || ''), [tutor, setTutor] = useState(row.links.tutor_id || ''), id = useId();
   const showLearner = ['sessions', 'packages', 'students'].includes(row.source_table), showTutor = ['sessions', 'tutors'].includes(row.source_table);
-  return <details className={styles.details}><summary>Review record links</summary><p className={styles.description}>Confirm the people linked to this source row. Payment and delivery figures remain reported after this review.</p><IdentityForm action="workflow-operations" payload={form => ({ link_id: row.id, expected_version: row.review.version, review_state: 'reviewed', links: { ...(showLearner ? { learner_id: learner || null } : {}), ...(showTutor ? { tutor_id: tutor || null } : {}) }, reason: String(form.get('reason')).trim() })} submitLabel="Save mapping review" successMessage="Mapping review saved. Historical financial and delivery claims remain reported." resettable={false} onSaved={onSaved}>
-    {showLearner && <div className={styles.filters}><label htmlFor={`${id}-learner`}>Linked learner<select id={`${id}-learner`} value={learner} onChange={event => setLearner(event.target.value)}><option value="">Unresolved learner</option>{options.learners.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
-    {showTutor && <div className={styles.filters}><label htmlFor={`${id}-tutor`}>Linked tutor<select id={`${id}-tutor`} value={tutor} onChange={event => setTutor(event.target.value)}><option value="">Unresolved tutor</option>{options.tutors.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
-    <TextField name="reason" label="Review evidence and reason" maxLength={2000} multiline />
+  return <details className={styles.details}><summary>{t("Review record links")}</summary><p className={styles.description}>{t("Confirm the people linked to this source row. Payment and delivery figures remain reported after this review.")}</p><IdentityForm action="workflow-operations" payload={form => ({ link_id: row.id, expected_version: row.review.version, review_state: 'reviewed', links: { ...(showLearner ? { learner_id: learner || null } : {}), ...(showTutor ? { tutor_id: tutor || null } : {}) }, reason: String(form.get('reason')).trim() })} submitLabel={t("Save mapping review")} successMessage={t("Mapping review saved. Historical financial and delivery claims remain reported.")} resettable={false} onSaved={onSaved}>
+    {showLearner && <div className={styles.filters}><label htmlFor={`${id}-learner`}>{t("Linked learner")}<select id={`${id}-learner`} value={learner} onChange={event => setLearner(event.target.value)}><option value="">{t("Unresolved learner")}</option>{options.learners.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
+    {showTutor && <div className={styles.filters}><label htmlFor={`${id}-tutor`}>{t("Linked tutor")}<select id={`${id}-tutor`} value={tutor} onChange={event => setTutor(event.target.value)}><option value="">{t("Unresolved tutor")}</option>{options.tutors.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
+    <TextField name="reason" label={t("Review evidence and reason")} maxLength={2000} multiline />
   </IdentityForm></details>;
 }

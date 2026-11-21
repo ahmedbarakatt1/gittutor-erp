@@ -7,6 +7,7 @@ import { publicContact } from '../../src/locales/contact';
 import type { Conversation } from '../../src/modules/support/commands';
 
 vi.mock('next/server', () => ({ connection: async () => {} }));
+vi.mock('@/server/site-language', () => ({ getSiteLanguage: async () => 'en' }));
 vi.mock('../../src/components/payments/shared', async importOriginal => ({
   ...await importOriginal<typeof import('../../src/components/payments/shared')>(),
   usePaymentRecord: () => ({ data: { is_admin: true, staff: [], templates: [], hours: { version: 1, weekly_intervals: [], response_target_minutes: null } }, reload: vi.fn() }),

@@ -7,16 +7,28 @@ import { catalogCopy } from '@/locales/catalog';
 import type { AdminOffer } from '@/modules/catalog/queries';
 import styles from './catalog.module.css';
 import formStyles from '../auth.module.css';
+import { policyFields as arabicPolicyFields, policyCopy as arabicPolicyCopy } from '@/locales/ar-transaction/catalog-policy';
+import { catalogCopy as arabicCatalogCopy } from '@/locales/ar-transaction/catalog';
+import { useSiteLanguage } from '@/components/site-language';
+
 
 export type PolicyContent = Record<string, unknown>;
 type FieldKey = keyof typeof policyFields;
 type Field = { label: string; min?: number; max?: number; options?: Record<string, string>; numeric?: boolean; boolean?: boolean; basisPoints?: boolean };
 const fields: Record<FieldKey, Field> = policyFields;
+const textByLanguage = {
+  en: { fields, copy, catalogCopy },
+  ar: { fields: arabicPolicyFields as Record<FieldKey, Field>, copy: arabicPolicyCopy, catalogCopy: arabicCatalogCopy },
+};
+
 export const basics: FieldKey[] = ['hold_minutes', 'confirmation_deadline_minutes_before_start', 'deposit_basis_points', 'deposit_rounding'];
 export const groups: FieldKey[] = ['group_target_size', 'group_capacity', 'group_minimum_size', 'formation_failure_action', 'amendment_acceptance_minutes', 'latest_amendment_minutes_before_start', 'post_confirmation_dropout_price_guarantee'];
 export const delivery: FieldKey[] = ['learner_no_show_rule', 'individual_early_departure_rule', 'partial_class_remedy_rule', 'partial_class_rounding'];
 
 function PolicyField({ name, value }: { name: FieldKey; value: unknown }) {
+  const uiLanguage = useSiteLanguage();
+  const { fields, copy } = textByLanguage[uiLanguage];
+
   const id = useId(); const definition = fields[name];
   const initial = value === null || value === undefined ? '' : definition.basisPoints ? scaledIntegerInput(Number(value), 2) : String(value);
   return <div className={formStyles.field}><label htmlFor={id}>{definition.label}</label>{definition.options ? <select id={id} name={name} defaultValue={initial} required><option value="">{copy.choose}</option>{Object.entries(definition.options).map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select> : <input id={id} name={name} type="number" step={definition.basisPoints ? '0.01' : '1'} min={definition.min} max={definition.max} defaultValue={initial} required />}</div>;
@@ -24,6 +36,9 @@ function PolicyField({ name, value }: { name: FieldKey; value: unknown }) {
 
 type Window = { minimum_minutes_before_start: number | null; maximum_minutes_before_start_exclusive: number | null; refund_basis_points: number | null };
 export function PolicyFields({ content, scope, offers }: { content: PolicyContent; scope: 'group' | 'private'; offers: AdminOffer[] }) {
+  const uiLanguage = useSiteLanguage();
+  const { catalogCopy, copy } = textByLanguage[uiLanguage];
+
   const initial = Array.isArray(content.customer_cancellation_windows) ? content.customer_cancellation_windows as Window[] : [{ minimum_minutes_before_start: 0, maximum_minutes_before_start_exclusive: null, refund_basis_points: null }];
   const [windows, setWindows] = useState(initial.map((value, index) => ({ value, key: index })));
   const [nextWindow, setNextWindow] = useState(initial.length);

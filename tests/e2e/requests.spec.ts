@@ -15,6 +15,32 @@ async function login(page: Page, label: string) {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expectSignedInAccount(page, actor.id);
 }
+
+test('an Arabic request saves its selected format and preserves the learner’s own wording', async ({ page }) => {
+  await login(page, 'learner_a');
+  await page.goto('/learn/requests');
+  await page.getByRole('button', { name: 'العربية', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  const topic = `سؤال عن Fourier ${randomUUID().slice(0, 8)}`;
+  const learner = page.getByLabel('لمن هذه الحصة؟', { exact: true });
+  await expect(learner.locator('option').nth(1)).toBeAttached();
+  await learner.selectOption({ index: 1 });
+  await page.getByLabel('المادة أو الموضوع', { exact: true }).fill(topic);
+  await page.getByLabel('ما الذي تحتاج إلى شرحه؟', { exact: true }).fill('أريد فهم تطبيق تحويل فورييه على هذه الإشارة.');
+  await page.getByLabel('نظام الدراسة', { exact: true }).selectOption('group2');
+  await page.getByLabel('الأيام والأوقات المناسبة لك', { exact: true }).fill('الأحد بعد السادسة بتوقيت القاهرة');
+  const created = page.waitForResponse(response =>
+    new URL(response.url()).pathname === '/api/v1/requests' && response.request().method() === 'POST');
+  await page.getByRole('button', { name: 'متابعة لرفع المواد' }).click();
+  const response = await created;
+  expect(response.ok()).toBe(true);
+  expect(response.request().postDataJSON()).toMatchObject({ topic, format: 'group2' });
+  await expect(page.getByRole('heading', { name: topic, exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'موادك الدراسية' })).toBeVisible();
+  await page.getByRole('button', { name: 'English', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+  await expect(page.getByRole('heading', { name: topic, exact: true })).toBeVisible();
+});
 test('customer material request goes through staff review into a separately consented booking', async ({ browser, page }) => {
   test.setTimeout(120000);
   const f = await requestFixture(), staffContext = await browser.newContext({ baseURL: 'http://127.0.0.1:3000' }), strangerContext = await browser.newContext({ baseURL: 'http://127.0.0.1:3000' });

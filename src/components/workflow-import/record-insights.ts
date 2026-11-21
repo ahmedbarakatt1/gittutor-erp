@@ -1,3 +1,5 @@
+import { staffText } from '@/locales/ar-staff';
+import type { SiteLanguage } from '@/locales/language';
 import type { WorkflowOperationsRecord as Row, WorkflowOperationsSection } from '@/modules/workflow-import/operational-model';
 
 export type ChartGroup = { key: string; label: string; ids: string[]; shortLabel?: string };
@@ -33,9 +35,10 @@ export function workbookDateTime(date: string | null) {
   return instant;
 }
 
-const fullMonth = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-const shortMonth = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' });
-function activity(rows: Row[]): WorkbookChart {
+function activity(rows: Row[], language: SiteLanguage): WorkbookChart {
+  const locale = language === 'ar' ? 'ar-EG' : 'en-GB';
+  const fullMonth = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const shortMonth = new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' });
   const months = rows.map(row => row.date && workbookDateTime(row.date) !== null ? row.date.slice(0, 7) : null);
   const dated = months.filter((value): value is string => value !== null).sort();
   const groups: ChartGroup[] = [];
@@ -58,7 +61,7 @@ function activity(rows: Row[]): WorkbookChart {
   const period = groups.length < 2 ? groups[0]?.label : groups[0].label + ' – ' + groups[groups.length - 1].label;
   if (earlier.ids.length) groups.push(earlier);
   if (missing.ids.length) groups.push(missing);
-  return { key: 'activity', title: 'Session activity', caption: period ? 'Session rows by workbook date · ' + period : 'Session rows have no valid workbook dates.', total: rows.length, groups };
+  return { key: 'activity', title: 'Session activity', caption: period ? staffText(language, 'Session rows by workbook date · ') + period : 'Session rows have no valid workbook dates.', total: rows.length, groups };
 }
 
 function sourceNumber(row: Row, key: string, type: 'number' | 'money') {
@@ -77,10 +80,10 @@ function packageProgress(rows: Row[]): WorkbookChart {
   return { key: 'progress', title: 'Package progress', caption: 'Packages grouped by reported completed and total sessions. Unknown includes missing or inconsistent counts.', total: rows.length, groups };
 }
 
-export function workbookCharts(view: WorkflowOperationsSection['key'], records: Row[]): WorkbookChart[] {
+function buildCharts(view: WorkflowOperationsSection['key'], records: Row[], language: SiteLanguage): WorkbookChart[] {
   if (view === 'overview' || view === 'sessions') {
     const sessions = records.filter(row => row.source_table === 'sessions');
-    if (sessions.length) return [outcomes(sessions), activity(sessions)];
+    if (sessions.length) return [outcomes(sessions), activity(sessions, language)];
   }
   if (view === 'packages' || view === 'overview') {
     const packages = records.filter(row => row.source_table === 'packages');
@@ -99,4 +102,13 @@ export function workbookCharts(view: WorkflowOperationsSection['key'], records: 
     return [{ key: 'balances', title: 'Reported balance distribution', caption, total: records.length, groups }];
   }
   return [];
+}
+
+export function workbookCharts(view: WorkflowOperationsSection['key'], records: Row[], language: SiteLanguage = 'en'): WorkbookChart[] {
+  const charts = buildCharts(view, records, language);
+  if (language === 'en') return charts;
+  return charts.map(chart => ({
+    ...chart, title: staffText(language, chart.title), caption: staffText(language, chart.caption),
+    groups: chart.groups.map(group => ({ ...group, label: staffText(language, group.label) })),
+  }));
 }

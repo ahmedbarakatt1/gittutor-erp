@@ -1,3 +1,6 @@
+'use client';
+import { useSiteLanguage } from '@/components/site-language';
+import { contactMessages } from '@/locales/ar-public';
 import type { ReactNode } from 'react';
 import { publicContact as contact } from '@/locales/contact';
 import styles from './public-contact.module.css';
@@ -9,6 +12,7 @@ function ContactIcon({ name }: { name: 'whatsapp' | 'instagram' | 'tiktok' | 'te
 }
 
 export function PublicContactLinks() {
+  const contact = contactMessages(useSiteLanguage());
   return <address className={styles.links} role="group" aria-label={contact.label}>
     <a href={contact.whatsappHref}><ContactIcon name="whatsapp" />{contact.whatsapp}</a>
     <a href={contact.instagramHref}><ContactIcon name="instagram" />{contact.instagram}</a>
@@ -26,6 +30,7 @@ export function WhatsAppContactAction({ children }: { children: ReactNode }) {
 }
 
 export function CourseHelp() {
+  const contact = contactMessages(useSiteLanguage());
   return <aside className={styles.help} aria-labelledby="course-help-title">
     <div><h2 id="course-help-title">{contact.courseHelpTitle}</h2><p>{contact.courseHelpBody}</p></div>
     <WhatsAppContactAction>{contact.courseHelpAction}</WhatsAppContactAction>

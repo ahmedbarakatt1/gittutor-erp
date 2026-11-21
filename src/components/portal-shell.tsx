@@ -1,5 +1,5 @@
-import { BrandLogo } from '@/components/brand-logo';
-import Link from 'next/link';
+import { LanguageSwitch } from './site-language';
+import { PortalHomeLink, StaffMessage, SiteLanguageName } from './ar-staff-label';
 import type { ReactNode } from 'react';
 import { SignOutButton } from './auth-form';
 import { PortalNavigation, type NavigationGroup } from './portal-navigation';
@@ -71,11 +71,12 @@ export function PortalShell({ kind, account, children, title, description, activ
   if (account.roles.includes('admin')) authorizedWorkspaces.push('admin');
   const groups = navigationFor(kind, learnerWorkspace, authorizedWorkspaces.filter(workspace => workspace !== kind));
   return <div className={`${styles.portal} ${kind === 'learn' ? '' : styles.staff}`}>
-    <a className="skip-link" href="#account">{copy.skip}</a>
+    <a className="skip-link" href="#account"><StaffMessage text={copy.skip} /></a>
+    <LanguageSwitch />
     <header className={styles.portalHeader}>
       <div className={styles.portalIdentity}>
-        <Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo compact /></Link>
-        <span className={styles.workspaceName}>{workspaceName}</span>
+        <PortalHomeLink className={styles.brand} />
+        <span className={styles.workspaceName}><StaffMessage text={workspaceName} /></span>
       </div>
       <SignOutButton />
     </header>
@@ -83,23 +84,23 @@ export function PortalShell({ kind, account, children, title, description, activ
       <PortalNavigation key={activePath || kind} workspace={workspaceName} groups={groups} activePath={activePath || `/${kind}`} />
       <main id="account" className={styles.portalMain}>
         <header className={styles.portalIntro}>
-          <h1>{title || text.title}</h1>
-          <p className={styles.description}>{description || text.description}</p>
+          <h1><StaffMessage text={title || text.title} /></h1>
+          <p className={styles.description}><StaffMessage text={description || text.description} /></p>
         </header>
         {primaryAction}
         {showAccount && <section className={styles.accountGrid} aria-labelledby="account-heading">
-          <h2 id="account-heading">{copy.portal.account}</h2>
+          <h2 id="account-heading"><StaffMessage text={copy.portal.account} /></h2>
           <dl>
-            <div><dt>{copy.portal.accountId}</dt><dd className={styles.accountReference} data-testid="account-id">{account.account_id}</dd></div>
-            <div><dt>{copy.portal.access}</dt><dd>{account.roles.map((role) => copy.portal.roleLabels[role] || role).join(', ')}</dd></div>
-            <div><dt>{copy.portal.locale}</dt><dd>{account.locale}</dd></div>
-            <div><dt>{copy.portal.verified}</dt><dd className={styles.status}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="m7.5 12 3 3 6-6" /></svg>{copy.portal.verified}</dd></div>
+            <div><dt><StaffMessage text={copy.portal.accountId} /></dt><dd className={styles.accountReference} data-testid="account-id" dir="ltr">{account.account_id}</dd></div>
+            <div><dt><StaffMessage text={copy.portal.access} /></dt><dd>{account.roles.map((role, index) => <span key={role}>{index > 0 && ', '}<StaffMessage text={copy.portal.roleLabels[role] || role} /></span>)}</dd></div>
+            <div><dt><StaffMessage text={copy.portal.locale} /></dt><dd><SiteLanguageName /></dd></div>
+            <div><dt><StaffMessage text={copy.portal.verified} /></dt><dd className={styles.status}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="m7.5 12 3 3 6-6" /></svg><StaffMessage text={copy.portal.verified} /></dd></div>
           </dl>
         </section>}
         {kind === 'learn' && learnerWorkspace && showAccount && <section id="learners" className={styles.section} aria-labelledby="learners-heading">
-          <h2 id="learners-heading">{copy.portal.learnerTitle}</h2>
-          <p>{copy.portal.learnerDescription}</p>
-          {account.authorized_learner_ids.length ? <ul className={styles.learnerList}>{account.authorized_learner_ids.map((id) => <li key={id}><span>{copy.portal.learnerReference}</span><strong data-testid="learner-id">{id}</strong></li>)}</ul> : <p>{copy.portal.noLearners}</p>}
+          <h2 id="learners-heading"><StaffMessage text={copy.portal.learnerTitle} /></h2>
+          <p><StaffMessage text={copy.portal.learnerDescription} /></p>
+          {account.authorized_learner_ids.length ? <ul className={styles.learnerList}>{account.authorized_learner_ids.map((id) => <li key={id}><span><StaffMessage text={copy.portal.learnerReference} /></span><strong data-testid="learner-id" dir="ltr">{id}</strong></li>)}</ul> : <p><StaffMessage text={copy.portal.noLearners} /></p>}
         </section>}
         {children}
       </main>

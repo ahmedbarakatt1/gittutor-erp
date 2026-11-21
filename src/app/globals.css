@@ -21,6 +21,16 @@
 }
 
 * { box-sizing: border-box; }
+.language-bar { background: var(--tint); }
+.language-bar form { display: flex; justify-content: flex-end; }
+.language-bar button { display: inline-flex; align-items: center; gap: .45rem; min-block-size: 36px; padding-inline: .65rem; border: 0; background: transparent; color: var(--ink); font: 650 .9rem/1.4 Tahoma, Arial, sans-serif; }
+.language-bar button:hover { color: var(--brand-hover); text-decoration: underline; }
+.language-bar svg { inline-size: 1rem; block-size: 1rem; }
+html:lang(ar) { --font-body: Tahoma, Arial, sans-serif; }
+html:lang(ar) :is(h1, h2, h3, button, label) { letter-spacing: normal; }
+html:lang(ar) :is(h1, h2, h3) { line-height: 1.45; }
+html:lang(ar) :is(input[type=email],input[type=tel],input[type=url],code) { direction: ltr; unicode-bidi: isolate; }
+@media print { .language-bar { display: none; } }
 html { scroll-behavior: smooth; scroll-padding-block-start: 24px; scrollbar-color: var(--muted) var(--canvas); }
 body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.65; }
 ::selection { color: var(--ink); background: var(--accent); }

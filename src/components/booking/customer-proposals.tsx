@@ -13,19 +13,31 @@ import { CustomerTransferReview } from './customer-transfer';
 import { formatCreditQuanta } from '@/modules/shared/format';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
+import { bookingCopy as arabicBookingCopy } from '@/locales/ar-transaction/booking';
+import { packageCopy as arabicPackageCopy } from '@/locales/ar-transaction/packages';
+import { useSiteLanguage } from '@/components/site-language';
+
+const textByLanguage = {
+  en: { copy, packageCopy },
+  ar: { copy: arabicBookingCopy, packageCopy: arabicPackageCopy },
+};
+
 
 export function CustomerTerms({ terms }: { terms: CustomerProposalTerms }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   const headingId = useId();
   return <><dl className={styles.facts}>
     <div><dt>{copy.oldTime}</dt><dd><SessionTime start={terms.old_start_at} end={terms.old_end_at} /></dd></div>
     <div><dt>{copy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div>
-    <div><dt>{copy.oldTuition}</dt><dd>{money(terms.old_customer_price_minor)}</dd></div>
-    <div><dt>{copy.newTuition}</dt><dd>{money(terms.customer_price_minor)}</dd></div>
-    <div><dt>{copy.adjustment}</dt><dd>{money(terms.customer_adjustment_minor)}</dd></div>
-    {terms.remedy !== 'none' && <div><dt>{copy.remedy}</dt><dd>{copy.remedies[terms.remedy]} · {terms.remedy_amount_minor === null ? copy.unknownMoney : money(terms.remedy_amount_minor)}</dd></div>}
-    {terms.restored_credit_quanta !== null && terms.restored_credit_quanta > 0 && <div><dt>{copy.restoredCredits}</dt><dd>{formatCreditQuanta(terms.restored_credit_quanta)}</dd></div>}
-    {terms.released_credit_quanta > 0 && <><div><dt>{copy.releasedCredits}</dt><dd>{formatCreditQuanta(terms.released_credit_quanta)}</dd></div>{terms.released_value_minor !== null && <div><dt>{copy.releasedCreditValue}</dt><dd>{money(terms.released_value_minor)}</dd></div>}</>}
-    {terms.extinguished_credit_quanta > 0 && <><div><dt>{copy.extinguishedCredits}</dt><dd>{formatCreditQuanta(terms.extinguished_credit_quanta)}</dd></div><div><dt>{copy.extinguishedCreditValue}</dt><dd>{money(terms.extinguished_value_minor)}</dd></div></>}
+    <div><dt>{copy.oldTuition}</dt><dd>{money(terms.old_customer_price_minor, 'EGP', uiLanguage)}</dd></div>
+    <div><dt>{copy.newTuition}</dt><dd>{money(terms.customer_price_minor, 'EGP', uiLanguage)}</dd></div>
+    <div><dt>{copy.adjustment}</dt><dd>{money(terms.customer_adjustment_minor, 'EGP', uiLanguage)}</dd></div>
+    {terms.remedy !== 'none' && <div><dt>{copy.remedy}</dt><dd>{copy.remedies[terms.remedy]} · {terms.remedy_amount_minor === null ? copy.unknownMoney : money(terms.remedy_amount_minor, 'EGP', uiLanguage)}</dd></div>}
+    {terms.restored_credit_quanta !== null && terms.restored_credit_quanta > 0 && <div><dt>{copy.restoredCredits}</dt><dd>{formatCreditQuanta(terms.restored_credit_quanta, uiLanguage === 'ar' ? 'ar-EG' : 'en-EG')}</dd></div>}
+    {terms.released_credit_quanta > 0 && <><div><dt>{copy.releasedCredits}</dt><dd>{formatCreditQuanta(terms.released_credit_quanta, uiLanguage === 'ar' ? 'ar-EG' : 'en-EG')}</dd></div>{terms.released_value_minor !== null && <div><dt>{copy.releasedCreditValue}</dt><dd>{money(terms.released_value_minor, 'EGP', uiLanguage)}</dd></div>}</>}
+    {terms.extinguished_credit_quanta > 0 && <><div><dt>{copy.extinguishedCredits}</dt><dd>{formatCreditQuanta(terms.extinguished_credit_quanta, uiLanguage === 'ar' ? 'ar-EG' : 'en-EG')}</dd></div><div><dt>{copy.extinguishedCreditValue}</dt><dd>{money(terms.extinguished_value_minor, 'EGP', uiLanguage)}</dd></div></>}
   </dl>{terms.extinguished_credit_quanta > 0 && <p className={styles.notice}>{copy.cancellationCreditNotice}</p>}<OfferTerms terms={terms.customer_policy} policyId={terms.policy_version_id} headingId={headingId} /></>;
 }
 
@@ -33,6 +45,9 @@ export function CustomerProposal(props: { id: string; learnerId: string; kind?: 
   return props.kind === 'enrollment_transfer' ? <CustomerTransferReview id={props.id} learnerId={props.learnerId} /> : <BookingCustomerProposal {...props} kind={props.kind} />;
 }
 function BookingCustomerProposal({ id: initialId, learnerId, kind = 'operation' }: { id: string; learnerId: string; kind?: 'operation' | 'amendment' }) {
+  const uiLanguage = useSiteLanguage();
+  const { packageCopy, copy } = textByLanguage[uiLanguage];
+
   const [id, setId] = useState(initialId);
   const route = kind === 'amendment' ? 'amendments' : 'operation-proposals';
   const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=customer&learner_id=${encodeURIComponent(learnerId)}`);
@@ -46,12 +61,15 @@ function BookingCustomerProposal({ id: initialId, learnerId, kind = 'operation' 
 }
 
 export function CustomerChangeRequest({ enrollment }: { enrollment: CustomerEnrollment }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   const [kind, setKind] = useState('reschedule'); const [destination, setDestination] = useState(''); const [remedy, setRemedy] = useState('policy_default'); const [proposalId, setProposalId] = useState('');
   const choices = usePagedRecords<PublicOccurrence>(`booking/occurrences?offer_id=${enrollment.occurrence.offer_id}`);
   if (!['held', 'confirmed'].includes(enrollment.state)) return null;
   return <details className={styles.section}><summary>{copy.requestChange}</summary><Select name="change_kind" label={copy.changeKind} value={kind} onChange={value => { setKind(value); setProposalId(''); }}><option value="reschedule">{copy.reschedule}</option><option value="cancellation_remedy">{copy.cancellation}</option></Select><p>{copy.pendingApproval}</p>{kind === 'reschedule' && <ReadState pending={choices.items === null} {...choices} />}
     <IdentityForm key={`${kind}-${enrollment.version}`} action="operation-proposals" submitLabel={copy.submitRequest} successMessage={copy.requested} resettable={false} onSaved={result => setProposalId(String(result.proposal_id))} payload={form => ({ kind, target_id: enrollment.enrollment_id, expected_version: enrollment.version, requested_terms: kind === 'reschedule' ? { target_type: 'enrollment', destination_occurrence_id: destination, expires_at: instantField(form, 'expires_at') } : { target_type: 'enrollment', remedy, expires_at: instantField(form, 'expires_at') }, reason: String(form.get('reason')).trim() })}>
-      {kind === 'reschedule' ? <Select name="destination" label={copy.destination} value={destination} onChange={setDestination}><option value="">{copy.chooseDestination}</option>{choices.items?.filter(item => item.occurrence_id !== enrollment.occurrence.occurrence_id && item.available_seats > 0).map(item => <option key={item.occurrence_id} value={item.occurrence_id}>{cairoDate(item.start_at)} {cairoTime(item.start_at)} · {item.tutor.display_name} · {money(item.customer_price_minor)}</option>)}</Select> : <Select name="remedy" label={copy.remedy} value={remedy} onChange={setRemedy}>{Object.entries(copy.remedies).filter(([value]) => value !== 'none').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}
+      {kind === 'reschedule' ? <Select name="destination" label={copy.destination} value={destination} onChange={setDestination}><option value="">{copy.chooseDestination}</option>{choices.items?.filter(item => item.occurrence_id !== enrollment.occurrence.occurrence_id && item.available_seats > 0).map(item => <option key={item.occurrence_id} value={item.occurrence_id}>{cairoDate(item.start_at, uiLanguage)} {cairoTime(item.start_at, uiLanguage)} · {item.tutor.display_name} · {money(item.customer_price_minor, 'EGP', uiLanguage)}</option>)}</Select> : <Select name="remedy" label={copy.remedy} value={remedy} onChange={setRemedy}>{Object.entries(copy.remedies).filter(([value]) => value !== 'none').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}
       <CairoInput name="expires_at" label={copy.requestExpiry} /><TextField name="reason" label={copy.reason} maxLength={2000} />
     </IdentityForm>{proposalId && <CustomerProposal id={proposalId} learnerId={enrollment.learner.learner_id} kind={kind === 'reschedule' ? 'enrollment_transfer' : 'operation'} />}
   </details>;

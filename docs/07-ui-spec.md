@@ -19,6 +19,8 @@ Use the approved logo asset once supplied. A text Git Tutor wordmark is the deve
 
 Application copy is externalized by locale. The initial English copy below is a draft. Components support RTL direction, logical CSS properties and locale-aware dates, numbers and currency. Countdown values derive from server-synchronized time and the saved occurrence start.
 
+The website starts in English. The language button reads **العربية** in English and **English** in Arabic. Switching keeps the current route and query, including a sign-in return link. A site-wide cookie remembers the selection in that browser. The document uses Arabic and right-to-left direction from the server when Arabic is selected. The interface language is independent of teaching language, uploaded documents, user-entered text and the underlying records.
+
 ## Public website
 
 | Route | Required content | Primary action |

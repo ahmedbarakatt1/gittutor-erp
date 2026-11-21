@@ -3,6 +3,7 @@
 .context p { margin-block-start: var(--heading-gap); color: var(--muted); max-inline-size: 46ch; font-size: clamp(1.0625rem, 1.6vw, 1.25rem); line-height: 1.6; }
 .table { inline-size: 100%; border-collapse: collapse; }
 .table th { text-align: start; }
+:global([dir=rtl]) .action svg { transform: scaleX(-1); }
 .table thead th { padding-block: .75rem; border-block-end: 2px solid var(--ink); font-weight: 650; }
 .table tbody :is(th, td) { padding-block: var(--row-space); border-block-end: 1px solid var(--border); }
 .table th:first-child { padding-inline-end: 1rem; }

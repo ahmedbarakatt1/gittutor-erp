@@ -1,5 +1,7 @@
 'use client';
 
+import { useSiteLanguage } from '@/components/site-language';
+import { useStaffCopy } from '@/components/ar-staff-label';
 import { useId, useState } from 'react';
 import Link from 'next/link';
 import type { FileView } from '@/modules/files/queries';
@@ -16,24 +18,29 @@ type TutorSession = Extract<SessionQuizzes, { view: 'tutor' }>;
 type TutorQuiz = TutorSession['quizzes'][number];
 
 export function TutorQuizzes({ initialOccurrence }: { initialOccurrence?: string }) {
+  const language = useSiteLanguage();
+  const copyUi = useStaffCopy(copy);
+
   const [chosen, setChosen] = useState(initialOccurrence ?? '');
   const sessions = usePaymentList<TutorOccurrence>(initialOccurrence ? `tutor/occurrences?occurrence_id=${initialOccurrence}` : 'tutor/occurrences');
   return <section className={styles.workspace}>
-    {initialOccurrence && <Link href="/tutor/quizzes">{copy.chooseSession}</Link>}
-    <Select label={copy.session} name="quiz_session" value={chosen} onChange={setChosen}>
-      <option value="">{copy.chooseSession}</option>
+    {initialOccurrence && <Link href="/tutor/quizzes">{copyUi.chooseSession}</Link>}
+    <Select label={copyUi.session} name="quiz_session" value={chosen} onChange={setChosen}>
+      <option value="">{copyUi.chooseSession}</option>
       {sessions.items?.filter(item => item.occurrence.state !== 'cancelled').map(({ occurrence, roster }) =>
         <option value={occurrence.occurrence_id} key={occurrence.occurrence_id}>
-          {cairoDate(occurrence.start_at)} · {cairoTime(occurrence.start_at)} · {occurrence.format === 'group' ? copy.group : copy.individual}{roster.length ? ' · ' + roster.map(r => r.display_name).join(', ') : ''}
+          {cairoDate(occurrence.start_at, language)} · {cairoTime(occurrence.start_at, language)} · {occurrence.format === 'group' ? copyUi.group : copyUi.individual}{roster.length ? ' · ' + roster.map(r => r.display_name).join(language === 'ar' ? '، ' : ', ') : ''}
         </option>)}
     </Select>
     <PaymentReadState pending={!sessions.items} {...sessions} />
-    {sessions.items?.length === 0 && <p>{copy.noSessions}</p>}
+    {sessions.items?.length === 0 && <p>{copyUi.noSessions}</p>}
     {chosen && <QuizSession key={chosen} id={chosen} />}
   </section>;
 }
 
 function QuizSession({ id }: { id: string }) {
+  const copyUi = useStaffCopy(copy);
+
   const record = usePaymentRecord<SessionQuizzes>(`occurrences/${id}/quizzes?view=tutor`, true);
   const data = record.data;
   const [announcement, setAnnouncement] = useState('');
@@ -44,11 +51,11 @@ function QuizSession({ id }: { id: string }) {
   return <div className={styles.workspace}>
     <p role="status">{announcement}</p>
     {data?.view === 'tutor' && <>
-      <details className={styles.panel}><summary>{copy.add}</summary>
-        <NewQuiz key={data.quizzes.length} id={id} quizzes={data.quizzes} onSaved={() => refresh(copy.published)} />
+      <details className={styles.panel}><summary>{copyUi.add}</summary>
+        <NewQuiz key={data.quizzes.length} id={id} quizzes={data.quizzes} onSaved={() => refresh(copyUi.published)} />
       </details>
-      <h2>{copy.grades}</h2>
-      {data.quizzes.length === 0 && <p className={styles.empty}>{copy.noQuizzes}</p>}
+      <h2>{copyUi.grades}</h2>
+      {data.quizzes.length === 0 && <p className={styles.empty}>{copyUi.noQuizzes}</p>}
       {data.quizzes.map(quiz => <QuizGradebook key={quiz.quiz_id} quiz={quiz} roster={data.roster} onSaved={refresh} />)}
     </>}
     <PaymentReadState pending={!data} {...record} />
@@ -56,6 +63,8 @@ function QuizSession({ id }: { id: string }) {
 }
 
 function NewQuiz({ id, quizzes, onSaved }: { id: string; quizzes: TutorQuiz[]; onSaved: () => void }) {
+  const copyUi = useStaffCopy(copy);
+
   const files = usePaymentList<FileView>(`files?occurrence_id=${id}&purpose=shared_handout`);
   const [recent, setRecent] = useState<FileView>();
   const [selected, setSelected] = useState('');
@@ -66,21 +75,21 @@ function NewQuiz({ id, quizzes, onSaved }: { id: string; quizzes: TutorQuiz[]; o
         !quizzes.some(quiz => quiz.file_id === file.file_id)) options.set(file.file_id, file);
   }
   return <div className={styles.workspace}>
-    <p>{copy.uploadHelp}</p>
+    <p>{copyUi.uploadHelp}</p>
     <FileUpload purpose="shared_handout" parentId={id} pdfOnly operationScope="session-quiz" onUploaded={() => setSelected('')}
       onReady={file => { setRecent(file); setSelected(file.file_id); files.reload(); }} />
     <PaymentReadState pending={!files.items} {...files} />
-    <IdentityForm action={`occurrences/${id}/quizzes`} submitLabel={copy.publish} successMessage={copy.published}
+    <IdentityForm action={`occurrences/${id}/quizzes`} submitLabel={copyUi.publish} successMessage={copyUi.published}
       disabled={!options.has(selected)} onSaved={onSaved} payload={form => ({
         title: String(form.get('title')).trim(), file_id: selected, max_score: Number(form.get('max_score')),
       })}>
-      <Select label={copy.available} name="file_id" value={options.has(selected) ? selected : ''} onChange={setSelected}>
-        <option value="">{copy.chooseFile}</option>
+      <Select label={copyUi.available} name="file_id" value={options.has(selected) ? selected : ''} onChange={setSelected}>
+        <option value="">{copyUi.chooseFile}</option>
         {Array.from(options.values(), file => <option key={file.file_id} value={file.file_id}>{file.filename}</option>)}
       </Select>
-      <TextField name="title" label={copy.title} maxLength={160} />
-      <PointField label={copy.max} name="max_score" min={0.01} max={10000} />
-      <p>{copy.audience}</p>
+      <TextField name="title" label={copyUi.title} maxLength={160} />
+      <PointField label={copyUi.max} name="max_score" min={0.01} max={10000} />
+      <p>{copyUi.audience}</p>
     </IdentityForm>
   </div>;
 }
@@ -94,23 +103,25 @@ function PointField({ label, name, min, max, initial }: { label: string; name: s
 }
 
 function QuizGradebook({ quiz, roster, onSaved }: { quiz: TutorQuiz; roster: TutorSession['roster']; onSaved: (message: string) => void }) {
+  const copyUi = useStaffCopy(copy);
+
   const [selected, setSelected] = useState('');
   const grade = quiz.grades.find(row => row.learner_id === selected);
   return <details className={styles.panel}>
-    <summary>{quiz.title}<span>{quiz.grades.length} / {roster.length} {copy.recorded}</span></summary>
+    <summary>{quiz.title}<span>{quiz.grades.length} / {roster.length} {copyUi.recorded}</span></summary>
     <div className={styles.workspace}>
-      <p>{copy.max} · {quiz.max_score}{quiz.content_path === `/api/v1/files/${quiz.file_id}/content` && <> · <a href={quiz.content_path} download>{quiz.filename}</a></>}</p>
-      {roster.length === 0 ? <p>{copy.noRoster}</p> : <Select label={copy.learner} name={'recipient-' + quiz.quiz_id} value={selected} onChange={setSelected}>
-        <option value="">{copy.chooseLearner}</option>
+      <p>{copyUi.max} · {quiz.max_score}{quiz.content_path === `/api/v1/files/${quiz.file_id}/content` && <> · <a href={quiz.content_path} download>{quiz.filename}</a></>}</p>
+      {roster.length === 0 ? <p>{copyUi.noRoster}</p> : <Select label={copyUi.learner} name={'recipient-' + quiz.quiz_id} value={selected} onChange={setSelected}>
+        <option value="">{copyUi.chooseLearner}</option>
         {roster.map(learner => <option value={learner.learner_id} key={learner.learner_id}>{learner.display_name}</option>)}
       </Select>}
       {selected && <IdentityForm key={selected + ':' + (grade?.version ?? 0)} action={`quizzes/${quiz.quiz_id}/grades`}
-        submitLabel={grade ? copy.change : copy.save} successMessage={grade ? copy.updated : copy.saved}
-        onSaved={() => onSaved(grade ? copy.updated : copy.saved)} payload={form => ({
+        submitLabel={grade ? copyUi.change : copyUi.save} successMessage={grade ? copyUi.updated : copyUi.saved}
+        onSaved={() => onSaved(grade ? copyUi.updated : copyUi.saved)} payload={form => ({
           learner_id: selected, score: Number(form.get('score')), expected_version: grade?.version ?? 0,
         })}>
-        <PointField label={copy.points} name="score" min={0} max={quiz.max_score} initial={grade?.score} />
-        <p>{copy.privateGrade}</p>
+        <PointField label={copyUi.points} name="score" min={0} max={quiz.max_score} initial={grade?.score} />
+        <p>{copyUi.privateGrade}</p>
       </IdentityForm>}
     </div>
   </details>;

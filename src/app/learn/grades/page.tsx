@@ -1,9 +1,10 @@
+import { pageMetadata } from '@/server/page-metadata';
 import { PortalShell } from '@/components/portal-shell';
 import { StudentGrades } from '@/components/quizzes/student-grades';
 import { quizCopy as copy } from '@/locales/quizzes';
 import { requireAccount } from '@/server/auth';
 
-export const metadata = { title: 'Quizzes and grades | Git Tutor', robots: { index: false, follow: false } };
+export const generateMetadata = pageMetadata({ title: 'Quizzes and grades | Git Tutor', robots: { index: false, follow: false } });
 
 export default async function GradesPage() {
   const account = await requireAccount('student', '/learn/grades');
