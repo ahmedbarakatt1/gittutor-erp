@@ -1,5 +1,24 @@
 # Implementation status
 
+## Arabic website option (21 November 2026)
+
+Visitors and signed-in users can choose Arabic or English on the same page. The selected language is stored in an HTTP-only site cookie for up to one year in that browser. Fresh browsers start in English. The server emits the document language, direction, page title and interface copy for the selected language. Arabic uses RTL layout and Egyptian Arabic formatting for customer tuition and Cairo times. The selection does not change the account's permissions or the instructor's teaching-language setting.
+
+The release covers the public catalog and pricing, contact and support, sign-in and recovery, learner/guardian requests, tutor teaching and grading, the service queue and administration. App-authored labels are translated locally. Records, uploaded materials, names and user-written messages keep their original content. Identifiers, financial amounts, API formats and submitted option values remain canonical. No hosted translation provider, credential, database migration or new paid resource is required.
+
+The public walkthrough executed 31 assertions using `playwright-cli` against the local app. The browser changed languages in both directions, followed a subject through the sign-in return link, checked all four published prices and exercised the interactive homepage example. The five screenshot checks covered widths from 320 to 1280 pixels. The browser recorded no horizontal overflow or JavaScript errors. Local evidence: `.local/nov21-ar-public/result.log` and `visual.log`.
+
+Release `cb96d64c582d7d7aff3c411807d451035db81adf` includes the initial Arabic rollout (`3f81661`) and localized booking and package loading messages. Both Vercel projects were promoted and the hosted walkthroughs below were repeated on the final release. The promotion checks fetched support, the contact icons, password recovery and health on each candidate. Existing production team protection was verified.
+
+| Executed verification | Result |
+| --- | --- |
+| Local lint, TypeScript, unit suite, production build and `python tools/verify-pack.py` | Passed. The unit suite ran 566 tests in 78 files. |
+| `node .local/arabic-pilot-walk.cjs` on the stable testing site | All 23 signed-in pages passed at 390 pixels across learner (7), tutor (4), customer service (5) and admin (7). Arabic headings, navigation, RTL layout, fit and return to English were verified. No page errors or site HTTP 5xx responses were recorded. |
+| `node .local/arabic-owner-walk.cjs` on protected production | Home, subjects, pricing, support, sign-in and password recovery passed at 390 pixels. Verified switching both ways, Arabic headings and browser titles, persistence across navigation and viewport fit. |
+| [GitHub Actions verification for the deployed release](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44927304598) | Passed lint, type checking, 566 unit tests, 318 integration tests and 184 browser tests. Two browser tests were skipped. The database verification and production build passed. The browser suite included submitting a bilingual request in Arabic and checking the stored group format and original learner wording. |
+
+The hosted walkthroughs used read-only navigation and browser language choices. The signed-in walkthrough used existing testing accounts. Production verification used public routes within the existing team access controls.
+
 ## Owner-only access and user manual (21 November 2026)
 
 The production owner requested an administrator-only account. Read-only inspection confirmed the intended active, verified owner had exactly the Administrator and Student roles and an unused version-one learner registration. All 37 foreign keys to learners were checked for this registration. There were zero related rows.
