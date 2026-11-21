@@ -137,6 +137,27 @@ test('a learner cannot self-assign staff access or open tutor and service URLs',
   expect(data.roles).not.toEqual(expect.arrayContaining(['customer_service']));
 });
 
+test('an administrator without a learner identity stays in administration on learner links', async ({ page }) => {
+  const owner = await createSyntheticActor();
+  const database = await adminDatabase();
+  try {
+    await database.query('begin');
+    await database.query("insert into app_private.account_roles(account_id,role,reason) values ($1,'admin','Synthetic staff-only account')", [owner.id]);
+    await database.query("update app_private.account_roles set revoked_at=now(),version=version+1 where account_id=$1 and role='student'", [owner.id]);
+    await database.query('delete from app_private.learners where account_id=$1', [owner.id]);
+    await database.query('commit');
+  } finally { await database.end(); }
+  await signIn(page, owner);
+  for (const path of ['/learn', '/learn/files', '/learn/requests?topic=Mathematics']) {
+    await page.goto(path);
+    await expect(page).toHaveURL(`${baseURL}/admin`);
+    await expect(page.getByRole('link', { name: 'Learning', exact: true })).toHaveCount(0);
+  }
+  const account = await page.request.get('/api/v1/me');
+  expect(account.status()).toBe(200);
+  expect((await account.json()).data).toMatchObject({ roles: ['admin'], authorized_learner_ids: [] });
+});
+
 test('guardian account shows exactly its current authorized learner scope', async ({ page }) => {
   await signIn(page, 'guardian_a');
   await expect(page).toHaveURL(`${baseURL}/learn`);

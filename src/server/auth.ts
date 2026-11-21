@@ -2,6 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { AuthUnavailableError, serverSupabase } from "./supabase";
+import { landingForRoles } from "./http";
 import { customerReturnPath } from "@/modules/identity/return-path";
 export { AuthUnavailableError } from "./supabase";
 
@@ -41,6 +42,9 @@ export async function requireAccount(role?: string, returnTo?: string): Promise<
   }
   if (!account) redirect(loginPath());
   const allowed = role === "student" ? ["student", "guardian"] : role ? [role] : null;
-  if (allowed && !allowed.some(item => account.roles.includes(item as Account["roles"][number]))) redirect(loginPath('forbidden'));
+  if (allowed && !allowed.some(item => account.roles.includes(item as Account["roles"][number]))) {
+    if (role === "student" && account.roles.length) redirect(landingForRoles(account.roles));
+    redirect(loginPath('forbidden'));
+  }
   return account;
 }

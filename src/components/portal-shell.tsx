@@ -46,7 +46,7 @@ function navigationFor(kind: PortalKind, learnerWorkspace: boolean, otherWorkspa
     groups.push(
       { label: n.money, links: [payments, refunds] },
       { label: n.service, links: [...(learnerWorkspace ? [account, local('#learners', copy.portal.learnerTitle)] : []),
-        updates, local('/support', n.support), exports, { href: '/apply-to-teach', label: identityCopy.application.nav }] }
+        updates, local('/support', n.support), ...(learnerWorkspace ? [exports] : []), { href: '/apply-to-teach', label: identityCopy.application.nav }] }
     );
   } else if (kind === 'tutor') {
     groups.push(
@@ -63,6 +63,7 @@ function navigationFor(kind: PortalKind, learnerWorkspace: boolean, otherWorkspa
 export function PortalShell({ kind, account, children, title, description, activePath, showAccount = true, primaryAction }: { kind: PortalKind; account: Account; children?: ReactNode; title?: string; description?: string; activePath?: string; showAccount?: boolean; primaryAction?: ReactNode }) {
   const text = copy.portal[kind];
   const learnerWorkspace = account.roles.some(role => role === 'student' || role === 'guardian');
+  const workspaceName = kind === 'learn' && !learnerWorkspace ? copy.portal.account : text.workspace;
   const authorizedWorkspaces: PortalKind[] = [];
   if (account.roles.some(role => role === 'student' || role === 'guardian')) authorizedWorkspaces.push('learn');
   if (account.roles.includes('tutor')) authorizedWorkspaces.push('tutor');
@@ -74,12 +75,12 @@ export function PortalShell({ kind, account, children, title, description, activ
     <header className={styles.portalHeader}>
       <div className={styles.portalIdentity}>
         <Link className={styles.brand} href="/" aria-label={copy.home}><BrandLogo compact /></Link>
-        <span className={styles.workspaceName}>{text.workspace}</span>
+        <span className={styles.workspaceName}>{workspaceName}</span>
       </div>
       <SignOutButton />
     </header>
     <div className={styles.portalLayout}>
-      <PortalNavigation key={activePath || kind} workspace={text.workspace} groups={groups} activePath={activePath || `/${kind}`} />
+      <PortalNavigation key={activePath || kind} workspace={workspaceName} groups={groups} activePath={activePath || `/${kind}`} />
       <main id="account" className={styles.portalMain}>
         <header className={styles.portalIntro}>
           <h1>{title || text.title}</h1>
@@ -95,7 +96,7 @@ export function PortalShell({ kind, account, children, title, description, activ
             <div><dt>{copy.portal.verified}</dt><dd className={styles.status}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="m7.5 12 3 3 6-6" /></svg>{copy.portal.verified}</dd></div>
           </dl>
         </section>}
-        {kind === 'learn' && showAccount && <section id="learners" className={styles.section} aria-labelledby="learners-heading">
+        {kind === 'learn' && learnerWorkspace && showAccount && <section id="learners" className={styles.section} aria-labelledby="learners-heading">
           <h2 id="learners-heading">{copy.portal.learnerTitle}</h2>
           <p>{copy.portal.learnerDescription}</p>
           {account.authorized_learner_ids.length ? <ul className={styles.learnerList}>{account.authorized_learner_ids.map((id) => <li key={id}><span>{copy.portal.learnerReference}</span><strong data-testid="learner-id">{id}</strong></li>)}</ul> : <p>{copy.portal.noLearners}</p>}

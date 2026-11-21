@@ -42,6 +42,23 @@ describe('T02 verified identity and current database authorization', () => {
       await database.query("insert into app_private.subjects(id,slug,title) values($1,$2,'Synthetic calculus')", [subjectId, `calculus-${run}`]);
     }
   }, 90000);
+  test('updating a verified identity preserves withdrawal from the learner workspace', async () => {
+    const owner = actors.admin.id;
+    await database.query('begin');
+    try {
+      await database.query("update app_private.account_roles set revoked_at=now() where account_id=$1 and role='student' and revoked_at is null", [owner]);
+      await database.query('delete from app_private.learners where account_id=$1', [owner]);
+      await database.query('update auth.users set email=email where id=$1', [owner]);
+      const result = await database.query(`select
+        app_private.has_role($1,'admin') as admin, app_private.has_role($1,'student') as student,
+        exists(select 1 from app_private.learners where account_id=$1) as learner,
+        exists(select 1 from app_private.verified_contacts where account_id=$1 and revoked_at is null and verified_at is not null) as verified`, [owner]);
+      expect(result.rows[0]).toEqual({ admin: true, student: false, learner: false, verified: true });
+    } finally {
+      await database.query('rollback');
+    }
+  });
+
   afterAll(async () => {
     await Promise.all(Object.values(actors).map(actor => actor.client.auth.signOut()));
     await database?.end();
