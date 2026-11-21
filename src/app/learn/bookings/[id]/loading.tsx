@@ -1,2 +1,8 @@
 import { bookingCopy } from '@/locales/booking';
-export default function LoadingBooking() { return <main className="container section-spacing"><p role="status">{bookingCopy.loading}</p></main>; }
+import { bookingCopy as arabicCopy } from '@/locales/ar-transaction/booking';
+import { getSiteLanguage } from '@/server/site-language';
+
+export default async function LoadingBooking() {
+  const copy = await getSiteLanguage() === 'ar' ? arabicCopy : bookingCopy;
+  return <main className="container section-spacing"><p role="status">{copy.loading}</p></main>;
+}
