@@ -1,5 +1,11 @@
 # Implementation status
 
+## Owner clarification on a reported session (22 November 2026)
+
+The owner disputed the recorded start slot on Sessions row 15. A new reviewed revision withdrew the start time and recorded the clarification. The row stays open pending its correct slot or disposition. The source entry and its conflicting historical status evidence are preserved.
+
+The first rehearsal lost its database connection before completion. Running `node --dns-result-order=ipv4first --import tsx .local/workflow-import/nov21-owner-01.mts` with `rehearse`, `apply` and then `verify` succeeded. A separate connection confirmed the active owner's projection contains the clarification and no start time on that row. The revision retains 168 source rows and 39 flagged rows. Sixteen operational table counts were checked.
+
 ## Production source-quality review (21 November 2026)
 
 Reviewed all 43 flagged source rows against both supplied workbook versions, the session notes, package references, learner schedules and merge crosswalk. The owner workspace now selects a separately hashed, reviewed revision with 168 rows. The original batch and its links remain preserved. Six supported display-field corrections cleared four rows and partially resolved two. The corrections cover two learner labels, one package-backed group label and three course labels. They do not establish account ownership or group membership.
