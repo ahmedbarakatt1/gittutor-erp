@@ -1,0 +1,59 @@
+.workspace {
+  display: grid;
+  gap: .8rem;
+  min-inline-size: 0;
+  margin-block: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.tabs { display: flex; flex-wrap: wrap; gap: .25rem; border-block-end: 1px solid var(--border); }
+.tabs a { padding: .5rem .7rem; text-decoration: none; color: var(--muted); font-size: .875rem; font-weight: 650; }
+.tabs a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -3px var(--brand); }
+.tabs a:hover { background: var(--tint); }
+.report { display: grid; gap: .7rem; min-inline-size: 0; }
+.heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem 1rem; }
+.heading h2 { margin: 0; }
+.range { color: var(--muted); font-size: .875rem; font-weight: 500; margin-inline-start: .75rem; }
+.disclosure { border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); min-inline-size: 0; }
+.disclosure > summary { cursor: pointer; padding: .55rem .85rem; font-weight: 700; }
+.disclosure > summary::marker { color: var(--brand-hover); }
+.disclosure > form, .body { margin: 0; padding: .75rem .85rem; border-block-start: 1px solid var(--border); }
+.body { display: grid; gap: .65rem; min-inline-size: 0; }
+.body > section { border: 0; padding: 0; }
+.headlines, .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .65rem; margin: 0; }
+.headlines > div { padding: .7rem .85rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); min-inline-size: 0; }
+.headlines dt, .note, .chart figcaption span, .headlines dd:last-child { color: var(--muted); font-size: .875rem; }
+.headlines dt { font-weight: 650; color: var(--ink); }
+.headlines dd { margin: 0; }
+.headlines dd:first-of-type { font-size: clamp(1.2rem, 2.5vw, 1.65rem); line-height: 1.35; font-weight: 750; font-variant-numeric: tabular-nums; }
+.charts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+.chart { margin: 0; padding: .85rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); min-inline-size: 0; }
+.chart figcaption { display: grid; gap: .1rem; margin-block-end: .75rem; }
+.chart figcaption strong { font-size: 1.05rem; }
+.chart ul, .records { list-style: none; padding: 0; margin: 0; }
+.chart ul { display: grid; gap: .65rem; }
+.chart li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: .15rem .6rem; font-size: .875rem; }
+.chart li strong { grid-column: 2; grid-row: 1; font-variant-numeric: tabular-nums; }
+.track { grid-column: 1 / -1; height: .4rem; overflow: hidden; border-radius: 2px; background: var(--tint); }
+.track > span { display: block; height: 100%; background: var(--brand); }
+.chart:nth-child(2) .track > span { background: var(--ink); }
+.empty, .spend { padding: .55rem .8rem; border-inline-start: 3px solid var(--accent); background: var(--surface); }
+.spend p + p { margin-block-start: .25rem; }
+.records { display: grid; gap: .4rem; }
+.records > li { min-inline-size: 0; }
+.records > li + li { border-block-start: 1px solid var(--border); padding-block-start: .4rem; }
+.actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.actions:empty { display: none; }
+.actions button { border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); padding: .45rem .75rem; font-weight: 650; }
+@media (max-width: 650px) {
+  .headlines { grid-template-columns: 1fr; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); }
+  .headlines > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: .5rem; border: 0; border-radius: 0; background: transparent; padding: .4rem .7rem; }
+  .headlines > div + div { border-block-start: 1px solid var(--border); }
+  .headlines dd:last-child { grid-column: 1 / -1; }
+  .tabs { gap: 0; }
+  .tabs a { padding-inline: .4rem; }
+  .range { display: block; margin-inline-start: 1rem; }
+}
+@media (forced-colors: active) {
+  .track { border: 1px solid CanvasText; }
+  .track > span { background: Highlight; forced-color-adjust: none; }
+}

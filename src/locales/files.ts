@@ -2,6 +2,7 @@ export const fileCopy = {
   workspaceLink: 'Open session materials and room', nav: 'Study files', title: 'Bring your questions.', description: 'Choose a session to share preparation privately with its assigned tutor and keep the published class resources.',
   sessions: 'Session', chooseSession: 'Choose a session', noSessions: 'No session materials are currently shared with this account.',
   privateTitle: 'Private preparation', privateDescription: 'Your preparation is available to you, authorized guardians and the currently assigned tutor. Other learners in a group cannot see it.',
+  requestTitle: 'Tutoring request material', requestDescription: 'Files the learner or guardian submitted with the matching tutoring request.',
   sharedTitle: 'Class resources', sharedDescription: 'These resources are shared with the learners authorized for this session. Uploading a resource does not publish it.',
   learner: 'Learner preparation', chooseLearner: 'Choose a learner', uploadTitle: 'Add a file', choose: 'Choose a file', upload: 'Upload and check file', retry: 'Retry this upload', another: 'Add another file',
   receiptLimits: 'PDF, PNG, JPEG or WebP, up to 5 MiB.', teachingLimits: 'PDF, PowerPoint (.pptx), PNG, JPEG or WebP, up to 25 MiB.', statementLimits: 'CSV or PDF, up to 25 MiB.',

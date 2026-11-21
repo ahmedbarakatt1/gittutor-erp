@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
+import { pageMetadata } from '@/server/page-metadata';
 import { AuthPage } from '@/components/auth-page';
 import { AuthUnavailableError, getCurrentAccount } from '@/server/auth';
 import { customerReturnPath } from '@/modules/identity/return-path';
 
-export const metadata: Metadata = { title: 'Sign in | Git Tutor', robots: { index: false, follow: false } };
+export const generateMetadata = pageMetadata({ title: 'Sign in | Git Tutor', robots: { index: false, follow: false } });
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ reason?: string; return_to?: string }> }) {
   let unavailable = false;

@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import{expect,test,type Page}from'@playwright/test';
 import{randomUUID}from'node:crypto';
 import{bookingFixture}from'../helpers/booking';
@@ -5,7 +6,7 @@ import{loadLocalSupabase}from'../helpers/supabase';
 import{runBrowserExport}from'../helpers/export-worker';
 import{mkdir}from'node:fs/promises';
 test.use({trace:'off',screenshot:'off'});
-async function login(page:Page,label:string){const actor=loadLocalSupabase().actors[label];await page.goto('/login');await page.getByLabel('Email address',{exact:true}).fill(actor.email);await page.getByLabel('Password',{exact:true}).fill(actor.password);const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/auth/login');await page.getByRole('button',{name:'Sign in',exact:true}).click();expect((await response).status()).toBe(200);await expect(page.getByTestId('account-id')).toHaveText(actor.id);}
+async function login(page:Page,label:string){const actor=loadLocalSupabase().actors[label];await page.goto('/login');await page.getByLabel('Email address',{exact:true}).fill(actor.email);await page.getByLabel('Password',{exact:true}).fill(actor.password);const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/auth/login');await page.getByRole('button',{name:'Sign in',exact:true}).click();expect((await response).status()).toBe(200);await expectSignedInAccount(page, actor.id);}
 test('admin customer follow-up and private CSV journey uses actual records; learner cannot download it',async({page,browser},info)=>{test.setTimeout(90000);const f=await bookingFixture();const separate=await browser.newContext();try{
  const learner=(await f.database.query('select id from app_private.learners where account_id=$1',[f.actor.id])).rows[0].id as string;
  await login(page,'admin_a');await page.goto('/admin/customers');await page.getByLabel('Find a customer by name, verified email or learner ID').fill(learner);await page.getByRole('button',{name:'Search customers',exact:true}).click();await expect(page.locator('button[aria-pressed]')).toHaveCount(1);await page.locator('button[aria-pressed]').click();

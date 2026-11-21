@@ -1,0 +1,15 @@
+# Testing a tutoring request
+
+The request-first update follows the owner's clarified workflow and prices. Check [implementation status](IMPLEMENTATION-STATUS.md) for the current deployed revision before testing; this guide does not itself claim deployment or acceptance.
+
+1. Sign in as the student or an authorized parent. Open **Session requests**, choose the learner, enter any subject/course, explain the help needed and give preferred times in Egypt time. Subjects on the public page are examples, not required course choices.
+2. Continue to save a private draft. Upload lecture slides, notes or questions (PDF, PPTX or supported images,25MiB maximum each). Wait for the file check. Remove an incorrect/rejected file if necessary, then **Submit tutoring request**.
+3. Sign in as customer service or admin and open **Session requests**. Review the brief and permitted files. Reply with the next step or ask for more information. The original requester can edit the brief, add material and resubmit when information is requested.
+4. Admin schedules a session using published pricing and booking terms. Staff select **Propose a scheduled session** to see the exact seat price and the number of places available. The session must match the requested format and the duration promised on the request (currently 90–105 minutes). A full session is available only for a learner who already holds a place. The learner can open that booking directly.
+5. The student/parent reviews and reserves through the existing booking flow, accepts the quote, then follows payment instructions. A request or staff match does not charge money, reserve capacity or confirm a booking. Independent payment reconciliation, teaching and private tutor payroll retain their existing workflow.
+
+Public tuition is EGP650 individual, and EGP575/550/500 per student for groups of2/3/4, per90–105 minute session. The separately stored public tariff contains no tutor compensation. Internal exact tutor agreements remain privileged.
+
+Drafts and their files are private to the requester. Customer service can access submitted, reviewing, needs-information and matched requests. After closure, authorized customers and admins retain access. Once the matched learner has a confirmed enrollment, the request stays linked to that session and the assigned tutor can access its clean materials.
+
+Private hosted-pilot credentials remain in ignored `.local/hosted-preview/START-HERE.md`. The new `.local/request-flow/TEST-GUIDE.md` provides exact practice steps, an untouched26November2026 session at18:00–19:30 Cairo time, sample slides and a separate EGP650 receipt with independently prepared synthetic settlement/payer evidence. The hosted request→review→quote→payment-review→confirmation→private tutor download path was actually executed on a separate appointment. Do not use real transfers or assume fake provider checks are live delivery/scanning evidence. Preserve historical workbook observations and existing practice sessions; new requests create their own records.

@@ -1,9 +1,11 @@
 import { bookingRpc, BookingRpcError, type BookingRpcClient } from '../booking/commands';
-import { workflowOperationsSchema, workflowReviewInputSchema, workflowReviewResultSchema } from './operational-model';
+import { workflowOperationsSchema, workflowReviewInputSchema, workflowReviewResultSchema, type WorkbookWorkspace } from './operational-model';
 
-export async function getWorkflowOperations(client: BookingRpcClient) {
-  const result = workflowOperationsSchema.safeParse((await bookingRpc(client, 'get_workflow_operations')).data);
+export async function getWorkflowOperations(client: BookingRpcClient, workspace: WorkbookWorkspace) {
+  const result = workflowOperationsSchema.safeParse((await bookingRpc(client, 'get_workspace_operations', { p_workspace: workspace })).data);
   if (!result.success) throw new BookingRpcError('DEPENDENCY_UNAVAILABLE');
+  const expectedRole = { learn: 'customer', tutor: 'tutor', service: 'service', admin: 'owner' }[workspace];
+  if (result.data.enabled && result.data.role !== expectedRole) throw new BookingRpcError('DEPENDENCY_UNAVAILABLE');
   return result.data;
 }
 export async function reviewWorkflowOperation(client: BookingRpcClient, input: unknown) {

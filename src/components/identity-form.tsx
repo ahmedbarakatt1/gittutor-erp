@@ -1,5 +1,6 @@
 'use client';
 
+import { useStaffCopy, useStaffText } from '@/components/ar-staff-label';
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { identityCopy as copy } from '@/locales/auth';
 import { useHydrated } from './use-hydrated';
@@ -7,7 +8,7 @@ import styles from './auth.module.css';
 
 type Result = { data?: Record<string, unknown>; code?: string; message?: string; request_id?: string; field_errors?: { conflicting_occurrence_ids?: string[] } };
 
-export function IdentityForm({ children, action, payload, submitLabel, successMessage, disabled = false, resettable = true, clearFieldsOnSuccess = false, onSaved, onPendingChange, onFailure }: {
+export function IdentityForm({ children, action, payload, submitLabel, successMessage, disabled = false, resettable = true, clearFieldsOnSuccess = false, releaseKeyOnSuccess = false, onSaved, onPendingChange, onFailure }: {
   children: ReactNode;
   action: string | ((data: FormData) => string);
   payload: (data: FormData) => Record<string, unknown>;
@@ -16,10 +17,14 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
   disabled?: boolean;
   resettable?: boolean;
   clearFieldsOnSuccess?: boolean;
+  releaseKeyOnSuccess?: boolean;
   onSaved?: (result: Record<string, unknown>) => void;
   onPendingChange?: (pending: boolean) => void;
   onFailure?: (result: Result) => void;
 }) {
+  const copyUi = useStaffCopy(copy);
+  const t = useStaffText();
+
   const hydrated = useHydrated();
   const operation = useRef<{ key: string; signature: string; storageKey: string } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -40,7 +45,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
       const data = new FormData(form);
       body = payload(data);
       path = typeof action === 'function' ? action(data) : action;
-    } catch { setError(copy.invalid); return; }
+    } catch { setError(copyUi.invalid); return; }
     const signature = `${path}:${JSON.stringify(body)}`;
     setPending(true);
     onPendingChange?.(true);
@@ -62,21 +67,27 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
       }
       const response = await fetch(`/api/v1/${path}`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.current.key }, body: JSON.stringify(body) });
       const responseBody = await response.json() as Result;
-      if (!response.ok) { setError(responseBody.message || copy.network); setRequestId(responseBody.request_id || ''); onFailure?.(responseBody); return; }
+      if (!response.ok) { setError(responseBody.message ? t(responseBody.message) : copyUi.network); setRequestId(responseBody.request_id || ''); onFailure?.(responseBody); return; }
+      if (releaseKeyOnSuccess && (typeof responseBody.data?.resource_id !== 'string' || !responseBody.data.resource_id)) throw new Error('COMMAND_RESULT_MISSING');
       if (clearFieldsOnSuccess) { form.reset(); operation.current.signature = ''; }
+      if (releaseKeyOnSuccess) {
+        const { storageKey, key } = operation.current;
+        try { if (sessionStorage.getItem(storageKey) === key) sessionStorage.removeItem(storageKey); } catch { /* Storage may be disabled. */ }
+        operation.current = null;
+      }
       setResult(responseBody.data || {});
       onSaved?.(responseBody.data || {});
-    } catch { setError(copy.network); }
+    } catch { setError(copyUi.network); }
     finally { setPending(false); onPendingChange?.(false); }
   }
 
   return <form ref={formRef} className={styles.form} method="post" onSubmit={submit} aria-busy={!hydrated || pending} aria-label={submitLabel}>
     <fieldset key={reset} className={styles.formFields} disabled={!hydrated || pending || Boolean(result)}>{children}</fieldset>
-    {error && <div className={styles.error} role="alert"><p>{error}</p>{requestId && <p className={styles.hint}>{copy.requestReference}: <span className={styles.reference}>{requestId}</span></p>}</div>}
-    {result ? <div className={styles.saved} role="status"><p>{successMessage}</p><dl>{Object.entries(copy.recordLabels).filter(([key]) => typeof result[key] === 'string' || typeof result[key] === 'number').map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{String(result[key])}</dd></div>)}</dl>{resettable && <button type="button" className={styles.signout} onClick={() => {
+    {error && <div className={styles.error} role="alert"><p>{error}</p>{requestId && <p className={styles.hint}>{copyUi.requestReference}: <span className={styles.reference}>{requestId}</span></p>}</div>}
+    {result ? <div className={styles.saved} role="status"><p>{successMessage}</p><dl>{Object.entries(copyUi.recordLabels).filter(([key]) => typeof result[key] === 'string' || typeof result[key] === 'number').map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{String(result[key])}</dd></div>)}</dl>{resettable && <button type="button" className={styles.signout} onClick={() => {
       if (operation.current) { try { sessionStorage.removeItem(operation.current.storageKey); } catch { /* Storage may be disabled. */ } }
       setResult(null); operation.current = null; formRef.current?.reset(); setReset(value => value + 1);
-    }}>{copy.nextRequest}</button>}</div> : <button className={styles.primary} type="submit" disabled={!hydrated || pending || disabled}>{pending ? copy.pending : submitLabel}</button>}
+    }}>{copyUi.nextRequest}</button>}</div> : <button className={styles.primary} type="submit" disabled={!hydrated || pending || disabled}>{pending ? copyUi.pending : submitLabel}</button>}
   </form>;
 }
 

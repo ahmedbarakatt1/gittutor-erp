@@ -1,0 +1,13 @@
+{
+  "version": "2026-11-15.1",
+  "currency": "EGP",
+  "pricing_unit": "per_student_per_session",
+  "duration_minutes_min": 90,
+  "duration_minutes_max": 105,
+  "tiers": [
+    { "format": "individual", "students": 1, "price_minor": 65000 },
+    { "format": "group2", "students": 2, "price_minor": 57500 },
+    { "format": "group3", "students": 3, "price_minor": 55000 },
+    { "format": "group4", "students": 4, "price_minor": 50000 }
+  ]
+}

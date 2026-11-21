@@ -1,11 +1,23 @@
 'use client';
 
 import { useRef, useState, type FormEvent } from 'react';
-import { authCopy as copy } from '@/locales/auth';
+import { publicAuth } from '@/locales/ar-public';
+import { useSiteLanguage } from '@/components/site-language';
+
 import { useHydrated } from './use-hydrated';
 import { customerReturnPath } from '@/modules/identity/return-path';
 import styles from './auth.module.css';
 
+function arabicAuthError(code?: string) {
+  switch (code) {
+    case 'AUTH_FAILED': return 'تحقّق من بريدك الإلكتروني وكلمة المرور ثم حاول مرة أخرى.';
+    case 'VERIFIED_ACCOUNT_REQUIRED': return 'أكّد عنوان بريدك الإلكتروني قبل تسجيل الدخول.';
+    case 'RATE_LIMITED': return 'حاول مرة أخرى بعد قليل.';
+    case 'VALIDATION_ERROR': return 'تحقّق من البيانات المدخلة ثم حاول مرة أخرى.';
+    case 'AUTH_REQUIRED': return 'سجّل الدخول من جديد ثم أعد المحاولة.';
+    default: return publicAuth('ar').error.generic;
+  }
+}
 type ApiResult = { data?: { redirect_to?: string; verification_required?: boolean }; code?: string; message?: string; request_id?: string };
 
 function navigateAfterAuthentication(path: string) {
@@ -14,7 +26,9 @@ function navigateAfterAuthentication(path: string) {
   window.location.assign(new URL(path, window.location.origin).href);
 }
 
-export function AuthForm({ mode, unavailable = false, forbidden = false, returnTo }: { mode: 'login' | 'signup'; unavailable?: boolean; forbidden?: boolean; returnTo?: string }) {
+export function AuthForm({ mode, unavailable = false, forbidden = false, returnTo }: { mode: 'login' | 'signup' | 'recover'; unavailable?: boolean; forbidden?: boolean; returnTo?: string }) {
+  const language = useSiteLanguage();
+  const copy = publicAuth(language);
   const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +38,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const text = copy[mode];
+  const [recoveryRequested, setRecoveryRequested] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +48,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
     const password = String(data.get('password') ?? '');
     const invalid = {
       email: !email || !emailRef.current?.validity.valid ? copy.error.invalidEmail : undefined,
-      password: !password ? copy.error.requiredPassword : mode === 'signup' && password.length < 12 ? copy.error.shortPassword : undefined,
+      password: !password && mode !== 'recover' ? copy.error.requiredPassword : mode === 'signup' && password.length < 12 ? copy.error.shortPassword : undefined,
     };
     setFieldErrors(invalid);
     setError('');
@@ -48,12 +63,16 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(mode === 'recover' ? { email } : { email, password }),
       });
       const result = await response.json() as ApiResult;
       if (!response.ok) {
-        setError(result.message || copy.error.generic);
+        setError(language === 'ar' ? arabicAuthError(result.code) : result.message || copy.error.generic);
         setReference(result.request_id || '');
+        return;
+      }
+      if (mode === 'recover') {
+        setRecoveryRequested(true);
         return;
       }
       if (mode === 'signup' && result.data?.verification_required) {
@@ -73,22 +92,23 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
     }
   }
 
+  if (recoveryRequested) return <p role="status">{copy.recover.received}</p>;
   return (
     <form className={styles.form} method="post" action={`/api/auth/${mode}`} onSubmit={submit} noValidate aria-busy={!hydrated || pending}>
       <fieldset className={styles.formFields} disabled={!hydrated || pending}>
       <div className={styles.field}>
         <label htmlFor="email">{copy.email}</label>
-        <input ref={emailRef} id="email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} />
+        <input ref={emailRef} id="email" dir="ltr" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} />
         {fieldErrors.email && <p className={styles.fieldError} id="email-error" role="alert">{fieldErrors.email}</p>}
       </div>
-      <div className={styles.field}>
+      {mode !== 'recover' && <div className={styles.field}>
         <label htmlFor="password">{copy.password}</label>
         <div className={styles.passwordRow}>
           <input ref={passwordRef} id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required minLength={mode === 'signup' ? 12 : undefined} maxLength={256} aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'password-error' : mode === 'signup' ? 'password-hint' : undefined} />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-pressed={showPassword}>{showPassword ? copy.hidePassword : copy.showPassword}</button>
+          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-controls="password" aria-label={showPassword ? copy.hidePassword : copy.showPassword}>{showPassword ? copy.hide : copy.show}</button>
         </div>
         {fieldErrors.password ? <p className={styles.fieldError} id="password-error" role="alert">{fieldErrors.password}</p> : mode === 'signup' && <p className={styles.hint} id="password-hint">{copy.passwordHint}</p>}
-      </div>
+      </div>}
       {error && <div className={styles.error} role="alert"><p>{error}</p>{reference && <p className={styles.hint}>{copy.error.reference}: <span className={styles.reference}>{reference}</span></p>}</div>}
       <button className={styles.primary} disabled={!hydrated || pending} type="submit">{pending ? text.pending : text.submit}</button>
       </fieldset>
@@ -97,6 +117,8 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
 }
 
 export function SignOutButton() {
+  const language = useSiteLanguage();
+  const copy = publicAuth(language);
   const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
@@ -117,6 +139,8 @@ export function SignOutButton() {
 }
 
 export function SetPasswordForm({ staffInvitationId }: { staffInvitationId?: string }) {
+  const language = useSiteLanguage();
+  const copy = publicAuth(language);
   const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -131,7 +155,7 @@ export function SetPasswordForm({ staffInvitationId }: { staffInvitationId?: str
     setMismatch(false); setError(''); setPending(true);
     try {
       const response = await fetch('/api/auth/password', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
-      if (!response.ok) { const body = await response.json() as ApiResult; setError(body.message || copy.error.generic); return; }
+      if (!response.ok) { const body = await response.json() as ApiResult; setError(language === 'ar' ? arabicAuthError(body.code) : body.message || copy.error.generic); return; }
       navigateAfterAuthentication(staffInvitationId ? `/learn?staff_invitation_id=${encodeURIComponent(staffInvitationId)}` : '/learn');
     } catch { setError(copy.error.network); }
     finally { setPending(false); }

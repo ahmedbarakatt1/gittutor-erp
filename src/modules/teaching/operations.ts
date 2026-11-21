@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { IdentityRpcClient } from '../identity/commands';
 import { MeetingRpcError } from './meetings';
+import { quizCommands } from './quizzes';
 const id=z.uuid(),version=z.number().int().positive().max(2147483647),instant=z.iso.datetime({offset:true}),key=z.string().min(1).max(200),reason=z.string().trim().min(1).max(2000),common=z.object({command_id:id,resource_id:id,version}).strict();
 const ids=z.array(id).min(1).max(100).refine(values=>new Set(values).size===values.length),page={cursor:z.string().max(200).optional(),limit:z.number().int().min(1).max(100).optional()};
 export const unavailabilityCaseSchema=z.object({case_id:id,incident_id:id,occurrence_id:id,tutor_id:id,start_at:instant,end_at:instant,owner:z.object({account_id:id,display_name:z.string()}).strict(),status:z.enum(['open','resolved']),version,can_assign:z.boolean(),can_resolve:z.boolean(),resolution_proposal_id:id.nullable()}).strict();
@@ -28,6 +29,7 @@ export type TutorReassignment=z.infer<typeof tutorReassignmentSchema>;
 export type ReassignmentCustomerTerms=z.infer<typeof reassignmentCustomerTermsSchema>;
 export type ReassignmentTutorTerms=z.infer<typeof reassignmentTutorTermsSchema>;
 export const teachingCommands={
+ ...quizCommands,
  propose_tutor_reassignment:{input:z.object({p_occurrence_id:id,p_new_tutor_id:id,p_new_fee_minor:minor,p_old_tutor_compensation_minor:minor,p_expires_at:instant,p_reason:reason,p_expected_version:version,p_idempotency_key:key}).strict(),output:common.extend({proposal_id:id,state:proposalState}).strict()},
  accept_tutor_reassignment:{input:z.object({p_proposal_id:id,p_terms_hash:hash,p_expected_version:version,p_idempotency_key:key}).strict(),output:common.extend({state:proposalState}).strict()},
  approve_tutor_reassignment:{input:z.object({p_proposal_id:id,p_terms_hash:hash,p_expected_version:version,p_idempotency_key:key}).strict(),output:common.extend({state:z.literal('approved')}).strict()},
@@ -39,7 +41,7 @@ export const teachingCommands={
  create_occurrence_series:{input:z.object({p_title:z.string().trim().min(1).max(120),p_occurrence_ids:ids,p_idempotency_key:key}).strict(),output:common.extend({series_id:id}).strict()},
  create_series_change_set:{input:z.object({p_series_id:id,p_selection:z.discriminatedUnion('mode',[z.object({mode:z.literal('selected'),occurrence_ids:ids}).strict(),z.object({mode:z.literal('from'),from_at:instant}).strict()]),p_changes:z.array(change).min(1).max(100).refine(values=>new Set(values.map(value=>value.occurrence_id)).size===values.length),p_expires_at:instant,p_reason:reason,p_idempotency_key:key}).strict(),output:common.extend({change_set_id:id,proposal_ids:z.array(id).min(1).max(100)}).strict()},
 }as const;
-const errors=new Set(['AUTH_REQUIRED','SESSION_REVOKED','VERIFIED_ACCOUNT_REQUIRED','FORBIDDEN','NOT_FOUND','VALIDATION_ERROR','VERSION_CONFLICT','IDEMPOTENCY_CONFLICT','STATE_CONFLICT','SCHEDULE_CONFLICT','INVALID_TIME','CONSENT_REQUIRED','RETRYABLE_CONFLICT','POLICY_INCOMPLETE']);
+const errors=new Set(['AUTH_REQUIRED','SESSION_REVOKED','VERIFIED_ACCOUNT_REQUIRED','FORBIDDEN','NOT_FOUND','VALIDATION_ERROR','VERSION_CONFLICT','IDEMPOTENCY_CONFLICT','STATE_CONFLICT','SCHEDULE_CONFLICT','INVALID_TIME','CONSENT_REQUIRED','RETRYABLE_CONFLICT','POLICY_INCOMPLETE','SCAN_REQUIRED','FILE_TYPE_INVALID']);
 async function call(client:IdentityRpcClient,name:string,args:Record<string,unknown>){const result=await client.rpc(name,args);if(result.error)throw new MeetingRpcError(errors.has(result.error.message)?result.error.message:'DEPENDENCY_UNAVAILABLE');return result;}
 function parse<T>(schema:z.ZodType<T>,value:unknown):T{const result=schema.safeParse(value);if(!result.success)throw new MeetingRpcError('DEPENDENCY_UNAVAILABLE');return result.data;}
 export async function invokeTeachingCommandWithStatus(client:IdentityRpcClient,name:string,args:Record<string,unknown>){if(!Object.hasOwn(teachingCommands,name))throw new MeetingRpcError('VALIDATION_ERROR');const command=teachingCommands[name as keyof typeof teachingCommands],input=command.input.safeParse(args);if(!input.success)throw new MeetingRpcError('VALIDATION_ERROR');const result=await call(client,name,input.data);return {data:parse(command.output as z.ZodType,result.data),status:result.status??200};}

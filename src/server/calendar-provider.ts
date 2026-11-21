@@ -13,7 +13,7 @@ const credentials = z.object({ provider: z.literal('google'), connection_id: z.u
 export function calendarAdapterFactory(database: Pick<Pool,'query'>, config: ServerConfig): CalendarAdapterFactory {
   return async (prepared, job) => {
     if (prepared.mode === 'fake') {
-      if (!config.isolated || config.providers.calendar !== 'fake') throw new Error('CALENDAR_CONFIGURATION_REQUIRED');
+      if (!config.isolated) throw new Error('CALENDAR_CONFIGURATION_REQUIRED');
       return createFakeCalendarAdapter(resolve('.local/fake-calendar/provider'));
     }
     if (config.providers.calendar !== 'google' || !config.google || !config.secret_encryption_key) throw new Error('CALENDAR_CONFIGURATION_REQUIRED');

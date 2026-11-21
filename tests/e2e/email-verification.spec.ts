@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { expect, test, type Page } from '@playwright/test';
@@ -10,7 +11,7 @@ import { staffInvitationHandler } from '../../src/worker/auth-invitations';
 // Token-bearing browser traces are disabled for these cases. Mailpit is
 // read only for each unique recipient; no global mailbox reset or message deletion.
 test.use({ trace: 'off' });
-async function verificationLink(email: string, type: 'email' | 'invite') {
+async function verificationLink(email: string, type: 'email' | 'invite' | 'recovery') {
   let messages: { ID: string; To: { Address: string }[] }[] = [];
   await expect.poll(async () => {
     const response = await fetch(`http://127.0.0.1:54324/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`);
@@ -70,7 +71,7 @@ test('signup email confirms the actual Auth account and retains ordinary custome
     expect(denied.status()).toBe(401);
     const link = await verificationLink(email, 'email');
     await followVerification(page, link, '/learn');
-    await expect(page.getByTestId('account-id')).toHaveText(id);
+    await expectSignedInAccount(page, id);
     const response = await page.request.get('/api/v1/me');
     expect(response.status()).toBe(200);
     const { data } = await response.json();
@@ -132,7 +133,10 @@ test('staff recipient follows real invitation mail, sets a password and explicit
     expect(after.status()).toBe(200);
     const { data } = await after.json();
     expect(data.roles).toContain('customer_service');
-    await page.getByRole('link', { name: 'Operations', exact: true }).click();
+    const navigation = page.getByRole('navigation', { name: 'Learning', exact: true });
+    const menu = navigation.getByRole('button', { name: /^Menu/ });
+    if (await menu.isVisible()) await menu.click();
+    await navigation.getByRole('link', { name: 'Operations', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Customer service', exact: true })).toBeVisible();
     expect((await database.query("select count(*)::int as count from app_private.account_roles where account_id=$1 and role='customer_service' and revoked_at is null", [data.account_id])).rows[0].count).toBe(1);
     expect((await database.query('select count(*)::int as count from auth.users where email=$1', [email])).rows[0].count).toBe(1);
@@ -141,4 +145,37 @@ test('staff recipient follows real invitation mail, sets a password and explicit
     await worker.end();
     await database.end();
   }
+});
+
+test('a learner can reset a password through the emailed recovery link', async ({ page, context }) => {
+  test.setTimeout(60000);
+  const config = loadLocalSupabase();
+  const email = `recovery.${randomUUID()}@example.test`;
+  const original = `Synthetic-${randomUUID()}!`;
+  const replacement = `Synthetic-${randomUUID()}!`;
+  const provider = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const created = await provider.auth.admin.createUser({ email, password: original, email_confirm: true });
+  expect(created.error?.code).toBeUndefined();
+  await page.goto('/login');
+  await page.getByRole('link', { name: 'Forgot your password?' }).click();
+  const resetForm = page.locator('form[action="/api/auth/recover"]');
+  await resetForm.getByLabel('Email address').fill(email);
+  const [request] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/recover' && response.request().method() === 'POST'),
+    resetForm.getByRole('button', { name: 'Send reset link' }).click(),
+  ]);
+  expect(request.status()).toBe(202);
+  await expect(page.getByRole('status')).toContainText('check your inbox');
+  const link = await verificationLink(email, 'recovery');
+  await followVerification(page, link, '/auth/set-password');
+  await page.getByLabel('Password', { exact: true }).fill(replacement);
+  await page.getByLabel('Confirm password').fill(replacement);
+  await page.getByRole('button', { name: 'Save password and continue' }).click();
+  await expect(page).toHaveURL(/\/learn$/);
+  const auth = anonymousClient();
+  expect((await auth.auth.signInWithPassword({ email, password: original })).error?.code).toBe('invalid_credentials');
+  expect((await auth.auth.signInWithPassword({ email, password: replacement })).error).toBeNull();
+  await auth.auth.signOut();
+  await context.clearCookies();
+  await followVerification(page, link, '/login');
 });

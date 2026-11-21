@@ -9,12 +9,26 @@ import { IdentityForm, TextField } from '../identity-form';
 import { ReadState, Select, SessionTime, useBookingRecord } from './shared';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
+import { bookingStaffCopy as arabicBookingStaffCopy } from '@/locales/ar-transaction/booking-staff';
+import { bookingCopy as arabicBookingCopy } from '@/locales/ar-transaction/booking';
+import { useSiteLanguage } from '@/components/site-language';
+
+const textByLanguage = {
+  en: { copy, bookingCopy },
+  ar: { copy: arabicBookingStaffCopy, bookingCopy: arabicBookingCopy },
+};
 
 export function AvailabilityEditor({ tutorId }: { tutorId?: string }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   const record = useBookingRecord<Availability>(tutorId ? `tutors/${tutorId}/availability` : 'tutor/availability');
   return <section className={styles.section} id="availability"><h2>{copy.availability}</h2><p>{copy.availabilityDescription}</p><p>{copy.commitments}</p><ReadState pending={!record.data} {...record} />{record.data && <AvailabilityForm key={`${record.data.tutor_id}-${record.data.version}`} availability={record.data} admin={Boolean(tutorId)} onSaved={record.reload} />}</section>;
 }
 function AvailabilityForm({ availability, admin, onSaved }: { availability: Availability; admin: boolean; onSaved: () => void }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy, bookingCopy } = textByLanguage[uiLanguage];
+
   const [weekly, setWeekly] = useState(availability.weekly_intervals);
   const [exceptions, setExceptions] = useState(availability.dated_exceptions);
   const [conflicts, setConflicts] = useState<string[]>([]);
@@ -27,6 +41,9 @@ function AvailabilityForm({ availability, admin, onSaved }: { availability: Avai
 }
 
 function ConflictingSession({ id, admin }: { id: string; admin: boolean }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   const record = useBookingRecord<{ items: (AdminOccurrence | TutorOccurrence)[] }>(`${admin ? 'occurrences' : 'tutor/occurrences'}?occurrence_id=${id}`);
   const occurrence = record.data?.items[0]?.occurrence;
   return <div className={styles.detail}>{occurrence ? <><SessionTime start={occurrence.start_at} end={occurrence.end_at} /><p><Link className={styles.link} href={`/${admin ? 'admin' : 'tutor'}/schedule?occurrence=${id}`}>{copy.inspectSession}</Link></p></> : <ReadState pending={!record.data} {...record} />}</div>;

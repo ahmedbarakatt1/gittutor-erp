@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
@@ -21,7 +22,7 @@ async function login(page: Page, label: string | { id: string; email: string; pa
   const signedIn = page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/login' && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await signedIn).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 async function submit(page: Page, form: Locator, path: string, status = 200, verifyRolledBack?: () => Promise<void>) {
   const send = async () => {
@@ -286,7 +287,8 @@ test('reserved cancellation shows exact returned and retained credits before cus
     expect(dto.terms).toMatchObject({ old_customer_price_minor: 0, customer_price_minor: 0, customer_adjustment_minor: 0, released_credit_quanta: 500, released_value_minor: 25000, extinguished_credit_quanta: 500, extinguished_value_minor: 25001 });
     expect(JSON.stringify(dto)).not.toMatch(confidential);
     expect(await customer.locator('body').innerText()).not.toMatch(/compensation|Current agreement ceiling|EGP 100\.00/);
-    await expect(customer.getByText('Reserved package credits count toward funding. Check the related reservation for its confirmation status.', { exact: true })).toBeVisible();
+    await customer.locator('summary').filter({ hasText: /^Use package credits$/ }).click();
+    await expect(customer.locator('#package-coverage').getByText('Reserved package credits count toward funding. Check the related reservation for its confirmation status.', { exact: true })).toBeVisible();
     await expect(customer.getByText('Session funding and confirmation remain unavailable until payment integration is complete.', { exact: true })).toHaveCount(0);
     await mkdir('.local/screenshots', { recursive: true });
     await proposal.screenshot({ path: `.local/screenshots/t06-partial-cancellation-${info.project.name}.png` });

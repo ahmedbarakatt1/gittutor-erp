@@ -1,5 +1,9 @@
 # Docker recovery — 13 November 2026
 
+## Recurrence during production preparation,14 November2026
+
+The engine was absent and the restarted backend repeated the stale `userAnalyticsOtlpHttp.sock` failure. After confirming/stopping the failed Docker processes and stopped WSL distribution, the exact runtime-only directory was preserved as `C:\Users\barak\AppData\Local\Docker\run.stale-20261114-114637`. A replacement runtime directory and hidden Docker launch restored engine27.3.1. No existing database volume or WSL data disk was deleted or reset. Both existing Supabase stacks restarted. The actual web/worker image builds and fresh disposable container smoke passed afterward; those checks did not use either existing database. This repair is recurring infrastructure recovery, not a permanent correction to Docker Desktop's Windows socket handling.
+
 ## Recurrence after laptop shutdown, 20:24 Cairo
 
 The backend failed again with the same observed `userAnalyticsOtlpHttp.sock` error. Docker Desktop/backend and its WSL distribution were confirmed stopped. The exact runtime-only path was checked and renamed to `C:\Users\barak\AppData\Local\Docker\run.stale-20261113-202444`; an empty replacement was created. No data volume or disk was removed. Engine 27.3.1 recovered and the six existing Supabase services became healthy/running.

@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import {expect,test,type Page} from '@playwright/test';
 import {Pool} from 'pg';
 import {mkdtemp,mkdir} from 'node:fs/promises';
@@ -9,7 +10,7 @@ import {claimJobs} from '../../src/worker/claims';
 import {executeLeasedJob} from '../../src/worker/execute';
 import {notificationSendHandler} from '../../src/worker/notifications';
 import {createLocalEmailAdapter} from '../../src/server/providers/email';
-async function login(page:Page,label:string){const actor=loadLocalSupabase().actors[label];await page.goto('/login');await page.getByLabel('Email address',{exact:true}).fill(actor.email);await page.getByLabel('Password',{exact:true}).fill(actor.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByTestId('account-id')).toHaveText(actor.id);}
+async function login(page:Page,label:string){const actor=loadLocalSupabase().actors[label];await page.goto('/login');await page.getByLabel('Email address',{exact:true}).fill(actor.email);await page.getByLabel('Password',{exact:true}).fill(actor.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expectSignedInAccount(page, actor.id);}
 test('customer updates stay confidential and admin retries a definite failed send once',async({browser},info)=>{
  test.setTimeout(90000);const f=await bookingFixture(),worker=new Pool({connectionString:loadLocalSupabase().worker_database_url}),contexts=await Promise.all([0,1].map(()=>browser.newContext({baseURL:'http://127.0.0.1:3000',viewport:info.project.use.viewport}))),directory=await mkdtemp(join(tmpdir(),'git-tutor-notice-browser-'));
  const claim=async(purpose:string,target:string)=>{await f.database.query('begin');try{await f.database.query('select id from app_private.outbox_jobs where purpose=$1 and id<>$2 for update',[purpose,target]);const jobs=await claimJobs(worker,purpose,1,60);expect(jobs[0]?.id).toBe(target);return jobs[0];}finally{await f.database.query('rollback');}};

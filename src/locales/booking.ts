@@ -1,4 +1,6 @@
 export const bookingCopy = {
+  groupCapacity: (capacity: number) => `Group session · ${capacity} seats`, reference: 'Booking reference',
+  materials: 'Study files and class resources', packageCredits: 'Use package credits', bookingTerms: 'Review booking terms', quoteAndTerms: 'Quote and booking terms',
   reviewReplacement: 'Review replacement terms', replacementNotice: 'These terms replace an earlier proposal. Review this exact version before responding.', restoredCredits: 'Previously used teaching credits to restore', releasedCredits: 'Unused teaching credits to return', extinguishedCredits: 'Teaching credits retained for cancellation', releasedCreditValue: 'Value of returned teaching credits', extinguishedCreditValue: 'Value retained for cancellation', cancellationCreditNotice: 'Credits retained for cancellation will no longer be available for lessons. Returned credits keep their original expiry.',
   title: 'Your sessions.', description: 'Choose a learner, review a time and keep every reservation separate.', nav: 'My sessions', browse: 'Browse offers', back: 'All your sessions',
   loading: 'Loading current session details…', failed: 'Session details could not be loaded. Refresh before making a change.', refresh: 'Refresh details', more: 'Load more results', loadingMore: 'Loading more…',

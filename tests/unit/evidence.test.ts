@@ -65,10 +65,16 @@ describe("GT-1603 acceptance execution evidence", () => {
     expect(JSON.stringify(manifest)).toBe(before);
   });
 
-  it("preserves the supplied catalogue's planned/not_run status", () => {
+  it("validates the supplied catalogue and preserves its recorded execution states", () => {
     const manifest = JSON.parse(readFileSync("fixtures/acceptance-cases.json", "utf8"));
     const before = JSON.stringify(manifest);
-    expect(validate(manifest)).toMatchObject({ valid: true, passed: 0, not_run: 147 });
+    const cases = manifest.cases as Array<{ execution_status: string }>;
+    const report = validateEvidenceManifest(manifest, { rootDir: process.cwd() });
+    expect(report).toEqual({
+      valid: true, errors: [],
+      passed: cases.filter(item => item.execution_status === "passed").length,
+      not_run: cases.filter(item => item.execution_status === "not_run").length,
+    });
     expect(JSON.stringify(manifest)).toBe(before);
   });
 

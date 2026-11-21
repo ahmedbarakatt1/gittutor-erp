@@ -5,7 +5,7 @@ import type { ServerConfig } from './config';
 import type { ProviderTokenKeys, ProviderTokenPayload } from './provider-tokens';
 
 type GoogleConfig = NonNullable<ServerConfig['google']>;
-const scope = z.object({ request_id: z.uuid(), connection_id: z.uuid(), actor_id: z.uuid(), session_id: z.uuid(), expires_at: z.iso.datetime({ offset: true }) }).strict();
+const scope = z.object({ request_id: z.uuid(), connection_id: z.uuid(), actor_id: z.uuid(), session_id: z.uuid(), expires_at: z.iso.datetime({ offset: true }), calendar_source: z.enum(['primary','configured']).optional(), verify_room: z.literal(true).optional() }).strict();
 const handshakeSchema = scope.extend({ state: z.string().regex(/^[A-Za-z0-9_-]{43}$/), code_verifier: z.string().regex(/^[A-Za-z0-9_-]{64}$/) }).strict();
 export const googleScopes = ['openid', 'email', 'https://www.googleapis.com/auth/calendar.events'] as const;
 function fail(): never { throw new Error('CALENDAR_AUTH_REQUIRED'); }
@@ -35,7 +35,7 @@ export function readOAuthHandshake(keys: ProviderTokenKeys, raw: string, state: 
 }
 export function googleAuthorizationUrl(config: GoogleConfig, handshake: { state: string; code_challenge: string }) {
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  url.search = new URLSearchParams({ client_id: config.client_id, redirect_uri: config.redirect_uri, response_type: 'code', scope: googleScopes.join(' '), access_type: 'offline', prompt: 'consent', state: handshake.state, code_challenge: handshake.code_challenge, code_challenge_method: 'S256' }).toString();
+  url.search = new URLSearchParams({ client_id: config.client_id, redirect_uri: config.redirect_uri, response_type: 'code', scope: googleScopes.join(' '), access_type: 'offline', prompt: 'select_account consent', state: handshake.state, code_challenge: handshake.code_challenge, code_challenge_method: 'S256' }).toString();
   return url.toString();
 }
 async function providerJson(response: Response) {
@@ -52,9 +52,9 @@ export async function exchangeGoogleCode(config: GoogleConfig, code: string, ver
   const response = tokenResponse.parse(await providerJson(await http('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'authorization_code', code, code_verifier: verifier, client_id: config.client_id, client_secret: config.client_secret, redirect_uri: config.redirect_uri }), signal: AbortSignal.timeout(10000), redirect: 'error' })));
   const scopes = response.scope?.split(/\s+/).filter(Boolean) ?? [];
   if (!response.refresh_token || !permitted(scopes)) return fail();
-  const identity = z.object({ email: z.email().max(254), email_verified: z.literal(true) }).safeParse(await providerJson(await http('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${response.access_token}` }, signal: AbortSignal.timeout(10000), redirect: 'error' })));
+  const identity = z.object({ sub: z.string().min(1).max(255).regex(/^[!-~]+$/), email: z.email().max(254), email_verified: z.literal(true) }).safeParse(await providerJson(await http('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${response.access_token}` }, signal: AbortSignal.timeout(10000), redirect: 'error' })));
   if (!identity.success) return fail();
-  return { organizer_email: identity.data.email, tokens: { refresh_token: response.refresh_token, access_token: response.access_token, scopes, expires_at: new Date(Date.now() + response.expires_in * 1000).toISOString() } satisfies ProviderTokenPayload };
+  return { google_subject: identity.data.sub, organizer_email: identity.data.email, tokens: { refresh_token: response.refresh_token, access_token: response.access_token, scopes, expires_at: new Date(Date.now() + response.expires_in * 1000).toISOString() } satisfies ProviderTokenPayload };
 }
 export async function refreshGoogleAccessToken(config: GoogleConfig, current: ProviderTokenPayload, http: typeof fetch = fetch): Promise<ProviderTokenPayload> {
   if (current.access_token && current.expires_at && Date.parse(current.expires_at) > Date.now() + 60000) return current;

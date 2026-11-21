@@ -15,17 +15,35 @@ import { StaffTransferReview } from './staff-transfer';
 import { CreditField, creditField, credits } from '../packages/shared';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
+import { bookingStaffCopy as arabicBookingStaffCopy } from '@/locales/ar-transaction/booking-staff';
+import { bookingCopy as arabicBookingCopy } from '@/locales/ar-transaction/booking';
+import { packageCopy as arabicPackageCopy } from '@/locales/ar-transaction/packages';
+import { transferCopy as arabicTransferCopy } from '@/locales/ar-transaction/enrollment-transfers';
+import { useSiteLanguage } from '@/components/site-language';
+import { transactionLabel } from '@/locales/ar-transaction/labels';
+
+const textByLanguage = {
+  en: { copy, transferCopy, bookingCopy, packageCopy },
+  ar: { copy: arabicBookingStaffCopy, transferCopy: arabicTransferCopy, bookingCopy: arabicBookingCopy, packageCopy: arabicPackageCopy },
+};
+
 
 type TutorProposalTerms = Extract<OperationProposal, { view: 'tutor' }>['terms'];
 
 function TeachingTerms({ terms }: { terms: TutorProposalTerms }) {
-  return <section className={styles.private}><h3>{copy.privateTerms}</h3><p>{copy.privateNotice}</p>{terms.fee_basis === 'retained_previous_agreement' && <p>{transferCopy.retainedFee}</p>}<dl className={styles.facts}><div><dt>{bookingCopy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div><div><dt>{terms.fee_agreement_state === 'reviewed_cancellation' ? copy.cancellationCompensation : copy.approvedFee}</dt><dd>{terms.fee_minor === null ? copy.feePending : money(terms.fee_minor)}</dd></div><div><dt>{copy.duration}</dt><dd>{terms.duration_minutes} min</dd></div></dl>{terms.fee_agreement_state === 'pending_approval' && <p>{copy.pendingFee}</p>}</section>;
+  const uiLanguage = useSiteLanguage();
+  const { copy, transferCopy, bookingCopy } = textByLanguage[uiLanguage];
+
+  return <section className={styles.private}><h3>{copy.privateTerms}</h3><p>{copy.privateNotice}</p>{terms.fee_basis === 'retained_previous_agreement' && <p>{transferCopy.retainedFee}</p>}<dl className={styles.facts}><div><dt>{bookingCopy.newTime}</dt><dd><SessionTime start={terms.start_at} end={terms.end_at} /></dd></div><div><dt>{terms.fee_agreement_state === 'reviewed_cancellation' ? copy.cancellationCompensation : copy.approvedFee}</dt><dd>{terms.fee_minor === null ? copy.feePending : money(terms.fee_minor, 'EGP', uiLanguage)}</dd></div><div><dt>{copy.duration}</dt><dd>{terms.duration_minutes} {transactionLabel(uiLanguage, "min")}</dd></div></dl>{terms.fee_agreement_state === 'pending_approval' && <p>{copy.pendingFee}</p>}</section>;
 }
 
 export function StaffProposal(props: { id: string; kind: 'operation' | 'amendment' | 'enrollment_transfer'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
   return props.kind === 'enrollment_transfer' ? <StaffTransferReview id={props.id} view={props.view} onSaved={props.onSaved} /> : <BookingStaffProposal {...props} kind={props.kind} />;
 }
 function BookingStaffProposal({ id: initialId, kind, view, names = {}, onSaved }: { id: string; kind: 'operation' | 'amendment'; view: 'tutor' | 'admin'; names?: Record<string, string>; onSaved?: () => void }) {
+  const uiLanguage = useSiteLanguage();
+  const { packageCopy, copy, bookingCopy } = textByLanguage[uiLanguage];
+
   const [id, setId] = useState(initialId);
   const decisionId = useId();
   const route = kind === 'amendment' ? 'amendments' : 'operation-proposals'; const record = useBookingRecord<OperationProposal | GroupAmendment>(`${route}/${id}?view=${view}`);
@@ -42,12 +60,15 @@ function BookingStaffProposal({ id: initialId, kind, view, names = {}, onSaved }
 }
 
 function CancellationReview({ proposal, onSaved }: { proposal: Extract<OperationProposal, { view: 'admin'; kind: 'reschedule' | 'cancellation_remedy' }>; onSaved: (result: Record<string, unknown>) => void }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy, bookingCopy } = textByLanguage[uiLanguage];
+
   const occurrenceId = proposal.terms.tutor?.occurrence_id || proposal.terms.customers[0]?.old_occurrence_id;
   const current = useBookingRecord<{ items: AdminOccurrence[]; next_cursor: string | null }>(`occurrences?occurrence_id=${occurrenceId}`);
   const occurrence = current.data?.items.find(row => row.occurrence.occurrence_id === occurrenceId);
   const maximum = occurrence?.fee_agreement?.fee_minor ?? 0;
   const reserved = occurrence?.roster.filter(row => proposal.terms.customers.some(terms => terms.enrollment_id === row.enrollment_id) && (row.funding.reserved_credit_quanta ?? 0) > 0) ?? [];
-  return <details className={styles.private}><summary>{copy.reviewCancellation}</summary><p>{copy.reviewCancellationDescription}</p><ReadState pending={!current.data} {...current} />{occurrence && <><p>{copy.cancellationMaximum}: <bdi>{money(maximum)}</bdi></p><IdentityForm action={`operation-proposals/${proposal.proposal_id}/revise-cancellation`} submitLabel={copy.saveCancellationReview} successMessage={copy.cancellationReviewed} resettable={false} onSaved={onSaved} payload={form => {
+  return <details className={styles.private}><summary>{copy.reviewCancellation}</summary><p>{copy.reviewCancellationDescription}</p><ReadState pending={!current.data} {...current} />{occurrence && <><p>{copy.cancellationMaximum}: <bdi>{money(maximum, 'EGP', uiLanguage)}</bdi></p><IdentityForm action={`operation-proposals/${proposal.proposal_id}/revise-cancellation`} submitLabel={copy.saveCancellationReview} successMessage={copy.cancellationReviewed} resettable={false} onSaved={onSaved} payload={form => {
     const tutor_compensation_minor = moneyField(form, 'compensation');
     if (tutor_compensation_minor > maximum) throw new Error('AMOUNT_OUT_OF_RANGE');
     const package_dispositions = reserved.map(row => {
@@ -57,10 +78,13 @@ function CancellationReview({ proposal, onSaved }: { proposal: Extract<Operation
       return { enrollment_id: row.enrollment_id, released_credit_quanta, extinguished_credit_quanta };
     });
     return { tutor_compensation_minor, ...(package_dispositions.length ? { package_dispositions } : {}), reason: String(form.get('reason')).trim(), expected_version: proposal.version };
-  }}><AmountField name="compensation" label={copy.cancellationCompensation} max={maximum} allowZero />{reserved.length > 0 && <fieldset className={styles.section}><legend>{copy.cancellationPackageDisposition}</legend><p>{copy.cancellationPackageDescription}</p>{reserved.map(row => <div key={row.enrollment_id}><h4>{row.display_name}</h4><p>{copy.cancellationReservedCredits}: {credits(row.funding.reserved_credit_quanta!)}</p><CreditField name={`release_${row.enrollment_id}`} label={`${copy.cancellationCreditsToReturn} · ${row.display_name}`} max={row.funding.reserved_credit_quanta!} allowZero /></div>)}</fieldset>}<TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm></>}</details>;
+  }}><AmountField name="compensation" label={copy.cancellationCompensation} max={maximum} allowZero />{reserved.length > 0 && <fieldset className={styles.section}><legend>{copy.cancellationPackageDisposition}</legend><p>{copy.cancellationPackageDescription}</p>{reserved.map(row => <div key={row.enrollment_id}><h4>{row.display_name}</h4><p>{copy.cancellationReservedCredits}: {credits(row.funding.reserved_credit_quanta!, uiLanguage)}</p><CreditField name={`release_${row.enrollment_id}`} label={`${copy.cancellationCreditsToReturn} · ${row.display_name}`} max={row.funding.reserved_credit_quanta!} allowZero /></div>)}</fieldset>}<TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm></>}</details>;
 }
 
 export function CreateOperationProposal({ occurrence, view = 'admin', onSaved }: { occurrence: AdminOccurrence['occurrence']; view?: 'admin' | 'tutor'; onSaved?: () => void }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy, bookingCopy } = textByLanguage[uiLanguage];
+
   const [kind, setKind] = useState('reschedule'); const [remedy, setRemedy] = useState('policy_default'); const [created, setCreated] = useState('');
   const duration = Date.parse(occurrence.end_at) - Date.parse(occurrence.start_at);
   return <details className={styles.section}><summary>{copy.newProposal}</summary><Select name="proposal_kind" label={copy.proposalKind} value={kind} onChange={value => { setKind(value); setCreated(''); }}><option value="reschedule">{copy.reschedule}</option>{view === 'admin' && <option value="cancellation_remedy">{copy.cancellation}</option>}</Select>
@@ -68,6 +92,6 @@ export function CreateOperationProposal({ occurrence, view = 'admin', onSaved }:
       const expires_at = instantField(form, 'expires_at');
       const requested_terms = kind === 'reschedule' ? { target_type: 'occurrence', start_at: instantField(form, 'start_at'), end_at: new Date(Date.parse(instantField(form, 'start_at')) + duration).toISOString(), time_zone: 'Africa/Cairo', expires_at } : { target_type: 'occurrence', remedy, expires_at };
       return { kind, target_id: occurrence.occurrence_id, expected_version: occurrence.version, requested_terms, reason: String(form.get('reason')).trim() };
-    }}>{kind === 'reschedule' ? <><CairoInput name="start_at" label={copy.proposedStart} /><p>{copy.duration}: {duration / 60_000} min. {copy.durationNote}</p></> : <Select name="remedy" label={bookingCopy.remedy} value={remedy} onChange={setRemedy}>{Object.entries(bookingCopy.remedies).filter(([value]) => value !== 'none').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}<CairoInput name="expires_at" label={copy.expiry} /><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>{created && <StaffProposal id={created} kind="operation" view={view} />}
+    }}>{kind === 'reschedule' ? <><CairoInput name="start_at" label={copy.proposedStart} /><p>{copy.duration}: {duration / 60_000} {transactionLabel(uiLanguage, "min.")} {copy.durationNote}</p></> : <Select name="remedy" label={bookingCopy.remedy} value={remedy} onChange={setRemedy}>{Object.entries(bookingCopy.remedies).filter(([value]) => value !== 'none').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}<CairoInput name="expires_at" label={copy.expiry} /><TextField name="reason" label={bookingCopy.reason} maxLength={2000} /></IdentityForm>{created && <StaffProposal id={created} kind="operation" view={view} />}
   </details>;
 }

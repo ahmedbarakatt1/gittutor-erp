@@ -16,7 +16,20 @@ export async function approvePayrollEarning(f:Fixture){const s=await f.rpc('star
 export async function payrollTools(f:Fixture){const local=loadLocalSupabase(),worker=new Pool({connectionString:local.worker_database_url});const config=parseServerConfig({APP_ENV:'test',NEXT_PUBLIC_SUPABASE_URL:local.url,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:local.publishable_key,SUPABASE_SECRET_KEY:local.secret_key}),content=createFileContentService(worker,config),cipher=createIdentifierCipher({currentKeyId:'synthetic-payroll',currentKey:'87'.repeat(32)}),port=privatePayoutDestinationPort(worker);
  const transport=(client:Fixture['admin'])=>createPayoutDestinationTransport({client,cipher,port});
  async function actor(client:Fixture['admin']){const result=await client.auth.getClaims();assert.equal(result.error,null);const claims=result.data!.claims;return{account_id:claims.sub,session_id:String(claims.session_id)};}
- async function evidence(action:'verify_payout_destination'|'reconcile_payout'|'record_payout_reversal',parent:string){const checksum=createHash('sha256').update(syntheticPdf).digest('hex');const made=await invokeFileCommandWithStatus(f.admin,'create_file_upload',{p_purpose:'review_evidence',p_evidence_action:action,p_parent_id:parent,p_filename:'synthetic-payout-evidence.pdf',p_declared_type:'application/pdf',p_size_bytes:syntheticPdf.length,p_checksum_sha256:checksum,p_idempotency_key:randomUUID()});await content.upload(f.admin,made.data.file_id,syntheticPdf);const finalized=await invokeFileCommandWithStatus(f.admin,'finalize_file_upload',{p_file_id:made.data.file_id,p_checksum_sha256:checksum,p_idempotency_key:randomUUID()});await runFileScan(finalized.data.scan_job_id);return made.data.file_id;}
+ async function evidence(action:'verify_payout_destination'|'reconcile_payout'|'record_payout_reversal', parent:string,
+   bytes:Buffer = syntheticPdf, filename = 'synthetic-payout-evidence.pdf') {
+   const checksum = createHash('sha256').update(bytes).digest('hex');
+   const made = await invokeFileCommandWithStatus(f.admin, 'create_file_upload', {
+     p_purpose:'review_evidence', p_evidence_action:action, p_parent_id:parent, p_filename:filename,
+     p_declared_type:'application/pdf', p_size_bytes:bytes.length, p_checksum_sha256:checksum, p_idempotency_key:randomUUID(),
+   });
+   await content.upload(f.admin, made.data.file_id, bytes);
+   const finalized = await invokeFileCommandWithStatus(f.admin, 'finalize_file_upload', {
+     p_file_id:made.data.file_id, p_checksum_sha256:checksum, p_idempotency_key:randomUUID(),
+   });
+   assert.equal(await runFileScan(finalized.data.scan_job_id), 'completed');
+   return made.data.file_id;
+ }
  async function destination(){const setting=(await f.database.query('select version from finance_private.tutor_payout_settings where tutor_id=$1',[f.tutorId])).rows[0];await invokePayrollCommandWithStatus(f.admin,'set_tutor_payout_methods',{p_tutor_id:f.tutorId,p_channels:['instapay','vodafone_cash'],p_expected_version:setting?.version??1,p_idempotency_key:randomUUID()});const submit={p_channel:'instapay',p_identifier:`synthetic-${randomUUID()}@instapay`,p_payee_name:'Synthetic tutor payout',p_idempotency_key:randomUUID()};const made=await transport(f.tutor).submit(await actor(f.tutor),submit);assert.deepEqual((await transport(f.tutor).submit(await actor(f.tutor),submit)).data,made.data);const d=made.data as{destination_id:string;version:number};const verified=await transport(f.admin).verify(await actor(f.admin),{p_destination_id:d.destination_id,p_evidence_file_id:await evidence('verify_payout_destination',d.destination_id),p_decision:'verified',p_reason:'Actual scanned synthetic ownership evidence',p_expected_version:d.version,p_idempotency_key:randomUUID()});return{destinationId:d.destination_id,versionId:(verified.data as{destination_version_id:string}).destination_version_id};}
  return{worker,transport,actor,evidence,destination,close:()=>worker.end()};}
 /** Real encrypted destination, evidence scan, authorization and settled posting; no direct payroll row writes. */

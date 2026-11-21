@@ -2,8 +2,14 @@ import { expect, test } from 'vitest';
 import { bookingCommands, bookingRpc, invokeBookingCommandWithStatus } from '../../src/modules/booking/commands';
 import { publicOccurrenceSchema } from '../../src/modules/booking/public-occurrence';
 import { fundingSchema, getOperationProposal } from '../../src/modules/booking/queries';
+import { safeError } from '../../src/server/http';
 
 const id='ffcc33e4-147b-460a-a687-ea7be75d67fd';
+test.each(['DUPLICATE_ENROLLMENT', 'STATE_CONFLICT'])('duplicate hold response %s reaches the customer as a conflict', async code => {
+  const database = { rpc: async () => ({ data: null, error: { message: code }, status: 400 }) };
+  const error = await bookingRpc(database, 'reserve_enrollment').catch(safeError);
+  expect(error).toMatchObject({ code, status: 409 });
+});
 test('reservation accepts only the learner and occurrence, never caller authority or quote prices',async()=>{
   const args={p_occurrence_id:id,p_learner_id:id,p_idempotency_key:'synthetic-key'};
   expect(bookingCommands.reserve_enrollment.input.safeParse(args).success).toBe(true);

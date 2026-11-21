@@ -1,5 +1,6 @@
 'use client';
 
+import type { SiteLanguage } from '@/locales/language';
 import { useState } from 'react';
 import type { Messages } from '@/locales/en';
 
@@ -10,7 +11,7 @@ const frames = [
   { low: 5, high: 6, middle: 5 },
 ];
 
-export function StudyExample({ copy }: { copy: Messages['example'] }) {
+export function StudyExample({ copy, language = 'en' }: { language?: SiteLanguage; copy: Messages['example'] }) {
   const [step, setStep] = useState(0);
   const frame = frames[step];
   const found = step === frames.length - 1;
@@ -22,10 +23,10 @@ export function StudyExample({ copy }: { copy: Messages['example'] }) {
         <span className="example-topic">{copy.topic}</span>
       </div>
       <h2 id="study-example-title">{copy.question}</h2>
-      <div className="search-numbers" role="list" aria-label={copy.valuesLabel}>
+      <div className="search-numbers" role="list" aria-label={copy.valuesLabel} dir="ltr">
         {values.map((value, index) => (
           <span
-            key={value}
+            key={value.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-EG')}
             role="listitem"
             className={[
               'search-number',
@@ -33,9 +34,9 @@ export function StudyExample({ copy }: { copy: Messages['example'] }) {
               index === frame.middle ? 'is-current' : '',
               found && index === frame.middle ? 'is-found' : '',
             ].filter(Boolean).join(' ')}
-            aria-label={`${value}${index === frame.middle ? `, ${found ? copy.foundLabel : copy.currentLabel}` : ''}`}
+            aria-label={`${value.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-EG')}${index === frame.middle ? `, ${found ? copy.foundLabel : copy.currentLabel}` : ''}`}
           >
-            {value}
+            {value.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-EG')}
           </span>
         ))}
       </div>

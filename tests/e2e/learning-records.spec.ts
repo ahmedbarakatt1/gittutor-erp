@@ -1,10 +1,11 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import {expect,test,type Page} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
 import {groupCompletionFixture} from '../helpers/group-completion';
 import {completeLearningFixture,internalLearningCanary} from '../helpers/learning-records';
 import {loadLocalSupabase} from '../helpers/supabase';
 test.use({trace:'off',screenshot:'off'});
-async function login(page:Page,actor:{id:string;email:string;password:string}){await page.goto('/login');await page.getByLabel('Email address',{exact:true}).fill(actor.email);await page.getByLabel('Password',{exact:true}).fill(actor.password);const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/auth/login'&&r.request().method()==='POST');await page.getByRole('button',{name:'Sign in',exact:true}).click();expect((await response).status()).toBe(200);await expect(page.getByTestId('account-id')).toHaveText(actor.id);}
+async function login(page:Page,actor:{id:string;email:string;password:string}){await page.goto('/login');await page.getByLabel('Email address',{exact:true}).fill(actor.email);await page.getByLabel('Password',{exact:true}).fill(actor.password);const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/auth/login'&&r.request().method()==='POST');await page.getByRole('button',{name:'Sign in',exact:true}).click();expect((await response).status()).toBe(200);await expectSignedInAccount(page, actor.id);}
 test('tutor explicitly publishes a class summary and individual feedback visible in the learner booking',async({browser},info)=>{
  test.setTimeout(90000);const f=await groupCompletionFixture(),contexts=await Promise.all([0,1].map(()=>browser.newContext({baseURL:'http://127.0.0.1:3000',viewport:info.project.use.viewport})));try{
   await completeLearningFixture(f);const tutor=await contexts[0].newPage(),customer=await contexts[1].newPage();await login(tutor,f.actor);await tutor.goto(`/tutor/schedule?occurrence=${f.occurrenceId}`);const panel=tutor.getByRole('region',{name:'Published learning record',exact:true});await expect(panel.getByText('No class summary has been published yet.',{exact:true})).toBeVisible();await expect(panel.getByText(internalLearningCanary,{exact:true})).toHaveCount(0);

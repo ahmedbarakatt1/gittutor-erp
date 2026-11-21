@@ -16,6 +16,11 @@ async function handle(request:NextRequest,context:{params:Promise<{path?:string[
   }else{
    if(!allowedOrigin(request.headers.get('origin'),scoped.config.app_base_url,scoped.config.isolated))throw new DomainError('FORBIDDEN');if(request.nextUrl.searchParams.size)throw new DomainError('VALIDATION_ERROR');const key=request.headers.get('Idempotency-Key');if(!key)throw new DomainError('VALIDATION_ERROR');
    const body=await readJson(request);if(!body||typeof body!=='object'||Array.isArray(body))throw new DomainError('VALIDATION_ERROR');const args=Object.fromEntries(Object.entries(body).map(([k,v])=>[`p_${k}`,v]));if('p_idempotency_key'in args||'p_conversation_id'in args)throw new DomainError('VALIDATION_ERROR');
+   if(scoped.config.providers.whatsapp==='manual'){
+    const action=path.length===2?path[1]:null;
+    if(path.join('/')==='templates'||path.join('/')==='template-revocations'||action==='reconcile')throw new DomainError('WHATSAPP_MANUAL_CONTACT_ONLY');
+    if(action==='reply'&&(await getConversation(scoped.client,path[0])).channel==='whatsapp')throw new DomainError('WHATSAPP_MANUAL_CONTACT_ONLY');
+   }
    args.p_idempotency_key=key;if(path.join('/')==='templates')data=await registerWhatsAppTemplate(scoped.client,args);else if(path.join('/')==='template-revocations')data=await revokeWhatsAppTemplate(scoped.client,args);else if(path.join('/')==='hours')data=await setSupportHours(scoped.client,args);else if(path.length===2&&path[1]==='challenge'){args.p_conversation_id=path[0];data=await issueConversationChallenge(scoped.client,args);}else{const name=path.length===0?'start_conversation':path.length===2?actions[path[1]]:null;if(!name)throw new DomainError('NOT_FOUND');if(path.length)args.p_conversation_id=path[0];data=(await invokeSupportCommand(scoped.client,name,args)).data;}
   }
  }

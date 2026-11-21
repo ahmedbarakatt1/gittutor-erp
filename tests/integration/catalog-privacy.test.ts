@@ -62,10 +62,22 @@ describe('T03 catalog approval and customer confidentiality on real Supabase', (
     return rpc('publish_offer', { p_offer_id: fixture.offerId, p_effective_at: effectiveAt, p_expected_version: 1, p_idempotency_key: randomUUID() });
   }
 
-  test('only the two allowlisted public catalog RPCs expose approved customer projections', async () => {
-    const result = await clients.anon.rpc('list_public_offers', {});
-    expect(result.error?.message).toBeUndefined();
-    expect(result.data).toHaveProperty('items');
+  test('signed-out visitors and support guests cannot read persisted offers or tutor profiles', async () => {
+    const guest = anonymousClient();
+    expect((await guest.auth.signInAnonymously()).error).toBeNull();
+    try {
+      for (const visitor of [clients.anon, guest]) {
+        const offers = await visitor.rpc('list_public_offers', {});
+        const tutor = await visitor.rpc('get_public_tutor', { p_tutor_id: randomUUID() });
+        for (const result of [offers, tutor]) {
+          expect(result.error).toBeTruthy();
+          expect(result.error?.message).not.toBe('NOT_FOUND');
+          expect(result.data).toBeNull();
+        }
+      }
+    } finally {
+      await guest.auth.signOut({ scope: 'local' });
+    }
   });
 
   test('GT-1604 catalog seed preserves canonical records and publishes the four required subject areas idempotently', async () => {
@@ -87,9 +99,9 @@ describe('T03 catalog approval and customer confidentiality on real Supabase', (
 
   test('GT-1211 GT-1212 synthetic publication exposes customer terms and keeps finance outside every customer role', async () => {
     const fixture = await draftOffer();
-    expect((await rpc('list_public_offers', { p_offer_id: fixture.offerId }, 'anon')).items).toEqual([]);
+    expect((await rpc('list_public_offers', { p_offer_id: fixture.offerId }, 'student')).items).toEqual([]);
     await publish(fixture);
-    for (const who of ['anon', 'student', 'guardian', 'tutor', 'cs']) {
+    for (const who of ['student', 'guardian', 'tutor', 'cs']) {
       const result = await rpc('list_public_offers', { p_offer_id: fixture.offerId }, who);
       const rows = result.items as Json[];
       expect(rows).toHaveLength(1);
@@ -103,7 +115,7 @@ describe('T03 catalog approval and customer confidentiality on real Supabase', (
     const privileged = await rpc('list_pricing_versions', {});
     expect(JSON.stringify(privileged)).toContain('fee_min_minor');
     const grants = await database.query("select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='api' and has_function_privilege('anon',p.oid,'EXECUTE') order by p.proname");
-    expect(grants.rows.map(row => row.proname)).toEqual(['get_public_tutor', 'list_public_offers']);
+    expect(grants.rows.map(row => row.proname)).toEqual([]);
   });
 
   test('GT-1602 approval accepts explicit zero and false but refuses incomplete or incompatible policy', async () => {
@@ -176,8 +188,8 @@ describe('T03 catalog approval and customer confidentiality on real Supabase', (
     const p = await rpc('create_policy_draft', { p_kind:'booking',p_scope:'private',p_content:newContent,p_idempotency_key:randomUUID() });
     const o = await rpc('create_offer', { p_subject_id:fixtureId('subject_calculus'),p_format:'private',p_duration_minutes:60,p_capacity:1,p_target_tier:null,p_pricing_version_id:id,p_policy_version_id:p.policy_version_id,p_idempotency_key:randomUUID() });
     await publish({ pricingId:id,policyId:p.policy_version_id as string,offerId:o.offer_id as string,content:newContent });
-    const first = (await rpc('list_public_offers',{p_offer_id:old.offerId},'anon')).items as Json[];
-    const second = (await rpc('list_public_offers',{p_offer_id:o.offer_id},'anon')).items as Json[];
+    const first = (await rpc('list_public_offers',{p_offer_id:old.offerId},'student')).items as Json[];
+    const second = (await rpc('list_public_offers',{p_offer_id:o.offer_id},'student')).items as Json[];
     expect(first[0].seat_price_minor).toBe(50000); expect(second[0].seat_price_minor).toBe(60000);
     expect(first[0].pricing_version_id).toBe(old.pricingId); expect(second[0].pricing_version_id).toBe(id);
   });
@@ -199,7 +211,7 @@ describe('T03 catalog approval and customer confidentiality on real Supabase', (
     expect(updated.version).toBe(2);
     await rpc('approve_policy_version',{p_policy_version_id:id,p_effective_at:effectiveAt,p_approval_note:'Synthetic package approval',p_expected_version:2,p_idempotency_key:randomUUID()});
     await rpc('publish_offer',{p_offer_id:offer.offer_id,p_effective_at:effectiveAt,p_expected_version:1,p_idempotency_key:randomUUID()});
-    const rows=(await rpc('list_public_offers',{p_offer_id:offer.offer_id},'anon')).items as Json[];
+    const rows=(await rpc('list_public_offers',{p_offer_id:offer.offer_id},'student')).items as Json[];
     expect(rows[0].seat_price_minor).toBe(50000);
     expect(JSON.stringify(rows)).not.toMatch(/private_fee_rule|compensation|tutor_fee/);
   });
@@ -218,16 +230,16 @@ describe('T03 catalog approval and customer confidentiality on real Supabase', (
     const args={p_display_name:'Synthetic approved tutor',p_bio:'Approved synthetic public biography.',p_subject_ids:[fixtureId('subject_calculus')],p_contact_id:target.contact_id,p_locale:'en',p_expected_version:target.version,p_idempotency_key:randomUUID()};
     await rpc('update_tutor_profile',args,'profile');
     let record=(await database.query('select draft_profile_version_id,version from app_private.tutors where id=$1',[target.id])).rows[0];
-    expect((await clients.anon.rpc('get_public_tutor',{p_tutor_id:target.id})).error?.message).toBe('NOT_FOUND');
+    expect((await clients.student.rpc('get_public_tutor',{p_tutor_id:target.id})).error?.message).toBe('NOT_FOUND');
     await rpc('approve_tutor_profile',{p_tutor_id:target.id,p_profile_version_id:record.draft_profile_version_id,p_decision:'approved',p_reason:'Reviewed public teaching profile',p_expected_version:record.version,p_idempotency_key:randomUUID()});
-    const first=await rpc('get_public_tutor',{p_tutor_id:target.id},'anon');
+    const first=await rpc('get_public_tutor',{p_tutor_id:target.id},'student');
     expect(first.bio).toBe(args.p_bio);
     expect(Object.keys(first).sort()).toEqual(['tutor_id','display_name','bio','subjects','photo_reference'].sort());
     record=(await database.query('select version from app_private.tutors where id=$1',[target.id])).rows[0];
     await rpc('update_tutor_profile',{...args,p_bio:'Unapproved replacement biography.',p_expected_version:record.version,p_idempotency_key:randomUUID()},'profile');
-    expect(await rpc('get_public_tutor',{p_tutor_id:target.id},'anon')).toEqual(first);
+    expect(await rpc('get_public_tutor',{p_tutor_id:target.id},'student')).toEqual(first);
     record=(await database.query('select draft_profile_version_id,version from app_private.tutors where id=$1',[target.id])).rows[0];
     await rpc('approve_tutor_profile',{p_tutor_id:target.id,p_profile_version_id:record.draft_profile_version_id,p_decision:'rejected',p_reason:'Keep prior approved version',p_expected_version:record.version,p_idempotency_key:randomUUID()});
-    expect(await rpc('get_public_tutor',{p_tutor_id:target.id},'anon')).toEqual(first);
+    expect(await rpc('get_public_tutor',{p_tutor_id:target.id},'student')).toEqual(first);
   });
 });

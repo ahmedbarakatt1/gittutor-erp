@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page, type Locator, type APIRequestContext, type Response } from '@playwright/test';
 import { bookingFixture } from '../helpers/booking';
 import { loadLocalSupabase } from '../helpers/supabase';
@@ -18,7 +19,7 @@ async function login(page: Page, actor: string | { id: string; email: string; pa
   const user = typeof actor === 'string' ? loadLocalSupabase().actors[actor] : actor;
   await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(user.email); await page.getByLabel('Password', { exact: true }).fill(user.password);
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(user.id, { timeout: 15_000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expectSignedInAccount(page, user.id);
 }
 async function submit(page: Page, form: Locator, action: string, expected = 200) {
   const pending = page.waitForResponse(result => new URL(result.url()).pathname === `/api/v1/${action}` && result.request().method() === 'POST');
@@ -70,12 +71,23 @@ test('booking and schedule workspaces require a verified session', async ({ page
   }
 });
 
-test('a public scheduled-session selection survives verified sign-in', async ({ page }) => {
-  await page.goto('/offers'); await page.getByText('Filter by session time', { exact: true }).click(); await page.locator('#from-time').fill('2050-01-01T12:00'); await page.locator('#to-time').fill('2050-01-02T12:00'); await page.getByRole('button', { name: 'Apply filters', exact: true }).click(); await expect(page.getByText('No published offers match this view yet.', { exact: true })).toBeVisible(); await page.getByRole('link', { name: 'Clear filters', exact: true }).click(); await expect(page).toHaveURL(`${baseURL}/offers`);
-  await page.goto(`/offers/${catalogFixtureIds.group2_offer}`); const choice = page.getByRole('link', { name: 'Choose this session', exact: true }).first(); await expect(choice).toBeVisible(); const destination = await choice.getAttribute('href'); expect(destination).toMatch(/^\/learn\/bookings\?offer=/);
-  await choice.click(); await expect(page).toHaveURL(/\/login\?return_to=/);
-  const actor = loadLocalSupabase().actors.learner_d; await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await page.waitForURL(`${baseURL}${destination}`, { timeout: 15_000 }); await expect(page.getByRole('heading', { name: 'Choose a session', exact: true })).toBeVisible();
+test('a protected offer returns after sign-in and preserves the selected session at booking', async ({ page }) => {
+  const offerPath = `/offers/${catalogFixtureIds.group2_offer}`;
+  await page.goto(offerPath);
+  await expect(page).toHaveURL(/\/login\?return_to=/);
+  expect(new URL(page.url()).searchParams.get('return_to')).toBe(offerPath);
+  const actor = loadLocalSupabase().actors.learner_d;
+  await page.getByLabel('Email address', { exact: true }).fill(actor.email);
+  await page.getByLabel('Password', { exact: true }).fill(actor.password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.waitForURL(`${baseURL}${offerPath}`);
+  const choice = page.getByRole('link', { name: 'Choose this session', exact: true }).first();
+  await expect(choice).toBeVisible();
+  const destination = await choice.getAttribute('href');
+  expect(destination).toMatch(/^\/learn\/bookings\?offer=/);
+  await choice.click();
+  await page.waitForURL(`${baseURL}${destination}`);
+  await expect(page.getByRole('heading', { name: 'Choose a session', exact: true })).toBeVisible();
   const selected = new URL(destination!, baseURL).searchParams.get('occurrence'); const request = await page.request.get(`/api/v1/booking/occurrences?offer_id=${catalogFixtureIds.group2_offer}&occurrence_id=${selected}`); expect(request.status()).toBe(200); expect((await request.json()).data.items).toHaveLength(1);
 });
 
@@ -103,7 +115,12 @@ test('administrator schedules and approves exact teaching terms; guardian reserv
       const hold = page.getByRole('form', { name: 'Reserve a temporary seat', exact: true }); await hold.getByLabel('I have reviewed the offer’s price, timing and cancellation terms.').check();
       const reservation = await submit(page, hold, `occurrences/${occurrenceId}/holds`, 201); enrollmentIds.push(String(reservation.enrollment_id));
       await page.locator('#reserve').getByRole('link', { name: 'Review your reservation', exact: true }).click(); await page.waitForURL(`**/learn/bookings/${reservation.enrollment_id}`, { timeout: 15_000 });
-      const quote = page.getByRole('form', { name: 'Accept this quote', exact: true }); await quote.getByLabel('I accept this learner’s exact price, session time and saved terms.').check(); await submit(page, quote, `quotes/${reservation.quote_id}/accept`);
+      const quote = page.getByRole('form', { name: 'Accept this quote', exact: true });
+      await expect(page.getByRole('region', { name: 'Session room', exact: true })).toHaveCount(0);
+      await page.getByText('Review booking terms', { exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Payment for confirmation', exact: true })).toBeVisible();
+      await page.getByText('Review booking terms', { exact: true }).click();
+      await quote.getByLabel('I accept this learner’s exact price, session time and saved terms.').check(); await submit(page, quote, `quotes/${reservation.quote_id}/accept`);
       await expect(page.getByRole('status').filter({ hasText: 'Quote accepted:' })).toBeVisible(); await expect(page.getByTestId('confirmation-explanation')).toBeVisible(); await expect(page.getByRole('button', { name: 'Confirm session', exact: true })).toHaveCount(0);
       const detail = await page.request.get(`/api/v1/enrollments/${reservation.enrollment_id}`); expect(detail.status()).toBe(200); const dto = (await detail.json()).data; expect(dto.learner.learner_id).toBe(learnerId); expect(dto.funding.integration_state).toBe('ready'); expect(dto.funding.allocated_minor).toBe(0); expect(dto.funding.eligible).toBe(false);
       expect(JSON.stringify(dto)).not.toMatch(privateFields); expect(await page.content()).not.toMatch(privateFields); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -117,7 +134,9 @@ test('administrator schedules and approves exact teaching terms; guardian reserv
     expect(assetViolations, 'Every actual customer-downloaded script must exclude confidential field definitions').toEqual([]);
     expect((await guardian.request.get(`/api/v1/occurrences/${occurrenceId}/fee-agreements`)).status()).toBe(403);
     const unrelated = await stranger.newPage(); await login(unrelated, 'learner_c'); for (const id of enrollmentIds) expect((await stranger.request.get(`/api/v1/enrollments/${id}`)).status()).toBe(404);
-    const publicResponse = await browser.newContext({ baseURL }); try { const response = await publicResponse.request.get(`/api/v1/public/offers?offer_id=${catalogFixtureIds.group2_offer}`); expect(response.status()).toBe(200); expect(await response.text()).not.toMatch(privateFields); } finally { await publicResponse.close(); }
+    const memberOffer = await guardian.request.get(`/api/v1/public/offers?offer_id=${catalogFixtureIds.group2_offer}`);
+    expect(memberOffer.status()).toBe(200);
+    expect(await memberOffer.text()).not.toMatch(privateFields);
     await mkdir('.local/ui-review', { recursive: true }); await admin.storageState({ path: `.local/ui-review/t04-${info.project.name}-admin.json` }); await guardian.storageState({ path: `.local/ui-review/t04-${info.project.name}-guardian.json` }); await writeFile(`.local/ui-review/t04-${info.project.name}-booking.json`, JSON.stringify({ occurrenceId, enrollmentIds, offerId: catalogFixtureIds.group2_offer }));
   } finally { await Promise.all([admin.close(), guardian.close(), stranger.close()]); await fixture.close(); }
 });

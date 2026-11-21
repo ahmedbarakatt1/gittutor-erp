@@ -5,6 +5,7 @@ import { requestSupabase } from '@/server/supabase';
 import { allowedOrigin, DomainError, readJson, safeError } from '@/server/http';
 import { analyticsCommands, cohortCsv, cohortFilters, getCohortReport, getWorkloadReport, invokeAnalyticsCommand, listAnalyticsInquiries, listCampaigns, type CohortReport } from '@/modules/analytics/queries';
 import { paymentRpc } from '@/modules/payments/commands';
+import { streamFileBytes } from '@/server/file-content-body';
 export const runtime = 'nodejs';
 const rangeFields = ['from', 'to', 'as_of', 'observation_days', 'campaign_id', 'source', 'format', 'subject_id', 'policy_version', 'cursor', 'limit'];
 async function handle(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
@@ -33,7 +34,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
         if (rows.length !== expected.learners || rows.filter(row => row.newly_taught).length !== expected.newly_taught) throw new DomainError('STATE_CONFLICT');
         const filters = Object.fromEntries(Object.entries(parsed).filter(([field]) => !['p_limit', 'p_cursor', 'p_policy_version'].includes(field)).map(([field, value]) => [field.slice(2), value]));
         const audit = z.object({ audit_id: z.uuid() }).strict().parse((await paymentRpc(scoped.client, 'audit_cohort_export', { p_filters: filters, p_row_count: rows.length, p_newly_taught_count: expected.newly_taught })).data);
-        return scoped.finish(new NextResponse(cohortCsv(rows), { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="cohort-${parsed.p_from}-${parsed.p_to}.csv"`, 'Cache-Control': 'private, no-store', 'X-Export-Audit': audit.audit_id, 'X-Content-Type-Options': 'nosniff' } }));
+        return scoped.finish(new NextResponse(streamFileBytes(new TextEncoder().encode(cohortCsv(rows))), { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="cohort-${parsed.p_from}-${parsed.p_to}.csv"`, 'Cache-Control': 'private, no-store', 'X-Export-Audit': audit.audit_id, 'X-Content-Type-Options': 'nosniff' } }));
       }
       if (params.size || !Object.hasOwn(analyticsCommands, path)) throw new DomainError('NOT_FOUND');
       const body = await readJson(request), idempotencyKey = request.headers.get('Idempotency-Key');

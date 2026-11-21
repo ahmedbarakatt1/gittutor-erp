@@ -42,6 +42,23 @@ describe('T02 verified identity and current database authorization', () => {
       await database.query("insert into app_private.subjects(id,slug,title) values($1,$2,'Synthetic calculus')", [subjectId, `calculus-${run}`]);
     }
   }, 90000);
+  test('updating a verified identity preserves withdrawal from the learner workspace', async () => {
+    const owner = actors.admin.id;
+    await database.query('begin');
+    try {
+      await database.query("update app_private.account_roles set revoked_at=now() where account_id=$1 and role='student' and revoked_at is null", [owner]);
+      await database.query('delete from app_private.learners where account_id=$1', [owner]);
+      await database.query('update auth.users set email=email where id=$1', [owner]);
+      const result = await database.query(`select
+        app_private.has_role($1,'admin') as admin, app_private.has_role($1,'student') as student,
+        exists(select 1 from app_private.learners where account_id=$1) as learner,
+        exists(select 1 from app_private.verified_contacts where account_id=$1 and revoked_at is null and verified_at is not null) as verified`, [owner]);
+      expect(result.rows[0]).toEqual({ admin: true, student: false, learner: false, verified: true });
+    } finally {
+      await database.query('rollback');
+    }
+  });
+
   afterAll(async () => {
     await Promise.all(Object.values(actors).map(actor => actor.client.auth.signOut()));
     await database?.end();
@@ -299,8 +316,8 @@ describe('T02 verified identity and current database authorization', () => {
   });
 
   test('GT-1213 grants retain private RLS ownership and Auth bridges cannot be called by user roles', async () => {
-    const roles = await database.query("select rolname,rolcanlogin,rolbypassrls from pg_roles where rolname in ('git_tutor_commands','git_tutor_identity_sync')");
-    expect(roles.rows).toHaveLength(2);
+    const roles = await database.query("select rolname,rolcanlogin,rolbypassrls from pg_roles where rolname in ('git_tutor_commands','git_tutor_identity_sync','git_tutor_workflow_reader','git_tutor_operational_reader')");
+    expect(roles.rows).toHaveLength(4);
     expect(roles.rows.every(row => !row.rolcanlogin && !row.rolbypassrls)).toBe(true);
     const privileges = await database.query(`select
       has_function_privilege('authenticated','app_private.auth_account(uuid)','EXECUTE') as auth_bridge,
@@ -308,8 +325,10 @@ describe('T02 verified identity and current database authorization', () => {
       has_table_privilege('git_tutor_commands','app_private.command_results','UPDATE') as update_results,
       has_table_privilege('git_tutor_worker','app_private.staff_invitations','SELECT') as worker_table`);
     expect(privileges.rows[0]).toEqual({ auth_bridge: false, accounts: false, update_results: false, worker_table: false });
-    const functions = await database.query("select p.proname,p.proconfig,r.rolname from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='api'");
-    expect(functions.rows.every(row => row.rolname === 'git_tutor_commands' && row.proconfig.includes('search_path=""'))).toBe(true);
+    const functions = await database.query("select p.oid::regprocedure::text signature,p.proname,p.proconfig,r.rolname from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner where n.nspname='api'");
+    const readOwners: Record<string,string> = { 'api.get_workflow_import()': 'git_tutor_workflow_reader', 'api.get_workflow_operations()': 'git_tutor_operational_reader', 'api.get_workspace_operations(text)': 'git_tutor_operational_reader' };
+    expect(functions.rows.length).toBeGreaterThan(0);
+    expect(functions.rows.every(row => row.rolname === (readOwners[row.signature] ?? 'git_tutor_commands') && row.proconfig.includes('search_path=""'))).toBe(true);
   });
 
   test('T02 creation, durable queuing and replay retain transport status without expanding result DTOs', async () => {

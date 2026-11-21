@@ -4,7 +4,13 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {expect,test} from 'vitest';
 import {parseWhatsAppWebhook,verifyWhatsAppSignature} from '../../src/server/whatsapp-webhook';
-import {createFakeWhatsAppAdapter,createCloudWhatsAppAdapter,parseWhatsAppConfig} from '../../src/server/providers/whatsapp';
+import {createFakeWhatsAppAdapter,createCloudWhatsAppAdapter,createWhatsAppAdapter,parseWhatsAppConfig} from '../../src/server/providers/whatsapp';
+
+test.each([true, false])('manual WhatsApp has no transport, even with leftover credentials (isolated=%s)', isolated => {
+ const config = parseWhatsAppConfig({WHATSAPP_ADAPTER:'manual', WHATSAPP_ACCESS_TOKEN:'old-token'}, isolated);
+ expect(config.mode).toBe('manual');
+ expect(() => createWhatsAppAdapter(config)).toThrow('WHATSAPP_MANUAL_CONTACT_ONLY');
+});
 
 test('WhatsApp authenticates exact raw bytes and accepts only the configured provider channel',()=>{
  const value={object:'whatsapp_business_account',entry:[{id:'business1',changes:[{field:'messages',value:{metadata:{phone_number_id:'phone1'},messages:[{id:'wamid.1',from:'201234567890',timestamp:'1794560400',type:'text',text:{body:'booking'}}]}}]}]};

@@ -1,7 +1,10 @@
 import { getOccurrenceSeries, getSeriesChangeSet, listOccurrenceSeries, listUnavailabilityCases, getTutorReassignment, listTutorReassignments, type teachingCommands } from '@/modules/teaching/operations';
 import type { IdentityRpcClient } from '@/modules/identity/commands';
+import { getSessionQuizzes, listMyQuizResults } from '@/modules/teaching/quizzes';
 type OperationRoute = { family: 'teaching-operations'; pattern: RegExp; rpc: keyof typeof teachingCommands; pathArgument?: string; fields: string[] };
 export const teachingOperationRoutes: OperationRoute[] = [
+  { family: 'teaching-operations', pattern: /^occurrences\/([^/]+)\/quizzes$/, rpc: 'create_session_quiz', pathArgument: 'occurrence_id', fields: ['title', 'file_id', 'max_score'] },
+  { family: 'teaching-operations', pattern: /^quizzes\/([^/]+)\/grades$/, rpc: 'record_quiz_grade', pathArgument: 'quiz_id', fields: ['learner_id', 'score', 'expected_version'] },
   { family: 'teaching-operations', pattern: /^occurrences\/([^/]+)\/tutor-reassignments$/, rpc: 'propose_tutor_reassignment', pathArgument: 'occurrence_id', fields: ['new_tutor_id', 'new_fee_minor', 'old_tutor_compensation_minor', 'expires_at', 'reason', 'expected_version'] },
   { family: 'teaching-operations', pattern: /^tutor-reassignments\/([^/]+)\/accept$/, rpc: 'accept_tutor_reassignment', pathArgument: 'proposal_id', fields: ['terms_hash', 'expected_version'] },
   { family: 'teaching-operations', pattern: /^tutor-reassignments\/([^/]+)\/approve$/, rpc: 'approve_tutor_reassignment', pathArgument: 'proposal_id', fields: ['terms_hash', 'expected_version'] },
@@ -14,6 +17,9 @@ export const teachingOperationRoutes: OperationRoute[] = [
   { family: 'teaching-operations', pattern: /^occurrence-series\/([^/]+)\/changes$/, rpc: 'create_series_change_set', pathArgument: 'series_id', fields: ['selection', 'changes', 'expires_at', 'reason'] },
 ];
 export function findTeachingOperationReadRoute(path: string): { fields: string[]; run: (client: IdentityRpcClient, options: Record<string, unknown>) => Promise<unknown> } | undefined {
+  if (path === 'me/quiz-results') return { fields: ['learner_id', 'cursor', 'limit'], run: listMyQuizResults };
+  const sessionQuizzes = /^occurrences\/([^/]+)\/quizzes$/.exec(path);
+  if (sessionQuizzes) return { fields: ['view', 'learner_id'], run: (client, options) => getSessionQuizzes(client, sessionQuizzes[1], options) };
   if (path === 'tutor-reassignments') return { fields: ['view', 'learner_id', 'occurrence_id', 'state', 'cursor', 'limit'], run: (client, options) => listTutorReassignments(client, options) };
   const reassignment = /^tutor-reassignments\/([^/]+)$/.exec(path); if (reassignment) return { fields: ['view', 'learner_id'], run: (client, options) => getTutorReassignment(client, reassignment[1], options) };
   if (path === 'unavailability-cases') return { fields: ['tutor_id', 'state', 'cursor', 'limit'], run: (client, options) => listUnavailabilityCases(client, options) };

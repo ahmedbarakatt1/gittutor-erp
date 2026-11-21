@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { completionFixture } from '../helpers/completion';
@@ -8,7 +9,7 @@ test.use({ trace: 'off', screenshot: 'off' });
 async function login(page: Page, actor: { id: string; email: string; password: string }) {
   await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password);
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expectSignedInAccount(page, actor.id);
 }
 function local(value: number) { const time = formatCairoInstant(new Date(value).toISOString()); return `${time.local_date}T${time.local_time}`; }
 async function submit(page: Page, form: Locator, path: string, label: string) {

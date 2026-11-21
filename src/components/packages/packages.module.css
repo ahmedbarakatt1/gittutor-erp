@@ -33,4 +33,6 @@
 .group .choice { margin-block: .65rem; }
 .empty { color: var(--muted); padding-block: 1rem; }
 @media(max-width: 760px) { .split { grid-template-columns: 1fr; gap: 1rem; } .records { max-block-size: 15rem; } }
-@media(max-width: 440px) { .facts > div { grid-template-columns: 1fr; gap: .35rem; } }
+@media (max-width: 440px) {
+  .facts > div { grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.75rem), 1fr)); gap: .35rem 1rem; }
+}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { IdentityRpcClient } from '../identity/commands';
 export type FileRpcClient=IdentityRpcClient;
-export const publicFilePurposeSchema=z.enum(['private_preparation','shared_handout','receipt','statement_evidence','review_evidence']);
+export const publicFilePurposeSchema=z.enum(['private_preparation','shared_handout','request_material','receipt','statement_evidence','review_evidence']);
 export type PublicFilePurpose=z.infer<typeof publicFilePurposeSchema>;
 export const fileEvidenceActionSchema=z.enum(['submit_receipt','replace_receipt','create_statement_import','record_manual_transfer','verify_transfer_settlement','create_receiving_account','bind_transfer_payer','record_transfer_reversal','propose_refund_destination','verify_refund_destination','reconcile_refund','record_refund_reversal','resolve_package_financing_hold','review_delivery_exception','amend_completion','adjust_tutor_earning','record_expense','record_expense_settlement','cash_reconciliation','verify_payout_destination','reconcile_payout','record_payout_reversal','analytics_evidence']);
 export const fileFilenameSchema=z.string().min(1).max(255).refine(value=>value===value.trim()&&!/[\\/\x00-\x1f\x7f]/.test(value)&&!['.','..'].includes(value));

@@ -9,17 +9,20 @@ export async function GET(request: NextRequest) {
   const tokenHash = request.nextUrl.searchParams.get("token_hash");
   const type = request.nextUrl.searchParams.get("type");
   const invitation = request.nextUrl.searchParams.get("staff_invitation_id");
-  if (tokenHash && isAuthTokenHash(tokenHash) && (type === "invite" || type === "email")) {
+  if (tokenHash && isAuthTokenHash(tokenHash) && (type === "invite" || type === "email" || type === "recovery")) {
     const { error } = await context.client.auth.verifyOtp({ token_hash: tokenHash, type });
     if (!error) {
-      const destination = new URL(type === "invite" ? "/auth/set-password" : "/learn", base);
-      if (invitation && /^[a-f0-9-]{36}$/i.test(invitation)) destination.searchParams.set("staff_invitation_id", invitation);
+      const destination = new URL(type === "email" ? "/learn" : "/auth/set-password", base);
+      if (type === "invite" && invitation && /^[a-f0-9-]{36}$/i.test(invitation)) destination.searchParams.set("staff_invitation_id", invitation);
       return context.finish(NextResponse.redirect(destination));
     }
   }
   if (code && code.length <= 4096) {
-    const { error } = await context.client.auth.exchangeCodeForSession(code);
-    if (!error) return context.finish(NextResponse.redirect(new URL("/learn", base)));
+    const { data, error } = await context.client.auth.exchangeCodeForSession(code);
+    if (!error) {
+      const destination = "redirectType" in data && data.redirectType === "recovery" ? "/auth/set-password" : "/learn";
+      return context.finish(NextResponse.redirect(new URL(destination, base)));
+    }
   }
   return context.finish(NextResponse.redirect(new URL("/login?reason=verification", base)));
 }

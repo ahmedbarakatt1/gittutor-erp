@@ -75,6 +75,29 @@ test('tutors see only assigned history and their own reported fees', async () =>
   expect(rows[0].fields.find(f => f.key === 'tutor_fee_due_minor')?.value).toBe(4500);
   expect(JSON.stringify(result.data)).not.toMatch(/Synthetic learner B|CONFIDENTIAL_SOURCE_NOTE|tuition_minor|source-a@example/);
 });
+test('a service worker who is also a guardian gets separate service and family workbook views', async () => {
+  await database.query("insert into app_private.account_roles(account_id,role,reason) values($1,'customer_service','Synthetic multi-role regression')", [guardianId]);
+  await database.query('insert into app_private.operational_workbook_access(batch_id,account_id,created_by) values($1,$2,$3)', [batchId, guardianId, ownerId]);
+  try {
+    const staff = await guardian.rpc('get_workspace_operations', { p_workspace: 'service' });
+    expect(staff.error).toBeNull();
+    const staffView = enabled(workflowOperationsSchema.parse(staff.data));
+    expect(staffView.role).toBe('service');
+    expect(staffView.sections.find(s => s.key === 'sessions')?.records).toHaveLength(3);
+    const family = await guardian.rpc('get_workspace_operations', { p_workspace: 'learn' });
+    expect(family.error).toBeNull();
+    const familyView = enabled(workflowOperationsSchema.parse(family.data));
+    expect(familyView.role).toBe('customer');
+    expect(familyView.sections.find(s => s.key === 'sessions')?.records).toHaveLength(1);
+    expect(JSON.stringify(familyView)).not.toMatch(/Synthetic learner B|tuition_minor|tutor_fee|CONFIDENTIAL_SOURCE_NOTE/);
+    const ownerRead = await guardian.rpc('get_workspace_operations', { p_workspace: 'admin' });
+    expect(ownerRead.error?.message).toBe('FORBIDDEN');
+    expect((await anonymousClient().rpc('get_workspace_operations', { p_workspace: 'learn' })).error).not.toBeNull();
+  } finally {
+    await database.query('delete from app_private.operational_workbook_access where batch_id=$1 and account_id=$2', [batchId, guardianId]);
+    await database.query("update app_private.account_roles set revoked_at=now() where account_id=$1 and role='customer_service' and revoked_at is null", [guardianId]);
+  }
+});
 test('guardian booking-only scope excludes financial fields and revocation removes history immediately', async () => {
   const result = await guardian.rpc('get_workflow_operations'); expect(result.error).toBeNull();
   const view = enabled(workflowOperationsSchema.parse(result.data)); expect(view.role).toBe('customer');

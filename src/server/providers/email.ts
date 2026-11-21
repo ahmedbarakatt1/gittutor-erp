@@ -23,3 +23,47 @@ export function createLocalEmailAdapter(directory:string,isolated:boolean,scenar
 export function createSesEmailAdapter(config:{region:string;from:string;configuration_set:string|null},client=new SESv2Client({region:config.region,maxAttempts:1})):EmailAdapter{
  return {async send(message){try{const response=await client.send(new SendEmailCommand({FromEmailAddress:config.from,Destination:{ToAddresses:[message.to]},Content:{Simple:{Subject:{Data:message.subject,Charset:'UTF-8'},Body:{Text:{Data:message.text,Charset:'UTF-8'},Html:{Data:message.html,Charset:'UTF-8'}}}},EmailTags:[{Name:'git_tutor_attempt',Value:message.attempt_id}],...(config.configuration_set?{ConfigurationSetName:config.configuration_set}:{})}),{abortSignal:AbortSignal.timeout(10000)});return response.MessageId?result('sent',response.MessageId):result('unknown',null,'EMAIL_OUTCOME_UNKNOWN');}catch(error){const name=error instanceof Error?error.name:'';return ['MessageRejected','BadRequestException','MailFromDomainNotVerifiedException','AccountSuspendedException','SendingPausedException','TooManyRequestsException'].includes(name)?result('failed',null,name==='TooManyRequestsException'?'EMAIL_TEMPORARY_REJECTION':'EMAIL_REJECTED'):result('unknown',null,'EMAIL_OUTCOME_UNKNOWN');}},async reconcile(){return result('unknown',null,'EMAIL_CALLBACK_REQUIRED');}};
 }
+
+const resendReceipt = z.object({ id: z.uuid() });
+const resendRejections = new Set([400, 401, 403, 404, 405, 413, 422]);
+
+export function createResendEmailAdapter(config: { api_key: string; from: string }, fetcher: typeof fetch = fetch): EmailAdapter {
+  return {
+    async send({ attempt_id, to, subject, text, html }) {
+      try {
+        const response = await fetcher('https://api.resend.com/emails', {
+          method: 'POST',
+          redirect: 'error',
+          signal: AbortSignal.timeout(10_000),
+          headers: {
+            Authorization: `Bearer ${config.api_key}`,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': `git-tutor/${attempt_id}`,
+          },
+          body: JSON.stringify({
+            from: config.from,
+            to: [to],
+            subject,
+            text,
+            html,
+            tags: [{ name: 'git_tutor_attempt', value: attempt_id }],
+          }),
+        });
+        if (response.ok) {
+          return result('sent', resendReceipt.parse(await response.json()).id);
+        }
+        void response.body?.cancel().catch(() => undefined);
+        if (response.status === 429) return result('failed', null, 'EMAIL_TEMPORARY_REJECTION');
+        if (resendRejections.has(response.status)) return result('failed', null, 'EMAIL_REJECTED');
+      } catch {
+        // A transport or response parsing error can follow a successful send.
+      }
+      return result('unknown', null, 'EMAIL_OUTCOME_UNKNOWN');
+    },
+    async reconcile() {
+      // The send-only key cannot look up this attempt. Wait for a signed
+      // callback instead of replaying a send with a 24-hour idempotency key.
+      return result('unknown', null, 'EMAIL_CALLBACK_REQUIRED');
+    },
+  };
+}

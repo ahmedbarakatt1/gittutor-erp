@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getWorkflowOperations, reviewWorkflowOperation } from '@/modules/workflow-import/operational-queries';
+import { workbookWorkspaceSchema } from '@/modules/workflow-import/operational-model';
 import { requestSupabase } from '@/server/supabase';
 import { allowedOrigin, DomainError, readJson, safeError } from '@/server/http';
 
@@ -9,12 +10,17 @@ async function handle(request: NextRequest) {
   const requestId = randomUUID();
   let context: ReturnType<typeof requestSupabase> | undefined;
   try {
-    if (request.nextUrl.searchParams.size) throw new DomainError('VALIDATION_ERROR');
+    const query = request.nextUrl.searchParams;
+    if ([...query.keys()].some(key => request.method !== 'GET' || key !== 'workspace') || query.getAll('workspace').length > 1) throw new DomainError('VALIDATION_ERROR');
     context = requestSupabase(request);
     const claims = await context.client.auth.getClaims();
     if (claims.error || !claims.data?.claims.sub) throw new DomainError('AUTH_REQUIRED');
     let data: unknown;
-    if (request.method === 'GET') data = await getWorkflowOperations(context.client);
+    if (request.method === 'GET') {
+      const workspace = workbookWorkspaceSchema.safeParse(query.get('workspace') ?? 'learn');
+      if (!workspace.success) throw new DomainError('VALIDATION_ERROR');
+      data = await getWorkflowOperations(context.client, workspace.data);
+    }
     else {
       if (!allowedOrigin(request.headers.get('origin'), context.config.app_base_url, context.config.isolated)) throw new DomainError('FORBIDDEN');
       const body = await readJson(request);

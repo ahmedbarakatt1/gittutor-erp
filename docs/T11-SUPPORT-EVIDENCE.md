@@ -4,6 +4,8 @@ Verified locally on 13 November 2026 against actual Supabase Auth/PostgreSQL and
 
 ## Implemented boundary
 
+The selected launch mode is manual WhatsApp contact on +20 15 08823452. Staff read and reply in the business app. The website support inbox continues independently. Webhook processing and WhatsApp worker dispatch are active only for the appropriate automated mode described below.
+
 Website conversations have anonymous authenticated ownership, approved FAQ answers, sensitive-question handoff, immutable messages/private notes, concurrent claim protection, owner transfer, escalation, administrator return, resolution and reopening. Unassigned staff can preview public transcripts; only the assigned owner/admin sees private notes. Customer responses use a strict allowlist.
 
 The original website owner can create a 15-minute, single-use linking challenge. A verified account must present that challenge and have current authority for the explicitly selected learner. The anonymous owner loses access after linking. Neither a shared number nor an account's default learner is used as identity proof. WhatsApp `link` requests return a channel challenge; the website linking form performs the same authorization. Analytics consumes explicit `support_account_links` separately.

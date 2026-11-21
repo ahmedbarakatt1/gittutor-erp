@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -7,6 +8,7 @@ import { runFileScan, syntheticPdf } from '../helpers/files';
 import { loadLocalSupabase } from '../helpers/supabase';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
 import { provisionFakeMeeting } from '../helpers/calendar';
+import { bookingFixture } from '../helpers/booking';
 
 test.use({ trace: 'off', screenshot: 'off' });
 const baseURL = 'http://127.0.0.1:3000';
@@ -18,7 +20,7 @@ async function login(page: Page, label: string | { id: string; email: string; pa
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 function section(page: Page, name: string) { return page.locator('section').filter({ has: page.getByRole('heading', { level: 2, name, exact: true }) }).last(); }
 async function upload(page: Page, region: Locator, filename: string, interrupt = false) {
@@ -70,6 +72,54 @@ async function download(page: Page, fileId: string) {
   expect(createHash('sha256').update(await response.body()).digest('hex')).toBe(createHash('sha256').update(syntheticPdf).digest('hex'));
 }
 
+test('large private material recovers interrupted pieces and a lost final acknowledgement', async ({ page }) => {
+  test.setTimeout(90_000);
+  test.info().annotations.push({ type: 'transport-fixture', description: 'Only a host payload ceiling, one dropped request and one lost final acknowledgement are simulated; Auth, SQL, Storage and scan-worker execution are real local services.' });
+  const fixture = await bookingFixture();
+  try {
+    await fixture.availability(); const occurrence = await fixture.occurrence(), enrollment = await fixture.reserve(String(occurrence.occurrence_id));
+    await login(page, 'learner_a'); await page.goto(`/learn/files?enrollment=${enrollment.enrollment_id}`);
+    const bytes = Buffer.alloc(5 * 1024 * 1024, 32); bytes.write('%PDF-1.4\n'); bytes.write('\n%%EOF\n', bytes.length - 7);
+    const requests: { size: number; range: string | undefined }[] = []; let interruptions = 0;
+    await page.route('**/api/v1/files/*/content', async route => {
+      const request = route.request(); if (request.method() !== 'PUT') return route.continue();
+      const size = request.postDataBuffer()?.length ?? 0, range = request.headers()['content-range']; requests.push({ size, range });
+      if (size > 4_500_000) return route.fulfill({ status: 413, contentType: 'application/json', body: JSON.stringify({ message: 'Host payload limit exceeded' }) });
+      if (range?.startsWith('bytes 3145728-') && interruptions < 2) {
+        interruptions++;
+        if (interruptions === 2) expect((await route.fetch()).status()).toBe(200);
+        return route.abort('connectionreset');
+      }
+      return route.continue();
+    });
+    const widget = section(page, 'Private preparation').getByRole('group', { name: 'Add a file', exact: true });
+    await widget.getByLabel('Choose a file', { exact: true }).setInputFiles({ name: 'large-private-preparation.pdf', mimeType: 'application/pdf', buffer: bytes });
+    await widget.getByRole('button', { name: 'Upload and check file', exact: true }).click();
+    await expect(widget.getByRole('alert')).toBeVisible();
+    await widget.getByRole('button', { name: 'Retry this upload', exact: true }).click();
+    await expect(widget.getByRole('button', { name: 'Retry this upload', exact: true })).toBeEnabled();
+    await expect(widget.getByRole('alert')).toBeVisible();
+    const [completed] = await Promise.all([
+      page.waitForResponse(response => /\/api\/v1\/files\/[^/]+\/complete$/.test(new URL(response.url()).pathname) && response.request().method() === 'POST'),
+      widget.getByRole('button', { name: 'Retry this upload', exact: true }).click(),
+    ]);
+    expect(completed.status()).toBe(202); expect(interruptions).toBe(2);
+    expect(requests).toEqual([
+      { size: 3145728, range: 'bytes 0-3145727/5242880' }, { size: 2097152, range: 'bytes 3145728-5242879/5242880' },
+      { size: 3145728, range: 'bytes 0-3145727/5242880' }, { size: 2097152, range: 'bytes 3145728-5242879/5242880' },
+      { size: 3145728, range: 'bytes 0-3145727/5242880' },
+    ]);
+    const fileId = new URL(completed.url()).pathname.split('/')[4], body = await completed.json();
+    expect((await page.request.get(`/api/v1/files/${fileId}/content`)).ok()).toBe(false);
+    expect(await runFileScan(body.data.scan_job_id)).toBe('completed');
+    const downloaded = await page.request.get(`/api/v1/files/${fileId}/content`);
+    expect(downloaded.status()).toBe(200); expect(downloaded.headers()['cache-control']).toContain('no-store');
+    expect(createHash('sha256').update(await downloaded.body()).digest('hex')).toBe(createHash('sha256').update(bytes).digest('hex'));
+    expect(JSON.stringify(await (await page.request.get(`/api/v1/files/${fileId}`)).json())).not.toMatch(/object_key|part_keys|tutor_fee|lease_token|authorization_id/);
+    expect((await fixture.database.query('select count(*)::int n from app_private.files where id=$1', [fileId])).rows[0].n).toBe(1);
+  } finally { await page.unrouteAll({ behavior: 'ignoreErrors' }); await fixture.close(); }
+});
+
 test('actual private preparation retries safely, publishes a separate class resource and revokes its saved download', async ({ browser }, info) => {
   test.setTimeout(120_000);
   // Genuine funding/confirmation is setup; the uploaded material below uses actual bytes and a real leased scan worker.
@@ -119,16 +169,19 @@ test('actual private preparation retries safely, publishes a separate class reso
     await peer.reload(); await expect(section(peer, 'Class resources').getByRole('heading', { name: 'class-handout.pdf', exact: true })).toHaveCount(0);
     await login(operator, 'admin_a'); await operator.goto('/admin/integrations');
     const connected = operator.waitForResponse(response => new URL(response.url()).pathname === '/api/calendar/connect' && response.request().method() === 'POST');
-    await operator.getByRole('button', { name: 'Connect simulated calendar', exact: true }).click();
+    await operator.getByRole('button', { name: /^(Connect simulated calendar|Add simulated organizer)$/ }).click();
     expect((await connected).status()).toBe(200);
     await expect(operator.getByRole('status').filter({ hasText: 'The simulated organizer is connected.' })).toBeVisible();
     expect((await provisionFakeMeeting(f, held.occurrenceId)).meeting_status).toBe('ready');
     await peer.goto(`/learn/bookings/${second.enrollment_id}`);
     const room = peer.getByRole('region', { name: 'Session room', exact: true });
     await expect(room.getByText('Room ready', { exact: true })).toBeVisible();
+    const roomButton = room.getByRole('button', { name: 'Preview simulated meeting', exact: true });
+    await expect(roomButton).toBeInViewport();
+    await expect(peer.getByText('Study files and class resources', { exact: true }).locator('..')).not.toHaveAttribute('open', '');
     await expect(room.getByRole('timer')).toContainText('Starts in');
     const access = peer.waitForResponse(response => new URL(response.url()).pathname === `/api/v1/occurrences/${held.occurrenceId}/meeting/access`);
-    await room.getByRole('button', { name: 'Preview simulated meeting', exact: true }).click();
+    await roomButton.click();
     const accessResponse = await access; expect(accessResponse.status()).toBe(200);
     expect(JSON.stringify(await accessResponse.json())).not.toMatch(/fee_minor|compensation|provider_token|refresh_token|internal_notes/);
     await expect(room.getByRole('region', { name: 'Simulated room preview', exact: true })).toBeVisible();

@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -17,7 +18,7 @@ async function login(page: Page, actor: { id: string; email: string; password: s
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id);
+  await expectSignedInAccount(page, actor.id);
 }
 async function submit(page: Page, form: Locator, path: string, expected = 200) {
   const response = page.waitForResponse(result => new URL(result.url()).pathname === `/api/v1/${path}` && result.request().method() === 'POST');
@@ -128,6 +129,7 @@ test('guided synthetic booking, real receipt review, confirmation, files and fiv
       await saveDemo(demo);
     }
     await learner.goto(`/learn/bookings/${slot.enrollmentId}`);
+    await learner.getByText('Study files and class resources', { exact: true }).click();
     await expect(learner.getByRole('heading', { name: 'demo-material.pdf', exact: true })).toBeVisible();
     const download = await learner.request.get(`/api/v1/files/${slot.materialFileId}/content`); expect(download.status()).toBe(200);
     expect(createHash('sha256').update(await download.body()).digest('hex')).toBe(createHash('sha256').update(await readFile('.local/demo/demo-material.pdf')).digest('hex'));

@@ -1,5 +1,15 @@
 # Git Tutor design record
 
+## Request-first correction — 15 November 2026
+
+The customer's own lecture material now starts the journey. The subject page offers examples and a clear route for another topic; the former offer catalogue is a compact individual/group price comparison. Existing Instagram-derived logo, warm ivory/red/ink palette and public-versus-operational visual distinction remain. The request workspace uses a side queue and brief/detail column on desktop, stacked in reading order on phones, rather than repeating full-width cards. No new decorative imagery or 3D scope was introduced.
+
+Loaded Taste at `C:/Users/barak/.codex/skills/design-taste-frontend/SKILL.md`, Impeccable4.3.1 at `C:/Users/barak/.codex/plugins/cache/openai-curated-remote/impeccable/4.3.1/skills/impeccable/SKILL.md` and official Playwright CLI skill at `C:/Users/barak/.agents/skills/playwright-cli/SKILL.md`. Mechanical audit returned `[]` (`.local/production-setup/request-design-audit.json`).
+
+Actual hosted CLI0.1.24 session `request-gittutor` reviewed `/`, `/subjects`, `/offers` at1440×1000 and360×1000. All six page responses were200, no horizontal overflow, pricing was650/575/550/500 and90–105minutes, and the request CTA reached login with the correct return path. Desktop pricing and mobile subjects screenshots were visually inspected: readable hierarchy, aligned prices, legible contact links and distinct request actions. No cosmetic rework was needed. Console inspection returned0 errors/warnings; response inspection returned no HTTP errors. Next prefetch requests cancelled by navigation were excluded from application failure counts. The private helper's first return-path assertion used the wrong query name; `return_to` was verified and the corrected check passed. Evidence: `.local/request-flow/cli-public-review-final.log` and `{home,subjects,offers}-{1440,360}.png`.
+
+The authenticated hosted browser walkthrough subsequently passed request creation, actual PDF upload/deployed simulated scan, staff information request, learner revision, matching, explicit650 quote consent, independently reviewed synthetic funding and assigned-tutor exact PDF download. Desktop/mobile screenshots are in `.local/request-flow/screenshots`; the confirmed tutor-material screenshot was visually inspected. No page exceptions occurred. Existing held-booking shared-handout list requests returned404 before confirmation; this non-blocking presentation issue remains recorded separately rather than hidden in a clean-console claim. The actual request material stayed private and became available to the assigned tutor after confirmation. Full details and preserved-data assertions are in [implementation status](IMPLEMENTATION-STATUS.md).
+
 ## T07 actual files and simulated meeting review
 
 The customer workspace retains the warm ivory, large readable type and red action styling established with Taste; tutor/admin controls use the existing compact operational forms. Preparation and class resources are separate labeled regions, with explicit publication and withdrawal. No private object keys, teaching fees or provider credentials are added to customer metadata.

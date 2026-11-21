@@ -15,7 +15,10 @@ export function calendarHandler(database:Pick<Pool,'query'>,factory:CalendarAdap
  return {
   async execute(job){const p=await prepare(job);if(p.state==='suppressed')return `suppressed:${p.reason}`;const adapter=await factory(p,job);const result=await finish(job,p.desired,await adapter.apply(p.desired));if(result.outcome==='unknown')throw new Error('CALENDAR_OUTCOME_UNKNOWN');return `${p.desired.provider_event_id}:${p.desired.meeting_generation}`;},
   async reconcile(job){const p=await prepare(job);if(p.state==='suppressed')return {outcome:'completed',reference:`suppressed:${p.reason}`};const result=await(await factory(p,job)).reconcile(p.desired);
-   if(result.outcome==='absent'||((result.outcome==='ready'||result.outcome==='pending')&&!result.matches_desired))return {outcome:'not_sent'};
+   // A missing Google event can still have an older insertion in flight. Record the
+   // observation so the database retains its slot and schedules cancellation checks.
+   const cancellingGoogle = p.mode==='google' && p.desired.action==='cancel';
+   if((result.outcome==='absent'&&!cancellingGoogle)||((result.outcome==='ready'||result.outcome==='pending')&&!result.matches_desired))return {outcome:'not_sent'};
    await finish(job,p.desired,result);if(result.outcome==='unknown')return {outcome:'unknown'};return {outcome:'completed',reference:`${p.desired.provider_event_id}:${p.desired.meeting_generation}`};},
  };
 }

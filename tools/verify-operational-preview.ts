@@ -17,28 +17,36 @@ import { executeLeasedJob } from '../src/worker/execute';
 import { calendarHandler } from '../src/worker/calendar';
 import { createFakeCalendarAdapter } from '../src/server/providers/calendar';
 import { getOccurrenceMeeting, invokeMeetingCommandWithStatus } from '../src/modules/teaching/meetings';
+import { assertHostedOperationalTarget, type HostedOperationalTarget } from './hosted-operational-target';
 
-const directory = resolve('.local/operational-preview');
-const config = JSON.parse(await readFile(resolve(directory, 'config.json'), 'utf8')) as { marker: string; url: string; publishable_key: string; secret_key: string; database_url: string; worker_database_url: string };
-assert.equal(config.marker, operationalPreviewMarker); assert.equal(new URL(config.database_url).port, '54332');
+const hostedPreview = process.argv.includes('--hosted-preview');
+const directory = resolve(hostedPreview ? '.local/hosted-preview' : '.local/operational-preview');
+const config = JSON.parse(await readFile(resolve(directory, 'config.json'), 'utf8')) as HostedOperationalTarget & { publishable_key: string; secret_key: string };
+assert.equal(config.marker, operationalPreviewMarker);
+if (!hostedPreview) assert.equal(new URL(config.database_url).port, '54332');
 const manifest = JSON.parse(await readFile(resolve(directory, 'manifest.json'), 'utf8')) as OperationalPreviewManifest;
 assert.equal(manifest.marker, operationalPreviewMarker); assert.equal(manifest.state, 'ready');
 const snapshot = workflowSnapshotSchema.parse(JSON.parse(await readFile('.local/workflow-import/workflow-snapshot.json', 'utf8')));
 const terms = practiceSourceTerms(snapshot), baseURL = process.env.PREVIEW_VERIFY_URL || 'http://127.0.0.1:3000';
+if (hostedPreview) { assertHostedOperationalTarget(config, snapshot.source_sha256, process.env.APP_ENV); assert.equal(baseURL, config.base_url); }
 const mutate = process.argv.includes('--walkthrough');
-assert(!mutate || baseURL === 'http://127.0.0.1:3000', 'Mutating walkthrough is local only');
+assert(!mutate || baseURL === 'http://127.0.0.1:3000' || hostedPreview, 'Mutating walkthrough requires an isolated approved target');
+const protection = hostedPreview ? JSON.parse(await readFile(resolve(directory, 'protection.json'), 'utf8')) as {secret:string} : null;
+if (protection) assert.match(protection.secret, /^[A-Za-z0-9]{32}$/);
 const browser = await chromium.launch();
 const database = new Client({ connectionString: config.database_url }); await database.connect();
 const worker = new Pool({ connectionString: config.worker_database_url });
 const storage = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } });
 const adminClient = createClient(config.url, config.publishable_key, { db: { schema: 'api' }, auth: { persistSession: false, autoRefreshToken: false } });
-const contexts = await Promise.all(Array.from({ length: 4 }, () => browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } })));
+const contexts = await Promise.all(Array.from({ length: 4 }, () => browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 }, ...(protection ? {extraHTTPHeaders:{'x-vercel-protection-bypass':protection.secret}} : {}) })));
 const [learner, service, tutor, admin] = await Promise.all(contexts.map(context => context.newPage()));
 const consoleErrors: string[] = [], pageErrors: string[] = [];
+const failedResponses: { path: string; status: number }[] = [];
 for (const page of [learner, service, tutor, admin]) {
   page.setDefaultTimeout(20000);
   page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('response', response => { if (response.status() >= 400) failedResponses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
 }
 type Progress = { enrollmentId?: string; chargeId?: string; receiptId?: string; caseId?: string; materialFileId?: string; confirmed?: boolean };
 let progress: Progress = {};
@@ -78,12 +86,17 @@ async function upload(page: Page, region: Locator, path: string) {
   const widget = region.getByRole('group', { name: 'Add a file', exact: true }); await widget.getByLabel('Choose a file', { exact: true }).setInputFiles(path);
   const response = page.waitForResponse(result => /\/api\/v1\/files\/[^/]+\/complete$/.test(new URL(result.url()).pathname) && result.request().method() === 'POST');
   await widget.getByRole('button', { name: 'Upload and check file', exact: true }).click(); const received = await response, body = await received.json(); assert.equal(received.status(), 202);
-  const id = new URL(received.url()).pathname.split('/')[4]; assert.equal((await page.request.get(`/api/v1/files/${id}/content`)).ok(), false);
+  const id = new URL(received.url()).pathname.split('/')[4];
+  const initialDownload = await page.request.get(`/api/v1/files/${id}/content`);
+  if (!hostedPreview) assert.equal(initialDownload.ok(), false);
+  else if (initialDownload.ok()) assert.equal((await database.query('select scan_state from app_private.file_access_states where file_id=$1',[id])).rows[0]?.scan_state,'clean');
   const handler = fileScanHandler(worker, async file => {
     const response = await storage.storage.from('git-tutor-private').download(file.object_key); assert(response.data && !response.error);
     return new Uint8Array(await response.data.arrayBuffer());
   }, scenario => createFakeScanAdapter(scenario, true));
-  assert.equal(await executeLeasedJob(worker, await claim('files.scan', body.data.scan_job_id), handler), 'completed');
+  if (hostedPreview) {
+    await expect.poll(async () => (await database.query('select scan_state from app_private.file_access_states where file_id=$1',[id])).rows[0]?.scan_state, {timeout:60000}).toBe('clean');
+  } else assert.equal(await executeLeasedJob(worker, await claim('files.scan', body.data.scan_job_id), handler), 'completed');
   await widget.getByRole('button', { name: 'Refresh files', exact: true }).click(); await expect(widget.getByRole('status')).toHaveText('Check passed'); return id;
 }
 const privacyKeys = /^(?:tutor_fee_minor|fee_minor|reported_fee_due_minor|reported_fee_paid_minor|reported_fee_owed_minor|compensation_policy_version|internal_notes|payout_destination|provider_token|margin_minor)$/;
@@ -98,7 +111,7 @@ try {
   assert.equal((await database.query('select fixture_marker from app_private.environment_metadata')).rows[0].fixture_marker, operationalPreviewMarker);
   await login(admin, 'owner'); await login(learner, 'student:5'); await login(tutor, 'tutor:5'); await login(service, 'service'); checks.push('four actual-data preview roles sign in');
   for (const [page, role] of [[learner, 'customer'], [service, 'service'], [tutor, 'tutor'], [admin, 'owner']] as const) {
-    const response = await page.request.get('/api/v1/workflow-operations'); assert.equal(response.status(), 200, `Operational ${role} read`);
+    const response = await page.request.get(`/api/v1/workflow-operations?workspace=${role === 'owner' ? 'admin' : role === 'customer' ? 'learn' : role}`); assert.equal(response.status(), 200, `Operational ${role} read`);
     const data = await response.json(); if (role === 'customer' || role === 'service') customerSafe(data);
     if (role !== 'owner') assert.equal((await page.request.get('/api/v1/workflow-import')).status(), role === 'service' || role === 'tutor' || role === 'customer' ? 403 : 200);
   }
@@ -149,7 +162,9 @@ try {
     assert.equal((await adminClient.auth.signInWithPassword(manifest.actors.owner)).error, null);
     assert.equal((await adminClient.rpc('connect_fake_calendar', { p_idempotency_key: 'operational-verification-calendar-v1' })).error, null);
     const meeting = await getOccurrenceMeeting(adminClient, slot.occurrenceId, { view: 'admin' });
-    if (meeting.meeting_status !== 'ready') {
+    if (hostedPreview) {
+      await expect.poll(async () => (await getOccurrenceMeeting(adminClient, slot.occurrenceId, {view:'admin'})).meeting_status, {timeout:60000}).toBe('ready');
+    } else if (meeting.meeting_status !== 'ready') {
       const existing = (await database.query("select j.id from app_private.outbox_jobs j join app_private.domain_events e on e.id=j.event_id where j.purpose='calendar.sync' and e.aggregate_id=$1 and j.state='pending' and j.available_at<=now() order by j.created_at desc limit 1", [slot.occurrenceId])).rows[0];
       const jobId = existing?.id || ((await invokeMeetingCommandWithStatus(adminClient, 'retry_meeting_provisioning', { p_occurrence_id: slot.occurrenceId, p_expected_version: meeting.occurrence_version, p_idempotency_key: randomUUID() })).data as { job_id: string }).job_id;
       assert.equal(await executeLeasedJob(worker, await claim('calendar.sync', jobId), calendarHandler(worker, () => createFakeCalendarAdapter(resolve(directory, 'fake-calendar')))), 'completed');
@@ -199,7 +214,7 @@ try {
   checks.push('eleven main admin screens at desktop/mobile; untouched personal practice session');
   Object.assign(report, { completed_at: new Date().toISOString(), outcome: 'passed', layouts, page_error_count: pageErrors.length, console_error_count: consoleErrors.length });
   await writeFile(resolve(directory, `browser-${mutate ? 'walkthrough' : 'read'}-report.json`), JSON.stringify(report, null, 2));
-  await writeFile(resolve(directory, 'browser-diagnostics.json'), JSON.stringify({ consoleErrors, pageErrors }, null, 2));
+  await writeFile(resolve(directory, 'browser-diagnostics.json'), JSON.stringify({ consoleErrors, pageErrors, failedResponses }, null, 2));
   console.log(JSON.stringify({ outcome: 'passed', checks: checks.length, layouts: layouts.length, page_errors: pageErrors.length, console_errors: consoleErrors.length }));
 } catch (error) {
   await mkdir(resolve(directory, 'screenshots'), { recursive: true });

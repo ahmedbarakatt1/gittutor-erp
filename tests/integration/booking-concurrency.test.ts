@@ -3,7 +3,6 @@ import { afterAll,beforeAll,beforeEach,describe,expect,test } from 'vitest';
 import { bookingFixture,raceBookingCalls } from '../helpers/booking';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
 import { invokeBookingCommandWithStatus } from '../../src/modules/booking/commands';
-import { anonymousClient } from '../helpers/supabase';
 import { bookingFixtureIds,seedBooking } from '../../tools/booking-seed';
 import { fixtureId } from '../../tools/db-seed';
 
@@ -158,7 +157,7 @@ describe('T04 independent booking foundation on real Supabase',()=>{
     try{
       await fixture.database.query('update app_private.account_roles set revoked_at=now() where id=any($1::uuid[])',[grants.map(row=>row.id)]);
       expect((await fixture.rpc('list_offer_occurrences',query,fixture.students[0])).items).toEqual([]);
-      const publicResult=await anonymousClient().rpc('list_public_offers',{p_offer_id:catalogFixtureIds.private_offer,p_from:times.start_at,p_to:times.end_at});
+      const publicResult=await fixture.students[0].rpc('list_public_offers',{p_offer_id:catalogFixtureIds.private_offer,p_from:times.start_at,p_to:times.end_at});
       expect(publicResult.error).toBeNull();
       const offers=publicResult.data.items as {availability:{next_occurrences:{occurrence_id:string}[]}}[];
       expect(offers.flatMap(offer=>offer.availability.next_occurrences).some(item=>item.occurrence_id===occurrence.occurrence_id)).toBe(false);
