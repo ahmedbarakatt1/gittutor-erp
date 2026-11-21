@@ -1,5 +1,11 @@
 # Implementation status
 
+## First production administrator activated (21 November 2026)
+
+The invited owner verified the production mailbox and signed in. The account reference shown on the learner dashboard matched the intended active production Auth and application account. Before activation there were zero administrator grants. Both invited colleagues still awaited mailbox verification.
+
+The database operator rehearsed the single-use first-owner transaction with rollback, then committed it. The transaction serialized changes to staff grants, checked the production project, environment, exact invited identity and verified sign-in, and wrote the grant, operator audit event and outbox entry atomically. A fresh connection verified that the current-role check authorized the owner and that exactly one active admin and one matching audited change existed. Commands: `node --dns-result-order=ipv4first --import tsx .local/nov21-first-production-owner.mts` with `rehearse`, `apply`, then `verify`. The private operator script and identifiers are excluded from the repository. The owner can open `/admin/access` in their existing production session to grant staff roles after recipient verification. Browser confirmation of the owner's admin page remains pending.
+
 ## Production owner invitation resent (21 November 2026)
 
 The owner requested a fresh activation email. The production check found the owner's address still unverified. Supabase Auth accepted the resend with the production callback, and Mailjet reported one matching invitation as `sent` for that recipient. Owner activation and colleague admin grants remain pending.
