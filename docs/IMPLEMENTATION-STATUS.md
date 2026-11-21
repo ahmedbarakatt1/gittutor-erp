@@ -2,6 +2,8 @@
 
 ## Production colleague invitation (21 November 2026)
 
+A second colleague received a production account invitation through the same process. The pre-send check found no account or pending staff invitation for that address. Supabase accepted one invitation and Mailjet reported `sent` for that recipient. The post-send check found the account awaiting verification, the owner awaiting verification and zero active administrators.
+
 The owner requested an invitation for one colleague on production only. A read-only check confirmed the production project identity, zero active admins and no existing account or pending staff invitation for the recipient. Supabase Auth accepted one account invitation with the production callback. Mailjet reported one matching message as `sent`. The post-send check confirmed the recipient account exists and awaits email verification. No admin role has been granted. The existing owner still needs to complete verification and administrator activation before the normal staff role grant. The testing site was untouched. Recipient details and private operator receipts are excluded from the repository.
 
 ## Role access and the signed-out Subjects journey (20 November 2026)
