@@ -1,5 +1,17 @@
 # Implementation status
 
+## Production source-quality review (21 November 2026)
+
+Reviewed all 43 flagged source rows against both supplied workbook versions, the session notes, package references, learner schedules and merge crosswalk. The owner workspace now selects a separately hashed, reviewed revision with 168 rows. The original batch and its links remain preserved. Six supported display-field corrections cleared four rows and partially resolved two. The corrections cover two learner labels, one package-backed group label and three course labels. They do not establish account ownership or group membership.
+
+There are 39 rows with open source-quality flags: 29 sessions and ten packages. The private reply sheet lists a question for every open row, the historical package-ledger reference where available, and two additional reconciliation questions. These include identical billing entries and conflicting historical status labels. The review preserved the original money and status values. The original spreadsheet, review evidence, names and owner answers are excluded from the repository.
+
+Executed checks:
+
+- `python .local/workflow-import/nov21-review.py` reproduced the original extract from the workbook, verified cross-sheet evidence for each edit, and built the private reviewed input. The six allowed field changes and their matching flags were checked against the entire revised snapshot.
+- `node --import tsx .local/workflow-import/nov21-quality-review.mts rehearse` passed in a rolled-back production transaction. `apply` committed the reviewed batch and its audit event. `verify` ran on a new connection and confirmed the selected revision, all 168 role-projected records, 39 outstanding rows, and the exact original archive. Sixteen identity, scheduling, notification and financial tables were checked for unintended writes.
+- `node .local/workflow-import/nov21-public.cjs` verified HTTP 401 without records on the archive and both learner and admin history API requests when signed out. The private UTF-8 answer sheet was re-read and matched to every outstanding worksheet/row pair.
+
 ## Production workbook import (21 November 2026)
 
 The owner supplied an updated workbook for the actual site. Production had no previous workbook batch, operational links, tutors, subjects or live bookings. The new workbook has 29 additional session rows compared with the earlier testing workbook. The extracted values also changed in 19 existing session rows, seven package rows and 17 balance rows. The testing database was outside this import.
