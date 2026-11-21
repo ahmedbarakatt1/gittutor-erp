@@ -1,5 +1,29 @@
 # Implementation status
 
+## Production workbook import (21 November 2026)
+
+The owner supplied an updated workbook for the actual site. Production had no previous workbook batch, operational links, tutors, subjects or live bookings. The new workbook has 29 additional session rows compared with the earlier testing workbook. The extracted values also changed in 19 existing session rows, seven package rows and 17 balance rows. The testing database was outside this import.
+
+| Production result | Count |
+| --- | ---: |
+| Reported session rows | 114 |
+| Package records | 10 |
+| Student profiles in the source | 5 |
+| Tutor profiles in the source | 11 |
+| Marketing expense records | 2 |
+| Distribution records | 1 |
+| Balance and count summaries | 25 |
+| Total source rows | 168 |
+| Distinct course titles added to the signed-in subject catalog | 18 |
+
+The protected owner dashboard and archive use the same private import batch. The original wording, amounts, cached observations and row references were retained in the supported workbook fields. Template rows, instructional sheets and duplicate derived views were excluded. The production dashboard displayed 114 reported session rows, including 106 marked completed, two scheduled, five canceled and one without a status. Those are workbook labels. The 43 rows with source-quality flags comprise 33 session rows and all 10 packages. Linking a workbook profile to a real account still needs verified identity evidence. Customer and tutor logins were not assigned from names or source contacts.
+
+Executed checks:
+
+- `python tools/extract-workflow.py <supplied-xlsx> --output .local/workflow-import/2026-11-21-upload.json` validated against the source hash and existing typed column contracts. The source workbook and manifests stay outside Git.
+- `node --import tsx .local/workflow-import/nov21-production.mts rehearse` exercised the complete import in a rolled-back production transaction. `apply` then committed one batch, its 168 dashboard records, 18 subjects and one audit event. A separate connection running `verify` confirmed exact stored snapshot equality, every source row in its owner projection, one batch and one import event. Fifteen identity, role, booking, settlement, payroll and notification tables were checked for unintended writes. No invitations or live bookings were generated.
+- The signed-in owner dashboard at `/admin` displayed the imported count and outcome chart. `node .local/workflow-import/nov21-public.cjs` checked the live archive API and both learner and admin history API requests without an application sign-in. All three returned HTTP 401 and no records. Database checks confirmed that anonymous and signed-in client roles cannot read the raw snapshot directly.
+
 ## Arabic website option (21 November 2026)
 
 Visitors and signed-in users can choose Arabic or English on the same page. The selected language is stored in an HTTP-only site cookie for up to one year in that browser. Fresh browsers start in English. The server emits the document language, direction, page title and interface copy for the selected language. Arabic uses RTL layout and Egyptian Arabic formatting for customer tuition and Cairo times. The selection does not change the account's permissions or the instructor's teaching-language setting.
