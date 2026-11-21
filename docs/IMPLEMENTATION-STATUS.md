@@ -1,5 +1,9 @@
 # Implementation status
 
+## Production owner invitation resent (21 November 2026)
+
+The owner requested a fresh activation email. The production check found the owner's address still unverified. Supabase Auth accepted the resend with the production callback, and Mailjet reported one matching invitation as `sent` for that recipient. Owner activation and colleague admin grants remain pending.
+
 ## Production colleague invitation (21 November 2026)
 
 A second colleague received a production account invitation through the same process. The pre-send check found no account or pending staff invitation for that address. Supabase accepted one invitation and Mailjet reported `sent` for that recipient. The post-send check found the account awaiting verification, the owner awaiting verification and zero active administrators.
