@@ -1,5 +1,19 @@
 # Implementation status
 
+## Owner-only access and user manual (21 November 2026)
+
+The production owner requested an administrator-only account. Read-only inspection confirmed the intended active, verified owner had exactly the Administrator and Student roles and an unused version-one learner registration. All 37 foreign keys to learners were checked for this registration. There were zero related rows.
+
+Migration `20261121010000_respect_student_role_withdrawal.sql` makes Auth synchronization respect a previously withdrawn Student grant. Ordinary new accounts keep their default learner provisioning and contact verification continues for staff. Pilot and production passed rollback rehearsals and Supabase CLI dry runs for that one migration. Both applied it without a seed or a role script. No pilot user was converted.
+
+A separate production-only transaction preserved the registration in a private recovery audit, retired its empty active relationship and revoked only the owner's Student grant. The transaction checked the exact verified owner, all active roles, guardian permissions, registration version, audit history and references. Rehearsal, commit and independent readback passed. Replaying the normal identity sync within a savepoint left only Administrator and zero learner registrations. The owner's account, verified contact and administrator grant remain active. Operator commands were `node --import tsx .local/nov21-owner-role-inventory.mts`, `node --import tsx .local/nov21-withdrawal-rehearse.mts <lane>`, `node --import tsx .local/nov21-withdrawal-cli.mts <lane> apply`, and `node --import tsx .local/nov21-owner-only.mts <rehearse|apply|verify>`. Re-running the account conversion after success is guarded.
+
+The [user manual](USER-MANUAL.md) covers the public site, learner and guardian, teaching, service, owner administration, finance and troubleshooting. It distinguishes testing from launch dependencies and contains no customer records or confidential compensation rates.
+
+**Live verification.** Vercel promoted application revision `16cf4f3` on the hosted pilot and protected production following four staged checks on each. In the owner's existing signed-in Brave session, opening the production URL `/learn` landed at `/admin`. The account panel displayed only **Administrator** and the navigation displayed the administration workspace. This was a read-only browser check. Learner-only pages redirect staff-only users to their own portal. Personal payment, support and update pages retain their existing account-specific permissions.
+
+**Manual verification.** The [downloadable PDF](../output/pdf/Git-Tutor-User-Manual.pdf) has 11 pages, 10 chapters, 11 outline entries, 20 internal navigation links and 43 distinct external links. Every source block was matched, every page was rasterized and reviewed, and each Git Tutor link was checked against the application's routes. `python .local/nov21-manual/qa.py` and `python tools/verify-pack.py` passed. Local lint, optimized build (including TypeScript), and the full unit suite passed (546 tests across 75 files). [Application CI](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44921548201) passed for the deployed revision. It executed 546 unit tests, 318 integration tests and 178 browser tests, including the admin-only fixture on desktop and mobile. Two opt-in guided-demo entries were skipped. Database checks and the final build passed.
+
 ## First production administrator activated (21 November 2026)
 
 The invited owner verified the production mailbox and signed in. The account reference shown on the learner dashboard matched the intended active production Auth and application account. Before activation there were zero administrator grants. Both invited colleagues still awaited mailbox verification.

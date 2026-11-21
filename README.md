@@ -1,5 +1,7 @@
 # Git Tutor
 
+For instructions on using each workspace, download the [Git Tutor User Manual (PDF)](output/pdf/Git-Tutor-User-Manual.pdf) or read the [online text edition](docs/USER-MANUAL.md).
+
 Git Tutor takes a student's course materials from a tutoring request through scheduling, payment review, teaching and settlement. Start with the [colleague handoff](docs/handoff/README.md) for the current system, diagrams, source map and first-day runbook. The [shared preview](https://gittutor-erp-rho.vercel.app/login) is the hosted testing environment. The [launch review](docs/IMPLEMENTATION-STATUS.md) records the separate commercial release decision.
 
 ## Run the local implementation
