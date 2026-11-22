@@ -1,6 +1,10 @@
 # Release readiness
 
-## Current release decision, 19 November 2026
+## Current release decision, 22 November 2026
+
+The hosted preview is available for testing. The five-role booking flow, same-session compensation privacy and workbook replay passed using synthetic data. The private scanner image recovered from stale signatures, processed a maximum-size clean file and detected the antivirus test pattern. Production has no running worker or connected Calendar organizer, and no enabled collection account or published booking policy. Its eight queued notification-routing jobs need review before worker activation. Keep the public launch on hold until the owner and operators complete the [live checks](evidence/production-qa-20261122.md).
+
+## Decision recorded on 19 November 2026
 
 PDF quizzes, tutor grading and the learner dashboard are deployed on the [testing site](ONLINE-PREVIEW.md). Both portal pages and their authenticated data requests were checked against the hosted deployment. The complete PDF and grade walkthrough also passed against a disposable database on desktop and mobile. The owner selected Vercel and staff-handled WhatsApp for production. The separate production database contains no imported learners, financial postings or queued pilot work. The dedicated Vercel project uses production-only settings and team sign-in on all URLs.
 

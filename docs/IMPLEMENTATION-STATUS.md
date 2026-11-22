@@ -1,5 +1,30 @@
 # Implementation status
 
+## Production QA and email release (22 November 2026)
+
+The [production QA report](evidence/production-qa-20261122.md) records the five-role booking test, direct comparisons of customer and tutor views on one paid session, the actual workbook writer replay, grade publication and 112 bilingual mobile page visits. The [Auth email evidence](evidence/auth-email-design-20261122.md) covers ordinary invitations, staff invitations, confirmation and recovery. The previous six-finding release below remains the historical baseline.
+
+Application revision `48fa8d7e155b134c063773c651ca3764e42e995c` passed [GitHub Actions run 44984233829](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44984233829). The runner passed 584 unit tests in 80 files, 325 integration tests in 97 files, 198 desktop/mobile browser cases and one separately seeded five-role booking walkthrough. The recovery drill verified 245 business tables, three private objects and the restored payout. Database checks, lint, TypeScript and the production build passed.
+
+Local checks on the first candidate passed 579 unit tests, linting, TypeScript and the pack validator. `pnpm audit --prod --json` returned zero known advisories across 179 production and optional entries. The Linux scanner rehearsal reproduced `SCANNER_READINESS_TIMEOUT`: ClamD continued serving set 28188 after FreshClam installed 28190. With startup sequencing and update notification fixed, the worker image's `--verify-scanner` check loaded 28190, accepted a clean 25 MiB stream, and detected the harmless antivirus test string. A separate Docker builder was needed because the default local cache supplied a zero-byte Node executable. CI now runs the guided desktop booking and a synthetic payout/database/private-file restore on a fresh runner.
+
+Production remains team-protected. All 14 database and configuration checks passed, and the owner's sole active role was Administrator. A read-only review of eight pending jobs counted four staff grants, three queue assignments and one guardian invitation. None had an eligible routed recipient at inspection time. Check again before activation. Production has no running worker, verified private scanner, connected organizer, published booking policy or enabled collection account. Mailjet is active but the last observed live Auth messages reached Spam. Live activation depends on the [owner and engineering inputs](PRODUCTION-INPUTS.md).
+
+Additional release-revision commands:
+
+- `pnpm exec playwright test --config .local/nov22-crossbrowser.config.ts tests/e2e/subjects.spec.ts tests/e2e/email-verification.spec.ts tests/e2e/requests.spec.ts tests/e2e/quizzes.spec.ts` passed all 18 cases in Firefox desktop and WebKit using an iPhone 13 viewport.
+- `node tools/evidence/record-financial.mjs . 48fa8d7e155b134c063773c651ca3764e42e995c` ran 53 assertions. Payment approval, revoked reviewer scope and package recognition passed formal acceptance. Cancellation/completion passed the stale conflict test. The formal requirement still assumes simultaneous eligibility under one occurrence version. [Execution record](evidence/acceptance/f121db7d-4bc1-4b54-b21c-0369e1611eef.json).
+
+### Hosted checks on the promoted application
+
+Both Vercel aliases were promoted to the CI-tested revision after staged confirmation-link, support, contact-icon, recovery and health checks. Canonical GET and HEAD on the Auth callback preserved the token and returned no-store and no-referrer. Vercel reported one ready testing worker and zero production instances against the new deployment IDs. [Testing](https://gittutor-erp-rho.vercel.app) · [Team-protected production](https://gittutor-erp-production.vercel.app).
+
+- `node .local/nov22-navigation-review.cjs https://gittutor-erp-rho.vercel.app` passed in four signed-in portals and Arabic admin navigation. `node .local/fix-six-queue-smoke.cjs pilot` confirmed admin 200, learner 403 and guest 401, and checked the response fields.
+- `& .local/fix-six-production-smoke.ps1` passed for a synthetic learner on production. Back, logo, public dashboard link and direct login preserved the account. Explicit sign-out removed access. The scan queue returned 403 before sign-out and 401 afterward. Ordinary production login continues to require Vercel team sign-in.
+- `./tools/auth-email-templates.ps1 -Target production -Apply` saved the Auth templates. A second read matched all six subject/body fields. `./tools/auth-email-templates.ps1 -Target pilot -Apply` returned HTTP 400 because free projects using Supabase's built-in mail sender cannot customize Auth templates. Dedicated pilot SMTP remains optional. Publication generated no external email. Mailjet inbox placement still needs a recipient observation.
+- `node .local/nov22-route-sweep.cjs <public|learn|tutor|service|admin> <en|ar>` repeated all 112 hosted visits after promotion. `python .local/nov22-final-sweep-check.py` confirmed HTTP 200, intended route, language direction, one main heading, settled networking, no horizontal overflow, uncaught JavaScript errors or failing application requests.
+- `node .local/nov22-accessibility.cjs` found zero automated violations on ten hosted routes. Five routes previously failed the visible-label check. These included Subjects and the admin, service, tutor and learner dashboards.
+
 ## Six review findings fixed, retested and deployed (22 November 2026)
 
 Application revision `2e9bbf973d9ca7b188a87c25495da09718ba9df6` passed [GitHub Actions run 44979385866](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44979385866). The run passed 567 unit tests in 78 files, 325 integration tests in 97 files and 196 browser tests. The two opt-in guided-demo entries were skipped. Linting, type checking, both database verification steps and the production build passed.
