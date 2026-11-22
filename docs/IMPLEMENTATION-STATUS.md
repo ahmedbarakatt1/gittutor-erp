@@ -1,5 +1,9 @@
 # Implementation status
 
+## Production multi-role testing access (22 November 2026)
+
+After account activation and owner confirmation, the owner workspace granted Administrator, Customer Service and Tutor to the designated colleague's verified production account. The refreshed staff list showed all three grants. Independent readback using `node --dns-result-order=ipv4first .local/nov22-eslam-roles.cjs` confirmed four active roles including the existing Student role. Guardian access requires a learner-specific invitation and consent.
+
 ## Production colleague invitation follow-up (22 November 2026)
 
 The prior invitation reached Vercel authentication before the application. After explicit owner approval, one colleague received a fresh production invitation and a one-hour Vercel share link in the same email. A fresh browser reached Git Tutor sign-in via the scoped link, and the private workbook API returned HTTP 401. Mailjet accepted one message for the intended address. The recipient completes activation and the owner controls any later role grant. Project-wide protection stayed enabled.
