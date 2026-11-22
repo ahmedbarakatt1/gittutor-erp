@@ -71,6 +71,6 @@ try {
       console.log(JSON.stringify({ event: 'job_processed', job_id: job.id, result }));
     }
     if (process.argv.includes('--once')) stopping = true;
-    if (!stopping) await setTimeout(1000);
+    if (!stopping && jobs.length === 0) await setTimeout(1000);
   }
 } finally { await pool.end(); }

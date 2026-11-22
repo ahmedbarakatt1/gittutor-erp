@@ -3,7 +3,7 @@ import { Pool } from 'pg';
 import { expect,test,vi } from 'vitest';
 import { bookingFixture } from '../helpers/booking';
 import { loadLocalSupabase } from '../helpers/supabase';
-import { claimJobs } from '../../src/worker/claims';
+import { claimJobs, claimWorkerJobs } from '../../src/worker/claims';
 import { executeLeasedJob } from '../../src/worker/execute';
 import { notificationSendHandler } from '../../src/worker/notifications';
 import { createLocalEmailAdapter,createResendEmailAdapter } from '../../src/server/providers/email';
@@ -44,7 +44,7 @@ test('guardian consent revoked after queuing suppresses the real send and remove
 
 test('durable email recovers lost acknowledgement, preserves callback order and blocks unsafe resend',async()=>{
  const f=await bookingFixture(),worker=new Pool({connectionString:loadLocalSupabase().worker_database_url});
- const claim=async(purpose:string,target:string)=>{await f.database.query('begin');try{await f.database.query('select id from app_private.outbox_jobs where purpose=$1 and id<>$2 for update',[purpose,target]);const jobs=await claimJobs(worker,purpose,1,60);expect(jobs).toHaveLength(1);expect(jobs[0].id).toBe(target);return jobs[0];}finally{await f.database.query('rollback');}};
+ const claim=async(purpose:string,target:string)=>{await f.database.query('begin');try{await f.database.query('select id from app_private.outbox_jobs where purpose=$1 and id<>$2 for update',[purpose,target]);const jobs=await claimWorkerJobs(worker,purpose,'fake');expect(jobs).toHaveLength(1);expect(jobs[0].id).toBe(target);return jobs[0];}finally{await f.database.query('rollback');}};
  try{await f.availability();const occurrence=await f.occurrence(),enrollment=await f.reserve(occurrence.occurrence_id as string);
   const source=(await f.database.query("select j.id,e.id event_id from app_private.outbox_jobs j join app_private.domain_events e on e.id=j.event_id where e.aggregate_id=$1 and e.event_type='booking_reserve_enrollment'and j.purpose='notifications.route'",[enrollment.enrollment_id])).rows[0];
   const route=await claim('notifications.route',source.id);await worker.query('select app_private.route_notification_event($1,$2)',[route.id,route.lease_token]);
@@ -52,7 +52,12 @@ test('durable email recovers lost acknowledgement, preserves callback order and 
   const delivery=(await f.database.query("select d.id,j.id job_id from app_private.notification_deliveries d join app_private.domain_events e on e.aggregate_id=d.id and e.event_type='notification_dispatch'join app_private.outbox_jobs j on j.event_id=e.id where d.event_id=$1 and d.recipient_account_id=$2 and d.channel='email'",[source.event_id,recipient])).rows[0];
   await f.database.query("insert into app_private.notification_fake_scenarios(delivery_id,scenario)values($1,'timeout_after_success')",[delivery.id]);
   const directory=await mkdtemp(join(tmpdir(),'git-tutor-delivery-')),handler=notificationSendHandler(worker,scenario=>createLocalEmailAdapter(directory,true,scenario),'http://localhost:3000');
-  expect(await executeLeasedJob(worker,await claim('notifications.send',delivery.job_id),handler)).toBe('reconciliation');
+  const untouched = await claim('notifications.send', delivery.job_id);
+  await f.database.query("update app_private.outbox_jobs set lease_expires_at=now()-interval '1 second' where id=$1", [untouched.id]);
+  const sending = await claim('notifications.send', delivery.job_id);
+  expect(sending.requires_reconciliation).toBe(false);
+  expect(await executeLeasedJob(worker,sending,handler)).toBe('reconciliation');
+  expect((await f.database.query('select dispatch_started from app_private.job_attempts where id=$1', [sending.lease_token])).rows[0].dispatch_started).toBe(true);
   expect((await f.database.query('select state from app_private.notification_deliveries where id=$1',[delivery.id])).rows[0].state).toBe('unknown');
   expect((await f.admin.rpc('retry_notification',{p_delivery_id:delivery.id,p_reason:'Cannot retry uncertain send',p_idempotency_key:randomUUID()})).error?.message).toBe('STATE_CONFLICT');
   const recovery=await f.admin.rpc('reconcile_notification',{p_delivery_id:delivery.id,p_reason:'Reconcile the existing provider identity',p_idempotency_key:randomUUID()});expect(recovery.error).toBeNull();

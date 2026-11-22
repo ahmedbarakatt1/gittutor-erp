@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { authClient,loadLocalSupabase } from '../helpers/supabase';
 import { createFileContentService,createPrivateObjectStore } from '../../src/server/files';
 import { parseServerConfig } from '../../src/server/config';
-import { getFile,listFiles } from '../../src/modules/files/queries';
+import { getFile,listFiles,listFileScanRetries } from '../../src/modules/files/queries';
 import { invokeFileCommandWithStatus } from '../../src/modules/files/commands';
 import { claimFileScan,syntheticPdf,runFileScan } from '../helpers/files';
 import { fileScanHandler } from '../../src/worker/file-scan';
@@ -17,6 +17,48 @@ import { paymentFixture } from '../helpers/payments';
 import { settleEnrollment } from '../helpers/financial-booking';
 function infrastructure(cleanupFails=false){const config=loadLocalSupabase(),worker=new Pool({connectionString:config.worker_database_url}),server=parseServerConfig({APP_ENV:'test',NEXT_PUBLIC_SUPABASE_URL:config.url,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:config.publishable_key,SUPABASE_SECRET_KEY:config.secret_key}),store=createPrivateObjectStore(server);return{worker,content:createFileContentService(worker,server,cleanupFails?{...store,removeParts:async()=>{throw new Error('Simulated cleanup outage');}}:store),store,config};}
 function declaration(purpose:string,parent:string|null,action:string|null=null){return{p_purpose:purpose,p_parent_id:parent,p_evidence_action:action,p_filename:'synthetic.pdf',p_declared_type:'application/pdf',p_size_bytes:syntheticPdf.length,p_checksum_sha256:createHash('sha256').update(syntheticPdf).digest('hex'),p_idempotency_key:randomUUID()};}
+
+test('operators can recover the same quarantined file after scanner restoration', async () => {
+  const f = await bookingFixture(), infra = infrastructure();
+  try {
+    await f.availability();
+    const occurrence = await f.occurrence(), enrollment = await f.reserve(occurrence.occurrence_id as string);
+    const args = declaration('private_preparation', enrollment.enrollment_id as string);
+    const created = await invokeFileCommandWithStatus(f.students[0], 'create_file_upload', args);
+    const id = created.data.file_id;
+    await infra.content.upload(f.students[0], id, syntheticPdf);
+    const complete = await invokeFileCommandWithStatus(f.students[0], 'finalize_file_upload', {
+      p_file_id: id, p_checksum_sha256: args.p_checksum_sha256, p_idempotency_key: randomUUID(),
+    });
+    // Stub the scanner's wire result while exercising the real worker/database and private storage.
+    const scanner = (clean: boolean) => () => ({ scan: async () => ({
+      adapter_mode: 'clamav' as const, outcome: clean ? 'clean' as const : 'error' as const,
+      engine_version: 'test', signature_version: 'test', reference: 'fixture',
+      safe_error_code: clean ? null : 'SCANNER_SIGNATURES_STALE',
+    }) });
+    await runFileScan(complete.data.scan_job_id, scanner(false));
+    const file = await getFile(f.students[0], id);
+    expect(file).toMatchObject({ scan_state:'quarantined', integration_state:'verification_required', can_download:false });
+    await expect(infra.content.download(f.students[0], id)).rejects.toThrow('NOT_FOUND');
+    await expect(listFileScanRetries(f.students[0], {})).rejects.toThrow('FORBIDDEN');
+    // Include preceding rows on a reused synthetic stack.
+    let cursor: string | undefined;
+    const listed = [];
+    do {
+      const page = await listFileScanRetries(f.admin, { cursor, limit: 100 });
+      listed.push(...page.items);
+      cursor = page.next_cursor ?? undefined;
+    } while (cursor && !listed.some(item => item.file_id === id));
+    expect(listed).toContainEqual({ file_id:id, filename:'synthetic.pdf', version:file.version, reason:'SCANNER_SIGNATURES_STALE' });
+    const retryArgs = { p_file_id:id, p_expected_version:file.version, p_idempotency_key:randomUUID() };
+    await expect(invokeFileCommandWithStatus(f.students[0], 'retry_file_scan', retryArgs)).rejects.toThrow('FORBIDDEN');
+    const retry = await invokeFileCommandWithStatus(f.admin, 'retry_file_scan', retryArgs);
+    expect((await invokeFileCommandWithStatus(f.admin, 'retry_file_scan', retryArgs)).data).toEqual(retry.data);
+    expect((await getFile(f.students[0], id)).can_download).toBe(false);
+    await runFileScan(retry.data.scan_job_id, scanner(true));
+    expect(await getFile(f.students[0], id)).toMatchObject({ file_id:id, scan_state:'clean', integration_state:'verified', can_download:true });
+  } finally { await f.close(); }
+});
 
 test('25 MiB private uploads survive bounded chunk retries and retain scan and current-account boundaries', async () => {
  const f=await bookingFixture(),infra=infrastructure(true);

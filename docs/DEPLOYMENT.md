@@ -2,6 +2,12 @@
 
 The [hosted testing preview](ONLINE-PREVIEW.md) uses its own authorized historical and practice records. The clean production project has separate credentials and data. The latest release decision and environment checks are in [implementation status](IMPLEMENTATION-STATUS.md). Mailjet is the selected email provider. The owner selected Vercel for production on 19 November. The commercial project uses dedicated settings on the current team. The earlier Oracle option is recorded in the [hosting decision](FREE-SERVICE-PLAN.md). Review [production inputs](PRODUCTION-INPUTS.md) before switching environments.
 
+## Worker dispatch tracking rollout
+
+Drain the previous worker revision, apply `20261122010100_worker_dispatch_tracking.sql`, run the restricted-worker grant check from the new revision, and start the updated workers. The database keeps both legacy claim signatures for existing callers. Older workers lack dispatch checkpoints and can park untouched jobs if they reclaim them during a mixed-version rollout.
+
+Each updated worker leases one job at a time. If it stops before committing the send checkpoint, a successor can start the untouched job. A committed checkpoint means a send may have reached the provider. Recovery consults the provider or retains the job for reconciliation. Existing in-flight leases without checkpoint history receive the same conservative treatment.
+
 ## Vercel testing environment
 
 The selected [gittutor-erp project](https://vercel.com/gittutor2-2821/gittutor-erp) is `prj_IVsk4r5XCIBXXP0HMcr27IIgTtmg` under the newly authenticated `gittutor2-2821` team, `team_pXDCumF5MnW3q30r2TXYm9BZ`. On15November, deployment `dpl_CpvZkQ9YoCEiCeUrThmuoxQwps48` became READY at [the stable hosted preview](https://gittutor-erp-rho.vercel.app), with one ready Frankfurt worker. Next.js uses Node24.x, pinned frozen pnpm installation and Corepack. The pilot is deployed explicitly. The later bounded Calendar pilot uses organizer consent for its nominated occurrence. The earlier account's project and both local databases remain unchanged. The owner requested keeping Hobby; no paid upgrade occurred.

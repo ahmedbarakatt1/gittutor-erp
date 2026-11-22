@@ -176,7 +176,11 @@ test('a two-learner plan waits for the actual outside payer and survives staff r
     await author.getByLabel('Choose a charge', { exact: true }).selectOption(String(sibling.charge_id));
     await author.getByRole('button', { name: 'Add selected charge', exact: true }).click();
     const planForm = author.getByRole('form', { name: 'Save payment plan', exact: true });
-    await planForm.locator(`input[name="amount-${fixture.chargeId}"]`).fill('1500');
+    const localizedAmount = planForm.locator(`input[name="amount-${fixture.chargeId}"]`);
+    await localizedAmount.fill('١٥٠٠٫٠٠١');
+    expect(await localizedAmount.evaluate((input: HTMLInputElement) => input.checkValidity())).toBe(false);
+    await localizedAmount.fill('١٥٠٠٫٠٠');
+    expect(await localizedAmount.evaluate((input: HTMLInputElement) => input.checkValidity())).toBe(true);
     await planForm.locator(`input[name="amount-${sibling.charge_id}"]`).fill('1500');
     await planForm.getByLabel('I authorize these exact amounts for the selected charges.', { exact: true }).check();
     const plan = await submit(author, planForm, `receipts/${receipt.receipt_id}/payment-plans`, 201);

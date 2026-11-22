@@ -35,8 +35,11 @@ test('manual workers leave WhatsApp deliveries and retries untouched while other
     expect((await db.query('select id from app_private.job_attempts where job_id=any($1::uuid[])', [ids.slice(0, 4)])).rows).toEqual([]);
     expect((await db.query("select has_function_privilege('authenticated','app_private.claim_jobs(text,integer,integer,text)','EXECUTE') allowed")).rows[0].allowed).toBe(false);
     await db.query('set local role git_tutor_worker');
-    const automated = await claimWorkerJobs(db, whatsapp, 'cloud');
-    expect(automated.map(job => job.id)).toEqual(expect.arrayContaining(ids.slice(0, 2)));
+    const first = await claimWorkerJobs(db, whatsapp, 'cloud');
+    const second = await claimWorkerJobs(db, whatsapp, 'cloud');
+    expect(first).toHaveLength(1);
+    expect(second).toHaveLength(1);
+    expect([first[0].id, second[0].id].sort()).toEqual(ids.slice(0, 2).sort());
   } finally {
     await db.query('rollback');
     await db.end();

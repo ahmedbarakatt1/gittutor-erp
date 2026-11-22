@@ -91,6 +91,92 @@ test('a protected offer returns after sign-in and preserves the selected session
   const selected = new URL(destination!, baseURL).searchParams.get('occurrence'); const request = await page.request.get(`/api/v1/booking/occurrences?offer_id=${catalogFixtureIds.group2_offer}&occurrence_id=${selected}`); expect(request.status()).toBe(200); expect((await request.json()).data.items).toHaveLength(1);
 });
 
+async function retryInterruptedCreation(page: Page, form: Locator, action: string) {
+  let committedId: string | undefined;
+  await page.route(`**/api/v1/${action}`, async route => {
+    const response = await route.fetch();
+    expect(response.status()).toBe(201);
+    committedId = (await response.json()).data.resource_id;
+    await route.abort('connectionreset');
+  }, { times: 1 });
+  await form.getByRole('checkbox').check();
+  await form.getByRole('button').click();
+  await expect(form.getByRole('alert')).toBeVisible();
+  await page.reload();
+  await form.getByRole('checkbox').check();
+  const replay = await submit(page, form, action);
+  await expect(form.getByRole('status')).toBeVisible();
+  expect(replay.resource_id).toBe(committedId);
+  return replay;
+}
+
+test('same-tab reservation retries a lost receipt and creates new seats after release and expiry', async ({ page }) => {
+  test.setTimeout(120_000);
+  const fixture = await bookingFixture();
+  try {
+    await fixture.availability();
+    const id = String((await fixture.occurrence('group')).occurrence_id);
+    const path = `/learn/bookings?offer=${catalogFixtureIds.group2_offer}&occurrence=${id}`;
+    const action = `occurrences/${id}/holds`;
+    const form = page.getByRole('form', { name: 'Reserve a temporary seat', exact: true });
+    await login(page, 'learner_a');
+    await page.goto(path);
+    const first = await retryInterruptedCreation(page, form, action);
+    await page.locator('#reserve').getByRole('link', { name: 'Review your reservation' }).click();
+    await page.getByText('Release this temporary seat', { exact: true }).click();
+    const release = page.getByRole('form', { name: 'Release temporary seat', exact: true });
+    await release.getByLabel('Reason for this request').fill('Synthetic same-tab rebooking');
+    await submit(page, release, `enrollments/${first.enrollment_id}/cancel`);
+
+    async function reserveAgain() {
+      await page.goto(path);
+      await form.getByRole('checkbox').check();
+      const saved = await submit(page, form, action, 201);
+      await expect(form.getByRole('status')).toBeVisible();
+      return saved.enrollment_id as string;
+    }
+    const second = await reserveAgain();
+    await fixture.database.query("update app_private.enrollments set hold_expires_at=now()-interval '1 second' where id=$1", [second]);
+    const third = await reserveAgain();
+    expect((await fixture.database.query(
+      'select id,state from app_private.enrollments where occurrence_id=$1 order by created_at', [id],
+    )).rows).toEqual([
+      { id: first.enrollment_id, state: 'cancelled' },
+      { id: second, state: 'expired' },
+      { id: third, state: 'held' },
+    ]);
+  } finally { await fixture.close(); }
+});
+
+test('same-tab waitlist retries a lost receipt and creates a new entry after leaving', async ({ page }) => {
+  test.setTimeout(120_000);
+  const fixture = await bookingFixture();
+  try {
+    await fixture.availability();
+    const id = String((await fixture.occurrence()).occurrence_id);
+    await fixture.reserve(id);
+    const action = `occurrences/${id}/waitlist`;
+    const form = page.getByRole('form', { name: 'Join waiting list', exact: true });
+    await login(page, 'learner_b');
+    await page.goto(`/learn/bookings?offer=${catalogFixtureIds.private_offer}&occurrence=${id}`);
+    const first = await retryInterruptedCreation(page, form, action);
+    const leave = await page.request.post(`/api/v1/waitlist/${first.waitlist_entry_id}/leave`, {
+      headers: { Origin: baseURL, 'Idempotency-Key': randomUUID() }, data: { expected_version: first.version },
+    });
+    expect(leave.status()).toBe(200);
+    await page.reload();
+    await form.getByRole('checkbox').check();
+    const second = await submit(page, form, action, 201);
+    await expect(form.getByRole('status')).toBeVisible();
+    expect((await fixture.database.query(
+      'select id,state from app_private.waitlist_entries where occurrence_id=$1 order by created_at', [id],
+    )).rows).toEqual([
+      { id: first.waitlist_entry_id, state: 'cancelled' },
+      { id: second.waitlist_entry_id, state: 'waiting' },
+    ]);
+  } finally { await fixture.close(); }
+});
+
 test('administrator schedules and approves exact teaching terms; guardian reserves and accepts separate learner quotes', async ({ browser }, info) => {
   test.setTimeout(180_000); const fixture = await bookingFixture(); await fixture.availability();
   const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const guardian = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const stranger = await browser.newContext({ baseURL, viewport: info.project.use.viewport });

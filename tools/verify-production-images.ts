@@ -36,7 +36,7 @@ try {
   await writeFile(resolve(folder, 'database.env'), `POSTGRES_PASSWORD=${password}\n`, { mode: 0o600 });
   await docker(['run', '--detach', '--name', names.database, '--label', label, '--network', network, '--env-file', resolve(folder, 'database.env'), '--health-cmd', 'pg_isready -U postgres', '--health-interval', '2s', '--health-start-period', '0s', 'postgres:17.12']); created.push(names.database);
   await healthy(names.database);
-  await docker(['exec', names.database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', 'create schema app_private; create function app_private.claim_jobs(text,integer,integer) returns table(id uuid) language sql as $$ select null::uuid where false $$;']);
+  await docker(['exec', names.database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', 'create schema app_private; create function app_private.claim_worker_job(text,text) returns table(id uuid) language sql as $$ select null::uuid where false $$;']);
   const settings = `APP_ENV=test\nAPP_BASE_URL=http://127.0.0.1:3002\nNEXT_PUBLIC_SUPABASE_URL=http://unused.invalid\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_smoke\nSUPABASE_SECRET_KEY=isolated-smoke-only\nWORKER_DATABASE_URL=postgresql://postgres:${password}@${names.database}:5432/postgres\nWORKER_PURPOSE=verification.no_jobs\n`;
   await writeFile(resolve(folder, 'runtime.env'), settings, { mode: 0o600 });
   const common = ['--label', label, '--network', network, '--env-file', resolve(folder, 'runtime.env'), '--read-only', '--tmpfs', '/tmp:rw,nosuid,size=32m', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--health-interval', '2s', '--health-start-period', '0s'];

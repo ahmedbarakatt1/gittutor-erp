@@ -7,18 +7,54 @@ let f: Awaited<ReturnType<typeof paymentFixture>>;
 beforeAll(async () => { f = await paymentFixture({ charge: 'enrollment' }); }, 30000);
 afterAll(async () => { await f?.close(); });
 
-test('GT-507 settled55000 funds50000 once and retains5000 for its actual payer', async () => {
+test('GT-507 allocation requires a current review version, posts 50000 once and retains 5000 for its payer', async () => {
   const account = await f.receiving(), transfer = await f.transfer(account.id);
   const receipt = await f.receipt(account.versionId);
+  const request = {
+    p_case_id: receipt.case_id, p_transfer_id: transfer.id, p_evidence_version: 1,
+    p_payment_plan_id: null, p_allocations: [{ charge_id: f.chargeId, amount_minor: 50000 }],
+    p_idempotency_key: randomUUID(),
+  };
+  const snapshot = async () => (await f.database.query(`
+    select r.state, r.version,
+      finance_private.finance_charge_balance($2) as charge,
+      finance_private.finance_transfer_balance($3) as transfer,
+      array(select id from finance_private.payment_allocations where review_case_id=r.id order by id) as allocations,
+      array(select id from finance_private.ledger_lines where transfer_id=$3 order by id) as ledger_lines,
+      array(select id from app_private.review_case_events where case_id=r.id order by id) as case_events,
+      array(select id from app_private.command_results where command_name='allocate_transfer' and idempotency_key=$4) as commands
+    from app_private.review_cases r where r.id=$1
+  `, [receipt.case_id, f.chargeId, transfer.id, request.p_idempotency_key])).rows[0];
+
+  const unclaimed = await snapshot();
+  expect((await f.reviewer.rpc('allocate_transfer', { ...request, p_expected_version: null })).error?.message).toBe('OWNER_REQUIRED');
+  expect(await snapshot()).toEqual(unclaimed);
+
   const claim = await f.rpc('claim_review_case', { p_case_id: receipt.case_id, p_expected_version: 1, p_idempotency_key: randomUUID() }, f.reviewer);
-  const args = { p_case_id: receipt.case_id, p_transfer_id: transfer.id, p_evidence_version: 1, p_payment_plan_id: null, p_allocations: [{ charge_id: f.chargeId, amount_minor: 50000 }], p_expected_version: claim.version, p_idempotency_key: randomUUID() };
+  const before = await snapshot();
+  for (const version of [null, 0, -1]) {
+    expect((await f.reviewer.rpc('allocate_transfer', { ...request, p_expected_version: version })).error?.message).toBe('VALIDATION_ERROR');
+    expect(await snapshot()).toEqual(before);
+  }
+  expect((await f.reviewer.rpc('allocate_transfer', { ...request, p_expected_version: unclaimed.version })).error?.message).toBe('VERSION_CONFLICT');
+  expect(await snapshot()).toEqual(before);
+
+  const args = { ...request, p_expected_version: claim.version };
   const first = await invokePaymentCommandWithStatus(f.reviewer, 'allocate_transfer', args);
   expect(first.data.allocation_ids).toHaveLength(1);
   expect(first.data.unapplied_minor).toBe(5000);
   expect(first.data.confirmation_status).toHaveLength(1);
   // Money can post while the actual required tutor agreement is still missing.
   expect(first.data.confirmation_status[0]).toMatchObject({ state: 'awaiting_requirements', reason: 'FEE_NOT_APPROVED' });
+  const posted = await snapshot();
+  expect(posted).toMatchObject({
+    state: 'resolved', version: before.version + 1, allocations: first.data.allocation_ids, commands: [first.data.command_id],
+  });
+  expect(posted.ledger_lines).toHaveLength(before.ledger_lines.length + 2);
+  expect(posted.case_events).toHaveLength(before.case_events.length + 1);
+  expect((await f.reviewer.rpc('allocate_transfer', { ...args, p_expected_version: null })).error?.message).toBe('VALIDATION_ERROR');
   expect((await invokePaymentCommandWithStatus(f.reviewer, 'allocate_transfer', args)).data).toEqual(first.data);
+  expect(await snapshot()).toEqual(posted);
   await expect(invokePaymentCommandWithStatus(f.reviewer, 'allocate_transfer', { ...args, p_allocations: [{ charge_id: f.chargeId, amount_minor: 49999 }] })).rejects.toThrow('IDEMPOTENCY_CONFLICT');
   const balance = (await f.database.query('select finance_private.finance_charge_balance($1) as data', [f.chargeId])).rows[0].data;
   expect(balance).toMatchObject({ commercial_net_minor: 50000, allocated_cash_minor: 50000, receivable_minor: 0 });

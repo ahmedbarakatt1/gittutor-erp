@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ChargeSummary, ConfirmationResult, SafeEvidence } from '@/modules/payments/queries';
-import { parseScaledIntegerInput, scaledIntegerInput } from '@/modules/shared/format';
+import { decimalInputPattern, parseScaledIntegerInput, scaledIntegerInput } from '@/modules/shared/format';
 import { paymentCopy as copy } from '@/locales/payments';
 import { fileCopy } from '@/locales/files';
 import { EvidenceUpload } from '../files/evidence-upload';
@@ -85,7 +85,7 @@ export function AmountField({ name, label = copy.amount, value, max, allowZero =
   const uiLanguage = useSiteLanguage();
   const { copy } = textByLanguage[uiLanguage];
 
-  const id = useId(); return <div className={formStyles.field}><label htmlFor={id}>{label}</label><input id={id} name={name} type="text" inputMode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" defaultValue={value === undefined ? '' : scaledIntegerInput(value, 2)} required aria-describedby={max === undefined ? undefined : `${id}-cap`} data-minor-min={allowZero ? 0 : 1} />{max !== undefined && <p id={`${id}-cap`} className={formStyles.hint}>{copy.refundable}: <bdi>{money(max, 'EGP', uiLanguage)}</bdi></p>}</div>;
+  const id = useId(); return <div className={formStyles.field}><label htmlFor={id}>{label}</label><input id={id} name={name} type="text" inputMode="decimal" pattern={decimalInputPattern(2)} defaultValue={value === undefined ? '' : scaledIntegerInput(value, 2)} required aria-describedby={max === undefined ? undefined : `${id}-cap`} data-minor-min={allowZero ? 0 : 1} />{max !== undefined && <p id={`${id}-cap`} className={formStyles.hint}>{copy.refundable}: <bdi>{money(max, 'EGP', uiLanguage)}</bdi></p>}</div>;
 }
 export function amountField(form: FormData, name: string, options: { max?: number; allowZero?: boolean } = {}) { const value = parseScaledIntegerInput(String(form.get(name) || ''), 2); if ((!options.allowZero && value === 0) || (options.max !== undefined && value > options.max)) throw new Error('AMOUNT_OUT_OF_RANGE'); return value; }
 export function ChargeFacts({ charge }: { charge: ChargeSummary }) {

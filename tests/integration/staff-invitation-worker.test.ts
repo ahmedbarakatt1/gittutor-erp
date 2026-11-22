@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Pool } from 'pg';
 import { expect, test } from 'vitest';
 import { adminDatabase, anonymousClient, loadLocalSupabase } from '../helpers/supabase';
-import { claimJobs } from '../../src/worker/claims';
+import { claimWorkerJobs } from '../../src/worker/claims';
 import { executeLeasedJob } from '../../src/worker/execute';
 import { staffInvitationHandler } from '../../src/worker/auth-invitations';
 
@@ -48,24 +48,29 @@ test('durable staff invitation reconciles a crashed worker without resending and
       await database.query('begin');
       try {
         await database.query("select id from app_private.outbox_jobs where purpose='identity.staff_invitation' and id<>$1 for update", [jobId]);
-        return await claimJobs(worker, 'identity.staff_invitation', 1, 60);
+        return await claimWorkerJobs(worker, 'identity.staff_invitation', 'fake');
       } finally { await database.query('rollback'); }
     }
     const first = await claimOwn();
     expect(first.map(job => job.id)).toEqual([jobId]);
     expect(first[0].attempt_count).toBe(1);
     const handler = staffInvitationHandler(worker);
-    const providerId = await handler.execute(first[0]);
+    // The first worker stopped before reaching Auth. A replacement can send immediately.
+    await database.query("update app_private.outbox_jobs set lease_expires_at=now()-interval '1 second' where id=$1", [jobId]);
+    const [sending] = await claimOwn();
+    expect(sending.requires_reconciliation).toBe(false);
+    const providerId = await handler.execute(sending);
     expect(typeof providerId).toBe('string');
     // Simulate process death after Auth accepted the send but before outbox completion.
     await database.query("update app_private.outbox_jobs set lease_expires_at=now()-interval '1 second' where id=$1", [jobId]);
     const second = await claimOwn();
     expect(second.map(job => job.id)).toEqual([jobId]);
-    expect(second[0].attempt_count).toBe(2);
+    expect(second[0].attempt_count).toBe(3);
+    expect(second[0].requires_reconciliation).toBe(true);
     expect(await executeLeasedJob(worker, second[0], handler)).toBe('completed');
     expect(await handler.execute(second[0])).toBe(providerId);
     const job = (await database.query('select state,attempt_count,provider_reference from app_private.outbox_jobs where id=$1', [jobId])).rows[0];
-    expect(job).toEqual({ state: 'completed', attempt_count: 2, provider_reference: providerId });
+    expect(job).toEqual({ state: 'completed', attempt_count: 3, provider_reference: providerId });
     await expect.poll(async () => (await mailFor(email)).length).toBe(1);
     const messages = await mailFor(email);
     const mail = await fetch(`http://127.0.0.1:54324/api/v1/message/${messages[0].ID}`);

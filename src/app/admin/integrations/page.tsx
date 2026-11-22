@@ -3,6 +3,7 @@ import { parseServerConfig } from '@/server/config';
 import { requireAccount } from '@/server/auth';
 import { PortalShell } from '@/components/portal-shell';
 import { CalendarConnectionPanel } from '@/components/teaching/calendar-connection';
+import { ScanRecoveryPanel } from '@/components/files/scan-recovery';
 import { ManualWhatsApp } from '@/components/support/manual-whatsapp';
 import { meetingCopy as copy } from '@/locales/meetings';
 import { meetingCopy as arabicMeetingCopy } from '@/locales/ar-transaction/meetings';
@@ -24,5 +25,6 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
   return <PortalShell kind="admin" account={account} title={copy.integrations} description={copy.integrationDescription} activePath="/admin/integrations" showAccount={false}>
     <CalendarConnectionPanel provider={calendar} verifyGoogleRooms={settings.environment === 'production' && calendar === 'google'} outcome={(await searchParams).calendar} />
     {whatsapp === 'manual' && <ManualWhatsApp staff />}
+    <ScanRecoveryPanel />
   </PortalShell>;
 }

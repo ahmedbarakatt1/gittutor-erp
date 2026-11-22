@@ -10,6 +10,7 @@ export type Job = {
   lease_token: string;
   lease_expires_at: Date;
   attempt_count: number;
+  requires_reconciliation?: boolean; // Absent on legacy claims.
   correlation_id: string;
 };
 type Database = Pick<Pool | PoolClient, 'query'>;
@@ -19,9 +20,17 @@ export async function claimJobs(database: Database, purpose: string | null = nul
   return result.rows as Job[];
 }
 export async function claimWorkerJobs(database: Database, purpose: string | null, mode: 'manual' | 'fake' | 'cloud'): Promise<Job[]> {
-  if (mode !== 'manual') return claimJobs(database, purpose);
-  const result = await database.query('select * from app_private.claim_jobs($1,$2,$3,$4)', [purpose, 10, 60, 'support.whatsapp_send']);
+  const excluded = mode === 'manual' ? 'support.whatsapp_send' : null;
+  const result = await database.query('select * from app_private.claim_worker_job($1,$2)', [purpose, excluded]);
   return result.rows as Job[];
+}
+export async function startJobDispatch(database: Database, job: Job) {
+  await database.query('select app_private.start_job_dispatch($1,$2)', [job.id, job.lease_token]);
+}
+export async function failJobExecution(database: Database, job: Job) {
+  const result = await database.query<{ state: 'pending' | 'failed' | 'reconciliation' }>(
+    'select app_private.fail_job_execution($1,$2) state', [job.id, job.lease_token]);
+  return result.rows[0].state;
 }
 export async function completeJob(database: Database, job: Job, providerReference: string | null) {
   await database.query('select app_private.complete_job($1,$2,$3)', [job.id, job.lease_token, providerReference]);

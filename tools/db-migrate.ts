@@ -7,7 +7,7 @@ import { assertIsolatedTarget, localDatabaseUrl } from '../tests/helpers/environ
 
 // Auth-dependent migrations execute only through the real local Supabase CLI.
 export const FOUNDATION_MIGRATION = '20261111103635_foundation_outbox.sql';
-export const NATIVE_BASELINE_MIGRATIONS = [FOUNDATION_MIGRATION, '20261119150400_manual_channel_queue_claims.sql'] as const;
+export const NATIVE_BASELINE_MIGRATIONS = [FOUNDATION_MIGRATION, '20261119150400_manual_channel_queue_claims.sql', '20261122010100_worker_dispatch_tracking.sql'] as const;
 
 export async function migrate(connectionString: string, environment = process.env.APP_ENV ?? 'development') {
   assertIsolatedTarget({ connectionString, environment });
