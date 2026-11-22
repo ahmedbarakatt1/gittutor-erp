@@ -27,7 +27,7 @@ function requestDate(value: string, language: 'en' | 'ar') {
   return language === 'ar' ? new Intl.DateTimeFormat('ar-EG', { timeZone: 'Africa/Cairo', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : cairoDate(value);
 }
 
-export function RequestWorkspace({ view = 'learn', selectedId, initialTopic = '' }: { view?: 'learn' | 'service' | 'admin'; selectedId?: string; initialTopic?: string }) {
+export function RequestWorkspace({ view = 'learn', selectedId, initialTopic = '', driveEnabled = false }: { driveEnabled?: boolean; view?: 'learn' | 'service' | 'admin'; selectedId?: string; initialTopic?: string }) {
   const language = useSiteLanguage();
   const text = requestTranslator(language);
   const staff = view !== 'learn', path = `/${view}/requests`;
@@ -47,7 +47,7 @@ export function RequestWorkspace({ view = 'learn', selectedId, initialTopic = ''
     </aside>;
   const content = <div className={styles.content} id="request-content" tabIndex={-1}>
     {!queueFirst && <a className={styles.historyShortcut} href="#request-history">{historyTitle}</a>}
-    {selectedId ? <RequestDetail key={selectedId} id={selectedId} view={view} onChange={requests.reload} /> : staff ? <section className={styles.empty}><h2>{text('Review a tutoring request')}</h2><p>{text('Open a request to read the student’s brief and material, reply, or propose a scheduled session.')}</p></section> : <CreateRequest initialTopic={initialTopic} />}
+    {selectedId ? <RequestDetail key={selectedId} id={selectedId} view={view} onChange={requests.reload} /> : staff ? <section className={styles.empty}><h2>{text('Review a tutoring request')}</h2><p>{text('Open a request to read the student’s brief and material, reply, or propose a scheduled session.')}</p></section> : <CreateRequest initialTopic={initialTopic} driveEnabled={driveEnabled} />}
   </div>;
   return <div className={styles.workspace}>
     {queueFirst ? <>{history}{content}</> : <>{content}{history}</>}
@@ -67,7 +67,7 @@ function RequestFields({ initial, topic = '' }: { initial?: TutoringRequestView;
   </>;
 }
 
-function CreateRequest({ initialTopic }: { initialTopic: string }) {
+function CreateRequest({ initialTopic, driveEnabled }: { initialTopic: string; driveEnabled: boolean }) {
   const language = useSiteLanguage();
   const text = requestTranslator(language);
   const router = useRouter(), learners = usePaymentList<Learner>('me/learners');
@@ -77,7 +77,7 @@ function CreateRequest({ initialTopic }: { initialTopic: string }) {
     <PaymentReadState pending={!learners.items} {...learners} />
     {learners.items?.length === 0 ? <p className={styles.notice}>{text('Add or link the learner first, so their material stays in the right account.')} <Link href="/learn#learners">{text('Manage learners')}</Link></p> : <IdentityForm action="requests" submitLabel={text('Continue to upload material')} successMessage={text('Draft saved. Add your material to submit.')} disabled={!learner} resettable={false} releaseKeyOnSuccess payload={form => ({ ...bodyFrom(form), learner_id: learner!.learner_id })} onSaved={result => router.push(`/learn/requests?request=${result.resource_id}`)}>
       <Select name="learner_id" label={text('Who is the session for?')} value={learner?.learner_id || ''} onChange={setSelected}><option value="">{text('Choose the learner')}</option>{learners.items?.map(item => <option key={item.learner_id} value={item.learner_id}>{item.display_name}</option>)}</Select>
-      <RequestFields topic={initialTopic} /><p className={styles.hint}>{text('This saves a draft. You’ll upload your material before sending the request. No payment is due now.')}</p>
+      <RequestFields topic={initialTopic} />{driveEnabled && <p className={styles.hint}>{language === 'ar' ? 'عند ربط Google Drive، يحفظ Git Tutor نسخة خاصة من ملفات الطلب الجديد. بعد فحص الملف وتأكيد الحجز، يمكن للمدرس المكلّف عرضه من حسابه المسجّل.' : 'When Google Drive is connected, Git Tutor saves a private copy of files on new requests. After the file passes its check and the booking is confirmed, the assigned tutor can view it using their registered account.'}</p>}<p className={styles.hint}>{text('This saves a draft. You’ll upload your material before sending the request. No payment is due now.')}</p>
     </IdentityForm>}
   </section>;
 }

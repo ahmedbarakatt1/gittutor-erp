@@ -2,8 +2,20 @@ import type { Client } from 'pg';
 
 // Reviewed exact RPC boundary from the application migrations, including server-mediated calls.
 // A new migration granting the worker another signature must update this list explicitly.
-const queueSignatures = ['claim_jobs(text,integer,integer)', 'claim_jobs(text,integer,integer,text)', 'claim_worker_job(text,text)', 'start_job_dispatch(uuid,uuid)', 'fail_job_execution(uuid,uuid)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
+const queueSignatures = ['claim_jobs(text,integer,integer)', 'claim_jobs(text,integer,integer,text)', 'claim_worker_job(text,text)', 'claim_request_material_scan(uuid)', 'start_job_dispatch(uuid,uuid)', 'fail_job_execution(uuid,uuid)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
+export const requestDriveWorkerSignatures = {
+  request_drive_connected: '',
+  record_request_drive_grant: 'uuid,uuid,uuid,uuid,text,text,jsonb',
+  read_request_drive_grant: '',
+  update_request_drive_token: 'uuid,uuid,jsonb',
+  drive_material_work: 'uuid,uuid,integer',
+  drive_material_projection: 'uuid',
+  drive_material_reserve_id: 'uuid,text',
+  drive_material_mark_uploaded: 'uuid,text',
+  drive_material_finish: 'uuid,integer,boolean,text',
+};
 const commandSignatures = [
+  ...Object.entries(requestDriveWorkerSignatures).map(([name, parameters]) => `${name}(${parameters})`),
   'finalize_calendar_sync(uuid,integer,uuid,integer,integer,uuid,uuid,jsonb)',
   'finalize_export_render(uuid,uuid,uuid,integer,text)', 'finalize_file_scan(uuid,integer,uuid,uuid,jsonb)',
   'finalize_notification_delivery(uuid,uuid,uuid,uuid,jsonb)', 'finalize_statement_import(uuid,integer,text,text,jsonb,text,text)',

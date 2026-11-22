@@ -2,7 +2,7 @@ import 'server-only';
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
-export const providerTokenContextSchema = z.object({ provider: z.literal('google'), connection_id: z.uuid(), credential_version: z.uuid() }).strict();
+export const providerTokenContextSchema = z.object({ provider: z.enum(['google', 'request-drive']), connection_id: z.uuid(), credential_version: z.uuid() }).strict();
 export type ProviderTokenContext = z.infer<typeof providerTokenContextSchema>;
 const token = z.string().min(1).max(16384).regex(/^[\x21-\x7e]+$/);
 export const providerTokenPayloadSchema = z.object({ refresh_token: token, access_token: token.optional(), expires_at: z.iso.datetime({ offset: true }).optional(), scopes: z.array(z.string().min(1).max(300)).min(1).max(30) }).strict();

@@ -1,3 +1,4 @@
+import { scheduleRequestDrive } from '@/server/schedule-request-drive';
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { invokeRequestCommand, type RequestCommandName } from '@/modules/requests/commands';
@@ -50,6 +51,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ path?: 
       args.p_idempotency_key = key;
       if (path.length) args.p_request_id = path[0];
       ({ data, status } = await invokeRequestCommand(client, action, args));
+      if (path.length) scheduleRequestDrive({requestId: path[0]});
     }
     return scoped.finish(NextResponse.json({ data, request_id: requestId }, { status, headers }));
   } catch (error) {

@@ -14,5 +14,5 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
   if (selected.success) params.set('request', selected.data); else if (topic) params.set('topic', topic);
   const account = await requireAccount('student', `/learn/requests${params.size ? `?${params}` : ''}`);
   const text = requestTranslator(await getSiteLanguage());
-  return <PortalShell kind="learn" account={account} title={text('Request a tutoring session')} description={text('Your course material is the starting point. Tell us what you need, upload your files, and send your request.')} showAccount={false} activePath="/learn/requests"><RequestWorkspace key={params.toString()} selectedId={selected.success ? selected.data : undefined} initialTopic={topic} /></PortalShell>;
+  return <PortalShell kind="learn" account={account} title={text('Request a tutoring session')} description={text('Your course material is the starting point. Tell us what you need, upload your files, and send your request.')} showAccount={false} activePath="/learn/requests"><RequestWorkspace driveEnabled={process.env.REQUEST_DRIVE_ADAPTER === 'google'} key={params.toString()} selectedId={selected.success ? selected.data : undefined} initialTopic={topic} /></PortalShell>;
 }

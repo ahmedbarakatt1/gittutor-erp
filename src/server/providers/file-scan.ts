@@ -6,11 +6,18 @@ export type ScanObservation = { outcome: 'clean'|'infected'|'error'|'unknown'; a
 export type ScanAdapter = { scan(file: ScanInput): Promise<ScanObservation> };
 export type ScanScenario = 'clean'|'infected'|'error'|'unknown'|'timeout_after_result';
 const maxBytes = 25 * 1024 * 1024;
-function validate(file: ScanInput) { if (!file.bytes.length || file.bytes.length > maxBytes) throw new Error('FILE_SIZE_MISMATCH'); if (createHash('sha256').update(file.bytes).digest('hex') !== file.checksum_sha256) throw new Error('FILE_CHECKSUM_MISMATCH'); }
-function reference(file: ScanInput) { return createHash('sha256').update(`${file.file_id}:${file.object_version}:${file.checksum_sha256}`).digest('hex'); }
+export function validateScanInput(file: ScanInput) { if (!file.bytes.length || file.bytes.length > maxBytes) throw new Error('FILE_SIZE_MISMATCH'); if (createHash('sha256').update(file.bytes).digest('hex') !== file.checksum_sha256) throw new Error('FILE_CHECKSUM_MISMATCH'); }
+export function scanReference(file: ScanInput) { return createHash('sha256').update(`${file.file_id}:${file.object_version}:${file.checksum_sha256}`).digest('hex'); }
+export function clamavVersion(value: string) {
+  const match = /^ClamAV ([A-Za-z0-9._-]{1,100})\/(\d{1,30})\/(.{1,100})$/.exec(value.trim());
+  if (!match) return { engine_version: 'unavailable', signature_version: 'unavailable', safe_error_code: 'SCANNER_VERSION_UNAVAILABLE' };
+  const age = Date.now() - Date.parse(match[3]);
+  return { engine_version: match[1], signature_version: match[2],
+    safe_error_code: !Number.isFinite(age) || age > 48 * 3600000 || age < -3600000 ? 'SCANNER_SIGNATURES_STALE' : null };
+}
 export function createFakeScanAdapter(scenario: ScanScenario, isolated: boolean): ScanAdapter {
   if (!isolated) throw new Error('FAKE_SCANNER_REQUIRES_ISOLATION');
-  return { async scan(file) { validate(file); const outcome = scenario === 'timeout_after_result' ? 'clean' : scenario; return { outcome, adapter_mode: 'fake', engine_version: 'git-tutor-fake-v1', signature_version: 'synthetic-v1', reference: reference(file), safe_error_code: outcome === 'clean' ? null : outcome === 'infected' ? 'FILE_QUARANTINED' : outcome === 'error' ? 'SCANNER_UNAVAILABLE' : 'SCANNER_OUTCOME_UNKNOWN' }; } };
+  return { async scan(file) { validateScanInput(file); const outcome = scenario === 'timeout_after_result' ? 'clean' : scenario; return { outcome, adapter_mode: 'fake', engine_version: 'git-tutor-fake-v1', signature_version: 'synthetic-v1', reference: scanReference(file), safe_error_code: outcome === 'clean' ? null : outcome === 'infected' ? 'FILE_QUARANTINED' : outcome === 'error' ? 'SCANNER_UNAVAILABLE' : 'SCANNER_OUTCOME_UNKNOWN' }; } };
 }
 
 /** Private-network ClamD INSTREAM; no customer path or URL reaches the daemon. */
@@ -36,15 +43,13 @@ export function createClamavScanAdapter(endpoint: string): ScanAdapter {
     });
   }
   return { async scan(file) {
-    validate(file); const base = { adapter_mode: 'clamav' as const, engine_version: 'unavailable', signature_version: 'unavailable', reference: reference(file) };
+    validateScanInput(file); const base = { adapter_mode: 'clamav' as const, engine_version: 'unavailable', signature_version: 'unavailable', reference: scanReference(file) };
     if (active >= 4) return { ...base, outcome: 'error', safe_error_code: 'SCANNER_BUSY' };
     active++;
     try {
-      const version = /^ClamAV ([A-Za-z0-9._-]{1,100})\/(\d{1,30})\/(.{1,100})$/.exec(await request('VERSION'));
-      if (!version) return { ...base, outcome: 'error', safe_error_code: 'SCANNER_VERSION_UNAVAILABLE' };
-      base.engine_version = version[1]; base.signature_version = version[2];
-      const age = Date.now() - Date.parse(version[3]);
-      if (!Number.isFinite(age) || age > 48 * 3600000 || age < -3600000) return { ...base, outcome: 'error', safe_error_code: 'SCANNER_SIGNATURES_STALE' };
+      const version = clamavVersion(await request('VERSION'));
+      base.engine_version = version.engine_version; base.signature_version = version.signature_version;
+      if (version.safe_error_code) return { ...base, outcome: 'error', safe_error_code: version.safe_error_code };
       const result = await request('INSTREAM', file.bytes);
       if (result === 'stream: OK') return { ...base, outcome: 'clean', safe_error_code: null };
       if (/^stream: .+ FOUND$/.test(result)) return { ...base, outcome: 'infected', safe_error_code: 'FILE_QUARANTINED' };

@@ -1,5 +1,21 @@
 # Testing a tutoring request
 
+## Uploads to the Git Tutor owner's Google Drive
+
+Students and authorized guardians choose a file on the session request form. No Google account or Drive link is needed from the family. When enabled and connected, new requests save an owner-private copy of their PDF, PPTX or supported image in the My Drive of `gittutor2@gmail.com`. Git Tutor retains the checked private upload in its existing storage as the source for retries, safety checks and authorized portal downloads. Existing requests and workbook records are outside the sync.
+
+A tutor receives **Viewer** access on their verified, registered account once the material is clean, the request matches the session, the learner has a confirmed place and the tutor assignment is active. A proposed session alone gives no Drive access. The tutor can open a shared file from their session materials while signed into Google with the registered address. The app does not use public links. Receipts, grades, tutor statements and other file categories are outside this integration.
+
+Changes to the booking, assignment, registered email or file eligibility queue a permission check. Git Tutor denies an obsolete portal link as soon as its database scope changes. Existing Google permissions are removed when reconciliation succeeds. Internet outages, Google quota exhaustion and owner authorization loss can delay removal in Drive. In an urgent case the owner can remove the viewer directly in Drive. Access changes cannot recall a file already downloaded.
+
+### Owner setup
+
+1. In the existing Google Cloud project `local-turbine-514923-g1`, enable **Google Drive API** and configure **Google Auth Platform → Data Access** for `https://www.googleapis.com/auth/drive.file`. The app also uses email and OpenID to verify the selected Google account. [Enable Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com?project=local-turbine-514923-g1) · [Google Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
+2. Under **Google Auth Platform → Clients**, open the existing web client and add `https://gittutor-erp-production.vercel.app/api/drive/google/callback` to **Authorized redirect URIs**. Keep the Calendar redirects. If the OAuth app is in Testing, include `gittutor2@gmail.com` as a test user. [Open web clients](https://console.cloud.google.com/auth/clients?project=local-turbine-514923-g1).
+3. Engineering applies the Drive migrations and sets `REQUEST_DRIVE_ADAPTER=google`, `REQUEST_MATERIAL_SCAN_ADAPTER=vercel_sandbox` and a private `CRON_SECRET` on the intended Vercel project. The scanner uses the Vercel runtime identity. A scan runs after upload, and a daily authenticated cron retries pending work. If free capacity is exhausted, the file stays unavailable to tutors until a scan succeeds.
+4. Sign in as the owner on the protected production site. Open **Administration → Integrations → Request slides in Google Drive**, select the connection button, choose `gittutor2@gmail.com`, and approve access to files used by this app. Google grants offline access for uploads and permission updates when the owner is away. Use the ordinary Google consent screen. [Production integrations](https://gittutor-erp-production.vercel.app/admin/integrations).
+5. Verify one new request with a synthetic slide and designated tutor: owner-only while pending, Viewer after confirmed matching and a clean scan, and removal after reassignment. Confirm the expected account in Google's own sharing dialog. The service uses the owner's available Drive storage and the free hosting quotas. [Google storage](https://support.google.com/drive/answer/6374270) · [Sharing permissions](https://developers.google.com/workspace/drive/api/guides/manage-sharing).
+
 The request-first update follows the owner's clarified workflow and prices. Check [implementation status](IMPLEMENTATION-STATUS.md) for the current deployed revision before testing; this guide does not itself claim deployment or acceptance.
 
 1. Sign in as the student or an authorized parent. Open **Session requests**, choose the learner, enter any subject/course, explain the help needed and give preferred times in Egypt time. Subjects on the public page are examples, not required course choices.

@@ -13,6 +13,7 @@ import { seedCatalog } from './catalog-seed';
 import { seedBooking } from './booking-seed';
 import { seedPackages } from './package-seed';
 import { seedPayments } from './payments-seed';
+import { requestDriveWorkerSignatures } from './production-worker-boundary';
 import { chooseLocalBootstrapPlan, historicalBootstrapSource, historicalCatalogCutoff, historicalCatalogMigrations } from './bootstrap-plan';
 
 const execute = promisify(execFile);
@@ -100,6 +101,7 @@ export function assertPaymentWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
 }
 
 const integrationWorkerSignatures: Record<string, string> = {
+  ...requestDriveWorkerSignatures,
   prepare_file_content: 'uuid,uuid', record_file_object: 'uuid,uuid,uuid,jsonb', prepare_file_download: 'uuid,uuid',
   prepare_file_scan: 'uuid,uuid,uuid', finalize_file_scan: 'uuid,integer,uuid,uuid,jsonb',
   verify_calendar_organizer: 'uuid,uuid,integer,uuid', record_calendar_organizer: 'uuid,uuid,uuid,text,text,jsonb,text,text', record_calendar_connection: 'uuid,uuid,uuid,text,text,jsonb,text', prepare_calendar_sync: 'uuid,uuid,uuid',
@@ -112,9 +114,9 @@ const integrationWorkerSignatures: Record<string, string> = {
 };
 export function assertIntegrationWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' | 'nspname' | 'signature' | 'rolname' | 'prosecdef' | 'executors'> & { worker: boolean }) {
   const signature = integrationWorkerSignatures[fn.proname];
-  if (signature) {
+  if (signature !== undefined) {
     if (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef || fn.signature !== `app_private.${fn.proname}(${signature})` || fn.rolname !== 'git_tutor_commands' || [...fn.executors].sort().join(',') !== 'git_tutor_commands,git_tutor_worker') throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
-  } else if (fn.worker && /^(file_|calendar_|notification_)/.test(fn.proname)) throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
+  } else if (fn.worker && (/^(file_|calendar_|notification_|drive_)/.test(fn.proname) || fn.proname.includes('request_drive'))) throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
 }
 
 async function verifyProjectContainer() {

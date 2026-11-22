@@ -1,5 +1,15 @@
 # Implementation status
 
+## Direct request uploads to Google Drive (22 November 2026)
+
+Students and authorized parents upload on the request form. The owner can opt new requests into a private Drive copy, backed by the existing private upload. After a clean scan, confirmed enrollment and matching tutor assignment, the registered verified tutor can receive Viewer access. Eligibility changes invalidate the portal link and queue Drive permission reconciliation. Receipts, payroll and existing workbook records stay outside the integration. [Owner approval and workflow](REQUEST-FLOW.md).
+
+- `pnpm db:verify` passed on the disposable local database with 171 migrations, 248 private RLS tables and 800 function boundaries. The focused Drive checks covered owner consent, privilege loss, concurrent ID reservation, assignment and email changes, stale acknowledgement and quarantine. The Google HTTP tests used mock responses.
+- The on-demand scanner on the existing Vercel Hobby team accepted a synthetic 25 MiB PDF and quarantined the EICAR test, with ClamAV 1.5.4 and signed definitions 28191. A cold sandbox also scanned the maximum-size fixture without a snapshot. No customer documents were submitted to this rehearsal. The unrelated production worker stays stopped.
+- `node --import tsx .local/drive-hosted-cli.mts <production|pilot> plan` verified exactly three migrations and zero seeds or role scripts on each target. `node --import tsx .local/drive-hosted-rehearsal.mts <production|pilot>` passed in rollback transactions on both databases, preserving accounts, enrollments, imports, calendar events, finance postings and job counts. The worker function boundary and private-table exposure checks passed.
+- `pnpm lint` and the nonincremental TypeScript check passed. `pnpm test:unit` passed all 629 tests after isolating optional provider imports from the request route. `pnpm exec playwright test tests/e2e/requests.spec.ts` passed all six desktop and mobile cases covering Arabic creation, file upload through staff review and separately consented booking, and interrupted draft retries. These browser runs used local adapters.
+- Live Google Drive consent and a synthetic upload, tutor open and reassignment check in Google are outstanding. The owner must enable the Drive API, register the production callback, and authorize the project from Administration. [Owner steps](REQUEST-FLOW.md).
+
 ## Vercel-only hosting decision (22 November 2026)
 
 The owner withdrew the Oracle option and selected Vercel for the worker and scanner. No Oracle account or resource was provisioned by this project. After refreshing the existing CLI session with `vercel whoami`, read-only team and daemon API checks verified Hobby, one ready testing worker and zero desired or running production instances. The current continuous scanner requests 8 GiB. Hobby daemons offer at most 2 GiB per instance. [Current free testing option and limits](FREE-SERVICE-PLAN.md). Billing and deployment settings were untouched.

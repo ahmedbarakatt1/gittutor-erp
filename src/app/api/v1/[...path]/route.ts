@@ -7,6 +7,7 @@ import { invokeTeachingCommandWithStatus as invokeTeachingOperation, type teachi
 import { teachingOperationRoutes, findTeachingOperationReadRoute } from "@/server/teaching-operations-http";
 import { invokeTeachingCommandWithStatus as invokeDeliveryCommand, type TeachingCommandName as DeliveryCommandName } from "@/modules/teaching/commands";
 import { deliveryCommandRoutes, findDeliveryReadRoute } from "@/server/delivery-http";
+import { scheduleRequestDrive } from '@/server/schedule-request-drive';
 import { randomUUID } from "node:crypto";
 import { invokeMeetingCommandWithStatus, type meetingCommands } from "@/modules/teaching/meetings";
 import { meetingCommandRoutes, findMeetingReadRoute } from "@/server/meeting-http";
@@ -15,6 +16,7 @@ import { fileCommandRoutes, findFileReadRoute } from "@/server/file-http";
 import { NextRequest, NextResponse } from "next/server";
 import { requestSupabase } from "@/server/supabase";
 import { allowedOrigin, DomainError, readJson, safeError } from "@/server/http";
+
 import { invokeIdentityCommandWithStatus, type IdentityCommandName } from "@/modules/identity/commands";
 import { getApplicationSubjects, getLearnerSummary, getMyGuardianLinks, getMyVerifiedContacts, getStaffInvitations, getStaffRoleGrants, getTutorApplications, getTutorProfile } from "@/modules/identity/queries";
 import { invokeCatalogCommandWithStatus, type CatalogCommandName } from "@/modules/catalog/commands";
@@ -38,6 +40,8 @@ import {
   listPackageEnrollments, listPackageGrantPolicies, listPackageLineage, listPackageLots,
   listPackageMovements, listPackageOperationProposals, listPackageRenewals,
 } from "@/modules/packages/queries";
+
+export const maxDuration = 300;
 
 type CommandRoute = { pattern: RegExp; fields: string[]; pathArgument?: string } & (
   { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName } | { family: "enrollment-transfer"; rpc: EnrollmentTransferCommandName } | { family: "files"; rpc: FileCommandName } | { family: "meetings"; rpc: keyof typeof meetingCommands } | { family: "delivery"; rpc: DeliveryCommandName } | { family: "finance"; rpc: keyof typeof financeCommands } | { family: "payroll"; rpc: keyof typeof payrollCommands } | { family: "teaching-operations"; rpc: keyof typeof teachingOperations }
@@ -176,6 +180,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       : route.family === "catalog"
       ? await invokeCatalogCommandWithStatus(context.client, route.rpc, args)
       : await invokeIdentityCommandWithStatus(context.client, route.rpc, args);
+    if (route.rpc === "finalize_file_upload" && typeof args.p_file_id === "string") scheduleRequestDrive({fileId: args.p_file_id});
+    else if (["payments", "booking", "identity", "enrollment-transfer", "teaching-operations", "catalog", "packages"].includes(route.family ?? "identity")) scheduleRequestDrive();
     return context.finish(NextResponse.json({ data: result.data, request_id: requestId }, { status: result.status }));
   } catch (error) {
     const safe = safeError(error);

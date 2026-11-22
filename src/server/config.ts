@@ -110,19 +110,25 @@ export function parseServerConfig(raw: Env) {
   const publishableKey = raw.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() || null;
   if (Boolean(supabaseUrl) !== Boolean(publishableKey)) throw new Error("Supabase public configuration is incomplete");
   if (publishableKey && !isBrowserKey(publishableKey)) throw new Error("Invalid public Supabase key classification");
+  const requestDriveMode = choice(raw.REQUEST_DRIVE_ADAPTER, ['disabled', 'google'], 'disabled', 'REQUEST_DRIVE_ADAPTER');
   const required: string[] = [];
   if (!isolated) required.push("APP_BASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "WORKER_DATABASE_URL", "SUPABASE_SECRET_KEY", "SECRET_ENCRYPTION_KEY");
   if (providers.email === "ses") required.push("AWS_REGION", "EMAIL_FROM", "EMAIL_SNS_TOPIC_ARN", "EMAIL_CONFIGURATION_SET");
   if (providers.email === "resend") required.push("EMAIL_FROM", "RESEND_API_KEY", "RESEND_WEBHOOK_SECRET");
   if (providers.email === "gmail") required.push("GMAIL_SMTP_USER", "GMAIL_APP_PASSWORD");
   if (providers.email === "mailjet") required.push("EMAIL_FROM", "MAILJET_API_KEY", "MAILJET_SECRET_KEY");
-  if (providers.calendar === "google") required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REDIRECT_URI", "SECRET_ENCRYPTION_KEY");
+  if (providers.calendar === "google" || requestDriveMode === 'google') required.push("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "SECRET_ENCRYPTION_KEY");
+  if (providers.calendar === "google") required.push("GOOGLE_OAUTH_REDIRECT_URI");
   if (providers.whatsapp === "cloud") required.push("WHATSAPP_BUSINESS_ACCOUNT_ID", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN");
   if (providers.file_scan === "clamav") required.push("FILE_SCAN_URL");
   const missing = required.filter(key => !raw[key]?.trim());
   if (missing.length) throw new Error(`Missing configuration keys: ${missing.join(", ")}`);
   const encryption = privateEncryptionKeys(raw);
   const appBaseUrl = absoluteUrl(raw.APP_BASE_URL || "http://localhost:3000", "APP_BASE_URL", !isolated);
+  const requestDrive = requestDriveMode === 'google' ? {
+    client_id: raw.GOOGLE_OAUTH_CLIENT_ID!.trim(), client_secret: raw.GOOGLE_OAUTH_CLIENT_SECRET!.trim(),
+    redirect_uri: new URL('/api/drive/google/callback', appBaseUrl).href,
+  } : null;
   const google = providers.calendar === 'google' ? {
     client_id: raw.GOOGLE_OAUTH_CLIENT_ID!.trim(), client_secret: raw.GOOGLE_OAUTH_CLIENT_SECRET!.trim(),
     redirect_uri: absoluteUrl(raw.GOOGLE_OAUTH_REDIRECT_URI!.trim(), 'GOOGLE_OAUTH_REDIRECT_URI', !isolated), calendar_id: raw.GOOGLE_CALENDAR_ID?.trim() || 'primary',
@@ -141,6 +147,7 @@ export function parseServerConfig(raw: Env) {
     secret_encryption_key_id: encryption.keyId,
     secret_encryption_previous_keys: encryption.previous,
     google, email,
+    request_drive: requestDrive,
     resend: providers.email === 'resend' ? resendConfig(raw, environment) : null,
     gmail: providers.email === 'gmail' ? gmailConfig(raw) : null,
     mailjet: providers.email === 'mailjet' ? mailjetConfig(raw) : null,
