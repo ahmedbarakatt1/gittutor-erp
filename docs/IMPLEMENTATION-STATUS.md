@@ -1,5 +1,35 @@
 # Implementation status
 
+## Six review findings fixed, retested and deployed (22 November 2026)
+
+Application revision `2e9bbf973d9ca7b188a87c25495da09718ba9df6` passed [GitHub Actions run 44979385866](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44979385866). The run passed 567 unit tests in 78 files, 325 integration tests in 97 files and 196 browser tests. The two opt-in guided-demo entries were skipped. Linting, type checking, both database verification steps and the production build passed.
+
+All six finding-specific retests passed. Of the fifteen wider journeys, eleven passed and four have partial coverage. U01 used direct links for private catalogue details because the public catalogue has no ordinary links to them. U09 found that entering a grade publishes it immediately. U12 covered the private data surfaces across fixtures but still needs a visual comparison using the same paid session. U13 verified duplicate handling, flags and deterministic synthetic extraction but still needs a complete writer replay with booking and ledger counts.
+
+### Hosted release and provider status
+
+- After CI passed, rollback rehearsals on both hosted databases verified record counts, organizer identities, private table protection and restricted worker grants. The testing worker was drained to zero. Each database then applied migrations `20261122010000`, `20261122010100` and `20261122010200` through the Supabase CLI. Readback verified all three history entries, worker privileges, restricted scan functions and zero incorrect live-verification flags on unresolved scans. No seed or role script was applied.
+- Each Vercel build passed staged checks for Support, contact icons, account recovery and health. Both canonical aliases resolved to the tested application commit after promotion. [Testing site](https://gittutor-erp-rho.vercel.app) · [Team-protected production site](https://gittutor-erp-production.vercel.app).
+- `node .local/nov22-navigation-review.cjs https://gittutor-erp-rho.vercel.app` passed for all four testing portals and Arabic admin navigation. `node .local/fix-six-queue-smoke.cjs pilot` verified the new admin queue, response fields and access restrictions. `& .local/fix-six-production-smoke.ps1` passed on the canonical production domain with a synthetic mobile learner. Back, logo, dashboard and sign-out behaved correctly. Queue access returned 403 while signed in as the learner and 401 after sign-out.
+- Vercel reported one ready testing worker on the promoted deployment. Production resolved the new worker image and reported zero configured and running instances. Background jobs and private file scanning on production still require activation and live verification. No paid resource was activated and no live mail, payment or Meet operation was used for these retests. [Production activation inputs](PRODUCTION-INPUTS.md).
+
+### What changed and how it was checked
+
+| ID | Change | Executed regression check |
+| --- | --- | --- |
+| F01 | Payment allocation requires a positive, current review version. Authorization precedes validation. The locked review and idempotent replay protect financial postings. | Missing, zero, negative and stale versions left review state and balances intact. A valid approval and its replay produced one posting. `tests/integration/payment-allocations.test.ts` |
+| F02 | The booking and waiting-list forms release their operation key after the server acknowledges creation. Interrupted requests keep their key. | Desktop and mobile both handled a lost response, cancellation, hold expiry and departure from the waiting list. New attempts received new active records. Four focused runs passed. `pnpm exec playwright test tests/e2e/booking.spec.ts --grep same-tab` |
+| F03 | A worker claims one executable job and records the start of a provider send under its lease. A successor can retry untouched work. Uncertain deliveries enter reconciliation. | Separate database connections exercised lease loss, preparation failure, a lost acknowledgment and the retry limit. Local Auth and its mail catcher delivered one invitation across three leases. Focused runs passed 21 native database tests and nine Supabase tests. `tests/integration/worker-recovery.test.ts`, `tests/integration/notifications.test.ts`, `tests/integration/staff-invitation-worker.test.ts` |
+| F04 | A scanner outage quarantines the file and marks its status as requiring verification. Administrators can retry a transient failure from Integrations. The original evidence is kept. | With private test storage and a scanner stub, a stale signature blocked download, repeating a retry returned the same job, and a clean rescan recovered the original object. The queue returned 401 signed out, 403 for a learner and 200 for an administrator. `tests/integration/files.test.ts` |
+| F05 | Payment amount inputs and the minor-unit parser accept Arabic-Indic and Persian digits and the Arabic decimal mark. Range and precision checks still apply. | Seven formatting tests passed. A two-learner payment plan accepted localized input on desktop and mobile and rejected excess precision. `pnpm exec vitest run tests/unit/unit-format.test.ts` and `pnpm exec playwright test tests/e2e/payments.spec.ts --grep "two-learner plan"` |
+| F06 | The campaign browser test expects a signed-in learner to return to the learner dashboard. It checks the same identity, denied report response and absence of privileged content. | A focused browser check confirmed the learner stayed signed in and the report returned 403. The full CI browser results are recorded above. `tests/e2e/analytics.spec.ts` |
+
+### Interpretation of the test evidence
+
+The updated [testing workbook](../output/review/Git-Tutor-Testing.xlsx) records each finding and journey separately. The 147 catalogue entries remain references to the acceptance definitions. The [independent review PDF](../output/review/Git-Tutor-Code-Review.pdf) describes the original findings at the reviewed revision.
+
+A local browser run of `tests/e2e/analytics.spec.ts` timed out on admin report content before reaching the revised denial assertion. Desktop was waiting for the conversion metric and mobile was waiting for the team-workload text. An initial local database run also timed out. The selected allocation and scan-recovery cases passed when rerun. A broader local integration group initially passed 21 of 23 tests. The two failures passed on isolated rerun. All checks used synthetic data, and the local invitation test delivered to a local mail catcher.
+
 ## Independent code review and testing workbook (22 November 2026)
 
 An independent agent reviewed application revision `2f7ad48`. The [review report](../output/review/Git-Tutor-Code-Review.pdf) covers three high-priority issues in payment review versioning, rebooking and worker leases, plus scanner recovery, Arabic amount entry and the campaign CI expectation. The [testing workbook](../output/review/Git-Tutor-Testing.xlsx) contains six finding-specific retests, fifteen user journeys and an index of all 147 acceptance IDs. Each new retest starts unexecuted.
