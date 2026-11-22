@@ -65,7 +65,10 @@ test('guided synthetic booking, real receipt review, confirmation, files and fiv
     const enrollmentResponse = await learner.request.get(`/api/v1/enrollments/${slot.enrollmentId}`);
     const enrollment = (await enrollmentResponse.json()).data;
     if (!enrollment.quote.accepted_at) { await accept.getByRole('checkbox').check(); await submit(learner, accept, `quotes/${enrollment.quote.quote_id}/accept`); }
-    await learner.getByRole('link', { name: 'View payment instructions', exact: true }).click();
+    await Promise.all([
+      learner.waitForURL(/\/learn\/payments\/charges\/[\da-f-]{36}$/),
+      learner.getByRole('link', { name: 'View payment instructions', exact: true }).click(),
+    ]);
     slot.chargeId = new URL(learner.url()).pathname.split('/').at(-1); await saveDemo(demo);
     if (!slot.receiptId) {
       await learner.getByLabel('Payment channel', { exact: true }).selectOption(demo.receivingVersionId);
@@ -76,14 +79,20 @@ test('guided synthetic booking, real receipt review, confirmation, files and fiv
       const evidenceUrl = `**/api/v1/charges/${slot.chargeId}/receipt-files`;
       let releaseEvidence!: () => void;
       const waitingForEvidence = new Promise<void>(resolve => { releaseEvidence = resolve; });
-      await learner.route(evidenceUrl, async route => { await waitingForEvidence; await route.continue(); });
+      let reportIntercept!: () => void;
+      const intercepted = new Promise<void>(resolve => { reportIntercept = resolve; });
+      await learner.route(evidenceUrl, async route => {
+        reportIntercept();
+        await waitingForEvidence;
+        await route.continue();
+      }, {times: 1});
       let receiptFileId: string;
       try {
         receiptFileId = await upload(learner, receipt, '.local/demo/verification-receipt.pdf');
+        await intercepted;
         await expect(receipt.getByRole('button', { name: 'Submit receipt for review', exact: true })).toBeDisabled();
       } finally {
         releaseEvidence();
-        await learner.unroute(evidenceUrl);
       }
       await expect(receipt.getByLabel('Prepared evidence', { exact: true })).toHaveValue(receiptFileId);
       const saved = await submit(learner, receipt, 'receipts', 201);
