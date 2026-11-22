@@ -6,6 +6,8 @@ Keep the website on Vercel and the database, authentication and private files on
 
 Use a Free Tier tenancy, `VM.Standard.A1.Flex`, **2 OCPUs, 8 GB RAM and one 50 GB boot volume**, within the tenancy's **remaining** Always Free allowance. At 744 hours these settings require 1,488 OCPU-hours and 5,952 GB-hours. Check both compute dimensions, storage and existing network use together before creating anything. Keep the account on Free Tier and the cost estimate at zero. Capacity is regional and Oracle can reclaim idle instances. A missing worker heartbeat or a pending private upload after a VM interruption requires operator attention. [Oracle allowances and reclamation](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) · [Signup and verification](https://www.oracle.com/cloud/free/faq/)
 
+The [native ARM rehearsal](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/45032660279) passed the real ClamAV checks, worker startup and restart, and queue isolation using synthetic data. The Oracle VM is pending owner account access and regional capacity.
+
 ### Operator procedure
 
 1. Check home-region capacity and remaining allowance. Select an Always Free eligible ARM Linux image. Restrict SSH to the operator, allow outbound HTTPS, the production database connection and required provider endpoints, and keep the Docker daemon and ClamAV inaccessible from outside. Enable Docker to start at boot. Use the reviewed Git revision on the host.
