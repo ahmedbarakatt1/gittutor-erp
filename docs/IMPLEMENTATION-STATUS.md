@@ -1,5 +1,13 @@
 # Implementation status
 
+## Production guardian invitation test (22 November 2026)
+
+The synthetic account “Guardian Flow Test Learner” issued a single-use invitation to the designated tester through the learner consent flow. Its five permissions cover profile, bookings, payments, materials and notifications for that learner. The invitation expires at 02:15 Cairo time on 23 November 2026.
+
+- `& .local/nov22-eslam-guardian.ps1` verified the synthetic learner's Student role, created the invitation and sent one owner-approved email containing the reference, code and instructions.
+- `node --dns-result-order=ipv4first .local/nov22-verify-guardian.cjs` confirmed the intended recipient, synthetic learner, five permissions, zero workbook links and zero enrollments. Acceptance was pending.
+- `& .local/nov22-guardian-mail-history.ps1` found one matching message with a Mailjet `sent` event. The tester's remaining step is to accept the invitation from their own account and check that the learner appears under Your learners.
+
 ## Production multi-role testing access (22 November 2026)
 
 After account activation and owner confirmation, the owner workspace granted Administrator, Customer Service and Tutor to the designated colleague's verified production account. The refreshed staff list showed all three grants. Independent readback using `node --dns-result-order=ipv4first .local/nov22-eslam-roles.cjs` confirmed four active roles including the existing Student role. Guardian access requires a learner-specific invitation and consent.
