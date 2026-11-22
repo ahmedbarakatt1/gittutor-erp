@@ -33,7 +33,7 @@ async function verificationLink(email: string, type: 'email' | 'invite' | 'recov
   return link;
 }
 
-async function followVerification(page: Page, link: URL, destination: string) {
+async function followVerification(page: Page, link: URL, destination: string, language: 'en' | 'ar' = 'en') {
   const hops: { host: string; path: string; status: number; destination: string; cookies: boolean }[] = [];
   let callbackReferrerPolicy: string | undefined;
   page.on('response', async response => {
@@ -44,10 +44,35 @@ async function followVerification(page: Page, link: URL, destination: string) {
     const target = headers.location ? new URL(headers.location, url) : null;
     hops.push({ host: url.host, path: url.pathname, status: response.status(), destination: target ? `${target.host}${target.pathname}` : '', cookies: Boolean(headers['set-cookie']) });
   });
+  for (const method of ['HEAD', 'GET']) {
+    const preview = await page.request.fetch(link.href, { method, maxRedirects: 0 });
+    expect(preview.status()).toBe(200);
+    expect(preview.headers()['set-cookie']).toBeUndefined();
+    expect(preview.headers()['cache-control']).toContain('no-store');
+    expect(preview.headers()['referrer-policy']).toBe('no-referrer');
+    expect(preview.headers()['content-security-policy']).toContain("form-action 'self'");
+    const html = await preview.text();
+    expect(html.includes(link.searchParams.get('token_hash')!)).toBe(false);
+  }
   try { await page.goto(link.href); } catch { throw new Error('LOCAL_VERIFICATION_NAVIGATION_FAILED'); }
+  const confirm = page.getByRole('button', { name: language === 'ar' ? /متابعة|تأكيد البريد/ : /Continue|Confirm email/ });
+  await expect(confirm).toBeVisible();
+  const [consumed] = await Promise.all([
+    page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === '/auth/callback'),
+    confirm.click(),
+  ]);
+  expect(consumed.status()).toBe(303);
+  const submittedHeaders = await consumed.request().allHeaders();
+  expect(submittedHeaders.referer).toBeUndefined();
+  expect(submittedHeaders['sec-fetch-site']).toBe('same-origin');
   try { await expect.poll(() => new URL(page.url()).pathname, { timeout: 15000 }).toBe(destination); }
   catch { throw new Error(`LOCAL_VERIFICATION_REDIRECT_FAILED:${JSON.stringify(hops)}`); }
   await expect.poll(() => callbackReferrerPolicy).toBe('no-referrer');
+  const replay = await page.request.post(link.href, {
+    form: { confirm: 'yes' }, headers: { Origin: link.origin }, maxRedirects: 0,
+  });
+  expect(replay.status()).toBe(303);
+  expect(new URL(replay.headers().location).pathname).toBe('/login');
 }
 
 test('signup email confirms the actual Auth account and retains ordinary customer access', async ({ page }) => {
@@ -116,7 +141,7 @@ test('staff recipient follows real invitation mail, sets a password and explicit
     expect(await executeLeasedJob(worker, jobs[0], staffInvitationHandler(worker))).toBe('completed');
     const link = await verificationLink(email, 'invite');
     expect(link.searchParams.get('staff_invitation_id')).toBe(id);
-    await followVerification(page, link, '/auth/set-password');
+    await followVerification(page, link, '/auth/set-password', 'ar');
     const before = await page.request.get('/api/v1/me');
     expect(before.status()).toBe(200);
     expect((await before.json()).data.roles).toEqual(['student']);
@@ -145,6 +170,18 @@ test('staff recipient follows real invitation mail, sets a password and explicit
     await worker.end();
     await database.end();
   }
+});
+
+test('an ordinary invitation survives email previews and opens password setup without a staff reference', async ({ page }) => {
+  const config = loadLocalSupabase();
+  const admin = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } }).auth.admin;
+  const email = `invite.ui.${randomUUID()}@example.test`;
+  expect((await admin.inviteUserByEmail(email)).error).toBeNull();
+  const link = await verificationLink(email, 'invite');
+  expect(link.searchParams.has('staff_invitation_id')).toBe(false);
+  await followVerification(page, link, '/auth/set-password', 'ar');
+  expect(new URL(page.url()).search).toBe('');
+  await expect(page.getByLabel('Confirm password', { exact: true })).toBeVisible();
 });
 
 test('a learner can reset a password through the emailed recovery link', async ({ page, context }) => {

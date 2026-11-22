@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseServerConfig } from "./server/config";
 
 export async function proxy(request: NextRequest) {
+  // The callback owns its session change. Preview reads must never refresh one.
+  if (request.nextUrl.pathname === "/auth/callback") return NextResponse.next();
   const settings = parseServerConfig(process.env);
   let response = NextResponse.next({ request });
   response.headers.set("Cache-Control", "private, no-store");

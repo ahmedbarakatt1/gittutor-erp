@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { NextRequest } from 'next/server';
 import { expect, test, vi } from 'vitest';
-import { GET } from '../../src/app/auth/callback/route';
+import { GET, HEAD, POST } from '../../src/app/auth/callback/route';
 
 const auth = vi.hoisted(() => ({ exchangeCodeForSession: vi.fn(), verifyOtp: vi.fn() }));
 vi.mock('@/server/supabase', () => ({ requestSupabase: () => ({
@@ -20,6 +20,13 @@ test.each([['recovery', '/auth/set-password'], [null, '/learn']])(
 const invitationId = '9e577815-c4cc-4eb8-b87c-df21cb37a882';
 const tokenHash = 'a'.repeat(64);
 const origin = 'https://gittutor.example';
+
+function confirm(action: string, source = origin, fetchSite = 'same-origin') {
+  return POST(new NextRequest(action, {
+    method: 'POST', body: 'confirm=yes',
+    headers: { origin: source, 'sec-fetch-site': fetchSite, 'content-type': 'application/x-www-form-urlencoded' },
+  }));
+}
 
 test.each([
   ['confirmation', 'email', false, '/learn'],
@@ -41,13 +48,45 @@ test.each([
   expect(new URL(action).pathname).toBe('/auth/callback');
   expect(new URL(action).origin).toBe(origin);
   auth.verifyOtp.mockResolvedValue({ error: null });
-  const result = await GET(new NextRequest(action));
+  auth.verifyOtp.mockClear();
+  const preview = await GET(new NextRequest(action));
+  expect(preview.status).toBe(200);
+  expect(preview.headers.get('cache-control')).toContain('no-store');
+  expect(preview.headers.get('referrer-policy')).toBe('no-referrer');
+  expect(preview.headers.get('content-security-policy')).toContain("default-src 'none'");
+  const document = await preview.text();
+  expect(document).toContain('<form method="post">');
+  expect(document).not.toContain(tokenHash);
+  expect(document).not.toContain(invitationId);
+  expect(await HEAD().text()).toBe('');
+  expect(auth.verifyOtp).not.toHaveBeenCalled();
+  const result = await confirm(action);
   expect(auth.verifyOtp).toHaveBeenLastCalledWith({ token_hash: tokenHash, type });
+  expect(result.status).toBe(303);
   expect(result.headers.get('location')).toBe(origin + destination);
 });
 
 test('an expired email action returns to sign-in without creating a session', async () => {
   auth.verifyOtp.mockResolvedValue({ error: { code: 'otp_expired' } });
-  const result = await GET(new NextRequest(origin + '/auth/callback?type=recovery&token_hash=' + tokenHash));
+  const result = await confirm(origin + '/auth/callback?type=recovery&token_hash=' + tokenHash, 'null');
   expect(result.headers.get('location')).toBe(origin + '/login?reason=verification');
+});
+
+test.each([['https://elsewhere.example', 'cross-site'], ['null', 'cross-site'], [origin, 'same-site'], ['null', '']])(
+  'rejects untrusted form submissions (%s, %s) before verifying a token', async (source, site) => {
+    auth.verifyOtp.mockClear();
+    const result = await confirm(origin + '/auth/callback?type=recovery&token_hash=' + tokenHash, source, site);
+    expect(result.status).toBe(403);
+    expect(auth.verifyOtp).not.toHaveBeenCalled();
+  },
+);
+
+test('an oversized form without a declared size leaves the email token unused', async () => {
+  auth.verifyOtp.mockClear();
+  const request = new NextRequest(origin + '/auth/callback?type=recovery&token_hash=' + tokenHash, {
+    method: 'POST', body: 'confirm=yes' + 'x'.repeat(1024),
+    headers: { origin, 'content-type': 'application/x-www-form-urlencoded' },
+  });
+  expect((await POST(request)).headers.get('location')).toBe(origin + '/login?reason=verification');
+  expect(auth.verifyOtp).not.toHaveBeenCalled();
 });
