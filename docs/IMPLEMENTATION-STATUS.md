@@ -1,5 +1,13 @@
 # Implementation status
 
+## Independent code review and testing workbook (22 November 2026)
+
+An independent agent reviewed application revision `2f7ad48`. The [review report](../output/review/Git-Tutor-Code-Review.pdf) covers three high-priority issues in payment review versioning, rebooking and worker leases, plus scanner recovery, Arabic amount entry and the campaign CI expectation. The [testing workbook](../output/review/Git-Tutor-Testing.xlsx) contains six finding-specific retests, fifteen user journeys and an index of all 147 acceptance IDs. Each new retest starts unexecuted.
+
+- Local `pnpm typecheck`, `pnpm test:unit` (566 tests) and `python tools/verify-pack.py` passed. Focused local checks confirmed the Arabic amount parser rejection and the worker's no-dispatch behavior for a stubbed reclaimed job with an unknown prior outcome.
+- [CI run 44967320943](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44967320943) passed 318 integration tests. `pnpm test:e2e` recorded 190 passes, two failures and two skips. Both failures expected a signed-in learner to land on the sign-in page after access denial. The actual destination was the learner dashboard. CI skipped its final database verification and build.
+- The PDF was rendered and reopened. The workbook was reopened and checked for the full catalogue, all 21 retests, its status dropdown and summary counts. This review produced handoff materials only.
+
 ## Dashboard navigation and session continuity (22 November 2026)
 
 Application revision `636948188` adds an English and Arabic Back link to the shared navigation bar. It uses same-site browsing history when available and the parent section on direct visits. Portal logos return to the current workspace. Public headers resolve My dashboard from the verified account, and opening sign-in with a valid session resumes the allowed destination. Password setup and email verification remain separate entry points.
