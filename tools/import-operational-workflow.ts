@@ -27,7 +27,7 @@ export type OperationalPreviewManifest = {
   state: 'preparing' | 'canonical_ready' | 'ready'; actors: Record<string, Actor>; steps: Record<string, Step>;
   batchId?: string; subjectIds: string[]; tutorId?: string; learnerId?: string; pricingId?: string; privateOfferId?: string;
   receivingId?: string; receivingVersionId?: string; personal?: Slot; verified?: Slot;
-  practiceSourceRow: number; historicalRecordsAreUnverified: true; guardianConsentImported: false;
+  practiceSourceRow?: number; historicalRecordsAreUnverified: true; guardianConsentImported: false;
   termsVersion?: 2; supersededPersonal?: Slot;
 };
 type Config = HostedOperationalTarget & { publishable_key: string; secret_key: string; secret_encryption_key: string };
@@ -40,10 +40,14 @@ type ApiClient = ReturnType<typeof createPreviewClient>;
 export async function writeOperationalHandoff(manifest: OperationalPreviewManifest, folder = resolve('.local/operational-preview')) {
   const base = new URL(process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:3000');
   assert(['http:', 'https:'].includes(base.protocol) && !base.username && !base.password && !base.search && !base.hash && base.pathname === '/', 'PREVIEW_ORIGIN_INVALID');
-  const actors = ['owner', 'student:5', 'tutor:5', 'service'].map(key => { const actor = manifest.actors[key]; return `| ${key} | ${actor.email} | ${actor.password} |`; }).join('\n');
+  const profiles = Object.entries(manifest.actors);
+  const student = profiles.find(([label, actor]) => label.startsWith('student:') && (!manifest.learnerId || actor.learnerId === manifest.learnerId));
+  const tutor = profiles.find(([label, actor]) => label.startsWith('tutor:') && (!manifest.tutorId || actor.tutorId === manifest.tutorId));
+  const keys = ['owner', student?.[0], tutor?.[0], 'service'].filter((key): key is string => key !== undefined);
+  const actors = keys.map(key => { const actor = manifest.actors[key]; return `| ${key} | ${actor.email} | ${actor.password} |`; }).join('\n');
   const slot = manifest.personal;
   const practice = slot ? `\n## Untouched practice booking\n\n[Book this session](${base.origin}/learn/bookings?offer=${slot.offerId}&occurrence=${slot.occurrenceId})\n\nUTC start: ${slot.start}; end: ${slot.end}. The website displays Africa/Cairo time.\n\nUpload [practice-receipt.pdf](./practice-receipt.pdf). Reference: ${slot.externalId}.\n\nThe receipt is generated fake evidence; the independently prepared transfer remains pending until you explicitly verify it.\n\n[Review independent transfer](${base.origin}/service/payments/transfers/${slot.transferId})\n\nSettlement evidence: ${slot.settlementFileId}\n\nPayer ownership evidence: ${slot.ownershipFileId}\n\nCollection account version: ${manifest.receivingVersionId}\n\n[Tutor workspace](${base.origin}/tutor/schedule?occurrence=${slot.occurrenceId}) · [Admin workspace](${base.origin}/admin/schedule?occurrence=${slot.occurrenceId})\n\nA second practice session is reserved for verification. Neither practice session changes the historical workbook date or asserts real delivery, settlement, earnings or payout.\n` : '';
-  await writeFile(resolve(folder, 'START-HERE.md'), `# Private Git Tutor operational preview\n\n[Sign in](${base.origin}/login). These aliases access real imported names and private workbook records. Keep this file private.\n\n| Role/source profile | Email | Password |\n|---|---|---|\n${actors}\n\nAll role credentials and imported profile IDs are in [manifest.json](./manifest.json). Source contacts are unverified; login aliases do not contact real people. No guardian consent or guardian relationship has been inferred.\n\n[Student bookings](${base.origin}/learn/bookings) · [Tutor schedule](${base.origin}/tutor/schedule) · [Payment service](${base.origin}/service/payments) · [Customer register](${base.origin}/admin/customers) · [Imported source records](${base.origin}/admin/workflow)\n\nHistorical workbook values remain reported, unverified observations. Exact full-name matches are linked; ambiguous/first-name records require review. New preview commercial policies are explicitly approved for development only and are not live commercial approval.\n${practice}\nImport source SHA-256: ${manifest.sourceHash}\n\nImport batch: ${manifest.batchId}\n\nPreparation status: ${manifest.state}. Browser verification is recorded separately by the verification operator.\n`, { mode: 0o600 });
+  await writeFile(resolve(folder, 'START-HERE.md'), `# Private Git Tutor operational preview\n\n[Sign in](${base.origin}/login). These aliases access real imported names and private workbook records. Keep this file private.\n\n| Role/source profile | Email | Password |\n|---|---|---|\n${actors}\n\nAll role credentials and imported profile IDs are in [manifest.json](./manifest.json). Source contacts are unverified; login aliases do not contact real people. No guardian consent or guardian relationship has been inferred.\n\n[Student bookings](${base.origin}/learn/bookings) · [Tutor schedule](${base.origin}/tutor/schedule) · [Payment service](${base.origin}/service/payments) · [Customer register](${base.origin}/admin/customers) · [Imported source records](${base.origin}/admin/workflow)\n\nHistorical workbook values remain reported, unverified observations. Exact full-name matches are linked; ambiguous/first-name records require review.${manifest.state === 'ready' ? ' Practice commercial policies are approved for this development preview only.' : ''}\n${practice}\nImport source SHA-256: ${manifest.sourceHash}\n\nImport batch: ${manifest.batchId}\n\nPreparation status: ${manifest.state}. Browser verification is recorded separately by the verification operator.\n`, { mode: 0o600 });
 }
 
 export async function refreshOperationalCairoHandoff(manifest: OperationalPreviewManifest, folder = resolve('.local/operational-preview')) {
@@ -68,7 +72,8 @@ export async function importOperationalWorkflow(preparePractice = true, hostedPr
   }
   const snapshot = workflowSnapshotSchema.parse(JSON.parse(await readFile(resolve('.local/workflow-import/workflow-snapshot.json'), 'utf8')));
   if (hostedPreview) assertHostedOperationalTarget(config, snapshot.source_sha256, process.env.APP_ENV);
-  const mapped = mapSourceEntities(snapshot), terms = practiceSourceTerms(snapshot), content = JSON.stringify(snapshot), contentHash = hash(content);
+  const mapped = mapSourceEntities(snapshot), content = JSON.stringify(snapshot), contentHash = hash(content);
+  const requestedPractice = preparePractice ? practiceSourceTerms(snapshot) : null;
   const database = new Client({ connectionString: config.database_url }); await database.connect();
   const worker = new Pool({ connectionString: config.worker_database_url });
   const auth = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -90,7 +95,7 @@ export async function importOperationalWorkflow(preparePractice = true, hostedPr
       const actor = (label: string, displayName: string): Actor => ({ id: stablePreviewId(snapshot.source_sha256, `account:${label}`), email: `operational-${label.replace(/:/g, '-')}-${snapshot.source_sha256.slice(0, 8)}@preview.gittutor.invalid`, password: randomBytes(24).toString('base64url'), displayName });
       const owner = actor('owner', 'Git Tutor private records owner');
       if (previousOwner) Object.assign(owner, { email: previousOwner.email, password: previousOwner.password });
-      manifest = { marker: operationalPreviewMarker, sourceHash: snapshot.source_sha256, contentHash, createdAt, effectiveAt: new Date(Date.parse(createdAt) - 60000).toISOString(), state: 'preparing', actors: { owner, service: actor('service', 'Git Tutor preview customer service') }, steps: {}, subjectIds: mapped.courses.map(item => item.id), practiceSourceRow: terms.sourceRow, historicalRecordsAreUnverified: true, guardianConsentImported: false };
+      manifest = { marker: operationalPreviewMarker, sourceHash: snapshot.source_sha256, contentHash, createdAt, effectiveAt: new Date(Date.parse(createdAt) - 60000).toISOString(), state: 'preparing', actors: { owner, service: actor('service', 'Git Tutor preview customer service') }, steps: {}, subjectIds: mapped.courses.map(item => item.id), historicalRecordsAreUnverified: true, guardianConsentImported: false };
       for (const entity of [...mapped.students, ...mapped.tutors]) manifest.actors[entity.label] = actor(entity.label, entity.name);
       await save(manifest);
     }
@@ -136,7 +141,7 @@ export async function importOperationalWorkflow(preparePractice = true, hostedPr
       const result = await client.auth.signInWithPassword({ email: actor.email, password: actor.password });
       if (result.error) fail('PREVIEW_LOGIN_FAILED'); clients.push(client); return client;
     }
-    const admin = await login(manifest.actors.owner), service = await login(manifest.actors.service);
+    const admin = await login(manifest.actors.owner);
     async function step(label: string, name: string, args: Json, client = admin): Promise<Json> {
       const key = `operational-v1:${snapshot.source_sha256.slice(0, 16)}:${label}`;
       const request = { ...args, p_idempotency_key: key }, requestHash = hash(JSON.stringify(request)), previous = manifest.steps[label];
@@ -175,14 +180,18 @@ export async function importOperationalWorkflow(preparePractice = true, hostedPr
       const draft = (await database.query('select draft_profile_version_id,approved_profile_version_id from app_private.tutors where id=$1', [profile.id])).rows[0];
       await step(`${entity.label}:approve`, 'approve_tutor_profile', { p_tutor_id: profile.id, p_profile_version_id: draft.draft_profile_version_id ?? draft.approved_profile_version_id, p_decision: 'approved', p_reason: 'Preview-only approval of exact workbook teaching associations; not verification of external identity or credentials', p_expected_version: updated.version });
     }
+    // The source mapping migration owns table shape and safe role projections.
+    await linkSourceRows(database, manifest, mapped, snapshot);
+    manifest.state = manifest.state === 'ready' ? 'ready' : 'canonical_ready'; await save(manifest);
+    if (!requestedPractice) { await writeOperationalHandoff(manifest, folder); console.log('Canonical operational import ready; private handoff saved.'); return; }
+
+    const terms = requestedPractice;
+    manifest.practiceSourceRow = terms.sourceRow;
     manifest.learnerId = manifest.actors[`student:${terms.studentRow}`].learnerId;
     manifest.tutorId = manifest.actors[`tutor:${terms.tutorRow}`].tutorId;
     assert(manifest.learnerId && manifest.tutorId, 'PRACTICE_CANONICAL_IDENTITIES_REQUIRED');
     await save(manifest);
-    // The source mapping migration owns table shape and safe role projections.
-    await linkSourceRows(database, manifest, mapped, snapshot);
-    manifest.state = manifest.state === 'ready' ? 'ready' : 'canonical_ready'; await save(manifest);
-    if (!preparePractice) { await writeOperationalHandoff(manifest, folder); console.log('Canonical operational import ready; private handoff saved.'); return; }
+    const service = await login(manifest.actors.service);
 
     const policySource = JSON.parse(await readFile(resolve('contracts/policy-settings.json'), 'utf8')) as { development_examples: { fixture_id: string; policy?: Json }[] };
     const groupSource = JSON.parse(await readFile(resolve('contracts/pricing-policy.json'), 'utf8')) as { customer_pricing: { group_tiers: unknown[] }; internal_compensation: { group_fee_bands: unknown[] } };
