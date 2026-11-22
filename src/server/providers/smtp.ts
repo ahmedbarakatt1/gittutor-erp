@@ -39,7 +39,7 @@ export function createSmtpEmailAdapter(config: SmtpConfig, sender: SmtpSender = 
       const messageId = `<git-tutor.${attempt_id}@${config.from.split('@')[1]}>`;
       try {
         const sent = await sender.sendMail({
-          from: config.from, to, subject, text, html, messageId,
+          from: { name: 'Git Tutor', address: config.from }, to, subject, text, html, messageId,
           envelope: { from: config.from, to: [to] }, disableFileAccess: true, disableUrlAccess: true,
           ...(config.headers && { headers: config.headers(attempt_id) }),
         });

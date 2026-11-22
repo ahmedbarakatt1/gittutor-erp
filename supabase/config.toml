@@ -250,7 +250,7 @@ otp_expiry = 3600
 # sender_name = "Admin"
 
 [auth.email.template.invite]
-subject = "Your Git Tutor team invitation"
+subject = "Your Git Tutor invitation"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.recovery]

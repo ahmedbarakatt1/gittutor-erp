@@ -20,8 +20,40 @@ export function createLocalEmailAdapter(directory:string,isolated:boolean,scenar
  },async reconcile(id){const existing=await read(id);return existing?emailObservationSchema.parse(existing.result):result('absent');}};
 }
 /** SDK retries are disabled: an ambiguous send must be reconciled through signed delivery events. */
-export function createSesEmailAdapter(config:{region:string;from:string;configuration_set:string|null},client=new SESv2Client({region:config.region,maxAttempts:1})):EmailAdapter{
- return {async send(message){try{const response=await client.send(new SendEmailCommand({FromEmailAddress:config.from,Destination:{ToAddresses:[message.to]},Content:{Simple:{Subject:{Data:message.subject,Charset:'UTF-8'},Body:{Text:{Data:message.text,Charset:'UTF-8'},Html:{Data:message.html,Charset:'UTF-8'}}}},EmailTags:[{Name:'git_tutor_attempt',Value:message.attempt_id}],...(config.configuration_set?{ConfigurationSetName:config.configuration_set}:{})}),{abortSignal:AbortSignal.timeout(10000)});return response.MessageId?result('sent',response.MessageId):result('unknown',null,'EMAIL_OUTCOME_UNKNOWN');}catch(error){const name=error instanceof Error?error.name:'';return ['MessageRejected','BadRequestException','MailFromDomainNotVerifiedException','AccountSuspendedException','SendingPausedException','TooManyRequestsException'].includes(name)?result('failed',null,name==='TooManyRequestsException'?'EMAIL_TEMPORARY_REJECTION':'EMAIL_REJECTED'):result('unknown',null,'EMAIL_OUTCOME_UNKNOWN');}},async reconcile(){return result('unknown',null,'EMAIL_CALLBACK_REQUIRED');}};
+export function createSesEmailAdapter(
+  config: { region: string; from: string; configuration_set: string | null },
+  client = new SESv2Client({ region: config.region, maxAttempts: 1 }),
+): EmailAdapter {
+  const from = z.email().safeParse(config.from).success ? `Git Tutor <${config.from}>` : config.from;
+  return {
+    async send(message) {
+      const command = new SendEmailCommand({
+        FromEmailAddress: from,
+        Destination: { ToAddresses: [message.to] },
+        Content: { Simple: {
+          Subject: { Data: message.subject, Charset: 'UTF-8' },
+          Body: {
+            Text: { Data: message.text, Charset: 'UTF-8' },
+            Html: { Data: message.html, Charset: 'UTF-8' },
+          },
+        } },
+        EmailTags: [{ Name: 'git_tutor_attempt', Value: message.attempt_id }],
+        ...(config.configuration_set && { ConfigurationSetName: config.configuration_set }),
+      });
+      try {
+        const response = await client.send(command, { abortSignal: AbortSignal.timeout(10000) });
+        if (response.MessageId) return result('sent', response.MessageId);
+      } catch (error) {
+        const name = error instanceof Error ? error.name : '';
+        if (name === 'TooManyRequestsException') return result('failed', null, 'EMAIL_TEMPORARY_REJECTION');
+        if (['MessageRejected', 'BadRequestException', 'MailFromDomainNotVerifiedException', 'AccountSuspendedException', 'SendingPausedException'].includes(name)) {
+          return result('failed', null, 'EMAIL_REJECTED');
+        }
+      }
+      return result('unknown', null, 'EMAIL_OUTCOME_UNKNOWN');
+    },
+    async reconcile() { return result('unknown', null, 'EMAIL_CALLBACK_REQUIRED'); },
+  };
 }
 
 const resendReceipt = z.object({ id: z.uuid() });
@@ -41,7 +73,7 @@ export function createResendEmailAdapter(config: { api_key: string; from: string
             'Idempotency-Key': `git-tutor/${attempt_id}`,
           },
           body: JSON.stringify({
-            from: config.from,
+            from: `Git Tutor <${config.from}>`,
             to: [to],
             subject,
             text,

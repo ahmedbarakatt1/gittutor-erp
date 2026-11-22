@@ -33,6 +33,10 @@ describe('Mailjet SMTP',()=>{
   const extra={...message,tutor_fee_minor:12345,internal_notes:'PRIVATE_NOTE',attachments:[{path:'/private/COMPENSATION'}],bcc:'hidden@example.test',headers:{'X-Mailjet-TrackClick':'1','X-Private':'PRIVATE_NOTE'}};
   expect(await adapter.send(extra)).toMatchObject({outcome:'sent',provider_message_id:'<git-tutor.a9c0e8c3-d0cf-456b-bf06-2b3039d76675@gmail.com>',safe_error_code:null});
   expect(envelope).toEqual({from:'sender@gmail.com',to:['learner@example.test']});
+  expect(wire).toMatch(/^From: Git Tutor <sender@gmail\.com>\r?$/im);
+  expect(wire).toMatch(/Content-Type: multipart\/alternative/i);
+  expect(wire).toMatch(/Content-Type: text\/plain; charset=utf-8/i);
+  expect(wire).toMatch(/Content-Type: text\/html; charset=utf-8/i);
   expect(wire).toMatch(/^X-Mailjet-TrackOpen: 0\r?$/im);expect(wire).toMatch(/^X-Mailjet-TrackClick: 0\r?$/im);
   expect(wire).toMatch(/^X-MJ-CustomID: a9c0e8c3-d0cf-456b-bf06-2b3039d76675\r?$/im);
   expect(wire).not.toMatch(/PRIVATE_NOTE|COMPENSATION|12345|hidden@example|\nBcc:|\nCc:|Content-Disposition: attachment/);

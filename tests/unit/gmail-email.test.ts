@@ -12,7 +12,7 @@ describe('Gmail SMTP',()=>{
   const sendMail=vi.fn().mockResolvedValue({accepted:[message.to],rejected:[],messageId:'<server-id@gmail.com>'});
   const adapter=createGmailEmailAdapter(config,{sendMail});
   expect(await adapter.send(message)).toMatchObject({outcome:'sent',provider_message_id:`<git-tutor.${message.attempt_id}@gmail.com>`,safe_error_code:null});
-  expect(sendMail).toHaveBeenCalledExactlyOnceWith({from:config.user,to:message.to,subject:message.subject,text:message.text,html:message.html,messageId:`<git-tutor.${message.attempt_id}@gmail.com>`,envelope:{from:config.user,to:[message.to]},disableFileAccess:true,disableUrlAccess:true});
+  expect(sendMail).toHaveBeenCalledExactlyOnceWith({from:{name:'Git Tutor',address:config.user},to:message.to,subject:message.subject,text:message.text,html:message.html,messageId:`<git-tutor.${message.attempt_id}@gmail.com>`,envelope:{from:config.user,to:[message.to]},disableFileAccess:true,disableUrlAccess:true});
  });
  it.each([[{responseCode:450},'failed','EMAIL_TEMPORARY_REJECTION'],[{responseCode:550},'failed','EMAIL_REJECTED'],[{code:'EAUTH'},'failed','EMAIL_REJECTED'],[{code:'ETIMEDOUT'},'unknown','EMAIL_OUTCOME_UNKNOWN'],[{code:'ECONNRESET'},'unknown','EMAIL_OUTCOME_UNKNOWN']])('keeps safe outcome %j without retry or provider details',async(error,outcome,code)=>{
   const sendMail=vi.fn().mockRejectedValue({...error,message:'private provider/credential diagnostics'});

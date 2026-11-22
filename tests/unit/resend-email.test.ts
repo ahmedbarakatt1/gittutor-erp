@@ -37,7 +37,7 @@ describe('Resend email adapter', () => {
     expect(keys[1]).toBe(keys[0]);
     expect(keys[2]).not.toBe(keys[0]);
     expect(JSON.parse(String(request?.body))).toEqual({
-      from: 'lessons@example.test',
+      from: 'Git Tutor <lessons@example.test>',
       to: ['customer@example.test'],
       subject: 'Your tutoring session',
       text: 'Open your booking in the portal.',
