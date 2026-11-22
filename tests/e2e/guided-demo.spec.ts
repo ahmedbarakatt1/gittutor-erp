@@ -72,7 +72,20 @@ test('guided synthetic booking, real receipt review, confirmation, files and fiv
       const receipt = learner.getByRole('form', { name: 'Submit receipt for review', exact: true });
       await receipt.getByLabel('Amount you transferred (EGP)', { exact: true }).fill('500');
       await receipt.getByLabel('Transfer reference', { exact: true }).fill(slot.externalId);
-      await upload(learner, receipt, '.local/demo/verification-receipt.pdf');
+      // Hold the genuine refreshed evidence list so a fast click after the scan is reproducible.
+      const evidenceUrl = `**/api/v1/charges/${slot.chargeId}/receipt-files`;
+      let releaseEvidence!: () => void;
+      const waitingForEvidence = new Promise<void>(resolve => { releaseEvidence = resolve; });
+      await learner.route(evidenceUrl, async route => { await waitingForEvidence; await route.continue(); });
+      let receiptFileId: string;
+      try {
+        receiptFileId = await upload(learner, receipt, '.local/demo/verification-receipt.pdf');
+        await expect(receipt.getByRole('button', { name: 'Submit receipt for review', exact: true })).toBeDisabled();
+      } finally {
+        releaseEvidence();
+        await learner.unroute(evidenceUrl);
+      }
+      await expect(receipt.getByLabel('Prepared evidence', { exact: true })).toHaveValue(receiptFileId);
       const saved = await submit(learner, receipt, 'receipts', 201);
       slot.receiptId = saved.receipt_id; slot.caseId = saved.case_id; await saveDemo(demo);
     }

@@ -212,7 +212,7 @@ test('overview chart groups reconcile to the visible session rows without counti
   const html = render('overview');
   expect(html).toContain('Session outcomes');
   expect(html).toContain('Session activity');
-  expect(html).toContain('aria-label="Show 2 records for Completed"');
+  expect(html).toContain('aria-description="Show 2 records for Completed"');
   expect(html).not.toContain('NaN');
 });
 

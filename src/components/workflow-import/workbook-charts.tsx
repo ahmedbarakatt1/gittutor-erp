@@ -36,7 +36,7 @@ export function WorkbookCharts({ charts, selected, onSelect, recordsId, compactO
         type: 'button' as const,
         'aria-pressed': selected?.chart === chart.key && selected.group === group.key,
         'aria-controls': recordsId,
-        'aria-label': arabic ? 'عرض السجلات لفئة ' + group.label + ' (' + count(group.ids.length) + ')' : 'Show ' + group.ids.length + (group.ids.length === 1 ? ' record for ' : ' records for ') + group.label,
+        'aria-description': arabic ? 'عرض السجلات لفئة ' + group.label + ' (' + count(group.ids.length) + ')' : 'Show ' + group.ids.length + (group.ids.length === 1 ? ' record for ' : ' records for ') + group.label,
         disabled: group.ids.length === 0,
         onClick: () => onSelect({ chart: chart.key, group: group.key }),
       });

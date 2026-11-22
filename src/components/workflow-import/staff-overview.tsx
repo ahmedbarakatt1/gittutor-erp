@@ -18,8 +18,8 @@ export async function loadStaffOverview(portal: 'admin' | 'service') {
   const firstRequest = queue?.items[0];
   const hint = firstRequest ? <><StaffMessage text="First in queue" /> · {firstRequest.topic}</>
     : <StaffMessage text={queue ? 'No requests in the queue' : 'Queue preview unavailable'} />;
-  const queueAction = <Link className={styles.queueAction} href={`/${portal}/requests`} aria-labelledby="queue-label" aria-describedby="queue-preview">
-    <span id="queue-label"><StaffMessage text="Open request queue" /></span><small id="queue-preview">{hint}</small>
+  const queueAction = <Link className={styles.queueAction} href={`/${portal}/requests`}>
+    <span><StaffMessage text="Open request queue" /></span><small>{hint}</small>
   </Link>;
   return { queueAction, overview: renderDashboardOverview(portal, operations, queueAction) };
 }

@@ -27,18 +27,16 @@ export default async function SubjectsPage() {
     </div>
     <ul className={styles.subjectList}>
       {subjects.map(([slug, detail]) => (
-        <li key={slug}>
-          <Link className={styles.subject} href={`/learn/requests?topic=${encodeURIComponent(catalogCopy.subjectDetails[slug].title)}`}
-            aria-label={copy.subjectExplore(detail.title)} aria-describedby={`${slug}-topics`}>
-            <div className={styles.subjectName}>
-              <h2>{detail.title}</h2>
-              <p className={styles.subjectTopics} id={`${slug}-topics`}>{detail.topics}</p>
-            </div>
-            <p className={styles.subjectDescription}>{detail.description}</p>
-            <svg className={styles.subjectArrow} viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M6 16h20M18 8l8 8-8 8" />
-            </svg>
-          </Link>
+        <li className={styles.subject} key={slug}>
+          <div className={styles.subjectName}>
+            <h2><Link className={styles.subjectLink} href={`/learn/requests?topic=${encodeURIComponent(catalogCopy.subjectDetails[slug].title)}`}
+              aria-describedby={`${slug}-topics ${slug}-description`}>{detail.title}</Link></h2>
+            <p className={styles.subjectTopics} id={`${slug}-topics`}>{detail.topics}</p>
+          </div>
+          <p className={styles.subjectDescription} id={`${slug}-description`}>{detail.description}</p>
+          <svg className={styles.subjectArrow} viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M6 16h20M18 8l8 8-8 8" />
+          </svg>
         </li>
       ))}
     </ul>

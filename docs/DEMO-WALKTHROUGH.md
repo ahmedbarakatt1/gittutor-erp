@@ -73,10 +73,8 @@ The app must be running on port 3000 with the existing local Supabase services. 
 ```powershell
 pnpm exec tsx --env-file=.env.local --conditions=react-server tools/prepare-demo.ts
 $env:DEMO_VERIFY = '1'
-$env:NODE_OPTIONS = '--conditions=react-server'
 pnpm exec playwright test tests/e2e/guided-demo.spec.ts --project=desktop --workers=1 --output=.local/demo/browser-results
 Remove-Item Env:DEMO_VERIFY
-Remove-Item Env:NODE_OPTIONS
 pnpm worker:dev
 ```
 
@@ -86,7 +84,7 @@ Preparation refuses nonlocal targets, nonfake providers and a competing preparat
 
 Use the generated links with the same isolated database that provided the demo records. Rewriting the hostname in a local booking link cannot transfer its account or booking to the hosted workbook preview. For the hosted environment use [its own access instructions](ONLINE-PREVIEW.md).
 
-The optional browser check is excluded from normal suites unless `DEMO_VERIFY=1`. It uses the separate verification session and authenticates all five roles. It does not mock application responses. File scanning and calendar provisioning use the existing strict fake adapters. Once it has passed, inspect its saved result rather than spending another booking. Actual logs and screenshots are in `.local/demo-browser*.log` and `.local/demo/screenshots`; the manifest records the successful run only after every assertion passes.
+Local runs opt in with `DEMO_VERIFY=1`. The release verification workflow prepares a fresh synthetic fixture and runs the desktop walkthrough on its disposable runner. It uses the separate verification session and authenticates all five roles. During receipt upload, the browser holds the prepared-evidence list request to check that submission waits for the authorized selection, then continues the request to the application. File scanning and calendar provisioning use the existing strict fake adapters. Once it has passed, inspect its saved result rather than spending another booking. Actual logs and screenshots are in `.local/demo-browser*.log` and `.local/demo/screenshots`; the manifest records the successful run only after every assertion passes.
 
 Executed 13 November 2026: setup and repeat-preservation check passed; scoped ESLint and whole TypeScript checking passed; the bounded desktop browser journey passed **1/1 in 35.5 seconds** (`.local/demo-browser-fourth.log`). Earlier harness attempts are retained: two stopped at the closed evidence-upload disclosure and one navigated before the review queue loaded. The final run resumed the saved reservation, performed the remaining real actions, and confirmed the personal session still had zero enrollments. No application response was substituted to obtain the passing result.
 

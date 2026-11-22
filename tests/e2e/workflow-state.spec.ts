@@ -71,7 +71,8 @@ test('reported chart drilldowns open their matching source rows and preserve cur
   const current = page.getByLabel('Session status', { exact: true });
   await current.selectOption('completed');
 
-  const complete = history.getByRole('button', { name: 'Show 1 record for Completed', exact: true });
+  const complete = history.getByRole('button', { name: 'Completed 1', exact: true });
+  await expect(complete).toHaveAccessibleDescription('Show 1 record for Completed');
   await complete.focus();
   await complete.press('Enter');
   const row = history.locator('summary').filter({ hasText: 'Synthetic completed lesson' });
@@ -79,7 +80,7 @@ test('reported chart drilldowns open their matching source rows and preserve cur
   await expect(history.getByText('Synthetic planned lesson')).toHaveCount(0);
   await row.click();
   await expect(history.getByText('Synthetic subject', { exact: true })).toBeVisible();
-  await history.getByRole('button', { name: 'Show 1 record for No valid date' }).click();
+  await history.getByRole('button', { name: 'No valid date 1', exact: true }).click();
   await expect(history.getByText('Synthetic undated lesson')).toBeVisible();
   await history.getByRole('button', { name: 'Clear filters' }).click();
   await expect(history.getByText('Synthetic planned lesson')).toBeVisible();

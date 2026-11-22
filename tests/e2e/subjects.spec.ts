@@ -9,7 +9,8 @@ test('subjects are flexible starting points for private requests with the suppli
   ];
   for (const [title] of areas) {
     await expect(main.getByRole('heading', { level: 2, name: title, exact: true })).toBeVisible();
-    const link = main.getByRole('link', { name: `Explore ${title}`, exact: true });
+    const link = main.getByRole('link', { name: title, exact: true });
+    await expect(link).toHaveAccessibleDescription(/\S+/);
     const href = await link.getAttribute('href'); expect(href).toBe(`/learn/requests?topic=${encodeURIComponent(title)}`);
   }
   await expect(main.getByRole('heading', { name: 'Calculus', exact: true })).toHaveCount(0);
@@ -24,8 +25,8 @@ test('subjects are flexible starting points for private requests with the suppli
   await expect(footer.getByRole('link', { name: /Call us/ })).toHaveAttribute('href', 'tel:+201508823452');
   await expect(footer.getByRole('link', { name: 'Instagram', exact: true })).toHaveAttribute('href', 'https://www.instagram.com/gittutor/');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await main.getByRole('link', { name: 'Explore Computer Science', exact: true }).focus();
-  expect(await page.evaluate(() => getComputedStyle(document.activeElement!).outlineStyle)).toBe('solid');
+  await main.getByRole('link', { name: 'Computer Science', exact: true }).focus();
+  expect(await page.evaluate(() => getComputedStyle(document.activeElement!, '::after').outlineStyle)).toBe('solid');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/login\?return_to=/);
   expect(new URL(page.url()).searchParams.get('return_to')).toBe('/learn/requests?topic=Computer+Science');

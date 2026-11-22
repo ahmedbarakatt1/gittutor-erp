@@ -102,7 +102,24 @@ export function EvidenceSelect({ action, targetId, chargeId, value, onChange, na
 
   const path = chargeId ? `charges/${chargeId}/receipt-files` : action ? `payment-evidence?action=${action}${targetId ? `&target_id=${targetId}` : ''}` : null;
   const records = usePaymentList<SafeEvidence>(path);
-  return <div><EvidenceUpload action={action || 'submit_receipt'} parentId={chargeId || targetId || null} onReady={id => { records.reload(); onChange(id); }} /><Select name={name} label={label} value={records.items?.some(row => row.file_id === value) ? value : ''} onChange={onChange}><option value="">{copy.choose}</option>{records.items?.map(row => <option key={row.file_id} value={row.file_id}>{row.detected_mime} · {new Date(row.created_at).toLocaleDateString(uiLanguage === 'ar' ? 'ar-EG' : "en-GB", { timeZone: 'Africa/Cairo' })} · {row.byte_size} B · {row.file_id.slice(0, 8)}</option>)}</Select><PaymentReadState pending={!records.items} {...records} />{records.items?.length === 0 && <p className={styles.empty}>{fileCopy.empty}</p>}{records.items?.find(row => row.file_id === value)?.source_provenance === 'synthetic_development_metadata_no_bytes' && <p className={styles.meta}>{copy.evidenceDevelopment}</p>}</div>;
+  const pendingUpload = useRef<{ path: string | null; id: string } | null>(null);
+  useEffect(() => {
+    const pending = pendingUpload.current;
+    if (pending?.path === path && records.items?.some(row => row.file_id === pending.id)) {
+      pendingUpload.current = null;
+      onChange(pending.id);
+    }
+  }, [path, records.items, onChange]);
+  function refreshEvidence(id: string) {
+    pendingUpload.current = { path, id };
+    onChange('');
+    records.reload();
+  }
+  function chooseEvidence(id: string) {
+    pendingUpload.current = null;
+    onChange(id);
+  }
+  return <div><EvidenceUpload action={action || 'submit_receipt'} parentId={chargeId || targetId || null} onReady={refreshEvidence} /><Select name={name} label={label} value={records.items?.some(row => row.file_id === value) ? value : ''} onChange={chooseEvidence}><option value="">{copy.choose}</option>{records.items?.map(row => <option key={row.file_id} value={row.file_id}>{row.detected_mime} · {new Date(row.created_at).toLocaleDateString(uiLanguage === 'ar' ? 'ar-EG' : "en-GB", { timeZone: 'Africa/Cairo' })} · {row.byte_size} B · {row.file_id.slice(0, 8)}</option>)}</Select><PaymentReadState pending={!records.items} {...records} />{records.items?.length === 0 && <p className={styles.empty}>{fileCopy.empty}</p>}{records.items?.find(row => row.file_id === value)?.source_provenance === 'synthetic_development_metadata_no_bytes' && <p className={styles.meta}>{copy.evidenceDevelopment}</p>}</div>;
 }
 export function EvidenceMetadata({ evidence }: { evidence: SafeEvidence }) {
   const uiLanguage = useSiteLanguage();
