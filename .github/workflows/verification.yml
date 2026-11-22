@@ -39,11 +39,19 @@ jobs:
       - run: pnpm exec tsx tools/supabase-local.ts migrate
       - run: pnpm exec tsx tools/supabase-local.ts seed
       - run: pnpm db:verify
+      - name: Restore a synthetic unknown payout and its private evidence
+        run: pnpm test:recovery:payout
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:unit
       - run: pnpm test:integration
-      - run: pnpm test:e2e
+      - run: pnpm test:e2e --grep-invert 'guided synthetic booking'
+      - name: Verify the five-role guided booking on fresh synthetic fixtures
+        env:
+          DEMO_VERIFY: '1'
+        run: |
+          pnpm exec tsx --env-file=.env.local --conditions=react-server tools/prepare-demo.ts
+          pnpm exec playwright test tests/e2e/guided-demo.spec.ts --project=desktop --workers=1
       - run: pnpm db:verify
       - run: pnpm build
 

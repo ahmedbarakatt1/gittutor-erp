@@ -43,20 +43,26 @@ const requested = new Promise(resolve => {
 });
 const scannerEnv = { PATH: process.env.PATH, HOME: '/tmp', TZ: 'UTC' };
 let clamd, updates, worker;
-try {
+async function waitForScanner(deadline, allowStale) {
+  do {
+    const observation = await scan(clean);
+    if (observation.outcome === 'clean' || (allowStale && observation.safe_error_code === 'SCANNER_SIGNATURES_STALE')) {
+      return { name: 'ready', observation };
+    }
+    await delay(2000, null, { signal: stopSignal.signal });
+  } while (Date.now() < deadline);
+  throw new Error('SCANNER_READINESS_TIMEOUT');
+}
+async function run() {
+  const deadline = Date.now() + 300000;
   clamd = start('clamd', ['--config-file=/etc/clamav/clamd.conf'], 'clamav', scannerEnv);
+  // FreshClam must be able to notify a listening daemon when it installs its first update.
+  const listening = await Promise.race([clamd.exited, requested, waitForScanner(deadline, true)]);
+  if (listening.name === 'shutdown') return;
+  if (listening.name !== 'ready') throw new Error('PRIVATE_SCANNER_STARTUP_FAILED_' + listening.name);
   updates = start('freshclam', ['--daemon', '--config-file=/etc/clamav/freshclam.conf'], 'clamav', scannerEnv);
   const serviceExit = Promise.race([clamd.exited, updates.exited, requested]);
-  async function ready() {
-    const deadline = Date.now() + 300000;
-    do {
-      const observation = await scan(clean);
-      if (observation.outcome === 'clean') return { name: 'ready', observation };
-      await delay(2000, null, { signal: stopSignal.signal });
-    } while (Date.now() < deadline);
-    throw new Error('SCANNER_READINESS_TIMEOUT');
-  }
-  const first = await Promise.race([serviceExit, ready()]);
+  const first = await Promise.race([serviceExit, waitForScanner(deadline, false)]);
   if (first.name === 'ready') {
     // Validate actual kernel listeners. ClamD has no authentication of its own.
     const clamdSockets = ['/proc/net/tcp', '/proc/net/tcp6'].flatMap(path => {
@@ -66,6 +72,10 @@ try {
     assert.deepEqual(clamdSockets.map(fields => fields[1]), ['0100007F:0CEE'], 'CLAMD_REQUIRES_ONE_LOOPBACK_LISTENER');
     log('private_scanner_ready', { engine: first.observation.engine_version, signatures: first.observation.signature_version });
     if (smoke) {
+      const maximumSizePdf = Buffer.alloc(25 * 1024 * 1024, 0x20);
+      maximumSizePdf.write('%PDF-1.4\n% Synthetic maximum-size scan\n');
+      maximumSizePdf.write('%%EOF\n', maximumSizePdf.length - 6);
+      assert.equal((await scan(maximumSizePdf)).outcome, 'clean', 'MAXIMUM_SIZE_SCAN_FAILED');
       // Inert standard EICAR anti-malware test pattern, generated only for this local check.
       const pattern = Buffer.from('X5O!P%@AP[4\\PZX54(P^)7CC)7}$' + 'EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
       assert.equal((await scan(pattern)).outcome, 'infected'); log('private_scanner_self_test_passed');
@@ -76,7 +86,8 @@ try {
       if (result.name !== 'shutdown') throw new Error('PRIVATE_SCANNER_PROCESS_EXITED_' + result.name);
     }
   } else if (first.name !== 'shutdown') throw new Error('PRIVATE_SCANNER_STARTUP_FAILED_' + first.name);
-} finally {
+}
+try { await run(); } finally {
   stopSignal.abort();
   await stop(worker, 95000);
   await Promise.all([stop(updates, 12000), stop(clamd, 12000)]);

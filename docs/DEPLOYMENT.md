@@ -8,6 +8,8 @@ Drain the previous worker revision, apply `20261122010100_worker_dispatch_tracki
 
 Each updated worker leases one job at a time. If it stops before committing the send checkpoint, a successor can start the untouched job. A committed checkpoint means a send may have reached the provider. Recovery consults the provider or retains the job for reconciliation. Existing in-flight leases without checkpoint history receive the same conservative treatment.
 
+The combined scanner image starts ClamD first and waits for its private listener before starting FreshClam. FreshClam notifies that listener when a signed database update finishes. Only a clean scan using sufficiently fresh definitions admits the job worker. The image rehearsal scans a maximum-size 25 MiB synthetic file and the standard harmless antivirus test pattern.
+
 ## Vercel testing environment
 
 The selected [gittutor-erp project](https://vercel.com/gittutor2-2821/gittutor-erp) is `prj_IVsk4r5XCIBXXP0HMcr27IIgTtmg` under the newly authenticated `gittutor2-2821` team, `team_pXDCumF5MnW3q30r2TXYm9BZ`. On15November, deployment `dpl_CpvZkQ9YoCEiCeUrThmuoxQwps48` became READY at [the stable hosted preview](https://gittutor-erp-rho.vercel.app), with one ready Frankfurt worker. Next.js uses Node24.x, pinned frozen pnpm installation and Corepack. The pilot is deployed explicitly. The later bounded Calendar pilot uses organizer consent for its nominated occurrence. The earlier account's project and both local databases remain unchanged. The owner requested keeping Hobby; no paid upgrade occurred.
