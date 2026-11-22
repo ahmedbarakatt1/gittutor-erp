@@ -1,5 +1,15 @@
 # Implementation status
 
+## Dashboard navigation and session continuity (22 November 2026)
+
+Application revision `636948188` adds an English and Arabic Back link to the shared navigation bar. It uses same-site browsing history when available and the parent section on direct visits. Portal logos return to the current workspace. Public headers resolve My dashboard from the verified account, and opening sign-in with a valid session resumes the allowed destination. Password setup and email verification remain separate entry points.
+
+- Reproduced on the testing site with `node .local/nov22-navigation-before.cjs`. The former admin logo opened the public homepage. The account endpoint still returned 200, but the Account link displayed a sign-in form.
+- `pnpm build`, `pnpm lint` and `pnpm test:unit` passed. The unit suite ran 566 tests. The regression cases in `tests/e2e/role-access.spec.ts` cover all four portals on both configured viewports.
+- `pnpm typecheck` and `python tools/verify-pack.py` passed. Docker Desktop's Linux engine was offline during local verification. Signed-in browser execution used the hosted sites.
+- `node .local/nov22-navigation-review.cjs https://gittutor-erp-rho.vercel.app` passed for administrator, customer service, learner and tutor on the testing deployment. Each retained the same account through direct-entry Back, workspace logo, Subjects → My dashboard → Back, and a direct visit to sign-in. Arabic return navigation worked in the admin browser. An anonymous visit to Administration still required sign-in. The Playwright CLI session `navigation-public` also confirmed the visible Back control at 390 × 844 on Support.
+- Both Vercel projects promoted revision `636948188`. On the protected production domain, `& .local/nov22-navigation-prod.ps1` passed with the existing synthetic learner at a mobile viewport. Back, the logo, the public Support account link and a direct visit to sign-in retained the same identity. Explicit Sign out returned to sign-in and the private account endpoint then returned HTTP 401.
+
 ## Production guardian invitation test (22 November 2026)
 
 The synthetic account “Guardian Flow Test Learner” issued a single-use invitation to the designated tester through the learner consent flow. Its five permissions cover profile, bookings, payments, materials and notifications for that learner. The invitation expires at 02:15 Cairo time on 23 November 2026.
