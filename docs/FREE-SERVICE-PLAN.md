@@ -1,5 +1,43 @@
 # Hosting decision and earlier free-service proposal
 
+## Current worker-only deployment, 22 November 2026
+
+Keep the website on Vercel and the database, authentication and private files on Supabase. Run the background worker and ClamAV together on one Oracle Always Free Ampere A1 VM in the tenancy's home region. The scanner listens on container loopback and the worker initiates outbound connections. This deployment needs neither a public application port nor a new domain. The previous full-site migration proposal below is historical.
+
+Use a Free Tier tenancy, `VM.Standard.A1.Flex`, **2 OCPUs, 8 GB RAM and one 50 GB boot volume**, within the tenancy's **remaining** Always Free allowance. At 744 hours these settings require 1,488 OCPU-hours and 5,952 GB-hours. Check both compute dimensions, storage and existing network use together before creating anything. Keep the account on Free Tier and the cost estimate at zero. Capacity is regional and Oracle can reclaim idle instances. A missing worker heartbeat or a pending private upload after a VM interruption requires operator attention. [Oracle allowances and reclamation](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) · [Signup and verification](https://www.oracle.com/cloud/free/faq/)
+
+### Operator procedure
+
+1. Check home-region capacity and remaining allowance. Select an Always Free eligible ARM Linux image. Restrict SSH to the operator, allow outbound HTTPS, the production database connection and required provider endpoints, and keep the Docker daemon and ClamAV inaccessible from outside. Enable Docker to start at boot. Use the reviewed Git revision on the host.
+2. From the repository root build the ARM64 image and record its ID. The image shares the Vercel scanner supervisor and its maximum-size, freshness and quarantine tests. Its architecture-specific runtime and engine are pinned. A separate pinned image supplies signed signature data only.
+
+   ```sh
+   docker buildx build --platform linux/arm64 --load -f deploy/arm-worker/Dockerfile -t git-tutor-background:reviewed .
+   export GIT_TUTOR_WORKER_IMAGE="$(docker image inspect -f '{{.Id}}' git-tutor-background:reviewed)"
+   docker image inspect -f '{{.Os}}/{{.Architecture}} {{.Id}}' "$GIT_TUTOR_WORKER_IMAGE"
+   ```
+
+3. On the fresh VM, run the scanner check with the same memory and privilege limits as the service. This check needs no site secrets or customer files. Use the named volume to retain fresh signatures for the worker. Run it before starting the service, with exclusive access to that volume.
+
+   ```sh
+   docker run --rm --init --platform linux/arm64 --read-only --memory 6g --memory-swap 6g \
+     --cap-drop ALL --cap-add SETUID --cap-add SETGID --cap-add KILL --security-opt no-new-privileges \
+     --tmpfs /tmp:mode=1777,size=384m --mount type=volume,src=git-tutor-background_signatures,dst=/var/lib/clamav \
+     "$GIT_TUTOR_WORKER_IMAGE" --verify-scanner
+   ```
+
+4. Place the production worker settings in an operator-controlled file with mode 0600 outside the checkout. The worker requires the restricted worker database role and the production provider settings. Confirm the production Vercel worker is stopped. Start the VM worker in its default `files.scan` mode and inspect its heartbeat. The first phase processes any pending file scans. All other job categories stay queued.
+
+   ```sh
+   export GIT_TUTOR_ENV_FILE=/etc/git-tutor/worker.env
+   export GIT_TUTOR_WORKER_PURPOSE=files.scan
+   docker compose -f deploy/arm-worker/compose.yml config --quiet
+   docker compose -f deploy/arm-worker/compose.yml up -d
+   docker compose -f deploy/arm-worker/compose.yml ps
+   ```
+
+5. Use the synthetic production test account for a clean upload and a harmless antivirus test fixture. Check quarantine, authorized retrieval of the clean file, heartbeat after restart, and pending work recovery. Review the live notification and finance queues before enabling general dispatch. After that review, set `GIT_TUTOR_WORKER_PURPOSE=''` explicitly and rerun the same Compose startup. To pause jobs, use `docker compose -f deploy/arm-worker/compose.yml stop`. Preserve the definitions volume and database leases for recovery.
+
 On 19 November the owner selected the existing Vercel team for production and staff replies on the existing WhatsApp number. The clean Supabase project, Mailjet and Google organizer are retained. The production worker and scanner are prepared separately from the testing worker. The current selection, configuration and steps for activation are documented in [production inputs](PRODUCTION-INPUTS.md) and [deployment](DEPLOYMENT.md).
 
 ## Earlier Oracle proposal, deferred 15 November

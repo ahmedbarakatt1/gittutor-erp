@@ -1,5 +1,13 @@
 # Implementation status
 
+## Free private worker rollout (22 November 2026)
+
+Prepared a worker-only Oracle Always Free A1 deployment alongside the existing Vercel website and Supabase database. The [operator procedure](FREE-SERVICE-PLAN.md) uses two OCPUs, 8 GB RAM and one 50 GB boot volume, subject to remaining home-region capacity. The encrypted private uploads stay in the existing storage system. The scanner and worker share a private loopback connection. By default only file scans may be claimed. Production queue activation and a hosted test are pending Oracle account access.
+
+- Docker registry inspection and an ARM64 cross-build succeeded. The image runs Node 24.22.1 and ClamAV 1.5.5. With the read-only filesystem and reduced privileges, the original root heartbeat probe returned 1 when the worker's private heartbeat was fresh. Running the probe as the worker returned 0. The ARM image now uses that identity for health checks.
+- `docker compose -f deploy/arm-worker/compose.yml config --format json` with placeholder settings verified one service, a six-GiB limit, read-only root and no published ports. No production credentials were used. The Windows Docker engine disconnected during the emulated scan before a verdict. Native ARM CI exercises the clean, maximum-size and quarantine checks, actual queue polling and restart.
+- `pnpm exec vitest run tests/integration/worker-recovery.test.ts tests/integration/manual-whatsapp-queue.test.ts` initially failed because Windows reserved loopback port 55432. On the marked disposable database, the existing loopback bridge for 45832 and `node --import tsx tools/db-migrate.ts` applied the two missing native baseline migrations. Both files and all 11 checks then passed. Production was outside this run.
+
 ## Production QA and email release (22 November 2026)
 
 The [production QA report](evidence/production-qa-20261122.md) records the five-role booking test, direct comparisons of customer and tutor views on one paid session, the actual workbook writer replay, grade publication and 112 bilingual mobile page visits. The [Auth email evidence](evidence/auth-email-design-20261122.md) covers ordinary invitations, staff invitations, confirmation and recovery. The previous six-finding release below remains the historical baseline.
