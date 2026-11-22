@@ -1,8 +1,9 @@
+import { publicWorkspaceHome } from '@/server/auth';
 import { LanguageSwitch } from '@/components/site-language';
 import { BrandLogo } from '@/components/brand-logo';
 import Link from 'next/link';
 import { AuthForm } from './auth-form';
-import { publicAuth } from '@/locales/ar-public';
+import { dashboardLabel, publicAuth } from '@/locales/ar-public';
 import { getSiteLanguage } from '@/server/site-language';
 
 import styles from './auth.module.css';
@@ -11,11 +12,12 @@ export async function AuthPage({ mode, unavailable, forbidden, returnTo }: { mod
   const language = await getSiteLanguage();
   const copy = publicAuth(language);
   const text = copy[mode];
-  return <><LanguageSwitch /><main className={styles.authLayout}>
+  const workspace = await publicWorkspaceHome();
+  return <><LanguageSwitch workspaceHome={workspace} /><main className={styles.authLayout}>
       <section className={styles.authPanel} aria-labelledby="auth-heading">
         <div className={styles.authMasthead}>
-          <BrandLogo compact />
-          <Link href="/"><span aria-hidden="true">{language === 'ar' ? '→ ' : '← '}</span>{copy.home}</Link>
+          <Link href={workspace || '/'} aria-label={workspace ? dashboardLabel(language) : copy.home}><BrandLogo compact /></Link>
+          <Link href={workspace || '/'}><span aria-hidden="true">{language === 'ar' ? '→ ' : '← '}</span>{workspace ? dashboardLabel(language) : copy.home}</Link>
         </div>
         <h1 id="auth-heading">{text.title}</h1>
         <p className={styles.description}>{text.description}</p>

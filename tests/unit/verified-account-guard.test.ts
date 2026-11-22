@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { PortalShell } from '../../src/components/portal-shell';
 vi.mock('server-only', () => ({}));
 const state = vi.hoisted(() => ({ account: { account_id: '50a7291f-829f-439a-9719-f8b3225ed77f', verified: true, roles: [] as string[], locale: 'en', authorized_learner_ids: [] }, signedIn: true }));
-vi.mock('next/navigation', () => ({ redirect: (path: string) => { throw new Error(`REDIRECT:${path}`); } }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/learn/payments', redirect: (path: string) => { throw new Error(`REDIRECT:${path}`); } }));
 vi.mock('../../src/server/supabase', () => ({ AuthUnavailableError: class AuthUnavailableError extends Error {}, serverSupabase: async () => ({ auth: { getClaims: async () => ({ data: state.signedIn ? { claims: { sub: state.account.account_id } } : null, error: null }) }, rpc: async () => ({ data: state.account, error: null }) }) }));
 import { requireAccount } from '../../src/server/auth';
 

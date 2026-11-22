@@ -1,7 +1,8 @@
+import { formatTuition } from '@/modules/shared/format';
 import { pageMetadata } from '@/server/page-metadata';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { PublicShell, CatalogUnavailable, formatTuition } from '@/components/catalog/public-shell';
+import { PublicShell, CatalogUnavailable } from '@/components/catalog/public-shell';
 import { OfferTerms } from '@/components/catalog/offer-terms';
 import { PublicSchedule } from '@/components/booking/public-schedule';
 import { getSiteLanguage } from '@/server/site-language';

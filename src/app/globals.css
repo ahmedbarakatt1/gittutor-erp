@@ -22,9 +22,10 @@
 
 * { box-sizing: border-box; }
 .language-bar { background: var(--tint); }
-.language-bar form { display: flex; justify-content: flex-end; }
-.language-bar button { display: inline-flex; align-items: center; gap: .45rem; min-block-size: 36px; padding-inline: .65rem; border: 0; background: transparent; color: var(--ink); font: 650 .9rem/1.4 Tahoma, Arial, sans-serif; }
-.language-bar button:hover { color: var(--brand-hover); text-decoration: underline; }
+.language-bar > .container { display: flex; align-items: center; justify-content: space-between; }
+.language-bar form { margin-inline-start: auto; }
+.language-bar :is(button, .site-back) { display: inline-flex; align-items: center; gap: .45rem; min-block-size: 40px; padding-inline: .65rem; border: 0; background: transparent; color: var(--ink); font: 650 .9rem/1.4 Tahoma, Arial, sans-serif; text-decoration: none; }
+.language-bar :is(button, .site-back):hover { color: var(--brand-hover); text-decoration: underline; }
 .language-bar svg { inline-size: 1rem; block-size: 1rem; }
 html:lang(ar) { --font-body: Tahoma, Arial, sans-serif; }
 html:lang(ar) :is(h1, h2, h3, button, label) { letter-spacing: normal; }

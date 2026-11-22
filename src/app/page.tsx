@@ -4,28 +4,31 @@ import { formatMinorUnits } from '@/modules/shared/format';
 import { StudyExample } from '@/components/study-example';
 import { GizaAccent } from '@/components/giza-accent';
 import { getSiteLanguage } from '@/server/site-language';
-import { homeMessages } from '@/locales/ar-public';
+import { dashboardLabel, homeMessages } from '@/locales/ar-public';
 import Link from 'next/link';
 import { PublicContactLinks } from '@/components/public-contact';
 import { BrandLogo } from '@/components/brand-logo';
+import { publicWorkspaceHome } from '@/server/auth';
 
 export default async function HomePage() {
   const language = await getSiteLanguage();
   const copy = homeMessages(language);
+  const workspace = await publicWorkspaceHome();
+  const dashboard = dashboardLabel(language);
   const money = (minor: number) => formatMinorUnits(minor, 'EGP', copy.locale, true);
   return (
     <>
       <a className="skip-link" href="#main">{copy.navigation.skip}</a>
-      <LanguageSwitch />
+      <LanguageSwitch workspaceHome={workspace} />
       <header className="site-header container" id="top">
-        <a className="brand-link" href="#top" aria-label={copy.brand}><BrandLogo compact /></a>
+        <Link className="brand-link" href={workspace || '#top'} aria-label={workspace ? dashboard : copy.brand}><BrandLogo compact /></Link>
         <nav aria-label={copy.navigation.label}>
           <Link href="/subjects">{copy.navigation.subjects}</Link>
           <a href="#formats">{copy.navigation.formats}</a>
           <a href="#how-it-works">{copy.navigation.how}</a>
           <a href="#questions">{copy.navigation.faq}</a>
           <Link href="/support">{language === 'ar' ? 'الدعم' : 'Support'}</Link>
-          <Link href="/login">{copy.navigation.account}</Link>
+          <Link href={workspace || '/login'}>{workspace ? dashboard : copy.navigation.account}</Link>
         </nav>
       </header>
 

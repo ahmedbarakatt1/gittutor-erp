@@ -1,3 +1,5 @@
+import type { SiteLanguage } from '@/locales/language';
+
 /** Format scaled integer units without rounding a large monetary/entitlement value through division. */
 function formatScaled(value: number|string, scaleDigits: number, locale: string, options: Intl.NumberFormatOptions, trimFraction: boolean) {
   if (typeof value==='number'?!Number.isSafeInteger(value):! /^-?(?:0|[1-9]\d{0,99})$/.test(value)) throw new Error('SAFE_INTEGER_REQUIRED');
@@ -46,3 +48,5 @@ export function parseScaledIntegerInput(raw: string, scaleDigits: 2 | 3) {
   if (exact > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error('DECIMAL_INPUT_REQUIRED');
   return Number(exact);
 }
+
+export const formatTuition = (minor: number, currency = 'EGP', language: SiteLanguage = 'en') => formatMinorUnits(minor, currency, language === 'ar' ? 'ar-EG' : 'en-EG', true);

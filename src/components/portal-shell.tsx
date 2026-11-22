@@ -75,7 +75,7 @@ export function PortalShell({ kind, account, children, title, description, activ
     <LanguageSwitch />
     <header className={styles.portalHeader}>
       <div className={styles.portalIdentity}>
-        <PortalHomeLink className={styles.brand} />
+        <PortalHomeLink className={styles.brand} href={kind === 'learn' && !learnerWorkspace ? '/learn/payments' : '/' + kind} label={workspaceName} />
         <span className={styles.workspaceName}><StaffMessage text={workspaceName} /></span>
       </div>
       <SignOutButton />

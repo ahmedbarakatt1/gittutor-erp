@@ -1,8 +1,7 @@
 import type { PublicPolicySummary } from '@/modules/catalog/queries';
-import { formatCreditQuanta } from '@/modules/shared/format';
+import { formatCreditQuanta, formatTuition } from '@/modules/shared/format';
 import { catalogCopy as copy } from '@/locales/catalog';
 import styles from './catalog.module.css';
-import { formatTuition } from './public-shell';
 import { catalogCopy as arabicCatalogCopy } from '@/locales/ar-transaction/catalog';
 
 const textByLanguage = {

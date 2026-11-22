@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { AuthUnavailableError, serverSupabase } from "./supabase";
@@ -12,7 +13,7 @@ export const accountSchema = z.object({
 });
 export type Account = z.infer<typeof accountSchema>;
 
-export async function getCurrentAccount(): Promise<Account | null> {
+export const getCurrentAccount = cache(async function getCurrentAccount(): Promise<Account | null> {
   const client = await serverSupabase();
   const { data: claims, error } = await client.auth.getClaims();
   if (error || !claims?.claims.sub) return null;
@@ -24,6 +25,16 @@ export async function getCurrentAccount(): Promise<Account | null> {
   const parsed = accountSchema.safeParse(result.data);
   if (!parsed.success || !parsed.data.verified || parsed.data.is_guest) return null;
   return parsed.data;
+});
+
+export async function publicWorkspaceHome(): Promise<string | undefined> {
+  try {
+    const account = await getCurrentAccount();
+    return account ? landingForRoles(account.roles) : undefined;
+  } catch (error) {
+    if (error instanceof AuthUnavailableError) return undefined;
+    throw error;
+  }
 }
 
 export async function requireAccount(role?: string, returnTo?: string): Promise<Account> {

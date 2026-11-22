@@ -28,9 +28,9 @@ export function StaffCairoLessonTime({ instant }: { instant: string }) {
   return <time dateTime={instant}>{formatter.format(new Date(instant))} {staffText(language, 'Cairo')}</time>;
 }
 
-export function PortalHomeLink({ className }: { className: string }) {
+export function PortalHomeLink({ className, href, label }: { className: string; href: string; label: string }) {
   const t = useStaffText();
-  return <Link className={className} href="/" aria-label={t('Back to Git Tutor')}><BrandLogo compact /></Link>;
+  return <Link className={className} href={href} aria-label={t(label)}><BrandLogo compact /></Link>;
 }
 
 export function SiteLanguageName() {

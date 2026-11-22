@@ -3,6 +3,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 import { changeSiteLanguage } from '@/app/language-action';
+import { SiteBackLink } from './site-back-link';
 import type { SiteLanguage } from '@/locales/language';
 
 const SiteLanguageContext = createContext<SiteLanguage>('en');
@@ -27,8 +28,10 @@ function SwitchButton() {
   </button>;
 }
 
-export function LanguageSwitch() {
-  return <div className="language-bar"><form className="container" action={changeSiteLanguage}>
-    <SwitchButton />
-  </form></div>;
+export function LanguageSwitch({ workspaceHome }: { workspaceHome?: string }) {
+  const arabic = useSiteLanguage() === 'ar';
+  return <div className="language-bar"><div className="container">
+    <SiteBackLink arabic={arabic} workspaceHome={workspaceHome} />
+    <form action={changeSiteLanguage}><SwitchButton /></form>
+  </div></div>;
 }

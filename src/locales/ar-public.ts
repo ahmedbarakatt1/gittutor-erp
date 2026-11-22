@@ -276,3 +276,5 @@ export const publicCatalog = (lang: SiteLanguage) => lang === 'ar' ? {
   notFound: 'هذه الصفحة غير متاحة',
   notFoundDescription: 'تصفّح الحصص المنشورة وملفات المدرّسين المعتمدة.',
 } : catalogCopy;
+
+export const dashboardLabel = (language: SiteLanguage) => language === 'ar' ? 'لوحة التحكم' : 'My dashboard';

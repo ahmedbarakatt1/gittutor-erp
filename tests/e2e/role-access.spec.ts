@@ -53,6 +53,29 @@ test('signed-out direct portal URLs require sign-in', async ({ page }) => {
   expect(response.status()).toBe(401);
 });
 
+for (const portal of portals) {
+  test(`Back, the logo and public account links preserve the ${portal.role} session`, async ({ page, context }) => {
+    await signIn(page, portal.actor);
+    const detail = portal.path + '/notifications';
+    const direct = await context.newPage();
+    await direct.goto(detail);
+    await direct.getByRole('link', { name: 'Back', exact: true }).click();
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await direct.goto(detail);
+    await direct.locator('header a:has(img)').first().click();
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await direct.goto('/subjects');
+    await direct.locator('header nav').getByRole('link', { name: 'My dashboard' }).click();
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await direct.getByRole('link', { name: 'Back', exact: true }).click();
+    await expect(direct).toHaveURL(baseURL + '/subjects');
+    await direct.goto('/login');
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await expectSignedInAccount(direct, loadLocalSupabase().actors[portal.actor].id);
+    await direct.close();
+  });
+}
+
 test('form validation is associated with controls and preserves entered email', async ({ page }) => {
   await page.goto('/signup');
   await page.getByLabel('Email address', { exact: true }).fill('not-an-email');
