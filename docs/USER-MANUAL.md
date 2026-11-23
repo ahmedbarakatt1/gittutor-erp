@@ -1,6 +1,6 @@
 # Git Tutor user manual
 
-**21 November 2026 · Production and testing edition**
+**23 November 2026 · Production and testing edition**
 
 Use this guide to request tutoring with your own course material, teach a session, support a family or run the service. All amounts are Egyptian pounds (EGP). Appointment times use Cairo time unless a field explicitly says it uses your device's time.
 
@@ -8,7 +8,7 @@ Use this guide to request tutoring with your own course material, teach a sessio
 
 | Site | When to use it | Start here |
 | --- | --- | --- |
-| Production | Invited team members managing their actual accounts. The site is team-protected. Commercial policy, upload processing, live scheduling and recovery checks remain launch dependencies. | [Production sign-in](https://gittutor-erp-production.vercel.app/login) |
+| Production | Invited team members managing their actual accounts. The site is team-protected. Paid bookings require approved booking terms, a published offer and a verified receiving account. | [Production sign-in](https://gittutor-erp-production.vercel.app/login) |
 | Testing | Practice with the account and example booking assigned to you. The preview contains imported operating history. Use practice materials and simulated payments. | [Testing sign-in](https://gittutor-erp-rho.vercel.app/login) |
 
 **First sign-in.** Open the latest Git Tutor invitation in the mailbox it was sent to. Check Spam if necessary. Complete the verification and password setup in that message. Production may first ask you to sign in to Vercel. If your Vercel account lacks access, ask the owner to arrange access to the protected site. If the invitation has expired, request a fresh invitation. For a forgotten password, use the recovery link on the sign-in screen and complete the newest recovery email.

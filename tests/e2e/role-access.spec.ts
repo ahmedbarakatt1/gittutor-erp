@@ -215,7 +215,9 @@ test('logout denies a stale tab and replay of the pre-logout session cookie', as
     const previousCookies = await context.cookies();
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);
-    await stale.reload();
+    await expect(stale).toHaveURL(/\/auth\/session-ended$/);
+    await expect(stale.getByTestId('account-id')).toHaveCount(0);
+    await stale.goto('/learn');
     await expect(stale).toHaveURL(/\/login(?:\?|$)/);
     const staleResponse = await stale.request.get('/api/v1/me');
     expect(staleResponse.status()).toBe(401);
