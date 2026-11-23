@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ChargeSummary, ConfirmationResult, SafeEvidence } from '@/modules/payments/queries';
@@ -29,7 +30,7 @@ export function usePaymentRecord<T>(path: string | null, keepDataOnRefresh = fal
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    fetch(`/api/v1/${path}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }).then(async response => {
+    sessionFetch(`/api/v1/${path}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }).then(async response => {
       const body = await response.json(); if (controller.signal.aborted) return;
       if (!response.ok) { setState({ path, error: response.status === 403 || response.status === 404 ? copy.permission : copy.failed }); return; }
       setState({ path, data: body.data });
@@ -49,7 +50,7 @@ export function usePaymentList<T>(path: string | null, pageField?: string, curso
   useEffect(() => {
     const current = invalidate(); if (!path) return;
     const controller = new AbortController(); controllers.current.add(controller);
-    fetch(`/api/v1/${path}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }).then(async response => {
+    sessionFetch(`/api/v1/${path}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }).then(async response => {
       const body = await response.json(); if (controller.signal.aborted || current !== generation.current) return;
       setLoadingMore(false);
       const result = pageField ? body.data?.[pageField] : body.data;
@@ -63,7 +64,7 @@ export function usePaymentList<T>(path: string | null, pageField?: string, curso
     if (!path || !page?.next_cursor || paging.current) return;
     const current = generation.current, controller = new AbortController(); controllers.current.add(controller); paging.current = true; setLoadingMore(true);
     try {
-      const response = await fetch(`/api/v1/${path}${path.includes('?') ? '&' : '?'}${cursorParameter}=${encodeURIComponent(page.next_cursor)}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
+      const response = await sessionFetch(`/api/v1/${path}${path.includes('?') ? '&' : '?'}${cursorParameter}=${encodeURIComponent(page.next_cursor)}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
       const body = await response.json(); const result = pageField ? body.data?.[pageField] : body.data; if (!response.ok || !Array.isArray(result?.items)) throw new Error('READ_FAILED');
       if (!controller.signal.aborted && current === generation.current) setState(previous => ({ path, page: { items: [...(previous.path === path ? previous.page?.items || [] : []), ...result.items], next_cursor: result.next_cursor } }));
     } catch { if (!controller.signal.aborted && current === generation.current) setState(previous => ({ ...previous, error: copy.failed })); }

@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useSiteLanguage } from '@/components/site-language';
 import { requestTranslator, type RequestPhrase } from '@/locales/ar-public-requests';
@@ -93,7 +94,7 @@ function useRequestRecord(id: string) {
     let scanPending = false;
     async function read() {
       try {
-        const response = await fetch(`/api/v1/requests/${id}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
+        const response = await sessionFetch(`/api/v1/requests/${id}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
         if (controller.signal.aborted) return;
         if ([401, 403, 404].includes(response.status)) {
           scanPending = false;

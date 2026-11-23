@@ -5,6 +5,7 @@ import { SignOutButton } from './auth-form';
 import { PortalNavigation, type NavigationGroup } from './portal-navigation';
 import { authCopy as copy, identityCopy, type PortalKind } from '@/locales/auth';
 import type { Account } from '@/server/auth';
+import { accountScope } from '@/modules/identity/account-scope';
 import styles from './auth.module.css';
 import { catalogCopy } from '@/locales/catalog';
 import { bookingCopy } from '@/locales/booking';
@@ -82,7 +83,7 @@ export function PortalShell({ kind, account, children, title, description, activ
     </header>
     <div className={styles.portalLayout}>
       <PortalNavigation key={activePath || kind} workspace={workspaceName} groups={groups} activePath={activePath || `/${kind}`} />
-      <main id="account" className={styles.portalMain}>
+      <main id="account" data-account-scope={accountScope(account)} className={styles.portalMain}>
         <header className={styles.portalIntro}>
           <h1><StaffMessage text={title || text.title} /></h1>
           <p className={styles.description}><StaffMessage text={description || text.description} /></p>

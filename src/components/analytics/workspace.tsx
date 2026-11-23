@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useSiteLanguage } from '@/components/site-language';
 import { useStaffText } from '@/components/ar-staff-label';
@@ -112,7 +113,7 @@ function Cohorts({ range, refresh }: { range: Range; refresh: () => void }) {
   const data = report.data, page = cursor ? nextPage.data : data;
   async function download() {
     setExporting(true); setExportError('');
-    try { const response = await fetch(`/api/v1/analytics/cohorts/export?${query}`, { method: 'POST', credentials: 'same-origin' }); if (!response.ok) throw new Error('The export could not be reconciled. Refresh the report and try again.'); const url = URL.createObjectURL(await response.blob()), a = document.createElement('a'); a.href = url; a.download = `cohort-${range.from}-${range.to}.csv`; a.click(); URL.revokeObjectURL(url); } catch (error) { setExportError(error instanceof Error ? error.message : 'Export unavailable.'); } finally { setExporting(false); }
+    try { const response = await sessionFetch(`/api/v1/analytics/cohorts/export?${query}`, { method: 'POST', credentials: 'same-origin' }); if (!response.ok) throw new Error('The export could not be reconciled. Refresh the report and try again.'); const url = URL.createObjectURL(await response.blob()), a = document.createElement('a'); a.href = url; a.download = `cohort-${range.from}-${range.to}.csv`; a.click(); URL.revokeObjectURL(url); } catch (error) { setExportError(error instanceof Error ? error.message : 'Export unavailable.'); } finally { setExporting(false); }
   }
 
   return <section className={ui.report}>

@@ -37,6 +37,7 @@ const errors: Record<string, [number, string]> = {
   AUTH_REQUIRED: [401, "Sign in to continue."],
   AUTH_FAILED: [401, "Check your email and password and try again."],
   SESSION_REVOKED: [401, "Your session has ended. Sign in again."],
+  PASSWORD_UPDATED_REVOCATION_UNCONFIRMED: [503, "Your password changed. Use Account security to sign out on all devices."],
   VERIFIED_ACCOUNT_REQUIRED: [401, "Verify your email before continuing."],
   FORBIDDEN: [403, "You do not have permission for this action."],
   OWNER_REQUIRED: [403, "This action needs the current owner."],

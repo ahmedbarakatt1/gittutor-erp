@@ -1,4 +1,5 @@
 'use client';
+import { documentSession, sessionFetch } from '@/components/session-fetch';
 
 import { useStaffCopy, useStaffText } from '@/components/ar-staff-label';
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
@@ -54,7 +55,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
     try {
       if (!operation.current || operation.current.signature !== signature) {
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signature));
-        const storageKey = `git-tutor-command:${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')}`;
+        const storageKey = `git-tutor-command:${documentSession()}:${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')}`;
         let key: string = crypto.randomUUID();
         // Keep only a digest and random key in tab storage, never form fields or invitation tokens.
         // An interrupted response can then be retried after a reload with the same logical key.
@@ -65,7 +66,7 @@ export function IdentityForm({ children, action, payload, submitLabel, successMe
         } catch { /* In-memory retry identity still works when browser storage is unavailable. */ }
         operation.current = { key, signature, storageKey };
       }
-      const response = await fetch(`/api/v1/${path}`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.current.key }, body: JSON.stringify(body) });
+      const response = await sessionFetch(`/api/v1/${path}`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.current.key }, body: JSON.stringify(body) });
       const responseBody = await response.json() as Result;
       if (!response.ok) { setError(responseBody.message ? t(responseBody.message) : copyUi.network); setRequestId(responseBody.request_id || ''); onFailure?.(responseBody); return; }
       if (releaseKeyOnSuccess && (typeof responseBody.data?.resource_id !== 'string' || !responseBody.data.resource_id)) throw new Error('COMMAND_RESULT_MISSING');

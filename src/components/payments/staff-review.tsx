@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import Link from 'next/link';
 import layoutStyles from '../auth.module.css';
@@ -83,7 +84,7 @@ function AllocationTargets({ data, transfer, plan, usable, onAllocated, onSaved 
   useEffect(() => {
     if (!plan) return;
     const controller = new AbortController();
-    Promise.all(plan.targets.map(async target => { const response = await fetch(`/api/v1/review-cases/${data.case.case_id}/charges/${target.charge_id}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }); if (!response.ok) throw new Error('READ_FAILED'); return (await response.json()).data as ChargeSummary; })).then(rows => { if (!controller.signal.aborted) setTargets(rows); }).catch(() => { if (!controller.signal.aborted) setError(copy.failed); });
+    Promise.all(plan.targets.map(async target => { const response = await sessionFetch(`/api/v1/review-cases/${data.case.case_id}/charges/${target.charge_id}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }); if (!response.ok) throw new Error('READ_FAILED'); return (await response.json()).data as ChargeSummary; })).then(rows => { if (!controller.signal.aborted) setTargets(rows); }).catch(() => { if (!controller.signal.aborted) setError(copy.failed); });
     return () => controller.abort();
   }, [plan, data.case.case_id, attempt, copy.failed]);
   const ordinary = targets?.filter(target => !plan?.targets.find(row => row.charge_id === target.charge_id)?.conditional_amendment_id) || [];

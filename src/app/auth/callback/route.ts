@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requestSupabase } from "@/server/supabase";
 import { authRedirectBase, isAuthTokenHash } from "@/server/http";
+import { priorSessionToken, retireReplacedSession } from "@/server/session-replacement";
 
 const styles = `
   *{box-sizing:border-box} body{margin:0;background:#f8f6ef;color:#252526;font:1rem/1.55 Arial,sans-serif}
@@ -29,7 +30,15 @@ function emailAction(request: NextRequest) {
 
 // A form with no action posts to this same first-party URL. Its document contains
 // no token, invitation reference, external resources, or active scripts.
-function confirmationPage(type: "invite" | "email" | "recovery") {
+function confirmationBinding(request: NextRequest) {
+  const cookies = request.cookies.getAll()
+    .filter(cookie => /^sb-[\w-]+-auth-token(?:\.\d+)?$/.test(cookie.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  if (!cookies.length) return '';
+  return createHash('sha256').update(JSON.stringify(cookies.map(({name,value}) => [name,value]))).digest('hex');
+}
+
+function confirmationPage(type: "invite" | "email" | "recovery", binding: string) {
   const copy = {
     email: ["Confirm your email address", "Confirm this email to finish creating your account.", "أكّد بريدك الإلكتروني لإكمال إنشاء حسابك.", "Confirm email", "تأكيد البريد"],
     invite: ["Open your invitation", "Continue to set a password and review your invitation.", "تابع لتعيين كلمة مرور ومراجعة دعوتك.", "Continue", "متابعة"],
@@ -38,7 +47,7 @@ function confirmationPage(type: "invite" | "email" | "recovery") {
   return new NextResponse(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>${copy[0]} | Git Tutor</title><style>${styles}</style></head><body><main>
     <header>Git <span>Tutor</span></header><h1>${copy[0]}</h1><p>${copy[1]}</p><p lang="ar" dir="rtl">${copy[2]}</p>
-    <form method="post"><button type="submit" name="confirm" value="yes">${copy[3]} · <span lang="ar" dir="rtl">${copy[4]}</span></button></form>
+    <form method="post">${binding ? `<input type="hidden" name="view" value="${binding}">` : ''}<button type="submit" name="confirm" value="yes">${copy[3]} · <span lang="ar" dir="rtl">${copy[4]}</span></button></form>
     </main></body></html>`, { headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } });
 }
 
@@ -47,7 +56,8 @@ function redirect(path: string, base: string) {
 }
 
 async function receivedConfirmation(request: NextRequest) {
-  const expected = Buffer.from("confirm=yes");
+  const binding = confirmationBinding(request);
+  const expected = Buffer.from(binding ? `view=${binding}&confirm=yes` : 'confirm=yes');
   const size = request.headers.get("content-length");
   if ((size !== null && Number(size) !== expected.length) ||
       request.headers.get("content-type")?.split(";")[0] !== "application/x-www-form-urlencoded") return false;
@@ -72,13 +82,19 @@ export function HEAD() {
 
 export async function GET(request: NextRequest) {
   const action = emailAction(request);
-  if (action) return confirmationPage(action.type);
+  if (action) return confirmationPage(action.type, confirmationBinding(request));
   const context = requestSupabase(request);
   const base = authRedirectBase(request.url, context.config.app_base_url, context.config.isolated, request.headers.get("host"));
   const code = request.nextUrl.searchParams.get("code");
   if (code && code.length <= 4096) {
-    const { data, error } = await context.client.auth.exchangeCodeForSession(code);
-    if (!error) return context.finish(redirect("redirectType" in data && data.redirectType === "recovery" ? "/auth/set-password" : "/learn", base));
+    try {
+      const previous = await priorSessionToken(context.client.auth);
+      const { data, error } = await context.client.auth.exchangeCodeForSession(code);
+      if (!error) {
+        await retireReplacedSession(context.client.auth, previous, data.session?.access_token);
+        return context.finish(redirect("redirectType" in data && data.redirectType === "recovery" ? "/auth/set-password" : "/learn", base));
+      }
+    } catch { return redirect("/login?reason=unavailable", base); }
   }
   return context.finish(redirect("/login?reason=verification", base));
 }
@@ -95,11 +111,15 @@ export async function POST(request: NextRequest) {
   }
   const action = emailAction(request);
   if (action && await receivedConfirmation(request)) {
-    const { error } = await context.client.auth.verifyOtp({ token_hash: action.hash, type: action.type });
-    if (!error) {
-      const path = action.type === "email" ? "/learn" : "/auth/set-password";
-      return context.finish(redirect(action.invitation ? `${path}?staff_invitation_id=${action.invitation}` : path, base));
-    }
+    try {
+      const previous = await priorSessionToken(context.client.auth);
+      const { data, error } = await context.client.auth.verifyOtp({ token_hash: action.hash, type: action.type });
+      if (!error) {
+        await retireReplacedSession(context.client.auth, previous, data.session?.access_token);
+        const path = action.type === "email" ? "/learn" : "/auth/set-password";
+        return context.finish(redirect(action.invitation ? `${path}?staff_invitation_id=${action.invitation}` : path, base));
+      }
+    } catch { return redirect("/login?reason=unavailable", base); }
   }
   return context.finish(redirect("/login?reason=verification", base));
 }

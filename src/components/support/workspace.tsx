@@ -1,4 +1,5 @@
 'use client';
+import { notifySessionChange, sessionFetch } from '@/components/session-fetch';
 import { supportText } from '@/locales/ar-support';
 import { useSiteLanguage } from '@/components/site-language';
 
@@ -19,17 +20,35 @@ export function SupportWorkspace({ staff = false, manualWhatsApp, publicEntry = 
   const text = (label: string) => supportText(language, label);
 
   const [ready, setReady] = useState(staff);
+  const [guest, setGuest] = useState(false);
   const [error, setError] = useState('');
   async function start() {
 
     setError('');
     try {
-      const response = await fetch('/api/v1/support/session', { method: 'POST' });
+      const response = await sessionFetch('/api/v1/support/session', { method: 'POST' });
       if (!response.ok) throw Error();
+      const guestView = response.headers.get('x-git-tutor-new-view');
+      if (guestView) {
+        document.documentElement.dataset.sessionView = guestView;
+        notifySessionChange();
+      }
+      setGuest(response.headers.get('x-git-tutor-guest') === '1');
       setReady(true);
     } catch { setError(text(copy.error)); }
   }
-  if (ready) return <Inbox staff={staff} manualWhatsApp={manualWhatsApp} />;
+  async function endGuestSession() {
+    try {
+      const response = await sessionFetch('/api/auth/logout', { method: 'POST' });
+      if (!response.ok) throw Error();
+      notifySessionChange();
+      window.location.replace('/support');
+    } catch { setError(text(copy.error)); }
+  }
+  if (ready) return <>{guest && <div>
+    <button type="button" onClick={endGuestSession}>{language === 'ar' ? 'إنهاء جلسة الضيف على هذا الجهاز' : 'End guest session on this device'}</button>
+    {error && <p role="alert">{error}</p>}
+  </div>}<Inbox staff={staff} manualWhatsApp={manualWhatsApp} /></>;
   return <section className={publicEntry ? publicStyles.option : undefined}>
     {publicEntry
       ? <div><h2>{text(publicSupportCopy.websiteTitle)}</h2><p>{text(publicSupportCopy.websiteBody)}</p></div>

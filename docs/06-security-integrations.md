@@ -22,6 +22,10 @@ Server identity verification uses signed claims. Authorization reads current dat
 
 Static FAQs remain publicly readable. Website chat can create a Supabase anonymous Auth session. Anonymous users receive only own-conversation commands. All other account and business commands explicitly require a verified non-anonymous account. Upgrading identity or linking a WhatsApp thread requires a verified account and a single-use, expiring thread challenge. Shared phone numbers never authorize a learner relationship.
 
+One browser profile has one active Git Tutor identity. A successful sign-in or email exchange retires the session previously held by that browser with the provider's local logout. A failed password attempt preserves the existing session. Every application fetch from a rendered page carries a comparison value derived from its session. The proxy compares it with verified current claims before routing the request. The value confers no authority. Server and database role and relationship checks still apply to every protected operation, including API clients that do not use the browser interface.
+
+An authentication change signals sibling tabs. A suspended private page hides on departure and rechecks on return. Active private tabs also check every minute, including current roles and learner scope where displayed. A mismatched or revoked view closes onto a neutral page. Retry information is scoped to the session. Account security provides global sign-out. Password changes revoke other sessions. Email-confirmation POSTs compare the submitting browser's cookie snapshot with the original form before consuming the link.
+
 ## Access by workspace
 
 | Who is using the site | Records available |

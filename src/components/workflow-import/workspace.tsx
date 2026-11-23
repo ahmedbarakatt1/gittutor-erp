@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useSiteLanguage } from '@/components/site-language';
 import type { SiteLanguage } from '@/locales/language';
@@ -59,7 +60,7 @@ export function WorkflowWorkspace() {
   const [selected, setSelected] = useState<number | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch('/api/v1/workflow-import', { cache: 'no-store', signal: controller.signal }).then(async response => {
+    sessionFetch('/api/v1/workflow-import', { cache: 'no-store', signal: controller.signal }).then(async response => {
       const body = await response.json();
       if (!response.ok) throw new Error(body.message || 'Your records could not be loaded.');
       setData(body.data === null ? null : workflowImportSchema.parse(body.data)); setError('');

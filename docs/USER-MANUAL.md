@@ -24,6 +24,13 @@ Use this guide to request tutoring with your own course material, teach a sessio
 
 The links in the rest of this manual open production. To practice, open the testing sign-in above and use its menus. Account references, course files, bookings and balances belong to the site where they were created.
 
+### Sharing a phone or laptop
+
+- Choose **Sign out** before handing the device to someone else. This ends the Git Tutor session in that browser profile. For two people working at the same time, use separate browser profiles. Tabs in one profile share one sign-in.
+- To end your Git Tutor sessions on all devices, open **Account security → Sign out on all my devices** in your workspace header. This signs you out here too. Changing your password ends your other sessions.
+- If a tab says **This tab’s session has ended**, close it or open the sign-in page. Start any unfinished action again in the intended account. Each learner has a separate record. A parent needs their own account and an explicit guardian invitation.
+- On the public support page, choose **End guest session on this device** before handing it over. For Google Drive and Meet, check Google's account picker separately. For private downloads, use your own device or remove local copies when you are done.
+
 ## 2. Request tutoring and upload study material
 
 Visitors can read [Subjects](https://gittutor-erp-production.vercel.app/subjects) and [session prices](https://gittutor-erp-production.vercel.app/offers). Subjects gives examples in Computer Science, Engineering, Business and Business Intelligence. Choose one to prefill your topic, or choose **Request help with another subject**. Available sessions, approved tutor profiles and personal records require sign-in.

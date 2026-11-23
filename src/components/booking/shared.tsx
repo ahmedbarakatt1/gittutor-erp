@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { formatMinorUnits } from '@/modules/shared/format';
@@ -21,7 +22,7 @@ export function useBookingRecord<T>(path: string | null) {
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    fetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }).then(async response => {
+    sessionFetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('READ_FAILED');
       const body = await response.json(); if (!controller.signal.aborted) setState({ path, data: body.data });
     }).catch(() => { if (!controller.signal.aborted) setState({ path, failed: true }); });

@@ -1,4 +1,5 @@
 'use client';
+import { notifySessionChange, sessionFetch } from '@/components/session-fetch';
 
 import { useRef, useState, type FormEvent } from 'react';
 import { publicAuth } from '@/locales/ar-public';
@@ -15,6 +16,7 @@ function arabicAuthError(code?: string) {
     case 'RATE_LIMITED': return 'حاول مرة أخرى بعد قليل.';
     case 'VALIDATION_ERROR': return 'تحقّق من البيانات المدخلة ثم حاول مرة أخرى.';
     case 'AUTH_REQUIRED': return 'سجّل الدخول من جديد ثم أعد المحاولة.';
+    case 'PASSWORD_UPDATED_REVOCATION_UNCONFIRMED': return 'تم تغيير كلمة المرور. استخدم أمان الحساب لتسجيل الخروج من جميع الأجهزة.';
     default: return publicAuth('ar').error.generic;
   }
 }
@@ -23,7 +25,8 @@ type ApiResult = { data?: { redirect_to?: string; verification_required?: boolea
 function navigateAfterAuthentication(path: string) {
   // Authentication changes invalidate every cached account view. Start a fresh document
   // at the caller's fixed same-origin destination after the cookie response has committed.
-  window.location.assign(new URL(path, window.location.origin).href);
+  notifySessionChange();
+  window.location.replace(new URL(path, window.location.origin).href);
 }
 
 export function AuthForm({ mode, unavailable = false, forbidden = false, returnTo }: { mode: 'login' | 'signup' | 'recover'; unavailable?: boolean; forbidden?: boolean; returnTo?: string }) {
@@ -59,7 +62,7 @@ export function AuthForm({ mode, unavailable = false, forbidden = false, returnT
     }
     setPending(true);
     try {
-      const response = await fetch(`/api/auth/${mode}`, {
+      const response = await sessionFetch(`/api/auth/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -122,12 +125,12 @@ export function SignOutButton() {
   const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
-  async function signOut() {
+  async function signOut(allDevices = false) {
     if (!hydrated || pending) return;
     setPending(true);
     setError(false);
     try {
-      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      const response = await sessionFetch(allDevices ? '/api/auth/logout-all' : '/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
       if (!response.ok) throw new Error('Sign-out failed');
       navigateAfterAuthentication('/login');
     } catch {
@@ -135,7 +138,13 @@ export function SignOutButton() {
       setPending(false);
     }
   }
-  return <div><button type="button" className={styles.signout} disabled={!hydrated || pending} onClick={signOut}>{pending ? copy.portal.signingOut : copy.portal.signout}</button>{error && <p className={styles.fieldError} role="alert">{copy.portal.signoutError}</p>}</div>;
+  return <div><button type="button" className={styles.signout} disabled={!hydrated || pending} onClick={() => signOut()}>{pending ? copy.portal.signingOut : copy.portal.signout}</button>
+    <details><summary>{language === 'ar' ? 'أمان الحساب' : 'Account security'}</summary>
+      <button type="button" className={styles.signout} disabled={!hydrated || pending} onClick={() => signOut(true)}>
+        {language === 'ar' ? 'تسجيل الخروج من جميع أجهزتي' : 'Sign out on all my devices'}
+      </button>
+    </details>
+    {error && <p className={styles.fieldError} role="alert">{copy.portal.signoutError}</p>}</div>;
 }
 
 export function SetPasswordForm({ staffInvitationId }: { staffInvitationId?: string }) {
@@ -154,7 +163,7 @@ export function SetPasswordForm({ staffInvitationId }: { staffInvitationId?: str
     if (password !== data.get('confirmation')) { setMismatch(true); confirmation.current?.focus(); return; }
     setMismatch(false); setError(''); setPending(true);
     try {
-      const response = await fetch('/api/auth/password', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+      const response = await sessionFetch('/api/auth/password', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
       if (!response.ok) { const body = await response.json() as ApiResult; setError(language === 'ar' ? arabicAuthError(body.code) : body.message || copy.error.generic); return; }
       navigateAfterAuthentication(staffInvitationId ? `/learn?staff_invitation_id=${encodeURIComponent(staffInvitationId)}` : '/learn');
     } catch { setError(copy.error.network); }

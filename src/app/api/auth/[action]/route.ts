@@ -4,13 +4,15 @@ import { requestSupabase } from "@/server/supabase";
 import { accountSchema } from "@/server/auth";
 import { allowedOrigin, DomainError, landingForRoles, loginInput, readJson, safeError, signupInput } from "@/server/http";
 import { z } from "zod";
+import { priorSessionToken, retireReplacedSession } from "@/server/session-replacement";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ action: string }> }) {
   const requestId = randomUUID();
   let context: ReturnType<typeof requestSupabase> | undefined;
+  let replacingSession = false;
   try {
     const { action } = await params;
-    if (!["login", "signup", "logout", "password", "recover"].includes(action)) throw new DomainError("NOT_FOUND");
+    if (!["login", "signup", "logout", "logout-all", "password", "recover"].includes(action)) throw new DomainError("NOT_FOUND");
     context = requestSupabase(request);
     if (!allowedOrigin(request.headers.get("origin"), context.config.app_base_url, context.config.isolated)) throw new DomainError("FORBIDDEN");
     if (action === "recover") {
@@ -34,10 +36,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (!parsed.success) throw new DomainError("VALIDATION_ERROR");
       const { error } = await context.client.auth.updateUser({ password: parsed.data.password });
       if (error) throw new DomainError(error.status === 429 ? "RATE_LIMITED" : "VALIDATION_ERROR");
+      const others = await context.client.auth.signOut({ scope: 'others' });
+      if (others.error) throw new DomainError('PASSWORD_UPDATED_REVOCATION_UNCONFIRMED');
       return context.finish(NextResponse.json({ data: { password_updated: true }, request_id: requestId }));
     }
-    if (action === "logout") {
-      const { error } = await context.client.auth.signOut({ scope: "local" });
+    if (action === "logout" || action === "logout-all") {
+      if (action === "logout-all") {
+        if (verified.error || !verified.data?.claims.sub) throw new DomainError("AUTH_REQUIRED");
+        const account = await context.client.rpc("get_my_account");
+        if (account.error) throw account.error;
+        if (!account.data?.verified || account.data.is_guest) throw new DomainError("VERIFIED_ACCOUNT_REQUIRED");
+      }
+      const { error } = await context.client.auth.signOut({ scope: action === "logout-all" ? "global" : "local" });
       if (error) throw new DomainError("DEPENDENCY_UNAVAILABLE");
       return context.finish(NextResponse.json({ data: { signed_out: true }, request_id: requestId }));
     }
@@ -45,14 +55,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const parsed = (action === "signup" ? signupInput : loginInput).safeParse(body);
     if (!parsed.success) throw new DomainError("VALIDATION_ERROR");
     const email = parsed.data.email.trim().toLowerCase();
+    const previous = await priorSessionToken(context.client.auth);
     if (action === "signup") {
-      const { error } = await context.client.auth.signUp({ email, password: parsed.data.password,
+      const { data, error } = await context.client.auth.signUp({ email, password: parsed.data.password,
         options: { emailRedirectTo: new URL("/auth/callback", context.config.app_base_url).href } });
       if (error) throw new DomainError(error.status === 429 ? "RATE_LIMITED" : "VALIDATION_ERROR");
+      replacingSession = true;
+      await retireReplacedSession(context.client.auth, previous, data.session?.access_token);
       return context.finish(NextResponse.json({ data: { verification_required: true }, request_id: requestId }, { status: 201 }));
     }
-    const { error } = await context.client.auth.signInWithPassword({ email, password: parsed.data.password });
+    const { data, error } = await context.client.auth.signInWithPassword({ email, password: parsed.data.password });
     if (error) throw new DomainError(error.code === "email_not_confirmed" ? "VERIFIED_ACCOUNT_REQUIRED" : error.status === 429 ? "RATE_LIMITED" : "AUTH_FAILED");
+    replacingSession = true;
+    await retireReplacedSession(context.client.auth, previous, data.session?.access_token);
     const account = await context.client.rpc("get_my_account");
     if (account.error) throw account.error;
     const current = accountSchema.safeParse(account.data);
@@ -61,6 +76,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     const safe = safeError(error);
     const response = NextResponse.json({ code: safe.code, message: safe.message, request_id: requestId }, { status: safe.status, headers: { "Cache-Control": "private, no-store" } });
+    if (replacingSession) {
+      await context?.client.auth.signOut({ scope: "local" }).catch(() => undefined);
+      return response;
+    }
     return context ? context.finish(response) : response;
   }
 }

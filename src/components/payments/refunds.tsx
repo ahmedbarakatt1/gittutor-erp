@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
@@ -90,7 +91,7 @@ function RevealDestination({ destination, attempt }: { destination: RefundDestin
   const hydrated = useHydrated(), [identifier, setIdentifier] = useState(''), [pending, setPending] = useState(false), [error, setError] = useState('');
   async function reveal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!hydrated || pending) return; const form = event.currentTarget; if (!form.reportValidity()) return; const reason = String(new FormData(form).get('reason')); setPending(true); setError(''); setIdentifier('');
-    try { const response = await fetch(`/api/v1/refund-destinations/${destination.destination_id}/reveal`, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refund_attempt_id: attempt.attempt_id, reason }) }); const body = await response.json(); if (!response.ok || typeof body.data?.identifier !== 'string') throw new Error('REVEAL_FAILED'); setIdentifier(body.data.identifier); form.reset(); } catch { setError(copy.failed); } finally { setPending(false); }
+    try { const response = await sessionFetch(`/api/v1/refund-destinations/${destination.destination_id}/reveal`, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refund_attempt_id: attempt.attempt_id, reason }) }); const body = await response.json(); if (!response.ok || typeof body.data?.identifier !== 'string') throw new Error('REVEAL_FAILED'); setIdentifier(body.data.identifier); form.reset(); } catch { setError(copy.failed); } finally { setPending(false); }
   }
   return <details className={styles.disclosure} onToggle={event => { if (!event.currentTarget.open) setIdentifier(''); }}><summary>{copy.revealDestination}</summary><p>{copy.revealNotice}</p><p>{destination.payee_name} · {destination.masked_identifier}</p><form method="post" className={formStyles.form} onSubmit={reveal} aria-label={copy.revealDestination}><fieldset className={formStyles.formFields} disabled={!hydrated || pending}><TextField name="reason" label={copy.revealReason} maxLength={2000} /></fieldset><button type="submit" className={formStyles.primary} disabled={!hydrated || pending}>{copy.revealDestination}</button></form>{error && <p role="alert" className={formStyles.error}>{error}</p>}{identifier && <div><p>{copy.revealedDestination}: <output><bdi dir="ltr">{identifier}</bdi></output></p><button type="button" className={formStyles.signout} onClick={() => setIdentifier('')}>{copy.hideDestination}</button></div>}</details>;
 }

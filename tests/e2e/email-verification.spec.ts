@@ -193,6 +193,9 @@ test('a learner can reset a password through the emailed recovery link', async (
   const provider = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } });
   const created = await provider.auth.admin.createUser({ email, password: original, email_confirm: true });
   expect(created.error?.code).toBeUndefined();
+  const otherDevice = anonymousClient();
+  expect((await otherDevice.auth.signInWithPassword({ email, password: original })).error).toBeNull();
+  expect((await otherDevice.rpc('get_my_account')).data.account_id).toBe(created.data.user!.id);
   await page.goto('/login');
   await page.getByRole('link', { name: 'Forgot your password?' }).click();
   const resetForm = page.locator('form[action="/api/auth/recover"]');
@@ -209,6 +212,7 @@ test('a learner can reset a password through the emailed recovery link', async (
   await page.getByLabel('Confirm password').fill(replacement);
   await page.getByRole('button', { name: 'Save password and continue' }).click();
   await expect(page).toHaveURL(/\/learn$/);
+  expect((await otherDevice.rpc('get_my_account')).error).toBeTruthy();
   const auth = anonymousClient();
   expect((await auth.auth.signInWithPassword({ email, password: original })).error?.code).toBe('invalid_credentials');
   expect((await auth.auth.signInWithPassword({ email, password: replacement })).error).toBeNull();

@@ -1,4 +1,5 @@
 import{randomUUID}from'node:crypto';import{NextRequest,NextResponse}from'next/server';import{z}from'zod';
+import { sessionView } from '@/server/session-view';
 import{requestSupabase}from'@/server/supabase';import{allowedOrigin,DomainError,readJson,safeError}from'@/server/http';import{getConversation,listConversations,invokeSupportCommand,getSupportOptions,issueConversationChallenge,registerWhatsAppTemplate,revokeWhatsAppTemplate,setSupportHours,type supportCommands}from'@/modules/support/commands';
 export const runtime='nodejs';
 const actions:Record<string,keyof typeof supportCommands>={messages:'submit_message',handoff:'request_handoff',claim:'claim_conversation',reply:'reply_to_conversation',transfer:'transfer_conversation',escalate:'escalate_conversation',return:'return_conversation',resolve:'resolve_conversation',notes:'add_conversation_note',link:'link_conversation_account',reconcile:'reconcile_whatsapp_message','withdraw-consent':'withdraw_whatsapp_consent'};
@@ -6,7 +7,17 @@ async function handle(request:NextRequest,context:{params:Promise<{path?:string[
  scoped=requestSupabase(request);const path=(await context.params).path||[],claims=await scoped.client.auth.getClaims();let data:unknown;
  if(request.method==='POST'&&path.join('/')==='session'){
   if(!allowedOrigin(request.headers.get('origin'),scoped.config.app_base_url,scoped.config.isolated))throw new DomainError('FORBIDDEN');
-  if(!claims.data?.claims.sub){const created=await scoped.client.auth.signInAnonymously();if(created.error||!created.data.session)throw new DomainError('DEPENDENCY_UNAVAILABLE');}data={ready:true};
+  if(!claims.data?.claims.sub){
+    const created=await scoped.client.auth.signInAnonymously();
+    if(created.error||!created.data.session)throw new DomainError('DEPENDENCY_UNAVAILABLE');
+    const guest=await scoped.client.auth.getClaims(created.data.session.access_token);
+    if(guest.error||!guest.data?.claims.session_id)throw new DomainError('DEPENDENCY_UNAVAILABLE');
+    return scoped.finish(NextResponse.json({data:{ready:true},request_id:requestId},{headers:{'x-git-tutor-new-view':sessionView(guest.data.claims.session_id),'x-git-tutor-guest':'1'}}));
+  }
+  if (claims.data.claims.is_anonymous === true) {
+    return scoped.finish(NextResponse.json({data:{ready:true},request_id:requestId},{headers:{'x-git-tutor-guest':'1'}}));
+  }
+  data={ready:true};
  }else{
   if(claims.error||!claims.data?.claims.sub)throw new DomainError('AUTH_REQUIRED');
   if(request.method==='GET'){

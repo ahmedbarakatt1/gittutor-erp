@@ -1,4 +1,5 @@
 'use client';
+import { documentSession, sessionFetch } from '@/components/session-fetch';
 
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FileView, PublicFilePurpose } from '@/modules/files/queries';
@@ -46,7 +47,7 @@ export function FileUpload({ purpose, parentId, evidenceAction, operationScope, 
     const controller = new AbortController(); let timer: ReturnType<typeof setTimeout> | undefined;
     const read = async () => {
       try {
-        const response = await fetch(`/api/v1/files/${fileId}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
+        const response = await sessionFetch(`/api/v1/files/${fileId}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
         const body = await response.json(); if (!response.ok || !body.data || body.data.file_id !== fileId) throw new Error(copy.unavailable);
         if (controller.signal.aborted) return;
         const current = body.data as FileView; setRecord(current);
@@ -67,12 +68,12 @@ export function FileUpload({ purpose, parentId, evidenceAction, operationScope, 
       const body = { purpose, parent_id: parentId, filename: selected.name, declared_type: declaredType, size_bytes: selected.size, checksum_sha256: checksum, evidence_action: evidenceAction || null };
       const signature = JSON.stringify(operationScope === undefined ? body : { ...body, operationScope }), digest = hexadecimal(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signature)));
       if (operation.current?.signature !== signature) {
-        const storageKey = `git-tutor-upload:${digest}`; let intentKey: string = crypto.randomUUID(), completeKey: string = crypto.randomUUID();
+        const storageKey = `git-tutor-upload:${documentSession()}:${digest}`; let intentKey: string = crypto.randomUUID(), completeKey: string = crypto.randomUUID();
         try { const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null'); if (/^[0-9a-f-]{36}$/.test(saved?.intentKey || '') && /^[0-9a-f-]{36}$/.test(saved?.completeKey || '')) { intentKey = saved.intentKey; completeKey = saved.completeKey; } sessionStorage.setItem(storageKey, JSON.stringify({ intentKey, completeKey })); } catch { /* In-memory retry remains available. */ }
         operation.current = { signature, intentKey, completeKey, storageKey };
       }
       async function json(path: string, payload: unknown, key: string) {
-        const response = await fetch(path, { method: 'POST', credentials: 'same-origin', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key }, body: JSON.stringify(payload) });
+        const response = await sessionFetch(path, { method: 'POST', credentials: 'same-origin', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key }, body: JSON.stringify(payload) });
         const result = await response.json(); if (!response.ok) { setRequestId(result.request_id || ''); throw new Error(typeof result.message === 'string' ? staffText(uiLanguage, result.message) : copy.failed); } return result.data;
       }
       setPhase('creating'); const intent = await json('/api/v1/files', body, operation.current.intentKey);
@@ -81,7 +82,7 @@ export function FileUpload({ purpose, parentId, evidenceAction, operationScope, 
       for (const range of fileRanges(bytes.byteLength)) {
         const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
         if (bytes.byteLength > fileChunkBytes) headers['Content-Range'] = `bytes ${range.start}-${range.end}/${range.total}`;
-        const uploaded = await fetch(intent.upload_path, { method: 'PUT', credentials: 'same-origin', signal: controller.signal, headers, body: bytes.slice(range.start, range.end + 1) });
+        const uploaded = await sessionFetch(intent.upload_path, { method: 'PUT', credentials: 'same-origin', signal: controller.signal, headers, body: bytes.slice(range.start, range.end + 1) });
         const result = await uploaded.json();
         if (!uploaded.ok) { setRequestId(result.request_id || ''); throw new Error(typeof result.message === 'string' ? staffText(uiLanguage, result.message) : copy.failed); }
         if (result.data?.file_id !== intent.file_id) throw new Error(copy.failed);

@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useStaffCopy } from '@/components/ar-staff-label';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
@@ -19,7 +20,7 @@ function useReferenceData(includeSubjects = false, includeProfile = false) {
   useEffect(() => {
     const controller = new AbortController();
     async function get(path: string) {
-      const response = await fetch(`/api/v1/${path}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' });
+      const response = await sessionFetch(`/api/v1/${path}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' });
       if (!response.ok) throw new Error('REFERENCE_DATA_UNAVAILABLE');
       return (await response.json()).data;
     }
@@ -60,7 +61,7 @@ export function usePagedRecords<T>(path: string) {
     const current = invalidate();
     const controller = new AbortController();
     controllers.current.add(controller);
-    fetch(`/api/v1/${path}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' }).then(async response => {
+    sessionFetch(`/api/v1/${path}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' }).then(async response => {
       if (!response.ok) throw new Error('RECORDS_UNAVAILABLE');
       const body = await response.json();
       if (!Array.isArray(body.data?.items)) throw new Error('RECORDS_UNAVAILABLE');
@@ -77,7 +78,7 @@ export function usePagedRecords<T>(path: string) {
     paging.current = true;
     setLoadingMore(true); setFailed(false);
     try {
-      const response = await fetch(`/api/v1/${path}${path.includes('?') ? '&' : '?'}cursor=${encodeURIComponent(cursor)}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' });
+      const response = await sessionFetch(`/api/v1/${path}${path.includes('?') ? '&' : '?'}cursor=${encodeURIComponent(cursor)}`, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' });
       if (!response.ok) throw new Error('RECORDS_UNAVAILABLE');
       const body = await response.json();
       if (!Array.isArray(body.data?.items)) throw new Error('RECORDS_UNAVAILABLE');

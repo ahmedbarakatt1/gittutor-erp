@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { expect, test, vi } from 'vitest';
 import { GET, HEAD, POST } from '../../src/app/auth/callback/route';
 
-const auth = vi.hoisted(() => ({ exchangeCodeForSession: vi.fn(), verifyOtp: vi.fn() }));
+const auth = vi.hoisted(() => ({ getSession: vi.fn(async () => ({data:{session:null},error:null})), exchangeCodeForSession: vi.fn(), verifyOtp: vi.fn() }));
 vi.mock('@/server/supabase', () => ({ requestSupabase: () => ({
   client: { auth }, config: { app_base_url: 'https://gittutor.example', isolated: false },
   finish: (response: Response) => response,
@@ -47,7 +47,7 @@ test.each([
     .replaceAll('&amp;', '&');
   expect(new URL(action).pathname).toBe('/auth/callback');
   expect(new URL(action).origin).toBe(origin);
-  auth.verifyOtp.mockResolvedValue({ error: null });
+  auth.verifyOtp.mockResolvedValue({ data: { session: { access_token: 'synthetic' } }, error: null });
   auth.verifyOtp.mockClear();
   const preview = await GET(new NextRequest(action));
   expect(preview.status).toBe(200);
@@ -88,5 +88,20 @@ test('an oversized form without a declared size leaves the email token unused', 
     headers: { origin, 'content-type': 'application/x-www-form-urlencoded' },
   });
   expect((await POST(request)).headers.get('location')).toBe(origin + '/login?reason=verification');
+  expect(auth.verifyOtp).not.toHaveBeenCalled();
+});
+
+test('a change of account between the email preview and confirmation leaves the link unused', async () => {
+  const url = origin + '/auth/callback?type=recovery&token_hash=' + tokenHash;
+  const first = 'sb-example-auth-token.0=synthetic-first';
+  const preview = await GET(new NextRequest(url, { headers: { cookie: first } }));
+  const html = await preview.text();
+  expect(html).not.toContain('synthetic-first');
+  const view = html.match(/name="view" value="([a-f0-9]{64})"/)?.[1];
+  expect(view).toBeTruthy();
+  auth.verifyOtp.mockClear();
+  const result = await POST(new NextRequest(url, { method:'POST', body:`view=${view}&confirm=yes`,
+    headers:{origin, cookie:'sb-example-auth-token.0=synthetic-second','content-type':'application/x-www-form-urlencoded'} }));
+  expect(result.headers.get('location')).toBe(origin+'/login?reason=verification');
   expect(auth.verifyOtp).not.toHaveBeenCalled();
 });

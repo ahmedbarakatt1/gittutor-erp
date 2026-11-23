@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useEffect, useId, useState } from 'react';
 import { formatCreditQuanta, scaledIntegerInput } from '@/modules/shared/format';
@@ -37,7 +38,7 @@ export function usePackageRecord<T>(path: string | null) {
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    fetch(`/api/v1/${path}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }).then(async response => {
+    sessionFetch(`/api/v1/${path}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal }).then(async response => {
       const body = await response.json(); if (controller.signal.aborted) return;
       if (!response.ok) { setState({ path, error: ['FORBIDDEN', 'PERMISSION_DENIED', 'CONSENT_REQUIRED'].includes(body.code) || response.status === 403 ? copy.permission : copy.failed }); return; }
       setState({ path, data: body.data });

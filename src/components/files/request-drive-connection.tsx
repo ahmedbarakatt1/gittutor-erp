@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { SiteLanguage } from '@/locales/language';
 import { serverSupabase } from '@/server/supabase';
+import { headers } from 'next/headers';
 import styles from '../teaching/calendar-connection.module.css';
 
 const copy = {
@@ -44,12 +45,13 @@ async function connectionStatus(enabled: boolean) {
 export async function RequestDriveConnection({ enabled, language, outcome }: { enabled: boolean; language: SiteLanguage; outcome?: string }) {
   const text = copy[language];
   const status = await connectionStatus(enabled);
+  const view = (await headers()).get('x-git-tutor-rendered-view') || 'signed-out';
   return <section className={styles.panel} aria-labelledby="request-drive-heading">
     <h2 id="request-drive-heading">{text.title}</h2>
     <p role="status">{text[status.state]}</p>
     {outcome === 'consent_failed' && <p role="alert">{text.consent_failed}</p>}
     {outcome === 'unavailable' && status.state !== 'unavailable' && <p role="alert">{text.unavailable}</p>}
-    {status.can_connect && <form action="/api/drive/connect" method="post">
+    {status.can_connect && <form action={'/api/drive/connect?view=' + encodeURIComponent(view)} method="post">
       <p>{text.consent}</p>
       <button className={styles.secondary} type="submit">{status.state === 'connected' ? text.renew : text.action}</button>
     </form>}

@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useEffect, useState } from 'react';
 import type { MeetingView, MeetingAccess } from '@/modules/teaching/meetings';
@@ -27,7 +28,7 @@ export function MeetingPanel({ occurrenceId, learnerId, view = 'customer', displ
   useEffect(() => {
     const controller = new AbortController(); let timer: ReturnType<typeof setTimeout> | undefined;
     async function load() {
-      try { const response = await fetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }); const body = await response.json(); if (!response.ok || body.data?.occurrence_id !== occurrenceId) throw new Error('MEETING_UNAVAILABLE'); if (!controller.signal.aborted) { const received = performance.now(); setRecord({ path, data: body.data, received }); setClock(received); setFailed(false); timer = setTimeout(load, 15000); } }
+      try { const response = await sessionFetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }); const body = await response.json(); if (!response.ok || body.data?.occurrence_id !== occurrenceId) throw new Error('MEETING_UNAVAILABLE'); if (!controller.signal.aborted) { const received = performance.now(); setRecord({ path, data: body.data, received }); setClock(received); setFailed(false); timer = setTimeout(load, 15000); } }
       catch { if (!controller.signal.aborted) { setFailed(true); setRecord(null); } }
     }
     void load(); return () => { controller.abort(); if (timer) clearTimeout(timer); };
@@ -40,7 +41,7 @@ export function MeetingPanel({ occurrenceId, learnerId, view = 'customer', displ
     if (!data?.can_join || ended || joining) return;
     setJoining(true); setJoinError(''); setPreview(false);
     try {
-      const response = await fetch(`/api/v1/occurrences/${occurrenceId}/meeting/access?${query}`, { cache: 'no-store', credentials: 'same-origin' }); const body = await response.json();
+      const response = await sessionFetch(`/api/v1/occurrences/${occurrenceId}/meeting/access?${query}`, { cache: 'no-store', credentials: 'same-origin' }); const body = await response.json();
       if (!response.ok) throw new Error(body.message || copy.failed);
       const access = body.data as MeetingAccess; if (access.occurrence_id !== occurrenceId) throw new Error(copy.failed);
       if (access.integration_state === 'simulated') { setPreview(true); return; }

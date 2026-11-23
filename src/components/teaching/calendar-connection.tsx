@@ -1,4 +1,5 @@
 'use client';
+import { documentSession, sessionFetch } from '@/components/session-fetch';
 
 import { useRef, useState } from 'react';
 import type { CalendarConnection } from '@/modules/teaching/meetings';
@@ -37,7 +38,7 @@ export function CalendarConnectionPanel({ provider, outcome, verifyGoogleRooms }
     setError('');
     setFeedback('');
     const signature = JSON.stringify(verifyGoogleRooms ? { ...action, verify_room: true } : action);
-    const storageKey = `git-tutor-calendar:${provider}:${signature}`;
+    const storageKey = `git-tutor-calendar:${documentSession()}:${provider}:${signature}`;
     try {
       if (operation.current?.signature !== signature) {
         let key: string = crypto.randomUUID();
@@ -48,7 +49,7 @@ export function CalendarConnectionPanel({ provider, outcome, verifyGoogleRooms }
         } catch { /* Retry within this page when browser storage is disabled. */ }
         operation.current = { key, signature };
       }
-      const response = await fetch('/api/calendar/connect', {
+      const response = await sessionFetch('/api/calendar/connect', {
         method: 'POST', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.current.key },
         body: signature,
