@@ -79,9 +79,27 @@ test('a guest can end a support session before handing over the device', async (
   await page.getByRole('button',{name:'Start a conversation'}).click();
   await expect(page.getByRole('heading',{name:'Your conversations'})).toBeVisible();
   expect((await (await page.request.get('/api/v1/me')).json()).data).toEqual({is_guest:true});
+  const ended = page.waitForResponse(response => response.url().endsWith('/api/auth/logout') && response.request().method() === 'POST');
   await page.getByRole('button',{name:'End guest session on this device'}).click();
+  expect((await ended).status()).toBe(200);
+  await page.waitForFunction(() => document.documentElement.dataset.sessionView === 'signed-out');
   await expect(page.getByRole('button',{name:'Start a conversation'})).toBeVisible();
   expect((await page.request.get('/api/v1/support')).status()).toBe(401);
+});
+
+test('a remotely signed-out browser can sign in to an unrelated account after a password change', async ({request,browser}) => {
+  const [first, second] = await accounts();
+  const remote = await browser.newContext({baseURL:origin});
+  try {
+    expect((await login(request,first)).status()).toBe(200);
+    expect((await login(remote.request,first)).status()).toBe(200);
+    const updated = await request.post('/api/auth/password',{headers,data:{password:'New-synthetic-'+randomUUID()}});
+    expect(updated.status()).toBe(200);
+    expect((await remote.request.get('/api/v1/me')).status()).toBe(401);
+    expect((await login(remote.request,second)).status()).toBe(200);
+    expect((await (await remote.request.get('/api/v1/me')).json()).data.account_id).toBe(second.id);
+    expect((await (await request.get('/api/v1/me')).json()).data.account_id).toBe(first.id);
+  } finally { await remote.close(); }
 });
 
 test('browser history after logout keeps the previous learner workspace closed with storage disabled', async ({page}) => {

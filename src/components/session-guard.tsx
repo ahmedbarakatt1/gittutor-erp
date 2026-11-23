@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import { changeKey, closeStaleView, discardOtherSessionRetries, documentSession, notifySessionChange, sessionFetch } from './session-fetch';
+import { changeKey, closeStaleView, discardOtherSessionRetries, documentSession, notifySessionChange } from './session-fetch';
 import { accountScope } from '@/modules/identity/account-scope';
 
 export function SessionGuard() {
@@ -21,7 +21,8 @@ export function SessionGuard() {
       const current = ++sequence;
       const view = documentSession();
       try {
-        const response = await sessionFetch('/api/v1/me', { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+        // Only the latest check for the visible document may initiate navigation.
+        const response = await fetch('/api/v1/me', { headers: { 'x-git-tutor-view': view }, cache: 'no-store', signal: AbortSignal.timeout(10000) });
         if (stopped || sequence !== current || documentSession() !== view) return;
         if (!response.ok && !(view === 'signed-out' && response.status === 401)) return closeStaleView();
         const scope = document.querySelector<HTMLElement>('[data-account-scope]')?.dataset.accountScope;
@@ -35,8 +36,9 @@ export function SessionGuard() {
         if (!stopped && sequence === current && view !== 'signed-out') closeStaleView();
       }
     }
+    const suspend = () => { ++sequence; hide(); };
     const visibility = () => {
-      if (document.hidden) { ++sequence; hide(); }
+      if (document.hidden) suspend();
       else void check();
     };
     const restore = (event: PageTransitionEvent) => { if (event.persisted) { hide(); void check(); } };
@@ -44,7 +46,7 @@ export function SessionGuard() {
     const focus = () => { if (!document.hidden && documentSession() !== 'signed-out') { hide(); void check(); } };
     const timer = window.setInterval(() => { if (!document.hidden && documentSession() !== 'signed-out') void check(); }, 60000);
     window.addEventListener('storage', changed);
-    window.addEventListener('pagehide', hide);
+    window.addEventListener('pagehide', suspend);
     window.addEventListener('pageshow', restore);
     window.addEventListener('focus', focus);
     document.addEventListener('visibilitychange', visibility);
@@ -52,7 +54,7 @@ export function SessionGuard() {
       stopped = true;
       clearInterval(timer);
       window.removeEventListener('storage', changed);
-      window.removeEventListener('pagehide', hide);
+      window.removeEventListener('pagehide', suspend);
       window.removeEventListener('pageshow', restore);
       window.removeEventListener('focus', focus);
       document.removeEventListener('visibilitychange', visibility);

@@ -16,7 +16,9 @@ export async function priorSessionToken(auth: Auth) {
 export async function retireReplacedSession(auth: Auth, previous: string | undefined, next: string | undefined) {
   if (!previous || !next || previous === next) return;
   const { error } = await auth.admin.signOut(previous, 'local');
-  if (error && error.code !== 'session_not_found') {
+  // Auth-js can normalize an already revoked session to AuthSessionMissingError
+  // without preserving the provider code. Both responses confirm retirement.
+  if (error && error.name !== 'AuthSessionMissingError' && error.code !== 'session_not_found' && error.code !== 'user_not_found') {
     await auth.signOut({ scope: 'local' });
     throw new DomainError('DEPENDENCY_UNAVAILABLE');
   }

@@ -218,5 +218,8 @@ test('a learner can reset a password through the emailed recovery link', async (
   expect((await auth.auth.signInWithPassword({ email, password: replacement })).error).toBeNull();
   await auth.auth.signOut();
   await context.clearCookies();
-  await followVerification(page, link, '/login');
+  // Reopen the email as a signed-out recipient. The previous learner tab
+  // independently closes when it detects that its browser session ended.
+  const replay = await context.newPage();
+  await followVerification(replay, link, '/login');
 });
