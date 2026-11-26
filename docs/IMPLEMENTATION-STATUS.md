@@ -1,5 +1,9 @@
 # Implementation status
 
+## Production administrator access (26 November 2026)
+
+The production account and role check found that one of the two requested colleagues already held an active Administrator grant, the management role used by the owner. The other colleague had an existing account awaiting email verification. The staff-grant command requires a verified mailbox, and the new-staff invitation command excludes existing accounts. One fresh activation email was sent to the intended existing account. A clean browser opened the private site-entry link at Git Tutor sign-in and the private records API returned 401. `.local/nov26-rawan-history.ps1` found one matching message with Mailjet event and status `sent`. At the last readback the second account still awaited verification and its Administrator grant remained outstanding. No role was removed or duplicated.
+
 ## Shared devices and session revocation (23 November 2026)
 
 - Vercel promoted `fb6b470597fce5cb0f491a1c166472d2772932d1` after [application CI](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/45100504402) and [worker CI](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/45100504441) passed. Application CI executed 636 unit tests, 329 integration tests, 208 desktop/mobile browser tests and a separate five-role guided booking. Database verification, the synthetic payout restore, lint, type checking and the release build passed.
