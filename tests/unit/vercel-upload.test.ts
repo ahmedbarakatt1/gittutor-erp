@@ -22,7 +22,7 @@ it('includes application directories during Vercel traversal while pruning priva
   await walk(root);
   expect(included).toEqual(expect.arrayContaining(['src/app/page.tsx','src/worker/index.ts','public/brand/git-tutor-instagram.jpg','contracts/runtime/supabase-root-2021.crt']));
   expect(included.filter(path=>path.startsWith('deploy/')).sort()).toEqual([
-    'deploy/vercel-scanner/Dockerfile','deploy/vercel-scanner/clamd.conf','deploy/vercel-scanner/freshclam.conf','deploy/vercel-scanner/supervise.mjs',
+    'deploy/vercel-scanner/Dockerfile','deploy/vercel-scanner/clamd.conf','deploy/vercel-scanner/freshclam.conf','deploy/vercel-scanner/readiness.ts','deploy/vercel-scanner/supervise.mjs',
   ]);
   expect(included.filter(path=>/^(?:\.local\/|\.env|tests\/|fixtures\/|tools\/|\.git\/|contracts\/(?!runtime\/))/.test(path))).toEqual([]);
   expect(included.filter(path=>/\.(?:xlsx|csv|log|dump)$/.test(path))).toEqual([]);

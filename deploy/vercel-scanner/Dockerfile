@@ -17,7 +17,7 @@ COPY package.json tsconfig.json ./
 COPY src ./src
 COPY contracts/runtime ./contracts/runtime
 COPY deploy/vercel-scanner/clamd.conf deploy/vercel-scanner/freshclam.conf /etc/clamav/
-COPY deploy/vercel-scanner/supervise.mjs ./
+COPY deploy/vercel-scanner/supervise.mjs deploy/vercel-scanner/readiness.ts ./
 RUN addgroup -g 1100 gitworker && adduser -D -u 1100 -G gitworker gitworker \
     && mkdir -p /app/.local && chown gitworker:gitworker /app/.local && chown clamav:clamav /var/lib/clamav \
     && node --version && clamd --version && freshclam --version

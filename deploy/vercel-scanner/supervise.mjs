@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
+import { waitForScanner } from './readiness.ts';
 import { createClamavScanAdapter } from './src/server/providers/file-scan.ts';
 
 const endpoint = 'tcp://127.0.0.1:3310';
@@ -43,26 +44,17 @@ const requested = new Promise(resolve => {
 });
 const scannerEnv = { PATH: process.env.PATH, HOME: '/tmp', TZ: 'UTC' };
 let clamd, updates, worker;
-async function waitForScanner(deadline, allowStale) {
-  do {
-    const observation = await scan(clean);
-    if (observation.outcome === 'clean' || (allowStale && observation.safe_error_code === 'SCANNER_SIGNATURES_STALE')) {
-      return { name: 'ready', observation };
-    }
-    await delay(2000, null, { signal: stopSignal.signal });
-  } while (Date.now() < deadline);
-  throw new Error('SCANNER_READINESS_TIMEOUT');
-}
 async function run() {
   const deadline = Date.now() + 300000;
+  const probe = allowStale => waitForScanner({ scan: () => scan(clean), deadline, allowStale, signal: stopSignal.signal, log });
   clamd = start('clamd', ['--config-file=/etc/clamav/clamd.conf'], 'clamav', scannerEnv);
   // FreshClam must be able to notify a listening daemon when it installs its first update.
-  const listening = await Promise.race([clamd.exited, requested, waitForScanner(deadline, true)]);
+  const listening = await Promise.race([clamd.exited, requested, probe(true)]);
   if (listening.name === 'shutdown') return;
   if (listening.name !== 'ready') throw new Error('PRIVATE_SCANNER_STARTUP_FAILED_' + listening.name);
   updates = start('freshclam', ['--daemon', '--config-file=/etc/clamav/freshclam.conf'], 'clamav', scannerEnv);
   const serviceExit = Promise.race([clamd.exited, updates.exited, requested]);
-  const first = await Promise.race([serviceExit, waitForScanner(deadline, false)]);
+  const first = await Promise.race([serviceExit, probe(false)]);
   if (first.name === 'ready') {
     // Validate actual kernel listeners. ClamD has no authentication of its own.
     const clamdSockets = ['/proc/net/tcp', '/proc/net/tcp6'].flatMap(path => {

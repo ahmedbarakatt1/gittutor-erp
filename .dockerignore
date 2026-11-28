@@ -21,3 +21,4 @@
 !deploy/vercel-scanner/clamd.conf
 !deploy/vercel-scanner/freshclam.conf
 !deploy/vercel-scanner/supervise.mjs
+!deploy/vercel-scanner/readiness.ts
