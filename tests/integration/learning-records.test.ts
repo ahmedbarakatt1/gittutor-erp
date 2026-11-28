@@ -7,7 +7,7 @@ import {anonymousClient,loadLocalSupabase} from '../helpers/supabase';
 import {getLearningRecords,publishLearningRecord} from '../../src/modules/teaching/learning-records';
 
 test('GT-803 explicit group publication, private learner feedback, immutable revisions and current scope govern read and notification',async()=>{
- const f=await groupCompletionFixture(),guardian=anonymousClient();try{
+ const f=await groupCompletionFixture({isolatedLearners:true}),guardian=anonymousClient();try{
   const args={p_occurrence_id:f.occurrenceId,p_learner_id:null,p_content:'Shared algebra practice',p_expected_version:0,p_idempotency_key:randomUUID()};
   expect((await f.tutor.rpc('publish_learning_record',args)).error?.message).toBe('STATE_CONFLICT');
   await completeLearningFixture(f);
@@ -34,8 +34,8 @@ test('GT-803 explicit group publication, private learner feedback, immutable rev
   const privateEvent=await event(feedbackA.revision_id),groupEvent=await event(group.revision_id);
   const recipients=async(id:string)=>(await f.database.query('select *from app_private.notification_recipients($1)',[id])).rows;
   const learnerA=(await f.students[0].auth.getUser()).data.user!.id;
-  const individual=await recipients(privateEvent);expect(individual.map(r=>r.account_id)).toEqual(expect.arrayContaining([learnerA,guardianId]));expect(individual.map(r=>r.account_id)).not.toContain(config.actors.learner_b.id);expect(individual.map(r=>r.account_id)).not.toContain(config.actors.learner_c.id);for(const r of individual){expect(Object.keys(r.content).sort()).toEqual(['action_path','audience','kind','locale','starts_at']);expect(r.content.kind).toBe('completion');expect(r.content.action_path).toBe('/learn/bookings');}expect(JSON.stringify(individual)).not.toMatch(/PRIVATE_|Shared algebra|learner_id|record_id/);
-  const shared=await recipients(groupEvent);expect(shared.map(r=>r.account_id)).toEqual(expect.arrayContaining([learnerA,guardianId,config.actors.learner_b.id,config.actors.learner_c.id]));
+  const individual=await recipients(privateEvent);expect(individual.map(r=>r.account_id)).toEqual(expect.arrayContaining([learnerA,guardianId]));expect(individual.map(r=>r.account_id)).not.toContain(f.learnerActors[1].id);expect(individual.map(r=>r.account_id)).not.toContain(f.learnerActors[2].id);for(const r of individual){expect(Object.keys(r.content).sort()).toEqual(['action_path','audience','kind','locale','starts_at']);expect(r.content.kind).toBe('completion');expect(r.content.action_path).toBe('/learn/bookings');}expect(JSON.stringify(individual)).not.toMatch(/PRIVATE_|Shared algebra|learner_id|record_id/);
+  const shared=await recipients(groupEvent);expect(shared.map(r=>r.account_id)).toEqual(expect.arrayContaining([learnerA,guardianId,f.learnerActors[1].id,f.learnerActors[2].id]));
   await f.rpc('revoke_guardian_link',{p_guardian_link_id:link.guardian_link_id,p_reason:'Withdraw teaching content scope',p_expected_version:1,p_idempotency_key:randomUUID()},f.students[0]);expect((await guardian.rpc('get_learning_records',{p_occurrence_id:f.occurrenceId,p_view:'customer',p_learner_id:f.learners[0]})).error?.message).toBe('NOT_FOUND');expect((await recipients(privateEvent)).map(r=>r.account_id)).not.toContain(guardianId);
   const role=(await f.database.query("select id,version from app_private.account_roles where account_id=$1 and role='tutor'and revoked_at is null",[f.actor.id])).rows[0];await f.rpc('revoke_staff_role',{p_role_grant_id:role.id,p_reason:'End current tutor authority',p_expected_version:role.version,p_idempotency_key:randomUUID()});
   expect((await f.tutor.rpc('publish_learning_record',args)).error?.message).toBe('FORBIDDEN');expect((await f.tutor.rpc('get_learning_records',{p_occurrence_id:f.occurrenceId,p_view:'tutor'})).error?.message).toBe('FORBIDDEN');

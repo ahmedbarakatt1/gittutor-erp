@@ -1,0 +1,27 @@
+# Upload only application source and build inputs, including for local CLI deploys.
+/*
+!vercel.json
+!.vercelignore
+!Dockerfile
+!.dockerignore
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!next.config.ts
+!tsconfig.json
+!next-env.d.ts
+# The CLI checks directory paths without trailing slashes before descending.
+!src
+!public
+!contracts
+/contracts/*
+!/contracts/runtime
+!deploy
+/deploy/*
+!/deploy/vercel-scanner
+/deploy/vercel-scanner/*
+!/deploy/vercel-scanner/Dockerfile
+!/deploy/vercel-scanner/clamd.conf
+!/deploy/vercel-scanner/freshclam.conf
+!/deploy/vercel-scanner/supervise.mjs
+!/deploy/vercel-scanner/readiness.ts

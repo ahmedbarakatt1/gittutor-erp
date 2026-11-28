@@ -6,7 +6,16 @@ export const authCopy = {
   password: 'Password',
   showPassword: 'Show password',
   hidePassword: 'Hide password',
+  show: 'Show', hide: 'Hide',
   passwordHint: 'Use at least 12 characters.',
+  navigation: {
+    menu: 'Menu', workspace: 'Workspace', sessions: 'Lessons', records: 'Records & reports',
+    money: 'Billing', service: 'Support & account', manage: 'Administration', switchWorkspace: 'Other workspaces',
+    dashboard: 'Dashboard', requests: 'Session requests', customers: 'Customers', support: 'Support',
+    supportInbox: 'Support inbox', exports: 'Your exports', history: 'Session history', campaigns: 'Campaigns',
+    students: 'Student progression', team: 'Team', updates: 'Your updates', notifications: 'Notification operations',
+    archive: 'Source archive', staff: 'Staff and applications',
+  },
   login: {
     title: 'Welcome back.',
     description: 'Sign in to your Git Tutor account.',
@@ -14,8 +23,6 @@ export const authCopy = {
     pending: 'Signing in…',
     alternative: 'New to Git Tutor?',
     link: 'Create an account',
-    asideTitle: 'Your learning starts with a question.',
-    asideBody: 'Keep your course materials, questions and next steps together as you learn.',
   },
   signup: {
     title: 'Make room for learning.',
@@ -24,8 +31,15 @@ export const authCopy = {
     pending: 'Creating account…',
     alternative: 'Already have an account?',
     link: 'Sign in',
-    asideTitle: 'Bring what you want to understand.',
-    asideBody: 'A topic, a problem or a slide. Start with your own questions and work towards a clearer next step.',
+  },
+  recover: {
+    title: 'Reset your password.',
+    description: 'Enter the email address you use for Git Tutor.',
+    submit: 'Send reset link',
+    pending: 'Requesting a link…',
+    alternative: 'Remember your password?',
+    link: 'Sign in',
+    received: 'If this address has a Git Tutor account, check your inbox and spam folder for a reset link.',
   },
   verification: {
     title: 'Check your email.',
@@ -35,7 +49,7 @@ export const authCopy = {
   },
   passwordSetup: {
     title: 'Set your password.',
-    description: 'Choose a password for your verified account. You will review and accept your staff invitation next.',
+    description: 'Choose a password for your verified Git Tutor account.',
     confirm: 'Confirm password',
     mismatch: 'The passwords do not match. Enter the same password again.',
     submit: 'Save password and continue',

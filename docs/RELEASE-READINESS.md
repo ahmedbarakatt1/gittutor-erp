@@ -1,12 +1,42 @@
 # Release readiness
 
-## Current decision
+## Current release decision, 22 November 2026
 
-**Ready for local exploratory testing — 13 November 2026.** The implemented public site and all role workspaces are available at `http://127.0.0.1:3000`. This is not a production release or a claim that all 147 acceptance catalogue entries have passed.
+The hosted preview is available for testing. The five-role booking flow, same-session compensation privacy and workbook replay passed using synthetic data. The private scanner image recovered from stale signatures, processed a maximum-size clean file and detected the antivirus test pattern. Production has no running worker or connected Calendar organizer, and no enabled collection account or published booking policy. Its eight queued notification-routing jobs need review before worker activation. Keep the public launch on hold until the owner and operators complete the [live checks](evidence/production-qa-20261122.md).
 
-The application includes the public site and learner/guardian, tutor, customer-service and admin workspaces. It uses synthetic identities and fake external providers. Docker and the existing Supabase database/storage are running again without a reset. The supplied phone/WhatsApp contact and Instagram-informed subject categories are incorporated.
+## Decision recorded on 19 November 2026
 
-## Executed checks
+PDF quizzes, tutor grading and the learner dashboard are deployed on the [testing site](ONLINE-PREVIEW.md). Both portal pages and their authenticated data requests were checked against the hosted deployment. The complete PDF and grade walkthrough also passed against a disposable database on desktop and mobile. The owner selected Vercel and staff-handled WhatsApp for production. The separate production database contains no imported learners, financial postings or queued pilot work. The dedicated Vercel project uses production-only settings and team sign-in on all URLs.
+
+The [current inputs and responsibilities](PRODUCTION-INPUTS.md) and the [execution record](IMPLEMENTATION-STATUS.md) govern commercial release. The group Meet rehearsal, real owner sign-in and recovery, hosted worker/scanner, financial approval and off-device recovery remain open.
+
+## Decision recorded on 18 November 2026
+
+The public site and four portals are ready for controlled testing on the [hosted preview](ONLINE-PREVIEW.md). Commercial activation remains pending. The [last full application verification](https://github.com/ahmedbarakatt1/gittutor-erp/actions/runs/44345460137) passed the database checks, unit and integration suites, 168 browser cases and the build. Two optional guided-demo cases were skipped in that run. The designated Meet pilot admitted the tutor and learner. Owner-only Mailjet Auth messages arrived in Spam. A clean production database has been provisioned separately.
+
+The [production inputs](PRODUCTION-INPUTS.md) list the outstanding host, scanner, Auth, financial, WhatsApp, commercial and recovery decisions. The [implementation record](IMPLEMENTATION-STATUS.md) contains the latest evidence and the open financial acceptance variants. A [hosted-source restore to a local target](evidence/hosted-source-recovery-20261115.md) succeeded. Recovery to a replacement hosted stack remains outstanding.
+
+## Earlier verification and repairs — 14 November 2026
+
+The entries below preserve earlier runs and their then-pending checks; the complete final CI result above supersedes those pending rerun statements. [Draft PR1](https://github.com/ahmedbarakatt1/gittutor-erp/pull/1) remains a preparation PR, not production activation.
+
+Baseline CI43595237730 passed all application stages:394 units,297 actual-database checks,158 browser checks/2 gated skips, database verification and optimized build. It failed only at3 documentation links to generated private demo files. Those references are corrected, and the unchanged pack verifier passes in a separate clean source archive. No private demo artifacts were committed to satisfy the checker.
+
+Latest production preparation: Docker web/worker builds and4 isolated image checks passed. After the final RPC-boundary correction,394 unit tests and whole lint/types passed;6/6 focused unit/actual-PostgreSQL checks also passed. Dependency audit found0 advisories across178 production/optional dependencies. Clean CI run43581649382 passed295/296 integration tests after fixing initialization; the final stale owner assertion was corrected and its focused check passed. Full rerun and final totals will be recorded in [implementation status](IMPLEMENTATION-STATUS.md). No all-green remote release is claimed yet.
+
+Subsequent CI43583823884 passed setup/static checks but stopped at393/394 units on a random UUID substring false positive in the Google privacy test. A deterministic reproducer failed locally; an exact allowed-payload assertion plus private input sentinels passed5/5 focused calendar checks. The next full run must supply its own integration/browser result.
+
+CI43584368137 then passed394/394 units and297/297 real-database integration checks. Browser result86 passed/70 failed/2 gated demo skips: shared sign-in assertions still expected the account UUID card removed from operational dashboards. The repaired setup checks server-authenticated identity directly; exact roles/scopes and confidentiality checks remain. Five focused role/guardian/logout/application browser checks passed locally. Full browser verification and later build/release steps remain pending the next run.
+
+After that repair, the full local browser run completed152 passed/4 failed/2 gated skips. The four failures came from two section selectors on both viewports; their corrected checks passed. A separately reproduced history-loading input reset is fixed with a new desktop/mobile regression. The focused repair run passed6/6, including all four failed cases and both new regressions. Whole lint/types, both rebuilt Docker targets and4/4 isolated image checks passed afterward. CI43591976383 on the earlier7344796 revision passed static/unit/database stages and browser155/158, with1 unavailable-response-body failure in the same remounting transfer workflow and2 gated skips. Commitff9399c preserves the workflow subtree and requests across history reads. Full CI43594506569 is executing that correction; no complete release-gate claim follows from combining earlier runs.
+
+CI43594506569 subsequently stopped at393/394 units on the stale assertion expecting unconditional fake-provider copy. The revised assertion preserves history separation and rejects that misleading production claim. Focused5/5 and whole394/394 unit checks plus scoped ESLint passed locally; no application change was needed. The remote integration/browser/build stages did not execute on that run. The next complete run remains the release gate.
+
+The Vercel transport follow-up preserves the file limits through3MiB authenticated pieces and streamed downloads/exports. Actual25MiB Storage validation, corrupt/interrupted retry, durable cleanup candidates, scan denial and unrelated-account denial are covered. Latest local whole units398/398, lint/types exit0, file/CRM/analytics browsers8/8 plus strengthened lost-acknowledgement desktop/mobile2/2. Independent final review reports no remaining concrete findings. A Linux local Vercel build passed on the preceding8b673d1 source; the updated build and full remote gate must be recorded separately. No hosted upload/deployment is claimed.
+
+The updated Linux Vercel build subsequently passed, including optimized compilation/types/static generation and actual Build Output API packaging. File/export/analytics entries all declare Node24.x response streaming. This resolves the local host-build check; deployed payload behavior still requires its own pilot.
+
+## Earlier executed release checks —13 November2026
 
 | Check | Latest recorded result | Evidence |
 |---|---|---|
@@ -33,18 +63,6 @@ All 147 entries are mapped across [T01–T06](T01-T06-ACCEPTANCE-MAP.md), [T07�
 
 The local restoration used a separate database in the existing container plus a new private bucket, with repeatable-read table controls, per-object SHA-256 comparisons and current authorization checks. It preserves source and failed target data. It verifies generic durable-job reconciliation without redispatch; it does not attest an external provider's uncertain payout outcome or a separate hosted-project restoration.
 
-## External activation dependencies
+## Current activation work
 
-| Area | Local implementation | Exact next controlled check |
-|---|---|---|
-| Hosted Auth/database/private Storage |Real local Supabase and current-role boundaries |Provision isolated staging, apply migrations without synthetic records, configure allowed redirects/SMTP, repeat separate-role and signed-file revocation checks.|
-| Commercial policies |Draft authoring, publication validation, synthetic approved examples |Owner approves complete cancellation, expiry, amendment, refund and fee rules; publish an approved policy and complete a controlled booking.|
-| Incoming/outgoing payments |Manual evidence reconciliation, allocations, refunds, payout reservations |Verify real receiving accounts and payout destinations; reconcile one controlled settled incoming transfer, refund and tutor payout to independent statement evidence.|
-| Google Calendar/Meet |Fake adapter, OAuth/PKCE, encrypted credentials, retry/reconciliation |Connect approved organizer; create/reschedule/cancel a controlled event and verify external learner admission, tutor hosting and removal of access.|
-| Email |Fake local inbox, SES adapter, signed callback processing |Verify sender/region/SNS topic; deliver to controlled addresses, receive signed delivery/bounce events and verify current-recipient withdrawal. Test Auth SMTP separately.|
-| WhatsApp |Fake adapter, signed webhook, FAQ, ownership, consent/window/template controls |Configure the approved business/phone IDs, token, secret, graph version and templates; test inbound, human handoff, opt-out, expired window and approved-template delivery.|
-| Malware scanning |Isolated fake and ClamD protocol adapter |Provide private scanner with current signatures; verify safe content accepted, malicious content quarantined and outage blocks downloads.|
-| Hosted recovery/operations |Local isolated rehearsal runner and durable replay |Approve retention/RPO/RTO/operator; restore into a separate hosted project, recover object bytes and encryption material, reconcile controls and measure recovery.|
-| CI/deployment |Pinned workflow and separate web/worker process definitions |Execute the workflow on the remote host, deploy staging and record its role, browser, provider and recovery results.|
-
-No live provider pilot, hosted CI run or production deployment is claimed. See [local testing instructions](LOCAL-TESTING.md) and [deployment instructions](DEPLOYMENT.md).
+Use the [operations and release handoff](handoff/03-operations-and-release.md) for the runbook and dependency order, [production inputs](PRODUCTION-INPUTS.md) for owner decisions, and [deployment](DEPLOYMENT.md) for target guards and provider configuration. Each historical result above applies to its named environment and revision.

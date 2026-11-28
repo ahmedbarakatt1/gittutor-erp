@@ -4,6 +4,13 @@ import { customerReturnPath } from '../../src/modules/identity/return-path';
 const learner = 'c66002a8-1587-467f-b705-d7bf65294970';
 const contract = 'ab915e6c-c35f-4b42-9242-14d71f386cfb';
 
+test('sign-in returns to a published catalog detail by ID', () => {
+  for (const category of ['offers', 'tutors']) {
+    expect(customerReturnPath(`/${category}/${contract}`)).toBe(`/${category}/${contract}`);
+    expect(customerReturnPath(`/${category}/unpublished`)).toBeUndefined();
+  }
+});
+
 test('customer sign-in intent preserves bounded package selection and detail paths', () => {
   expect(customerReturnPath('/learn/packages')).toBe('/learn/packages');
   expect(customerReturnPath(`/learn/packages?contract=${contract}&learner=${learner}`))

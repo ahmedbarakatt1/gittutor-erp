@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { Pool } from "pg";
-import type { JobHandler } from "./execute";
+import { ProviderOutcomeUnknown, type JobHandler } from "./execute";
+import { startJobDispatch } from "./claims";
 
 type Delivery = {
   invitation_id: string; email: string; delivery_version: number;
@@ -31,12 +32,21 @@ export function staffInvitationHandler(database: Pool): JobHandler {
     await database.query("select app_private.record_staff_invitation_delivery($1,$2,$3,$4,$5)", [delivery.invitation_id, delivery.delivery_version, outcome, userId, error]);
   };
   return {
+    marksProviderDispatch: true,
     async execute(job) {
       const delivery = await read(job.aggregate_id);
       if (!delivery) return "suppressed:invitation_unavailable";
       if (delivery.delivery_state === "sent" && delivery.provider_user_id) return delivery.provider_user_id;
+      if (delivery.delivery_state === "unknown") {
+        const knownUser = delivery.provider_user_id || delivery.reconciled_user_id;
+        if (!knownUser) throw new ProviderOutcomeUnknown("AUTH_INVITATION_OUTCOME_UNKNOWN");
+        await record(delivery, "sent", knownUser);
+        return knownUser;
+      }
       const provider = invitationProvider();
-      const { data, error } = await provider.auth.admin.inviteUserByEmail(delivery.email, { data: { staff_invitation_id: delivery.invitation_id }, redirectTo: new URL("/auth/callback", process.env.APP_BASE_URL || "http://127.0.0.1:3000").href });
+      const options = { data: { staff_invitation_id: delivery.invitation_id }, redirectTo: new URL("/auth/callback", process.env.APP_BASE_URL || "http://127.0.0.1:3000").href };
+      await startJobDispatch(database, job);
+      const { data, error } = await provider.auth.admin.inviteUserByEmail(delivery.email, options);
       if (error || !data.user) {
         await record(delivery, "unknown", null, "AUTH_INVITATION_OUTCOME_UNKNOWN");
         throw new Error("AUTH_INVITATION_OUTCOME_UNKNOWN");

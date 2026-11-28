@@ -1,0 +1,17 @@
+export const quizCopy = {
+  tutorNav: 'Quizzes', studentNav: 'Quizzes and grades',
+  tutorTitle: 'Session quizzes', tutorIntro: 'Share a PDF with a session and grade each learner privately.',
+  studentTitle: 'Quizzes and grades', studentIntro: 'Download your quizzes and see the scores your tutor has published.',
+  session: 'Session', chooseSession: 'Choose an assigned session', group: 'Group', individual: 'Individual',
+  noSessions: 'You have no assigned sessions available here.', add: 'Add a PDF quiz', pdfLimits: 'PDF only, up to 25 MiB.',
+  available: 'Quiz PDF', chooseFile: 'Choose a checked PDF', uploadHelp: 'Upload a PDF or choose one already checked for this session.',
+  title: 'Quiz title', max: 'Maximum points', publish: 'Publish quiz', published: 'Quiz published to the session.',
+  audience: 'Publishing shares the PDF with confirmed learners and their authorized guardians.',
+  noQuizzes: 'No quizzes have been published for this session.', noRoster: 'There are no confirmed learners to grade.',
+  grades: 'Grades', learner: 'Learner', chooseLearner: 'Choose a learner', points: 'Points earned',
+  save: 'Publish grade', saved: 'Grade published.', change: 'Update grade', updated: 'Grade updated.',
+  privateGrade: 'Only this learner and their authorized guardians can see this grade in the learning portal.',
+  awaiting: 'Awaiting grade', pdf: 'Download PDF', unavailable: 'PDF unavailable',
+  results: 'Assigned quizzes', empty: 'Your quizzes will appear here when a tutor publishes one for a confirmed session.',
+  fileLink: 'Quizzes for this session', recorded: 'graded', outOf: 'out of',
+};

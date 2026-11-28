@@ -57,3 +57,11 @@ test('decimal input parsing rejects rounding, unsafe integers and alternate nume
   expect(() => parseScaledIntegerInput('1.0001', 3)).toThrow('DECIMAL_INPUT_REQUIRED');
   expect(() => parseScaledIntegerInput('9007199254740.992', 3)).toThrow('DECIMAL_INPUT_REQUIRED');
 });
+
+
+test('Arabic payment entry preserves minor units and rejects ambiguous or unsafe amounts', () => {
+  for (const value of ['575.50', '٥٧٥٫٥٠', '۵۷۵٫۵۰']) expect(parseScaledIntegerInput(value, 2)).toBe(57550);
+  for (const value of ['٥٧٥٫٥٠١', '٥٧٥٬٥٠', '٩٠٠٧١٩٩٢٥٤٧٤٠٩٫٩٢']) {
+    expect(() => parseScaledIntegerInput(value, 2)).toThrow('DECIMAL_INPUT_REQUIRED');
+  }
+});

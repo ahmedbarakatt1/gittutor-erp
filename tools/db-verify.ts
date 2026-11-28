@@ -20,7 +20,7 @@ try {
     if (!(await client.query('select to_regclass($1) as oid', [`app_private.${table}`])).rows[0].oid) failures.push(`Missing table: ${table}`);
   }
   if (!(await client.query("select to_regclass('git_tutor_migrations.applied_migrations') as oid")).rows[0].oid) failures.push('Missing local migration history');
-  const requiredFunctions = ['reject_immutable_change()', 'enqueue_event(uuid,text,uuid,jsonb,text)', 'claim_jobs(text,integer,integer)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
+  const requiredFunctions = ['reject_immutable_change()', 'enqueue_event(uuid,text,uuid,jsonb,text)', 'claim_jobs(text,integer,integer)', 'claim_jobs(text,integer,integer,text)', 'claim_worker_job(text,text)', 'start_job_dispatch(uuid,uuid)', 'fail_job_execution(uuid,uuid)', 'complete_job(uuid,uuid,text)', 'fail_job(uuid,uuid,text,boolean)'];
   for (const fn of requiredFunctions) {
     if (!(await client.query('select to_regprocedure($1) as oid', [`app_private.${fn}`])).rows[0].oid) failures.push(`Missing function: ${fn}`);
   }
@@ -48,8 +48,7 @@ try {
     if (fn.prosecdef && (fn.rolcanlogin || fn.rolbypassrls)) failures.push(`Definer owner must be NOLOGIN/NOBYPASSRLS: ${fn.proname}`);
     if (fn.prosecdef && !fn.proconfig?.includes('search_path=""')) failures.push(`Unfixed search path: ${fn.proname}`);
     const granted = await client.query("select has_function_privilege('anon',$1,'EXECUTE') as allowed", [fn.oid]);
-    const publicReads = ['list_public_offers', 'get_public_tutor'];
-    if (granted.rows[0].allowed && !(fn.nspname === 'api' && publicReads.includes(fn.proname))) failures.push(`Unexpected anon function: ${fn.proname}`);
+    if (granted.rows[0].allowed) failures.push(`Unexpected anon function: ${fn.proname}`);
     if (fn.nspname !== 'api' && (await client.query("select has_function_privilege('authenticated',$1,'EXECUTE') as allowed", [fn.oid])).rows[0].allowed) failures.push(`Unexpected authenticated private function: ${fn.proname}`);
   }
   const config = await readFile('supabase/config.toml', 'utf8');

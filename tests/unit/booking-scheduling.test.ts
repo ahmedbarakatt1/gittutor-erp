@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { availabilityInputSchema, formatCairoInstant, resolveCairoLocalTime, validateScheduledInterval } from '../../src/modules/booking/scheduling';
+import { cairoBookingPeriod, availabilityInputSchema, formatCairoInstant, resolveCairoLocalTime, validateScheduledInterval } from '../../src/modules/booking/scheduling';
 
 describe('T04 Cairo scheduling boundaries', () => {
   test('formats Cairo date boundaries independently of the machine timezone', () => {
@@ -31,4 +31,9 @@ describe('T04 Cairo scheduling boundaries', () => {
     expect(availabilityInputSchema.safeParse({...source,dated_exceptions:[source.dated_exceptions[0],source.dated_exceptions[0]]}).success).toBe(false);
     expect(availabilityInputSchema.safeParse({...source,dated_exceptions:[{local_date:'2026-02-30',intervals:[]}]}).success).toBe(false);
   });
+});
+
+test('Cairo through-date includes a spring-forward day and an autumn repeated hour', () => {
+  expect(cairoBookingPeriod('2026-04-24', '2026-04-24')).toEqual({ from: '2026-04-23T22:00:00.000Z', to: '2026-04-24T21:00:00.000Z' });
+  expect(cairoBookingPeriod('2026-10-29', '2026-10-29')).toEqual({ from: '2026-10-28T21:00:00.000Z', to: '2026-10-29T22:00:00.000Z' });
 });

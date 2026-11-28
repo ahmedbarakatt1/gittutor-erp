@@ -1,0 +1,38 @@
+# Account email checks, 22 November 2026
+
+The invitation, signup confirmation and password recovery emails each use one application link, an English and Arabic instruction, and a text wordmark. The ordinary account invitation asks the recipient to set a password. The staff invitation explains that team access starts when the recipient accepts the invitation.
+
+## Captured local messages
+
+The mobile previews show the exact rendered test messages. [Bilingual password recovery](qa-email-recovery-mobile.png) · [Arabic booking notification](qa-email-booking-ar-mobile.png).
+
+A separate Supabase Auth v2.197.0 project sent four messages to its loopback Mailpit inbox with synthetic `example.test` addresses. Each message supplied a plain-text alternative containing its callback URL. Chromium rendered each captured HTML message at 320, 390 and 760 pixels without horizontal scrolling. Each action was at least 44 by 44 pixels and remained readable with inline styles removed. The Arabic instructions rendered right to left.
+
+| Captured email | Actual subject | Verified action |
+| --- | --- | --- |
+| Signup confirmation | Confirm your Git Tutor account | `email` token verified for the new account |
+| Password recovery | Reset your Git Tutor password | `recovery` token verified for the confirmed account |
+| Account invitation | Your Git Tutor invitation | `invite` token verified without staff metadata |
+| Staff invitation | Your Git Tutor invitation | `invite` token verified with the original invitation reference preserved |
+
+Supabase accepted each local token once and rejected its replay. The local capture report is `.local/nov22-auth-design/auth-email-results.json`. Screenshots are in the same ignored directory.
+
+## Email previews and recipient confirmation
+
+The original first-party callback redeemed the single-use token during GET. The browser now displays a bilingual confirmation form for an email link. GET and HEAD leave the token available. The recipient's same-origin form POST verifies the token and returns a 303 redirect. The page sets no-store and no-referrer, loads no remote resources and contains no token or invitation reference in its HTML. The existing provider code exchange continues to work.
+
+Twelve callback tests passed with `pnpm exec vitest run tests/unit/auth-recovery-callback.test.ts`. Eight real browser journeys passed with `pnpm exec playwright test tests/e2e/email-verification.spec.ts --reporter=list`, covering signup, account and staff invitations, and recovery on desktop and mobile. Each journey opened the captured link with HEAD and GET before the browser's native form submission. English and Arabic action labels, replay rejection, password changes and the separate staff grant were exercised.
+
+The first local run found that the retained development Auth container had no recovery template configured. The repository's data-preserving `pnpm supabase:restart` loaded the three tracked templates into that loopback environment. Readback confirmed Mailpit as the SMTP host before the eight passing journeys.
+
+## Hosted readback before publication
+
+Production had the previous three application callback bodies and the intended subjects. The pilot had the three default Supabase bodies and subjects. The local config now uses the invitation subject that production already used. Run `./tools/auth-email-templates.ps1 -Target pilot` or `-Target production` with the existing project operator's `SUPABASE_ACCESS_TOKEN` for a fresh comparison. To publish the three subjects and bodies to the selected project, add `-Apply`. The command checks the project identity and site URL, then compares all six saved fields against the local source. [Supabase email templates and Management API](https://supabase.com/docs/guides/auth/auth-email-templates)
+
+Mailjet reported the configured Gmail sender as Active, and its TLS SMTP authentication succeeded without sending a message. The preceding owner-only invitation and recovery reached Spam. Current inbox placement requires a recipient observation. Gmail specifically cautions against third-party mail using Gmail From addresses. Authenticating a domain managed by the sender allows Mailjet to verify SPF and DKIM and supports DMARC alignment. [Previous recipient evidence](auth-mailjet-20261116.md) · [Gmail sender requirements](https://support.google.com/a/answer/81126) · [Mailjet domain authentication](https://documentation.mailjet.com/hc/en-us/articles/360049641733-Authenticating-Domains-with-SPF-and-DKIM-A-Complete-Guide)
+
+## Publication and delivery status
+
+After both hosted applications promoted revision `48fa8d7`, each canonical URL returned the bilingual confirmation page on GET and preserved the link on HEAD. Both responses carried no-store and no-referrer. Production `./tools/auth-email-templates.ps1 -Target production -Apply` saved the three email templates. An independent readback matched all six subject and body fields. No recipient message was generated by publication.
+
+On the shared pilot, `./tools/auth-email-templates.ps1 -Target pilot -Apply` returned HTTP 400. Supabase said the free built-in email provider requires a custom SMTP provider or a plan upgrade to modify templates. The pilot retains its default Auth emails. Its application notifications use the current bilingual designs. Dedicated pilot SMTP would allow the hosted Auth samples to match production. The protected production templates and the local Mailpit test messages already use the new designs.

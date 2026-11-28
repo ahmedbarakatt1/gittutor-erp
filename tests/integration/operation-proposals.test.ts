@@ -48,6 +48,12 @@ describe('T04 actual scoped operation proposal lifecycle',()=>{
     expect(after.occurrence.occurrence_id).toBe(occ.id);expect(Date.parse(after.occurrence.start_at)).toBe(Date.parse(proposal.start));
     expect(after.quote.quote_id).not.toBe(before.quote.quote_id);expect(after.quote.customer_price_minor).toBe(before.quote.customer_price_minor);
     expect(after.quote.accepted_at).not.toBeNull();expect(after.funding.eligible).toBe(false);
+    // GT-CON-002: submit the original quote still open in the learner's other tab.
+    const stale = await fixture.clients.learner.rpc('accept_quote', {
+      p_quote_id: before.quote.quote_id, p_quote_hash: before.quote.quote_hash,
+      p_expected_version: before.quote.version, p_idempotency_key: randomUUID(),
+    });
+    expect(stale.error?.message).toBe('VERSION_CONFLICT');
     const original=(await fixture.database.query('select terms_hash from app_private.quotes where id=$1',[before.quote.quote_id])).rows[0];expect(original.terms_hash).toBe(before.quote.quote_hash);
     expect((await getOperationProposal(fixture.clients.admin,proposal.id,{view:'admin'})).state).toBe('committed');
   });

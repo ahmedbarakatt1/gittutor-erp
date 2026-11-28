@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "test:recovery:payout": "tsx --conditions=react-server tools/recovery-rehearsal.ts --unknown-payout",
     "test:e2e": "playwright test",
     "db:start": "powershell -NoProfile -File tools/db-start.ps1 && tsx tools/supabase-local.ts bootstrap",
     "db:migrate": "tsx tools/db-migrate.ts && tsx tools/supabase-local.ts migrate",
@@ -31,12 +32,15 @@
     "@fontsource-variable/manrope": "5.3.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.0",
+    "@vercel/sandbox": "4.1.0",
     "next": "16.4.6",
+    "nodemailer": "10.5.0",
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "server-only": "0.0.1",
     "three": "0.187.0",
+    "tsx": "4.23.15",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -49,7 +53,6 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
     "supabase": "3.1.0",
-    "tsx": "4.23.15",
     "typescript": "5.9.3",
     "vitest": "5.1.0"
   }

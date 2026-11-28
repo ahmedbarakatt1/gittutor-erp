@@ -6,7 +6,8 @@ Implements R02, R06–R09, R11–R18. The application uses the database boundari
 
 | Surface | Mandatory implementation contract |
 |---|---|
-| Public reads | Grant `anon` and `authenticated` execution on `api.list_public_offers` and `api.get_public_tutor`, both sanitized |
+| Public website | Generic subject descriptions and published prices are readable while signed out |
+| Available sessions and approved tutor profiles | Both catalog functions require a verified, active account and grant execution only to `authenticated` |
 | Other API functions | Revoke `EXECUTE` from `PUBLIC` and `anon`, grant only named functions to `authenticated` |
 | Base tables | Unexposed `app_private` and `finance_private`, zero browser grants, explicit RLS |
 | Sensitive RPC ownership | Dedicated `NOLOGIN`, `NOBYPASSRLS` owner with grants for its command family, separate table ownership |
@@ -20,6 +21,23 @@ The exposed definer RPC is a deliberate boundary allowing authorized commands wh
 Server identity verification uses signed claims. Authorization reads current database roles and relationships. User-editable metadata is unsuitable for role decisions. A private session-check helper validates `auth.uid()` and the signed `session_id` against `auth.sessions`, plus current application account status, for sensitive commands and file access. App logout revokes the corresponding session before returning success. Reuse of the old token then fails the next protected operation. [Supabase sessions](https://supabase.com/docs/guides/auth/sessions)
 
 Static FAQs remain publicly readable. Website chat can create a Supabase anonymous Auth session. Anonymous users receive only own-conversation commands. All other account and business commands explicitly require a verified non-anonymous account. Upgrading identity or linking a WhatsApp thread requires a verified account and a single-use, expiring thread challenge. Shared phone numbers never authorize a learner relationship.
+
+One browser profile has one active Git Tutor identity. A successful sign-in or email exchange retires the session previously held by that browser with the provider's local logout. A failed password attempt preserves the existing session. Every application fetch from a rendered page carries a comparison value derived from its session. The proxy compares it with verified current claims before routing the request. The value confers no authority. Server and database role and relationship checks still apply to every protected operation, including API clients that do not use the browser interface.
+
+An authentication change signals sibling tabs. A suspended private page hides on departure and rechecks on return. Active private tabs also check every minute, including current roles and learner scope where displayed. A mismatched or revoked view closes onto a neutral page. Retry information is scoped to the session. Account security provides global sign-out. Password changes revoke other sessions. Email-confirmation POSTs compare the submitting browser's cookie snapshot with the original form before consuming the link.
+
+## Access by workspace
+
+| Who is using the site | Records available |
+|---|---|
+| Visitor | Generic subjects, published tuition, contact details and public help. Session availability and tutor profile links lead to sign-in. |
+| Learner | Own requests, bookings, released materials and grades, and customer payment information. |
+| Guardian | Linked learners, within the specific permissions currently granted for each learner. |
+| Tutor | Assigned teaching work and enrolled learners within that assignment. The tutor pay view covers the tutor's own compensation. |
+| Customer service | Operational requests and records within service permissions and assignment. Customer service has no access to confidential tutor compensation. |
+| Admin | Administrative records and authorized finance functions while the account has an active admin role. |
+
+Each portal requests its own imported workbook projection through `get_workspace_operations`. The database checks the role and applies relationship filters. An account with several roles sees learner-scoped data in its learner portal. An API request that omits the workspace selects the learner view.
 
 ## Private files and exports
 
@@ -42,15 +60,18 @@ Define typed server-only adapters for calendar, transactional email, WhatsApp, s
 | `WORKER_DATABASE_URL` | Restricted worker login, server only |
 | `SUPABASE_SECRET_KEY` | Server-only Storage wrapper and controlled administrative Auth operations |
 | `SECRET_ENCRYPTION_KEY` | Encrypt provider connections and private payout identifiers, versioned rotation |
-| `EMAIL_ADAPTER` | `fake` or `ses` |
+| `EMAIL_ADAPTER` | `fake`, `ses`, `resend` or `gmail`; fake is isolated-development/test only |
 | `CALENDAR_ADAPTER` | `fake` or `google` |
-| `WHATSAPP_ADAPTER` | `fake` or `cloud` |
+| `WHATSAPP_ADAPTER` | `manual` for the launch contact link, `fake` for isolated simulations, or `cloud` for automated Meta messaging |
 | `FILE_SCAN_ADAPTER`, `FILE_SCAN_URL` | `fake` or `clamav`, approved scanner endpoint |
 | `PAYMENT_RECONCILIATION_ADAPTER` | `manual` |
 | `AWS_REGION`, `EMAIL_FROM`, `EMAIL_SNS_TOPIC_ARN` | Live SES sender and allowed signed notification topic |
+| `EMAIL_FROM`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` | Verified Resend sender, sending-only key and signed delivery callbacks |
+| `GMAIL_SMTP_USER`, `GMAIL_APP_PASSWORD` | Owner-selected consumer Gmail sender and private App Password; see [Gmail setup](GMAIL-SETUP.md) |
+| `EMAIL_FROM`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` | Selected Mailjet sender and private API/secret pair; [Mailjet setup](MAILJET-SETUP.md) records Auth settings and remaining delivery gates |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional server credential chain inputs when workload identity is unavailable |
-| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Approved organizer OAuth configuration |
-| `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` | Live business account, send credentials and webhook verification |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` | Shared Google web client. Each additional account grants its own primary calendar. The calendar ID is optional for legacy initial setup. |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_GRAPH_VERSION` | Cloud mode only. Live business account, send credentials, webhook verification and Graph API version |
 
 Persist refresh tokens encrypted in `provider_connections`. Verify required settings at process startup. A public/publishable Supabase key is the browser credential. Privileged keys stay server-side and user financial commands always carry the user's JWT. [Supabase SSR client configuration](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
 
@@ -103,11 +124,17 @@ InstaPay and Vodafone Cash use manually verified receiving-account statements in
 
 Use an outbox uniqueness key containing event, recipient account, channel and template version. Store queued/sent/delivered/bounced/suppressed/failed observations separately from attempts. Verify signed SNS callbacks and the permitted topic, deduplicate provider IDs and preserve monotonic delivery outcomes. A hard bounce creates a contact-verification task. An uncertain send is reconciled before resend.
 
+The owner selected domain-free Gmail on15November2026. Gmail SMTP acceptance establishes sent only. It provides neither a provider idempotency key nor the signed delivery/bounce callback implemented for SES/Resend. A stable Message-ID supports investigation without guaranteeing deduplication. Timeout/ambiguous outcomes remain unknown and cannot be automatically resent. Live readiness requires separate SMTP, received-content and Auth SMTP checks plus an evidenced procedure for unresolved outcomes; selecting Gmail does not waive these controls. Resend's signed terminal outcomes likewise cannot be overwritten by a later HTTP acceptance.
+
+The selected Mailjet SMTP adapter follows the same sent/unknown boundary and content allowlist, with open/click tracking forced off. Its CustomID/Message-ID are investigation references, not deduplication guarantees. Authenticated Mailjet callbacks/automated reconciliation are not implemented. The owner-approved test reached Spam; the latest instruction selected Mailjet and clean Auth configuration is saved while the preview stays fake/manual. Supabase Auth needs separate account-level tracking inspection before token-bearing mail. No unverified Mailjet webhook is accepted as delivery evidence.
+
 Supabase Auth owns its verification, recovery and invitation token lifecycle. Configure its approved SMTP sender and templates and test those deliveries separately from application-outbox email. The application sends each business event through the outbox once its transaction commits. Package-funded delivery and routine completion use the corresponding own-customer and own-tutor projections.
 
 Dispatch rechecks guardian scope, staff membership, assignment, verified address, preference and current business version. Automatic operational notices use current event entitlement independently of an interactive login. User-requested privileged export jobs also revalidate the requester's authority and session. Separate marketing consent from operational notices. Bodies omit attachments, raw payout destinations, other learners' details and internal notes. English/Arabic templates use approved terminology and Cairo time.
 
 ## WhatsApp and human ownership
+
+Manual mode opens the public business number in WhatsApp. Staff handle those conversations in the business app. Website chat retains its own ownership, transcript and handoff. The following webhook and delivery rules apply when Cloud automation is enabled.
 
 Verify webhook subscription challenges with the verify token and message callbacks using `X-Hub-Signature-256`, HMAC-SHA256 over raw request bytes and constant-time comparison. Deduplicate message/status IDs before changing a thread. Store separate channel identities and `last_whatsapp_user_message_at`. Only authenticated incoming WhatsApp messages reset that channel's 24-hour customer-service window.
 

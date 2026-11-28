@@ -1,4 +1,4 @@
-.workspace { display: grid; gap: 2rem; margin-block: 2rem; }
+.workspace { display: grid; gap: clamp(1.5rem, 3vw, 2rem); margin-block: 1.5rem; }
 .section { border-block-start: 1px solid var(--border); padding-block-start: 1.5rem; min-inline-size: 0; }
 .section h2, .section h3 { margin-block: 0 .75rem; }
 .intro { max-inline-size: 68ch; margin-block: 0 1.25rem; }
@@ -6,7 +6,7 @@
 .upload input { max-inline-size: 100%; min-inline-size: 0; }
 .upload input::file-selector-button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--ink); padding: .5rem .75rem; margin-inline-end: .75rem; cursor: pointer; }
 .list { list-style: none; padding: 0; margin-block: 1rem; }
-.file { padding-block: 1.25rem; border-block-end: 1px solid var(--border); overflow-wrap: anywhere; }
+.file { padding-block: var(--row-space); border-block-end: 1px solid var(--border); overflow-wrap: anywhere; }
 .file h3 { font-size: 1.1rem; margin-block: 0 .5rem; }
 .meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; color: var(--muted); margin-block: .5rem; }
 .notice { padding: 1rem; background: var(--surface); max-inline-size: 70ch; }
@@ -15,4 +15,8 @@
 .phase { margin: 0; }
 .field { display: grid; gap: .5rem; margin-block: 1rem; }
 .field select { min-block-size: 2.75rem; max-inline-size: 100%; font: inherit; background: var(--canvas); color: var(--ink); border: 1px solid var(--border); padding: .65rem; }
-@media (max-width: 480px) { .upload { padding: 1rem; } .tools { align-items: stretch; } .tools > * { inline-size: 100%; } }
+@media (max-width: 480px) {
+  .upload { padding: 1rem; }
+  .tools { gap: .5rem .75rem; }
+  .tools > button { min-block-size: 44px; }
+}

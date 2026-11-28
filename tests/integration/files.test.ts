@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { authClient,loadLocalSupabase } from '../helpers/supabase';
 import { createFileContentService,createPrivateObjectStore } from '../../src/server/files';
 import { parseServerConfig } from '../../src/server/config';
-import { getFile,listFiles } from '../../src/modules/files/queries';
+import { getFile,listFiles,listFileScanRetries } from '../../src/modules/files/queries';
 import { invokeFileCommandWithStatus } from '../../src/modules/files/commands';
 import { claimFileScan,syntheticPdf,runFileScan } from '../helpers/files';
 import { fileScanHandler } from '../../src/worker/file-scan';
@@ -15,8 +15,105 @@ import { createFakeScanAdapter } from '../../src/server/providers/file-scan';
 import { executeLeasedJob } from '../../src/worker/execute';
 import { paymentFixture } from '../helpers/payments';
 import { settleEnrollment } from '../helpers/financial-booking';
-function infrastructure(){const config=loadLocalSupabase(),worker=new Pool({connectionString:config.worker_database_url}),server=parseServerConfig({APP_ENV:'test',NEXT_PUBLIC_SUPABASE_URL:config.url,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:config.publishable_key,SUPABASE_SECRET_KEY:config.secret_key});return{worker,content:createFileContentService(worker,server),store:createPrivateObjectStore(server),config};}
+function infrastructure(cleanupFails=false){const config=loadLocalSupabase(),worker=new Pool({connectionString:config.worker_database_url}),server=parseServerConfig({APP_ENV:'test',NEXT_PUBLIC_SUPABASE_URL:config.url,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:config.publishable_key,SUPABASE_SECRET_KEY:config.secret_key}),store=createPrivateObjectStore(server);return{worker,content:createFileContentService(worker,server,cleanupFails?{...store,removeParts:async()=>{throw new Error('Simulated cleanup outage');}}:store),store,config};}
 function declaration(purpose:string,parent:string|null,action:string|null=null){return{p_purpose:purpose,p_parent_id:parent,p_evidence_action:action,p_filename:'synthetic.pdf',p_declared_type:'application/pdf',p_size_bytes:syntheticPdf.length,p_checksum_sha256:createHash('sha256').update(syntheticPdf).digest('hex'),p_idempotency_key:randomUUID()};}
+
+test('operators can recover the same quarantined file after scanner restoration', async () => {
+  const f = await bookingFixture(), infra = infrastructure();
+  try {
+    await f.availability();
+    const occurrence = await f.occurrence(), enrollment = await f.reserve(occurrence.occurrence_id as string);
+    const args = declaration('private_preparation', enrollment.enrollment_id as string);
+    const created = await invokeFileCommandWithStatus(f.students[0], 'create_file_upload', args);
+    const id = created.data.file_id;
+    await infra.content.upload(f.students[0], id, syntheticPdf);
+    const complete = await invokeFileCommandWithStatus(f.students[0], 'finalize_file_upload', {
+      p_file_id: id, p_checksum_sha256: args.p_checksum_sha256, p_idempotency_key: randomUUID(),
+    });
+    // Stub the scanner's wire result while exercising the real worker/database and private storage.
+    const scanner = (clean: boolean) => () => ({ scan: async () => ({
+      adapter_mode: 'clamav' as const, outcome: clean ? 'clean' as const : 'error' as const,
+      engine_version: 'test', signature_version: 'test', reference: 'fixture',
+      safe_error_code: clean ? null : 'SCANNER_SIGNATURES_STALE',
+    }) });
+    await runFileScan(complete.data.scan_job_id, scanner(false));
+    const file = await getFile(f.students[0], id);
+    expect(file).toMatchObject({ scan_state:'quarantined', integration_state:'verification_required', can_download:false });
+    await expect(infra.content.download(f.students[0], id)).rejects.toThrow('NOT_FOUND');
+    await expect(listFileScanRetries(f.students[0], {})).rejects.toThrow('FORBIDDEN');
+    // Include preceding rows on a reused synthetic stack.
+    let cursor: string | undefined;
+    const listed = [];
+    do {
+      const page = await listFileScanRetries(f.admin, { cursor, limit: 100 });
+      listed.push(...page.items);
+      cursor = page.next_cursor ?? undefined;
+    } while (cursor && !listed.some(item => item.file_id === id));
+    expect(listed).toContainEqual({ file_id:id, filename:'synthetic.pdf', version:file.version, reason:'SCANNER_SIGNATURES_STALE' });
+    const retryArgs = { p_file_id:id, p_expected_version:file.version, p_idempotency_key:randomUUID() };
+    await expect(invokeFileCommandWithStatus(f.students[0], 'retry_file_scan', retryArgs)).rejects.toThrow('FORBIDDEN');
+    const retry = await invokeFileCommandWithStatus(f.admin, 'retry_file_scan', retryArgs);
+    expect((await invokeFileCommandWithStatus(f.admin, 'retry_file_scan', retryArgs)).data).toEqual(retry.data);
+    expect((await getFile(f.students[0], id)).can_download).toBe(false);
+    await runFileScan(retry.data.scan_job_id, scanner(true));
+    expect(await getFile(f.students[0], id)).toMatchObject({ file_id:id, scan_state:'clean', integration_state:'verified', can_download:true });
+  } finally { await f.close(); }
+});
+
+test('25 MiB private uploads survive bounded chunk retries and retain scan and current-account boundaries', async () => {
+ const f=await bookingFixture(),infra=infrastructure(true);
+ try {
+  await f.availability(); const occurrence=await f.occurrence(), enrollment=await f.reserve(occurrence.occurrence_id as string);
+  const bytes=Buffer.alloc(25*1024*1024,32); bytes.write('%PDF-1.4\n'); bytes.write('\n%%EOF\n',bytes.length-7);
+  const checksum=createHash('sha256').update(bytes).digest('hex');
+  const args={...declaration('private_preparation',enrollment.enrollment_id as string),p_size_bytes:bytes.length,p_checksum_sha256:checksum};
+  const made=await invokeFileCommandWithStatus(f.students[0],'create_file_upload',args),id=made.data.file_id;
+  const width=3*1024*1024,first={start:0,end:width-1,total:bytes.length};
+  await expect(infra.content.uploadChunk(f.students[1],id,bytes.subarray(0,width),first)).rejects.toThrow('NOT_FOUND');
+  await expect(infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),{...first,total:bytes.length-1})).rejects.toThrow('FILE_SIZE_MISMATCH');
+  const second={start:width,end:2*width-1,total:bytes.length};
+  expect(await infra.content.uploadChunk(f.students[0],id,bytes.subarray(width,2*width),second)).toEqual({file_id:id,upload_state:'uploading'});
+  const storage=createClient(infra.config.url,infra.config.secret_key).storage.from('git-tutor-private');
+  const candidate=await storage.download(`${id}/parts/${checksum}/cleanup.json`);
+  expect(candidate.error).toBeNull();
+  const manifest=JSON.parse(await candidate.data!.text());
+  expect(manifest).toMatchObject({version:1,kind:'file_chunk_cleanup_candidate',file_id:id,checksum_sha256:checksum,size_bytes:bytes.length});
+  expect(manifest.part_keys).toEqual(Array.from({length:9},(_,index)=>`${id}/parts/${checksum}/${index}`));
+  const firstResult=await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first);
+  expect(firstResult).toEqual({file_id:id,upload_state:'uploading'});
+  expect(await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first)).toEqual(firstResult);
+  expect(JSON.stringify(firstResult)).not.toMatch(/object_key|lease_token|authorization_id|tutor_fee/);
+  await expect(infra.content.download(f.students[0],id)).rejects.toThrow('NOT_FOUND');
+  await expect(invokeFileCommandWithStatus(f.students[0],'finalize_file_upload',{p_file_id:id,p_checksum_sha256:checksum,p_idempotency_key:randomUUID()})).rejects.toThrow('UPLOAD_REQUIRED');
+  const corrupted=Buffer.from(bytes.subarray(0,width)); corrupted[100]=0;
+  await infra.content.uploadChunk(f.students[0],id,corrupted,first);
+  for(let start=2*width;start+width<bytes.length;start+=width){
+   const end=Math.min(start+width,bytes.length)-1;
+   const result=await infra.content.uploadChunk(f.students[0],id,bytes.subarray(start,end+1),{start,end,total:bytes.length});
+   expect(result.upload_state).toBe('uploading');
+  }
+  const lastStart=Math.floor((bytes.length-1)/width)*width,last={start:lastStart,end:bytes.length-1,total:bytes.length};
+  await expect(infra.content.uploadChunk(f.students[0],id,bytes.subarray(lastStart),last)).rejects.toThrow('FILE_CHECKSUM_MISMATCH');
+  expect((await f.database.query('select count(*)::int n from app_private.files where id=$1',[id])).rows[0].n).toBe(0);
+  await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first);
+  expect((await infra.content.uploadChunk(f.students[0],id,bytes.subarray(lastStart),last)).upload_state).toBe('uploaded');
+  expect((await f.database.query('select count(*)::int n from app_private.files where id=$1',[id])).rows[0].n).toBe(1);
+  // Only deletion fails; writes/reads/adoption use actual private Storage and SQL.
+  expect((await storage.list(`${id}/parts/${checksum}`)).data).toHaveLength(10);
+  expect(await (await storage.download(`${id}/parts/${checksum}/cleanup.json`)).data!.text()).toBe(await candidate.data!.text());
+  await infra.store.removeParts(manifest.part_keys);
+  expect((await storage.list(`${id}/parts/${checksum}`)).data!.map(row=>row.name)).toEqual(['cleanup.json']);
+  const replay=await infra.content.uploadChunk(f.students[0],id,bytes.subarray(0,width),first);
+  expect(replay).toMatchObject({file_id:id,upload_state:'uploaded',size_bytes:bytes.length,checksum_sha256:checksum});
+  const altered=Buffer.from(bytes.subarray(0,width)); altered[100]=0;
+  await expect(infra.content.uploadChunk(f.students[0],id,altered,first)).rejects.toThrow('FILE_CHECKSUM_MISMATCH');
+  await expect(infra.content.download(f.students[0],id)).rejects.toThrow('NOT_FOUND');
+  const complete=await invokeFileCommandWithStatus(f.students[0],'finalize_file_upload',{p_file_id:id,p_checksum_sha256:checksum,p_idempotency_key:randomUUID()});
+  expect(await runFileScan(complete.data.scan_job_id)).toBe('completed');
+  expect(createHash('sha256').update((await infra.content.download(f.students[0],id)).bytes).digest('hex')).toBe(checksum);
+  await expect(infra.content.download(f.students[1],id)).rejects.toThrow('NOT_FOUND');
+ } finally { await infra.worker.end(); await f.close(); }
+},90000);
 
 test('private preparation intent is scoped, strict and idempotent before any bytes exist',async()=>{
  const f=await bookingFixture();try{await f.availability();const o=await f.occurrence();const e=await f.reserve(o.occurrence_id as string);const bytes=Buffer.from('%PDF-1.4\n% Synthetic preparation\n%%EOF\n');const args={p_purpose:'private_preparation',p_parent_id:e.enrollment_id,p_filename:'preparation.pdf',p_declared_type:'application/pdf',p_size_bytes:bytes.length,p_checksum_sha256:createHash('sha256').update(bytes).digest('hex'),p_evidence_action:null,p_idempotency_key:randomUUID()};const result=await f.students[0].rpc('create_file_upload',args);expect(result.error).toBeNull();expect(result.status).toBe(201);expect(result.data).toMatchObject({file_id:expect.any(String),upload_path:expect.stringMatching(/^\/api\/v1\/files\//)});expect((await f.students[1].rpc('get_file',{p_file_id:result.data.file_id})).error?.message).toBe('NOT_FOUND');expect((await f.students[0].rpc('create_file_upload',args)).data).toEqual(result.data);const view=await f.students[0].rpc('get_file',{p_file_id:result.data.file_id});expect(view.data).toMatchObject({scan_state:'pending',can_download:false,source_provenance:'metadata_only'});expect(JSON.stringify(view.data)).not.toMatch(/object_key|tutor_fee|lease_token/);

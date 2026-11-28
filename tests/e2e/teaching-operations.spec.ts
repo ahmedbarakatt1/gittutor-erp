@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { bookingFixture } from '../helpers/booking';
@@ -6,7 +7,7 @@ import { loadLocalSupabase } from '../helpers/supabase';
 import { formatCairoInstant } from '../../src/modules/booking/scheduling';
 import { tutorReassignmentSchema } from '../../src/modules/teaching/operations';
 test.use({ trace: 'off', screenshot: 'off' });
-async function login(page: Page, actor: { id: string; email: string; password: string }) { await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password); const response = page.waitForResponse(row => new URL(row.url()).pathname === '/api/auth/login' && row.request().method() === 'POST'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15000 }); }
+async function login(page: Page, actor: { id: string; email: string; password: string }) { await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password); const response = page.waitForResponse(row => new URL(row.url()).pathname === '/api/auth/login' && row.request().method() === 'POST'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expectSignedInAccount(page, actor.id); }
 function local(instant: string) { const time = formatCairoInstant(instant); return `${time.local_date}T${time.local_time}`; }
 async function stage<T>(name: string, action: () => Promise<T>): Promise<T> {
   console.info(`[teaching-operations] start: ${name}`);

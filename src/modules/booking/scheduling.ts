@@ -30,14 +30,27 @@ export function resolveCairoLocalTime(localDateTime:string):{instant:string;offs
     return `${local.local_date}T${local.local_time}`===localDateTime?[{instant,offset_minutes}]:[];
   }).sort((a,b)=>a.instant.localeCompare(b.instant));
 }
+/** The enrollment query uses an inclusive start and an exclusive end instant. */
+export function cairoBookingPeriod(from: string, through: string) {
+  if (!validDate(from) || !validDate(through) || from > through) return invalid();
+  const following = new Date(`${through}T00:00:00Z`);
+  following.setUTCDate(following.getUTCDate() + 1);
+  function startOfDay(date: string) {
+    // Cairo's spring transition can skip local midnight.
+    const first = resolveCairoLocalTime(`${date}T00:00`)[0] ?? resolveCairoLocalTime(`${date}T01:00`)[0];
+    return first?.instant ?? invalid();
+  }
+  return { from: startOfDay(from), to: startOfDay(following.toISOString().slice(0, 10)) };
+}
 export function validateScheduledInterval(start:string,end:string,durationMinutes:number):void{
   if(!instantSchema.safeParse(start).success||!instantSchema.safeParse(end).success||!Number.isSafeInteger(durationMinutes)||durationMinutes<=0)return invalid();
   const elapsed=Date.parse(end)-Date.parse(start);
   if(!Number.isFinite(elapsed)||elapsed<=0||elapsed!==durationMinutes*60000)return invalid();
 }
 const clock=z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
-export const localIntervalSchema=z.object({start_local:clock,end_local:clock}).strict().refine(row=>row.start_local<row.end_local,{message:'INVALID_TIME'});
-export const weeklyIntervalSchema=z.object({weekday:z.number().int().min(1).max(7),start_local:clock,end_local:clock}).strict().refine(row=>row.start_local<row.end_local,{message:'INVALID_TIME'});
+const endClock=z.union([clock,z.literal('24:00')]);
+export const localIntervalSchema=z.object({start_local:clock,end_local:endClock}).strict().refine(row=>row.start_local<row.end_local,{message:'INVALID_TIME'});
+export const weeklyIntervalSchema=z.object({weekday:z.number().int().min(1).max(7),start_local:clock,end_local:endClock}).strict().refine(row=>row.start_local<row.end_local,{message:'INVALID_TIME'});
 const intervalSort=(a:{start_local:string;end_local:string},b:{start_local:string;end_local:string})=>a.start_local.localeCompare(b.start_local)||a.end_local.localeCompare(b.end_local);
 const overlaps=(rows:{start_local:string;end_local:string}[])=>rows.some((row,index)=>index>0&&rows[index-1].end_local>row.start_local);
 export const datedExceptionSchema=z.object({local_date:z.string().refine(validDate),intervals:z.array(localIntervalSchema).max(10)}).strict();

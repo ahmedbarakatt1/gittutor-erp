@@ -1,2 +1,8 @@
 import { packageCopy } from '@/locales/packages';
-export default function LoadingPackages() { return <main className="container section-spacing"><p role="status">{packageCopy.loading}</p></main>; }
+import { packageCopy as arabicCopy } from '@/locales/ar-transaction/packages';
+import { getSiteLanguage } from '@/server/site-language';
+
+export default async function LoadingPackages() {
+  const copy = await getSiteLanguage() === 'ar' ? arabicCopy : packageCopy;
+  return <main className="container section-spacing"><p role="status">{copy.loading}</p></main>;
+}

@@ -1,0 +1,79 @@
+.page {
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.frame {
+  inline-size: min(100%, calc(64rem + 2 * var(--gutter)));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.header { border-block-end: 1px solid var(--border); }
+.header .frame, .header nav { display: flex; align-items: center; }
+.header .frame { justify-content: space-between; gap: 1rem; padding-block: .65rem; }
+.header nav { flex-wrap: wrap; justify-content: flex-end; gap: .25rem clamp(1rem, 3vw, 2.25rem); }
+.header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.header nav a:hover { text-decoration: underline; }
+
+.main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(2rem, 5vh, 3.75rem);
+  padding-block: clamp(2.5rem, 7vh, 5rem);
+  min-inline-size: 0;
+}
+.intro h1 { font-size: clamp(2.75rem, 6vw, 5rem); letter-spacing: -.055em; line-height: 1.06; }
+.intro p {
+  max-inline-size: 50ch;
+  margin-block-start: 1rem;
+  color: var(--muted);
+  font-size: clamp(1.0625rem, 1.65vw, 1.25rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.channels { border-block-start: 1px solid var(--border); }
+.option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem clamp(1.5rem, 4vw, 4rem);
+  padding-block: clamp(1.5rem, 3.75vh, 2.5rem);
+  border-block-end: 1px solid var(--border);
+}
+.option h2 { font-size: clamp(1.45rem, 2.4vw, 2rem); letter-spacing: -.035em; line-height: 1.2; }
+.option p { max-inline-size: 48ch; margin-block-start: .55rem; line-height: 1.65; }
+.option > :is(a, button) { justify-self: end; }
+.option > p[role='alert'] { grid-column: 1 / -1; margin: 0; color: var(--brand-hover); }
+.privacy { margin-block-start: 1.2rem; color: var(--muted); line-height: 1.6; }
+
+.footer { background: var(--tint); border-block-start: 1px solid var(--border); }
+.footer .frame {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .65rem 2rem;
+  padding-block: clamp(1.25rem, 3vh, 2rem);
+}
+.footer h2 { font-size: 1.125rem; letter-spacing: -.02em; }
+
+@media (max-width: 38rem) {
+  .main { padding-block: 2.5rem; gap: 1.75rem; }
+  .option { grid-template-columns: 1fr; gap: 1rem; }
+  .option > :is(a, button) { justify-self: start; }
+  .footer .frame { display: grid; }
+  .footer address { column-gap: clamp(.4rem, 2vw, .85rem); }
+  .footer address a:last-child { flex-basis: 100%; }
+}

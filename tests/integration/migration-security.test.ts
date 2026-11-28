@@ -68,8 +68,7 @@ test('GT-1605 clean migrations and reapply reproduce the private database bounda
         where n.nspname in ('api','app_private','finance_private') order by n.nspname,p.proname,arguments
       `)).rows;
       for (const fn of functions) {
-        const publicRead = fn.schema === 'api' && ['list_public_offers', 'get_public_tutor'].includes(fn.proname);
-        expect(fn.anon_grant).toBe(publicRead);
+        expect(fn.anon_grant).toBe(false);
         if (fn.schema !== 'api') expect(fn.authenticated_grant).toBe(false);
         if (fn.prosecdef) {
           expect(fn.rolcanlogin).toBe(false);

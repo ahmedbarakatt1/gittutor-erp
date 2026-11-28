@@ -1,4 +1,5 @@
 'use client';
+import { sessionFetch } from '@/components/session-fetch';
 
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { formatMinorUnits } from '@/modules/shared/format';
@@ -6,6 +7,14 @@ import { bookingCopy as copy } from '@/locales/booking';
 import { resolveCairoLocalTime } from '@/modules/booking/scheduling';
 import styles from './booking.module.css';
 import formStyles from '../auth.module.css';
+import { bookingCopy as arabicBookingCopy } from '@/locales/ar-transaction/booking';
+import { useSiteLanguage } from '@/components/site-language';
+
+const textByLanguage = {
+  en: { copy },
+  ar: { copy: arabicBookingCopy },
+};
+
 
 export function useBookingRecord<T>(path: string | null) {
   const [state, setState] = useState<{ path: string | null; data?: T; failed?: boolean }>({ path });
@@ -13,7 +22,7 @@ export function useBookingRecord<T>(path: string | null) {
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    fetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }).then(async response => {
+    sessionFetch(`/api/v1/${path}`, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('READ_FAILED');
       const body = await response.json(); if (!controller.signal.aborted) setState({ path, data: body.data });
     }).catch(() => { if (!controller.signal.aborted) setState({ path, failed: true }); });
@@ -22,18 +31,30 @@ export function useBookingRecord<T>(path: string | null) {
   return { data: state.path === path ? state.data : undefined, failed: state.path === path && Boolean(state.failed), reload: () => { setState({ path }); setAttempt(value => value + 1); } };
 }
 export function ReadState({ pending, failed, reload, cursor, loadMore, loadingMore }: { pending: boolean; failed: boolean; reload: () => void; cursor?: string | null; loadMore?: () => void; loadingMore?: boolean }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   return <>{pending && !failed && <p role="status">{copy.loading}</p>}{failed && <p className={formStyles.error} role="alert">{copy.failed}</p>}<div className={styles.tools}><button type="button" className={formStyles.signout} onClick={reload}>{copy.refresh}</button>{cursor && <button type="button" className={formStyles.signout} disabled={loadingMore} onClick={loadMore}>{loadingMore ? copy.loadingMore : copy.more}</button>}</div></>;
 }
 export function Select({ name, label, value, onChange, children, required = true }: { name: string; label: string; value: string; onChange: (value: string) => void; children: ReactNode; required?: boolean }) {
   const id = useId(); return <div className={formStyles.field}><label htmlFor={id}>{label}</label><select id={id} name={name} value={value} onChange={event => onChange(event.target.value)} required={required}>{children}</select></div>;
 }
 export function Check({ name, label }: { name: string; label: string }) { return <label className={styles.choice}><input type="checkbox" name={name} required />{label}</label>; }
-export function money(value: number, currency = 'EGP') { return formatMinorUnits(value, currency); }
-export function cairoDate(value: string) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)); }
-export function cairoTime(value: string) { return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)); }
-export function SessionTime({ start, end }: { start: string; end: string }) { return <bdi dir="ltr" className={styles.date}><time dateTime={start}>{cairoDate(start)} · {cairoTime(start)}</time>–<time dateTime={end}>{cairoTime(end)}</time><span className={styles.meta}> {copy.timezone}</span></bdi>; }
-export function CairoTimestamp({ value }: { value: string }) { return <bdi dir="ltr">{cairoDate(value)} · {cairoTime(value)} {copy.timezone}</bdi>; }
+export function money(value: number, currency = 'EGP', language: 'ar' | 'en' = 'en') { return formatMinorUnits(value, currency, language === 'ar' ? 'ar-EG' : 'en-EG'); }
+export function cairoDate(value: string, language: 'ar' | 'en' = 'en') { return new Intl.DateTimeFormat(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)); }
+export function cairoTime(value: string, language: 'ar' | 'en' = 'en') { return new Intl.DateTimeFormat(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)); }
+export function SessionTime({ start, end }: { start: string; end: string }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+ return <bdi dir={uiLanguage === 'ar' ? 'rtl' : 'ltr'} className={styles.date}><time dateTime={start}>{cairoDate(start, uiLanguage)} · {cairoTime(start, uiLanguage)}</time>–<time dateTime={end}>{cairoDate(start, uiLanguage) !== cairoDate(end, uiLanguage) && `${cairoDate(end, uiLanguage)} · `}{cairoTime(end, uiLanguage)}</time><span className={styles.meta}> {copy.timezone}</span></bdi>; }
+export function CairoTimestamp({ value }: { value: string }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+ return <bdi dir={uiLanguage === 'ar' ? 'rtl' : 'ltr'}>{cairoDate(value, uiLanguage)} · {cairoTime(value, uiLanguage)} {copy.timezone}</bdi>; }
 export function CairoInput({ name, label, onChange, initial = '' }: { name: string; label: string; onChange?: (value: string) => void; initial?: string }) {
+  const uiLanguage = useSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
   const id = useId(); const [local, setLocal] = useState(initial); const [choice, setChoice] = useState('');
   function candidatesFor(value: string) { try { return resolveCairoLocalTime(value); } catch { return []; } }
   const candidates = local ? candidatesFor(local) : [];

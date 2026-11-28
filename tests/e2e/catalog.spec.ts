@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page, type Locator, type APIRequestContext, type APIResponse } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
@@ -15,7 +16,7 @@ async function signIn(page: Page, label: string | { id: string; email: string; p
   const response = page.waitForResponse(result => result.url().endsWith('/api/auth/login') && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 async function items<T>(request: APIRequestContext, path: string): Promise<T[]> {
   const all: T[] = []; let cursor: string | null = null;
@@ -63,18 +64,24 @@ test('published catalog has working filters, readable terms and customer-safe re
         const url = new URL(response.url());
         if (response.status() === 200 && url.origin === baseURL && url.pathname.startsWith('/_next/static/') && url.pathname.endsWith('.js')) downloadedScripts.add(url.href);
       });
-      const offers = await items<PublicOffer>(page.request, 'public/offers');
-      expect(offers.length).toBeGreaterThan(0); expect(JSON.stringify(offers)).not.toMatch(forbidden);
-      const offer = offers.find(item => item.format === 'group')!; expect(offer).toBeTruthy();
       await page.goto('/subjects'); await expect(page.getByRole('heading', { name: 'Start with your subject.' })).toBeVisible();
-      await page.goto('/offers'); await page.getByLabel('Subject', { exact: true }).selectOption(offer.subject.subject_id); await page.getByLabel('Study format', { exact: true }).selectOption('group'); await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
-      await expect(page).toHaveURL(new RegExp(`subject_id=${offer.subject.subject_id}.*format=group`));
-      await page.goto(`/offers/${offer.offer_id}`); await expect(page.getByRole('heading', { name: offer.title, exact: true })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Before you reserve' })).toBeVisible();
-      if (offer.availability.scheduled_occurrences > 0) await expect(page.getByRole('heading', { name: 'Upcoming sessions', exact: true })).toBeVisible();
-      else await expect(page.getByRole('button', { name: 'Reservations not open yet' })).toBeDisabled();
-      expect(await page.content()).not.toMatch(forbidden); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-      await page.evaluate(() => { document.documentElement.dir = 'rtl'; }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.goto('/offers'); await expect(page.getByRole('table', { name: 'Individual and group tuition' })).toContainText('650');
+      await expect(page.getByRole('main')).toContainText('90–105 minutes');
+      if (!actor) {
+        const catalog = await page.request.get('/api/v1/public/offers');
+        expect(catalog.status()).toBe(401);
+        expect(await catalog.json()).not.toHaveProperty('data');
+      } else {
+        const offers = await items<PublicOffer>(page.request, 'public/offers');
+        expect(offers.length).toBeGreaterThan(0); expect(JSON.stringify(offers)).not.toMatch(forbidden);
+        const offer = offers.find(item => item.format === 'group')!; expect(offer).toBeTruthy();
+        await page.goto(`/offers/${offer.offer_id}`); await expect(page.getByRole('heading', { name: offer.title, exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Before you reserve' })).toBeVisible();
+        if (offer.availability.scheduled_occurrences > 0) await expect(page.getByRole('heading', { name: 'Upcoming sessions', exact: true })).toBeVisible();
+        else await expect(page.getByRole('button', { name: 'Reservations not open yet' })).toBeDisabled();
+        expect(await page.content()).not.toMatch(forbidden); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.evaluate(() => { document.documentElement.dir = 'rtl'; }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      }
       for (const path of ['policies', 'pricing-versions', 'offers', 'tutors']) expect((await page.request.get(`/api/v1/${path}`)).status()).toBe(actor ? 403 : 401);
       // Full-document filter navigation can invalidate DevTools response handles.
       // Inspect every exact browser-observed asset URL through the same context.
@@ -90,7 +97,7 @@ test('published catalog has working filters, readable terms and customer-safe re
 
 test('administrator creates, approves and publishes through structured editors without leaking compensation', async ({ browser }, info) => {
   test.setTimeout(120_000);
-  const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const publicContext = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
+  const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const memberContext = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
   try {
     const page = await admin.newPage(); await signIn(page, 'admin_a');
     const initialPricing = await items<AdminPricing>(page.request, 'pricing-versions'); const initialPolicies = await items<AdminPolicy>(page.request, 'policies');
@@ -122,7 +129,7 @@ test('administrator creates, approves and publishes through structured editors w
     const createOffer = offers.getByRole('form', { name: 'Create offer draft' }); const subject = (await items<{ subject_id: string; title: string }>(page.request, 'me/application-subjects'))[0];
     await createOffer.getByLabel('Subject', { exact: true }).selectOption(subject.subject_id); await createOffer.getByLabel('Saved commercial terms', { exact: true }).selectOption(policyResult.policy_version_id);
     const offerResult = await submit(page, createOffer, 'Create offer draft', 'offers', 201);
-    const anonymous = await publicContext.newPage(); await anonymous.goto(`/offers/${offerResult.offer_id}`); await expect(anonymous.getByRole('heading', { name: 'This page is not available.' })).toBeVisible(); expect(await items<PublicOffer>(anonymous.request, `public/offers?offer_id=${offerResult.offer_id}`)).toEqual([]);
+    const member = await memberContext.newPage(); await signIn(member, 'learner_a'); await member.goto(`/offers/${offerResult.offer_id}`); await expect(member.getByRole('heading', { name: 'This page is not available.' })).toBeVisible(); expect(await items<PublicOffer>(member.request, `public/offers?offer_id=${offerResult.offer_id}`)).toEqual([]);
     const packageForm = policies.getByRole('form', { name: 'Save draft changes', exact: true });
     await packageForm.getByLabel('Allow package funding', { exact: true }).check();
     await packageForm.getByRole('checkbox', { name: new RegExp(offerResult.offer_id.slice(0, 8)) }).check();
@@ -147,13 +154,13 @@ test('administrator creates, approves and publishes through structured editors w
     await approve(page, policies, 'policies', policyResult.policy_version_id);
     const publish = offers.getByRole('form', { name: 'Publish offer' }); await publish.getByLabel('Effective from', { exact: true }).fill('2026-01-01T00:00'); await submit(page, publish, 'Publish offer', `offers/${offerResult.offer_id}/publish`);
     await expect(offers.getByRole('link', { name: 'Customer preview' })).toBeVisible();
-    await anonymous.goto(`/offers/${offerResult.offer_id}`);
-    await expect(anonymous.getByText('61 minutes', { exact: true })).toBeVisible(); await expect(anonymous.getByText('0% of the tuition is required for confirmation through an approved funding source.', { exact: true })).toBeVisible();
-    await expect(anonymous.getByText('This package does not expire.', { exact: true })).toBeVisible();
-    const publicRows = await items<PublicOffer>(anonymous.request, `public/offers?offer_id=${offerResult.offer_id}`); expect(publicRows).toHaveLength(1); await expect(anonymous.getByRole('heading', { name: publicRows[0].title, exact: true })).toBeVisible(); expect(publicRows[0].seat_price_minor).toBe(57500); expect(publicRows[0].policy_summary.package_contract).toMatchObject({ purchase_activation_rule: 'full_settled_charge', expiry_clock: 'elapsed_24_hour_days' }); expect(JSON.stringify(publicRows)).not.toMatch(forbidden); expect(await anonymous.content()).not.toMatch(forbidden);
+    await member.goto(`/offers/${offerResult.offer_id}`);
+    await expect(member.getByText('61 minutes', { exact: true })).toBeVisible(); await expect(member.getByText('0% of the tuition is required for confirmation through an approved funding source.', { exact: true })).toBeVisible();
+    await expect(member.getByText('This package does not expire.', { exact: true })).toBeVisible();
+    const publicRows = await items<PublicOffer>(member.request, `public/offers?offer_id=${offerResult.offer_id}`); expect(publicRows).toHaveLength(1); await expect(member.getByRole('heading', { name: publicRows[0].title, exact: true })).toBeVisible(); expect(publicRows[0].seat_price_minor).toBe(57500); expect(publicRows[0].policy_summary.package_contract).toMatchObject({ purchase_activation_rule: 'full_settled_charge', expiry_clock: 'elapsed_24_hour_days' }); expect(JSON.stringify(publicRows)).not.toMatch(forbidden); expect(await member.content()).not.toMatch(forbidden);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await mkdir('.local/ui-review', { recursive: true }); await admin.storageState({ path: `.local/ui-review/t03-${info.project.name}-admin.json` }); await writeFile(`.local/ui-review/t03-${info.project.name}-catalog.json`, JSON.stringify({ offer_id: offerResult.offer_id, policy_id: policyResult.policy_version_id, pricing_id: priceResult.pricing_version_id }));
-  } finally { await admin.close(); await publicContext.close(); }
+  } finally { await admin.close(); await memberContext.close(); }
 });
 
 test('approved tutor biography survives a new unapproved edit and excludes private contacts', async ({ browser }, info) => {
@@ -161,7 +168,7 @@ test('approved tutor biography survives a new unapproved edit and excludes priva
   const database = await adminDatabase(); await database.end();
   const config = loadLocalSupabase(); const auth = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } });
   const actor = { email: `catalog.${randomUUID()}@example.test`, password: `Synthetic-${randomUUID()}!` }; const created = await auth.auth.admin.createUser({ ...actor, email_confirm: true }); if (created.error || !created.data.user) throw new Error('LOCAL_FIXTURE_CREATION_FAILED');
-  const tutor = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const anonymous = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
+  const tutor = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const admin = await browser.newContext({ baseURL, viewport: info.project.use.viewport }); const member = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
   try {
     const tutorPage = await tutor.newPage(); await signIn(tutorPage, { ...actor, id: created.data.user.id }); const adminPage = await admin.newPage(); await signIn(adminPage, 'admin_a');
     const contacts = await items<{ contact_id: string }>(tutorPage.request, 'me/contacts'); const subjects = await items<{ subject_id: string }>(tutorPage.request, 'me/application-subjects'); const displayName = `Synthetic catalog tutor ${randomUUID().slice(0, 6)}`;
@@ -169,10 +176,10 @@ test('approved tutor biography survives a new unapproved edit and excludes priva
     const approval = await adminPage.request.post(`/api/v1/tutor-applications/${applicationId}/review`, { headers: { Origin: baseURL, 'Idempotency-Key': randomUUID() }, data: { decision: 'approved', reason: 'Synthetic profile approval fixture', approved_subject_ids: [subjects[0].subject_id], expected_version: 1 } }); expect(approval.status()).toBe(200); const tutorId = (await approval.json()).data.tutor_id;
     await adminPage.goto('/admin/catalog'); const profiles = adminPage.locator('#profiles'); await pickRecord(profiles, tutorId);
     const review = profiles.getByRole('form', { name: 'Save biography decision', exact: true }); await review.getByLabel('Decision reason', { exact: true }).fill('Review of the exact submitted synthetic biography'); await submit(adminPage, review, 'Save biography decision', `tutor-profiles/${tutorId}/approve`);
-    const publicPage = await anonymous.newPage(); await publicPage.goto(`/tutors/${tutorId}`); await expect(publicPage.getByText('Approved synthetic biography for a local browser check.', { exact: true })).toBeVisible();
+    const publicPage = await member.newPage(); await signIn(publicPage, 'learner_a'); await publicPage.goto(`/tutors/${tutorId}`); await expect(publicPage.getByText('Approved synthetic biography for a local browser check.', { exact: true })).toBeVisible();
     await tutorPage.goto('/tutor'); const profileForm = tutorPage.getByRole('form', { name: 'Save profile', exact: true }); await profileForm.getByLabel('Teaching experience and biography', { exact: true }).fill('UNAPPROVED_SYNTHETIC_BIOGRAPHY'); await submit(tutorPage, profileForm, 'Save profile', 'tutor/profile');
     await publicPage.reload(); await expect(publicPage.getByText('Approved synthetic biography for a local browser check.', { exact: true })).toBeVisible(); await expect(publicPage.getByText('UNAPPROVED_SYNTHETIC_BIOGRAPHY')).toHaveCount(0);
     const response = await publicPage.request.get(`/api/v1/public/tutors/${tutorId}`); expect(response.status()).toBe(200); const safe = JSON.stringify((await response.json()).data); expect(safe).not.toContain(actor.email); expect(safe).not.toContain(contacts[0].contact_id); expect(safe).not.toMatch(forbidden); expect(await publicPage.content()).not.toContain(actor.email);
     const liveOffers = await items<AdminOffer>(adminPage.request, 'offers'); expect(Array.isArray(liveOffers)).toBe(true);
-  } finally { await tutor.close(); await admin.close(); await anonymous.close(); }
+  } finally { await tutor.close(); await admin.close(); await member.close(); }
 });

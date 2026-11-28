@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "run_id": "21568a3d-5694-4bbd-b0d4-3263b6d2b443",
+  "test_command": "node node_modules/vitest/vitest.mjs run --config tools/evidence/financial.config.ts --reporter=json --outputFile=.local/financial-vitest-21568a3d-5694-4bbd-b0d4-3263b6d2b443.json tests/integration/package-concurrency.test.ts tests/integration/review-evidence-concurrency.test.ts tests/integration/review-authorization.test.ts tests/integration/revenue-recognition-boundaries.test.ts",
+  "git_commit": "41231df2c12f37948165805f04a89ace6f6bc291",
+  "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+  "provider_mode": "fake",
+  "database_migration_version": "20261119142209",
+  "started_at": "2026-11-19T15:12:40.270Z",
+  "finished_at": "2026-11-19T15:13:04.975Z",
+  "exit_code": 0,
+  "test_results": [
+    {
+      "case_id": "GT-1317",
+      "test_file": "tests/integration/package-concurrency.test.ts",
+      "status": "blocked",
+      "assertion_count": 11,
+      "layers": [
+        {
+          "layer": "sql_concurrency",
+          "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+          "provider_mode": "fake",
+          "database_migration_version": "20261119142209"
+        }
+      ],
+      "vitest_results": [
+        {
+          "title": "GT-1317 a previously eligible cancellation conflicts with completion of the same package reservation",
+          "status": "passed",
+          "assertion_count": 11,
+          "duration_ms": 21660.494581
+        }
+      ],
+      "formal_limitation": "The pre-start cancellation is already stale when completion is approved. Its independent lock wait and conflict passed, but both terminal commands cannot be eligible on the same occurrence version."
+    },
+    {
+      "case_id": "GT-1403",
+      "test_file": "tests/integration/review-evidence-concurrency.test.ts",
+      "status": "passed",
+      "assertion_count": 13,
+      "layers": [
+        {
+          "layer": "sql_concurrency",
+          "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+          "provider_mode": "fake",
+          "database_migration_version": "20261119142209"
+        }
+      ],
+      "vitest_results": [
+        {
+          "title": "GT-1403 a replacement commits while an eligible approval is waiting on the original receipt",
+          "status": "passed",
+          "assertion_count": 13,
+          "duration_ms": 650.800577
+        }
+      ]
+    },
+    {
+      "case_id": "GT-1405",
+      "test_file": "tests/integration/review-authorization.test.ts",
+      "status": "passed",
+      "assertion_count": 6,
+      "layers": [
+        {
+          "layer": "sql_concurrency",
+          "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+          "provider_mode": "fake",
+          "database_migration_version": "20261119142209"
+        }
+      ],
+      "vitest_results": [
+        {
+          "title": "GT-1405 a valid original token and active claim cannot approve payment after staff membership revocation",
+          "status": "passed",
+          "assertion_count": 6,
+          "duration_ms": 556.069397
+        }
+      ]
+    },
+    {
+      "case_id": "GT-1510",
+      "test_file": "tests/integration/revenue-recognition-boundaries.test.ts",
+      "status": "passed",
+      "assertion_count": 23,
+      "layers": [
+        {
+          "layer": "sql_integration",
+          "environment": "Marked synthetic local Supabase (API 54321, PostgreSQL 54322)",
+          "provider_mode": "fake",
+          "database_migration_version": "20261119142209"
+        }
+      ],
+      "vitest_results": [
+        {
+          "title": "GT-1510 one approved group delivery earns 50000 of the settled 150000 package and moves no cash",
+          "status": "passed",
+          "assertion_count": 23,
+          "duration_ms": 716.937823
+        }
+      ]
+    }
+  ],
+  "vitest_version": "5.1.0",
+  "vitest_report_sha256": "2f915223a5ded486f9f8fd9542c6233f82e8e9535d51f9975868f3896ac627a4",
+  "git_tree": "c135662163ddde0a1aac58910d5e6491552e3624",
+  "source_note": "Whole Git blobs and executed file bytes were hashed. Verification permits CRLF and only the isolated API/database port substitution in the Supabase test helper.",
+  "sources": {
+    "contracts/policy-settings.json": {
+      "git_sha256": "af92ea91819df7fae33d40c0465fc08906496befe8dd8d8150e6a750f4f97ff7",
+      "executed_sha256": "af92ea91819df7fae33d40c0465fc08906496befe8dd8d8150e6a750f4f97ff7"
+    },
+    "contracts/pricing-policy.json": {
+      "git_sha256": "0b903742e22058edc61b6421b2868e253b46f964afc23522c612c562e4dee100",
+      "executed_sha256": "0b903742e22058edc61b6421b2868e253b46f964afc23522c612c562e4dee100"
+    },
+    "contracts/runtime/catalog-schemas.json": {
+      "git_sha256": "d1bd38ac48c8aa0925912e6f12a525add344b61471f672b4fdecf6b156e37fed",
+      "executed_sha256": "d1bd38ac48c8aa0925912e6f12a525add344b61471f672b4fdecf6b156e37fed"
+    },
+    "fixtures/domain-scenarios.json": {
+      "git_sha256": "c23ca347b8fd59b44d9268979d83242c6dc0cc2eef87964caa513fb589e01f46",
+      "executed_sha256": "c23ca347b8fd59b44d9268979d83242c6dc0cc2eef87964caa513fb589e01f46"
+    },
+    "pnpm-lock.yaml": {
+      "git_sha256": "bf0910375f871465abde1e15edf595c3c30f03d6166186b6b66b51f235f0ec5d",
+      "executed_sha256": "bf0910375f871465abde1e15edf595c3c30f03d6166186b6b66b51f235f0ec5d"
+    },
+    "src/modules/analytics/finance.ts": {
+      "git_sha256": "2292e875e45cd94165d5c38649138a62762d9273b57514d08e3905030ec9bec7",
+      "executed_sha256": "2292e875e45cd94165d5c38649138a62762d9273b57514d08e3905030ec9bec7"
+    },
+    "src/modules/booking/commands.ts": {
+      "git_sha256": "8b8a509071efcf65f2c235b8d8f0ba8562fdb07b97f573ceb2ac7566263681a1",
+      "executed_sha256": "8b8a509071efcf65f2c235b8d8f0ba8562fdb07b97f573ceb2ac7566263681a1"
+    },
+    "src/modules/booking/public-occurrence.ts": {
+      "git_sha256": "5f4da6f150b2fcd23aa6c5a36c6e187ec535bef65c8a95190e560798a43f4e83",
+      "executed_sha256": "5f4da6f150b2fcd23aa6c5a36c6e187ec535bef65c8a95190e560798a43f4e83"
+    },
+    "src/modules/booking/queries.ts": {
+      "git_sha256": "e20ccd208921a5380c142250bab2fbd59ebc49dc12ee14d6f3793ce1a6b9559e",
+      "executed_sha256": "e20ccd208921a5380c142250bab2fbd59ebc49dc12ee14d6f3793ce1a6b9559e"
+    },
+    "src/modules/booking/scheduling.ts": {
+      "git_sha256": "359ae0deae3cd48cd9130fb41a810af9e6a27d0503eb53469a5cf1166936f904",
+      "executed_sha256": "359ae0deae3cd48cd9130fb41a810af9e6a27d0503eb53469a5cf1166936f904"
+    },
+    "src/modules/catalog/commands.ts": {
+      "git_sha256": "1479a9fab3fd07d31496d9f1cf2443f2f1056b40109739d729c80d1054844049",
+      "executed_sha256": "1479a9fab3fd07d31496d9f1cf2443f2f1056b40109739d729c80d1054844049"
+    },
+    "src/modules/catalog/policies.ts": {
+      "git_sha256": "6f9e5e9d69667bc6e1dfc5de5545e88eef890979b2ee8a8dc5dc37e7ac43085e",
+      "executed_sha256": "6f9e5e9d69667bc6e1dfc5de5545e88eef890979b2ee8a8dc5dc37e7ac43085e"
+    },
+    "src/modules/catalog/queries.ts": {
+      "git_sha256": "802bab1afca0ba5e0bea18c14767dcbaa21c7f962d626ba04cc963eddb3a6e2d",
+      "executed_sha256": "802bab1afca0ba5e0bea18c14767dcbaa21c7f962d626ba04cc963eddb3a6e2d"
+    },
+    "src/modules/files/commands.ts": {
+      "git_sha256": "31a0463f1a38e5543985b92a54c827d7c610b8aa46ba5c8cb693b9e03a923969",
+      "executed_sha256": "31a0463f1a38e5543985b92a54c827d7c610b8aa46ba5c8cb693b9e03a923969"
+    },
+    "src/modules/identity/commands.ts": {
+      "git_sha256": "7755c3b7585421c522d46aa0c373760cd0eab0fe8ddc126cd801772416e56fea",
+      "executed_sha256": "7755c3b7585421c522d46aa0c373760cd0eab0fe8ddc126cd801772416e56fea"
+    },
+    "src/modules/packages/commands.ts": {
+      "git_sha256": "b095f9324254c29e7eaba353048f4add1c2f6f31ccad2bf4c1081a21d7464939",
+      "executed_sha256": "b095f9324254c29e7eaba353048f4add1c2f6f31ccad2bf4c1081a21d7464939"
+    },
+    "src/modules/packages/proposal-contract.ts": {
+      "git_sha256": "3e8107850d69d700d1146ed792ec29ce489bb9be181c0dd479fef48d50461b04",
+      "executed_sha256": "3e8107850d69d700d1146ed792ec29ce489bb9be181c0dd479fef48d50461b04"
+    },
+    "src/modules/packages/queries.ts": {
+      "git_sha256": "230971b13ed3b858c3d93417591b77debb250ea478d1b0870f9f4eef2740961f",
+      "executed_sha256": "230971b13ed3b858c3d93417591b77debb250ea478d1b0870f9f4eef2740961f"
+    },
+    "src/modules/payments/commands.ts": {
+      "git_sha256": "37e25e478b366a65033e4f7effa47c43ffd6b20945556ce01a11feb67b4d3869",
+      "executed_sha256": "37e25e478b366a65033e4f7effa47c43ffd6b20945556ce01a11feb67b4d3869"
+    },
+    "src/modules/payments/queries.ts": {
+      "git_sha256": "f61f45a428008cdc1d060d6f46865774039913898c2108fa9a07b6df118a2c73",
+      "executed_sha256": "f61f45a428008cdc1d060d6f46865774039913898c2108fa9a07b6df118a2c73"
+    },
+    "src/modules/shared/primitives.ts": {
+      "git_sha256": "f7f88d826a0532ced86159ef1bc56e89bf3f7d4cb842c03992a54b760d3d9e2b",
+      "executed_sha256": "f7f88d826a0532ced86159ef1bc56e89bf3f7d4cb842c03992a54b760d3d9e2b"
+    },
+    "tests/helpers/booking.ts": {
+      "git_sha256": "8094f1291e11a9bfeecbf796b8224aa6f3edf75d21edc3231fc1bb5fec003f65",
+      "executed_sha256": "8094f1291e11a9bfeecbf796b8224aa6f3edf75d21edc3231fc1bb5fec003f65"
+    },
+    "tests/helpers/completion.ts": {
+      "git_sha256": "502f299309b9103279e0f53119c17c1acd020c2a6546b62a3e5382dab455f88c",
+      "executed_sha256": "502f299309b9103279e0f53119c17c1acd020c2a6546b62a3e5382dab455f88c"
+    },
+    "tests/helpers/environment.ts": {
+      "git_sha256": "67e8175459d046646ff109466e693ea7544f0c7e836e28d180199a610107bee0",
+      "executed_sha256": "67e8175459d046646ff109466e693ea7544f0c7e836e28d180199a610107bee0"
+    },
+    "tests/helpers/financial-booking.ts": {
+      "git_sha256": "f94fd1d6f9061cbe989332d2119df8588376e8ba2179a7c311512b08eb9e27bc",
+      "executed_sha256": "f94fd1d6f9061cbe989332d2119df8588376e8ba2179a7c311512b08eb9e27bc"
+    },
+    "tests/helpers/packages.ts": {
+      "git_sha256": "f49c027e9a0485cd41099c74c6903f17630bff0d3e9c495bd2c06516bff05895",
+      "executed_sha256": "f49c027e9a0485cd41099c74c6903f17630bff0d3e9c495bd2c06516bff05895"
+    },
+    "tests/helpers/payment-review.ts": {
+      "git_sha256": "ffc7999dee925ee940f94623033d14f6d35e367b3e35e32286870f340ae94073",
+      "executed_sha256": "ffc7999dee925ee940f94623033d14f6d35e367b3e35e32286870f340ae94073"
+    },
+    "tests/helpers/payments.ts": {
+      "git_sha256": "0d20db84ad6bfc4a010df310e9e0280cee7b5acb706cbedb9c5771b9bd075194",
+      "executed_sha256": "0d20db84ad6bfc4a010df310e9e0280cee7b5acb706cbedb9c5771b9bd075194"
+    },
+    "tests/helpers/supabase.ts": {
+      "git_sha256": "3b46b3a14537629c0cc4afe36fb7dfd28f72694bd23442145af90d4fb2614fa5",
+      "executed_sha256": "3b46b3a14537629c0cc4afe36fb7dfd28f72694bd23442145af90d4fb2614fa5"
+    },
+    "tests/integration/package-concurrency.test.ts": {
+      "git_sha256": "1d95af88054ab0cc0a57696033d733cc16f8f109e925f8fd7840db77f660c027",
+      "executed_sha256": "1d95af88054ab0cc0a57696033d733cc16f8f109e925f8fd7840db77f660c027"
+    },
+    "tests/integration/revenue-recognition-boundaries.test.ts": {
+      "git_sha256": "ffe3d86fe931c2931cc098977018639b7eca5082eb971f8110d27b2195489f71",
+      "executed_sha256": "ffe3d86fe931c2931cc098977018639b7eca5082eb971f8110d27b2195489f71"
+    },
+    "tests/integration/review-authorization.test.ts": {
+      "git_sha256": "aea6c958f8b485ca5fa39b254a4b9cef8ce41301ef0d94bae0076cdbc1bcaf1f",
+      "executed_sha256": "aea6c958f8b485ca5fa39b254a4b9cef8ce41301ef0d94bae0076cdbc1bcaf1f"
+    },
+    "tests/integration/review-evidence-concurrency.test.ts": {
+      "git_sha256": "5841044f917c7ae734857585ba646d2a97d37af832eb5313ea373b816616dd10",
+      "executed_sha256": "5841044f917c7ae734857585ba646d2a97d37af832eb5313ea373b816616dd10"
+    },
+    "tests/unit/policy-vectors.ts": {
+      "git_sha256": "21a9d0685c405f826d3e1b9b534ab84f5a0646edd20d5b8a22a0f27086a9eb75",
+      "executed_sha256": "21a9d0685c405f826d3e1b9b534ab84f5a0646edd20d5b8a22a0f27086a9eb75"
+    },
+    "tools/catalog-seed.ts": {
+      "git_sha256": "6c221b04b8a0c2cd6e2e2889d24b19152057db93f5049c835b6d12fde3dbc27a",
+      "executed_sha256": "6c221b04b8a0c2cd6e2e2889d24b19152057db93f5049c835b6d12fde3dbc27a"
+    },
+    "tools/db-seed.ts": {
+      "git_sha256": "096dc7bdd93f1e320bf1e2560ead5364acd5d75aef186e0d67e696ba3cf9aabb",
+      "executed_sha256": "096dc7bdd93f1e320bf1e2560ead5364acd5d75aef186e0d67e696ba3cf9aabb"
+    },
+    "vitest.config.ts": {
+      "git_sha256": "0ce08a1188308d214a83084d6082d791d29c03af1933f07be01b4f36852f8d70",
+      "executed_sha256": "0ce08a1188308d214a83084d6082d791d29c03af1933f07be01b4f36852f8d70"
+    }
+  },
+  "instrumentation": {
+    "tools/evidence/financial.config.ts": "15a68bbedf3ed325de0de0fae59d3676c3cd718a495be49e6ae3831094b0170f",
+    "tools/evidence/count-assertions.ts": "c7f3f212d4bb8ddcd6be0a33f02d552ee7b90b0db9842951d9dbd1db933ffd5c",
+    "tools/evidence/record-financial.mjs": "ad72e3cc8fa635b162419f521061a480991da9032ce4fb96499c0e19182b108b"
+  }
+}

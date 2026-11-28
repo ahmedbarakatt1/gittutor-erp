@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { Pool } from 'pg';
 import { FileRpcError, fileRpc, fileFilenameSchema, publicFilePurposeSchema, type FileRpcClient } from '../modules/files/commands';
 import { validateFileBytes, fileLimits } from '../modules/files/validation';
+import { fileChunkBytes, fileRanges, parseFileRange, type FileRange } from '../modules/files/transport';
 import { createDatabasePool, databaseUrl } from './database';
 import { parseServerConfig, type ServerConfig } from './config';
 
@@ -40,6 +41,27 @@ export function createPrivateObjectStore(config: ServerConfig) {
   }
   return {
     read,
+    async putPart(objectKey: string, bytes: Uint8Array) {
+      await ensureBucket();
+      // Unadopted staging parts may be corrected. Final object generations remain immutable.
+      const result = await client.storage.from(bucket).upload(objectKey, bytes, { upsert: true, contentType: 'application/octet-stream', cacheControl: '0' });
+      if (result.error) throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
+      await read({ object_key: objectKey, size_bytes: bytes.byteLength, checksum_sha256: createHash('sha256').update(bytes).digest('hex') });
+    },
+    async readPart(objectKey: string, expectedSize: number) {
+      const result = await client.storage.from(bucket).download(objectKey);
+      if (result.error || !result.data) {
+        if (String(result.error?.statusCode) === '404') throw new FileRpcError('UPLOAD_REQUIRED');
+        throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
+      }
+      if (result.data.size !== expectedSize || expectedSize > fileChunkBytes) throw new FileRpcError('FILE_SIZE_MISMATCH');
+      return new Uint8Array(await result.data.arrayBuffer());
+    },
+    async removeParts(keys: string[]) {
+      // Parts have no download grants and are never file generations. Cleanup is retryable.
+      const result = await client.storage.from(bucket).remove(keys);
+      if (result.error) throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
+    },
     async put(descriptor: PrivateObject & { detected_type: string }, bytes: Uint8Array) {
       await ensureBucket();
       // Lost acknowledgements and concurrent retry adoption reuse the exact immutable object.
@@ -51,8 +73,29 @@ export function createPrivateObjectStore(config: ServerConfig) {
   };
 }
 
-export function createFileContentService(database: Pick<Pool, 'query'>, config: ServerConfig) {
-  const storage = createPrivateObjectStore(config);
+export function createFileContentService(database: Pick<Pool, 'query'>, config: ServerConfig, storage = createPrivateObjectStore(config)) {
+  // A cold service can verify an existing immutable manifest through storage.put.
+  // Joining the same promise also covers concurrent, out-of-order first chunks.
+  const manifests = new Map<string, Promise<void>>();
+  function ensureChunkManifest(prepared: z.infer<typeof upload>, keys: string[]) {
+    const key = `${prepared.file_id}/parts/${prepared.checksum_sha256}/cleanup.json`;
+    const existing = manifests.get(key);
+    if (existing) return existing;
+    const bytes = new TextEncoder().encode(JSON.stringify({
+      version: 1, kind: 'file_chunk_cleanup_candidate', file_id: prepared.file_id,
+      checksum_sha256: prepared.checksum_sha256, size_bytes: prepared.size_bytes, part_keys: keys,
+    }));
+    const verification = storage.put({
+      object_key: key, size_bytes: bytes.byteLength,
+      checksum_sha256: createHash('sha256').update(bytes).digest('hex'), detected_type: 'application/json',
+    }, bytes).catch(error => {
+      if (manifests.get(key) === verification) manifests.delete(key);
+      throw error;
+    });
+    if (manifests.size >= 256) manifests.delete(manifests.keys().next().value!);
+    manifests.set(key, verification);
+    return verification;
+  }
   async function query(sql: string, values: unknown[]) {
     try { const result = await database.query(sql, values); if (result.rowCount !== 1) throw new Error(); return result.rows[0].data as unknown; }
     catch (error) { throw new FileRpcError(error instanceof Error && safeCodes.has(error.message) ? error.message : 'DEPENDENCY_UNAVAILABLE'); }
@@ -61,15 +104,54 @@ export function createFileContentService(database: Pick<Pool, 'query'>, config: 
     if (!id.safeParse(fileId).success) throw new FileRpcError('VALIDATION_ERROR');
     return z.object({ authorization_id: id }).strict().parse((await fileRpc(client, 'authorize_file_content', { p_file_id: fileId, p_operation: operation })).data).authorization_id;
   }
+  async function adopt(prepared: z.infer<typeof upload>, bytes: Uint8Array): Promise<UploadedFile> {
+    const observed = validateFileBytes(prepared, bytes);
+    await storage.put({ ...prepared, detected_type: observed.detected_type }, bytes);
+    const result = uploaded.parse(await query('select app_private.record_file_object($1,$2,$3,$4::jsonb) data', [prepared.file_id, prepared.attempt_id, prepared.lease_token, JSON.stringify(observed)]));
+    if (result.file_id !== prepared.file_id || result.checksum_sha256 !== observed.checksum_sha256 || result.size_bytes !== observed.size_bytes) throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
+    return result;
+  }
+  async function cleanupParts(fileId: string, keys: string[]) {
+    try { await storage.removeParts(keys); }
+    catch { console.warn(JSON.stringify({ event: 'file_chunk_cleanup_pending', file_id: fileId })); }
+    // Keep the pre-write manifest even after successful cleanup: a concurrent late write
+    // remains discoverable. Abandoned uploads need the separately approved retention policy.
+  }
   return {
     async upload(client: FileRpcClient, fileId: string, bytes: Uint8Array): Promise<UploadedFile> {
       const ticket = await authorize(client, fileId, 'upload');
       const prepared = upload.parse(await query('select app_private.prepare_file_content($1,$2) data', [fileId, ticket]));
       if (prepared.file_id !== fileId) throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
-      const observed = validateFileBytes(prepared, bytes);
-      await storage.put({ ...prepared, detected_type: observed.detected_type }, bytes);
-      const result = uploaded.parse(await query('select app_private.record_file_object($1,$2,$3,$4::jsonb) data', [fileId, prepared.attempt_id, prepared.lease_token, JSON.stringify(observed)]));
-      if (result.file_id !== fileId || result.checksum_sha256 !== observed.checksum_sha256 || result.size_bytes !== observed.size_bytes) throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
+      return adopt(prepared, bytes);
+    },
+    async uploadChunk(client: FileRpcClient, fileId: string, bytes: Uint8Array, range: FileRange): Promise<UploadedFile | { file_id: string; upload_state: 'uploading' }> {
+      try { parseFileRange(`bytes ${range.start}-${range.end}/${range.total}`); } catch { throw new FileRpcError('VALIDATION_ERROR'); }
+      const ticket = await authorize(client, fileId, 'upload');
+      const prepared = upload.parse(await query('select app_private.prepare_file_content($1,$2) data', [fileId, ticket]));
+      if (prepared.file_id !== fileId) throw new FileRpcError('DEPENDENCY_UNAVAILABLE');
+      if (range.total !== prepared.size_bytes || bytes.byteLength !== range.end - range.start + 1) throw new FileRpcError('FILE_SIZE_MISMATCH');
+      const ranges = fileRanges(prepared.size_bytes);
+      // Keys derive only from trusted intent metadata. No caller key, URL or path reaches Storage.
+      const keys = ranges.map(part => `${prepared.file_id}/parts/${prepared.checksum_sha256}/${part.start / fileChunkBytes}`);
+      if (prepared.already_uploaded) {
+        const whole = await storage.read(prepared);
+        if (!whole) throw new FileRpcError('UPLOAD_REQUIRED');
+        if (!Buffer.from(whole.subarray(range.start, range.end + 1)).equals(Buffer.from(bytes))) throw new FileRpcError('FILE_CHECKSUM_MISMATCH');
+        const result = await adopt(prepared, whole);
+        await cleanupParts(fileId, keys);
+        return result;
+      }
+      await ensureChunkManifest(prepared, keys);
+      await storage.putPart(keys[range.start / fileChunkBytes], bytes);
+      if (range.end !== range.total - 1) return { file_id: fileId, upload_state: 'uploading' };
+      const whole = new Uint8Array(prepared.size_bytes);
+      for (let index = 0; index < ranges.length; index++) {
+        const part = ranges[index];
+        whole.set(await storage.readPart(keys[index], part.end - part.start + 1), part.start);
+      }
+      // Full size/type/hash validation and the database's fresh authorization still own adoption.
+      const result = await adopt(prepared, whole);
+      await cleanupParts(fileId, keys);
       return result;
     },
     async download(client: FileRpcClient, fileId: string) {
@@ -87,4 +169,5 @@ export function createFileContentService(database: Pick<Pool, 'query'>, config: 
 let service: ReturnType<typeof createFileContentService> | undefined;
 function currentService() { return service ??= createFileContentService(createDatabasePool(databaseUrl('worker')), parseServerConfig(process.env)); }
 export const uploadFileContent = (client: FileRpcClient, fileId: string, bytes: Uint8Array) => currentService().upload(client, fileId, bytes);
+export const uploadFileChunk = (client: FileRpcClient, fileId: string, bytes: Uint8Array, range: FileRange) => currentService().uploadChunk(client, fileId, bytes, range);
 export const downloadFileContent = (client: FileRpcClient, fileId: string) => currentService().download(client, fileId);

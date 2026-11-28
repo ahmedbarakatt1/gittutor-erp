@@ -1,6 +1,18 @@
 import { DomainError } from './http';
 
 export const maximumFileBytes = 25 * 1024 * 1024;
+/** Call only after the content service has verified bytes and current download authority. */
+export function streamFileBytes(bytes: Uint8Array): ReadableStream<Uint8Array> {
+  let offset = 0;
+  return new ReadableStream({
+    pull(controller) {
+      if (offset >= bytes.byteLength) { controller.close(); return; }
+      const end = Math.min(offset + 64 * 1024, bytes.byteLength);
+      controller.enqueue(bytes.subarray(offset, end)); offset = end;
+    },
+    cancel() { offset = bytes.byteLength; },
+  });
+}
 export async function readBoundedFileBody(request: Request, maximum = maximumFileBytes): Promise<Uint8Array> {
   const length = request.headers.get('content-length');
   if (length !== null && (!/^\d+$/.test(length) || !Number.isSafeInteger(Number(length)))) throw new DomainError('VALIDATION_ERROR');

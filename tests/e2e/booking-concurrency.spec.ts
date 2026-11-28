@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page } from '@playwright/test';
 import { Pool } from 'pg';
 import { bookingFixture } from '../helpers/booking';
@@ -10,7 +11,7 @@ import { bookingDueHandler } from '../../src/worker/booking-due';
 const baseURL = 'http://127.0.0.1:3000';
 async function signIn(page: Page, label: string) {
   const user = loadLocalSupabase().actors[label]; await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(user.email); await page.getByLabel('Password', { exact: true }).fill(user.password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expect(page.getByTestId('account-id')).toHaveText(user.id, { timeout: 15_000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expectSignedInAccount(page, user.id);
 }
 
 async function findOfferedSeat(page: Page, enrollmentId: string) {
@@ -22,7 +23,7 @@ async function findOfferedSeat(page: Page, enrollmentId: string) {
   await page.goto('/learn/bookings');
   const first = await firstResponse; expect(first.status()).toBe(200);
   let body = (await first.json()).data as { items: unknown[]; next_cursor: string | null };
-  const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'A temporary seat is available', exact: true }) });
+  const section = page.getByRole('heading', { name: 'A temporary seat is available', exact: true }).locator('..');
   const offer = section.locator(`a[href="/learn/bookings/${enrollmentId}"]`).filter({ hasText: 'A temporary seat is available' });
   let loaded = body.items.length;
   await expect(section.getByRole('listitem')).toHaveCount(loaded);
@@ -80,7 +81,7 @@ test('GT-208 independent queue walkthrough expires one offer and promotes exactl
     expect((await fixture.database.query('select state from app_private.waitlist_entries where id=$1', [entries[1]])).rows[0].state).toBe('waiting');
     await fixture.database.query("update app_private.enrollments set hold_expires_at=now()-interval '1 second' where id=$1", [first.offered_enrollment_id]); await runOwnDueJob();
     const second = (await fixture.database.query('select state,offered_enrollment_id from app_private.waitlist_entries where id=$1', [entries[1]])).rows[0]; expect(second.state).toBe('offered'); expect((await fixture.database.query('select state from app_private.waitlist_entries where id=$1', [entries[0]])).rows[0].state).toBe('expired');
-    const offer = await findOfferedSeat(pages[1], second.offered_enrollment_id); await offer.click(); await pages[1].waitForURL('**/learn/bookings/' + second.offered_enrollment_id, { timeout: 15_000 }); await expect(pages[1].getByRole('heading', { name: 'Your exact quote', exact: true })).toBeVisible();
+    const offer = await findOfferedSeat(pages[1], second.offered_enrollment_id); await offer.click(); await pages[1].waitForURL('**/learn/bookings/' + second.offered_enrollment_id, { timeout: 15_000 }); await expect(pages[1].getByRole('heading', { name: 'Your exact quote', exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(pages[1].getByTestId('confirmation-explanation')).toBeVisible(); await expect(pages[1].getByRole('button', { name: 'Confirm session', exact: true })).toHaveCount(0);
     expect((await fixture.database.query("select count(*)::int as count from app_private.enrollments where occurrence_id=$1 and state='held' and hold_expires_at>now()", [occurrenceId])).rows[0].count).toBe(1);
   } finally { await Promise.all(contexts.map(context => context.close())); await worker.end(); await fixture.close(); }

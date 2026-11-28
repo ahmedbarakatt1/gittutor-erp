@@ -1,7 +1,33 @@
-import type { Metadata } from 'next';
+import { pageMetadata } from '@/server/page-metadata';
+import { parseServerConfig } from '@/server/config';
 import { requireAccount } from '@/server/auth';
 import { PortalShell } from '@/components/portal-shell';
 import { CalendarConnectionPanel } from '@/components/teaching/calendar-connection';
+import { ScanRecoveryPanel } from '@/components/files/scan-recovery';
+import { RequestDriveConnection } from '@/components/files/request-drive-connection';
+import { ManualWhatsApp } from '@/components/support/manual-whatsapp';
 import { meetingCopy as copy } from '@/locales/meetings';
-export const metadata: Metadata = { title: 'Integrations | Git Tutor', robots: { index: false, follow: false } };
-export default async function IntegrationsPage() { const account = await requireAccount('admin'); return <PortalShell kind="admin" account={account} title={copy.integrations} description={copy.integrationDescription} activePath="/admin/integrations" showAccount={false}><CalendarConnectionPanel /></PortalShell>; }
+import { meetingCopy as arabicMeetingCopy } from '@/locales/ar-transaction/meetings';
+import { getSiteLanguage } from '@/server/site-language';
+
+const textByLanguage = {
+  en: { copy },
+  ar: { copy: arabicMeetingCopy },
+};
+
+export const generateMetadata = pageMetadata({ title: 'Integrations | Git Tutor', robots: { index: false, follow: false } });
+export default async function IntegrationsPage({ searchParams }: { searchParams: Promise<{ calendar?: string; drive?: string }> }) {
+  const uiLanguage = await getSiteLanguage();
+  const { copy } = textByLanguage[uiLanguage];
+
+  const account = await requireAccount('admin');
+  const settings = parseServerConfig(process.env);
+  const { calendar, whatsapp } = settings.providers;
+  const outcomes = await searchParams;
+  return <PortalShell kind="admin" account={account} title={copy.integrations} description={copy.integrationDescription} activePath="/admin/integrations" showAccount={false}>
+    <CalendarConnectionPanel provider={calendar} verifyGoogleRooms={settings.environment === 'production' && calendar === 'google'} outcome={outcomes.calendar} />
+    <RequestDriveConnection enabled={Boolean(settings.request_drive)} language={uiLanguage} outcome={outcomes.drive} />
+    {whatsapp === 'manual' && <ManualWhatsApp staff />}
+    <ScanRecoveryPanel />
+  </PortalShell>;
+}

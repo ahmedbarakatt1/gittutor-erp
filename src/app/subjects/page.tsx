@@ -1,30 +1,45 @@
-import type { Metadata } from 'next';
+import { pageMetadata } from '@/server/page-metadata';
 import Link from 'next/link';
-import { connection } from 'next/server';
-import { PublicShell, CatalogUnavailable } from '@/components/catalog/public-shell';
-import { catalogCopy as copy } from '@/locales/catalog';
-import { publicSupabase } from '@/server/supabase';
-import { listPublicOffers, type PublicOffer } from '@/modules/catalog/queries';
-import styles from '@/components/catalog/catalog.module.css';
+import { PublicShell } from '@/components/catalog/public-shell';
 import { CourseHelp } from '@/components/public-contact';
-import { publicContact } from '@/locales/contact';
+import { getSiteLanguage } from '@/server/site-language';
+import { publicCatalog } from '@/locales/ar-public';
+import { catalogCopy } from '@/locales/catalog';
+import styles from '@/components/catalog/catalog.module.css';
 
-export const metadata: Metadata = { title: 'Subjects | Git Tutor', description: 'Explore published tutoring offers for your subject.' };
+export const generateMetadata = pageMetadata({
+  title: 'Subjects | Git Tutor',
+  description: 'Tutoring around your own course material. Explore our study areas or request help with another topic.',
+});
+
 export default async function SubjectsPage() {
-  await connection();
-  const subjects = new Map<string, PublicOffer['subject']>();
-  let unavailable = false;
-  try {
-    const client = publicSupabase();
-    const page = await listPublicOffers(client, { limit: 1 });
-    for (const subject of page.subjects) subjects.set(subject.slug, subject);
-  } catch { unavailable = true; }
-  return <PublicShell active="subjects"><div className={`${styles.intro} ${styles.subjectIntro}`}><h1>{copy.subjectsTitle}</h1><p>{copy.subjectsDescription}</p></div>
-    {unavailable && <CatalogUnavailable retry="/subjects" />}
-    <ul className={styles.subjectList}>{Object.entries(copy.subjectDetails).sort(([, a], [, b]) => a.order - b.order).map(([slug, detail]) => {
-      const subject = unavailable ? undefined : subjects.get(slug);
-      return <li key={slug}><Link className={styles.subject} href={subject ? `/offers?subject_id=${subject.subject_id}` : publicContact.whatsappHref} aria-label={subject ? copy.subjectExplore(detail.title) : copy.subjectAsk(detail.title)}><div className={styles.subjectName}><h2>{detail.title}</h2><p className={styles.subjectTopics}>{detail.topics}</p></div><div className={styles.subjectDescription}><p>{detail.description}</p><span className={styles.subjectAction}>{subject ? copy.subjectAction : copy.subjectAskAction}</span></div><svg className={styles.subjectArrow} viewBox="0 0 32 32" aria-hidden="true"><path d="M6 16h20M18 8l8 8-8 8" /></svg></Link></li>;
-    })}</ul>
+  const language = await getSiteLanguage();
+  const copy = publicCatalog(language);
+  const subjects = Object.entries(copy.subjectDetails).sort(([, a], [, b]) => a.order - b.order);
+
+  return <PublicShell language={language} active="subjects">
+    <div className={`${styles.intro} ${styles.subjectIntro}`}>
+      <h1>{copy.subjectsTitle}</h1>
+      <div>
+        <p>{copy.subjectsDescription}</p>
+        <Link className={styles.textLink} href="/learn/requests">{copy.anotherSubject}</Link>
+      </div>
+    </div>
+    <ul className={styles.subjectList}>
+      {subjects.map(([slug, detail]) => (
+        <li className={styles.subject} key={slug}>
+          <div className={styles.subjectName}>
+            <h2><Link className={styles.subjectLink} href={`/learn/requests?topic=${encodeURIComponent(catalogCopy.subjectDetails[slug].title)}`}
+              aria-describedby={`${slug}-topics ${slug}-description`}>{detail.title}</Link></h2>
+            <p className={styles.subjectTopics} id={`${slug}-topics`}>{detail.topics}</p>
+          </div>
+          <p className={styles.subjectDescription} id={`${slug}-description`}>{detail.description}</p>
+          <svg className={styles.subjectArrow} viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M6 16h20M18 8l8 8-8 8" />
+          </svg>
+        </li>
+      ))}
+    </ul>
     <p className={styles.allCourses}><Link className={styles.textLink} href="/offers">{copy.allCourses}</Link></p>
     <CourseHelp />
   </PublicShell>;

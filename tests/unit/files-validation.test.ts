@@ -11,3 +11,12 @@ function zip(entries:Record<string,string>){const local:Buffer[]=[],central:Buff
 const presentation={'[Content_Types].xml':'<Types/>','ppt/presentation.xml':'<presentation/>','_rels/.rels':'<Relationships/>'};
 function pptx(data:Buffer){return validateFileBytes({...declaration,purpose:'shared_handout',filename:'slides.pptx',declared_type:'application/vnd.openxmlformats-officedocument.presentationml.presentation',size_bytes:data.length,checksum_sha256:createHash('sha256').update(data).digest('hex')},data);}
 test('bounded PPTX central directory and actual CRC/inflate are checked before scanner',()=>{expect(pptx(zip(presentation)).detected_type).toContain('presentationml');const malicious:Record<string,string>[]=[{'../escape.xml':'x'},{'ppt/vbaProject.bin':'x'},{'ppt/_rels/slides.rels':'<Relationship TargetMode="External" Target="https://example.test"/>'}];for(const extra of malicious)expect(()=>pptx(zip({...presentation,...extra}))).toThrow('FILE_ARCHIVE_INVALID');const corrupt=zip(presentation);corrupt[31+'[Content_Types].xml'.length]^=1;expect(()=>pptx(corrupt)).toThrow('FILE_ARCHIVE_INVALID');});
+
+test('request materials can include a validated lecture presentation', () => {
+  const slides = zip(presentation);
+  expect(validateFileBytes({
+    purpose: 'request_material', filename: 'lecture.pptx',
+    declared_type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    size_bytes: slides.length, checksum_sha256: createHash('sha256').update(slides).digest('hex'),
+  }, slides).detected_type).toContain('presentationml');
+});

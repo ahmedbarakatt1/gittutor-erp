@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {groupRemovalFixture} from './group-removal';
 import {settleEnrollment} from './financial-booking';
 /** Historical admission only is seeded. Payments, attendance, approval and earnings use actual commands. */
-export async function groupCompletionFixture(){const f=await groupRemovalFixture(3);try{
+export async function groupCompletionFixture(options: {isolatedLearners?: boolean} = {}){const f=await groupRemovalFixture(3,true,options);try{
  const occurrenceId=randomUUID(),end=new Date(Date.now()-3600000),start=new Date(end.getTime()-3600000),accepted=new Date(start.getTime()-86400000),seats:string[]=[];
  const original=(await f.database.query('select * from app_private.occurrences where id=$1',[f.occurrenceId])).rows[0];
  await f.database.query(`insert into app_private.occurrences select(jsonb_populate_record(null::app_private.occurrences,to_jsonb(o)||jsonb_build_object('id',$2::uuid,'start_at',$3::timestamptz,'end_at',$4::timestamptz,'confirmation_deadline_at',$3::timestamptz-interval '1 hour','state','forming','current_fee_agreement_id',null,'version',1,'meeting_status','not_requested'))).* from app_private.occurrences o where id=$1`,[f.occurrenceId,occurrenceId,start,end]);

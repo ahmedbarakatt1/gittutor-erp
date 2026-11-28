@@ -7,6 +7,8 @@ import { fixtureId } from './db-seed';
 type Json = Record<string, unknown>;
 const source = JSON.parse(readFileSync('contracts/policy-settings.json','utf8')) as { version:string; development_examples:{fixture_id:string;policy?:Json}[] };
 const manifest = JSON.parse(readFileSync('contracts/pricing-policy.json','utf8')) as { version:string;customer_pricing:{group_tiers:unknown[]};internal_compensation:{group_fee_bands:unknown[]} };
+const tuition = JSON.parse(readFileSync('contracts/runtime/public-tuition.json','utf8')) as { duration_minutes_min: number; tiers: {format: string; price_minor: number}[] };
+const individualTuition = tuition.tiers.find(tier => tier.format === 'individual')!;
 const sourceVersion = `catalog-seed-v1:${source.version}`;
 const catalogSubjects = [
   { label:'computer_science',slug:'computer-science',title:'Computer Science' },
@@ -17,6 +19,8 @@ const catalogSubjects = [
 const tutorProfile = { display_name:'TutorA · Calculus',bio:'Clear explanations, practical examples and time to work through difficult questions. This is a synthetic development tutor profile.',subject_ids:[fixtureId('subject_calculus')] };
 // Canonical fixture labels map to the same UUIDs across independent disposable databases.
 export const catalogFixtureIds = {
+  individual_pricing: fixtureId('fixture_individual_pricing_v2'), individual_policy: fixtureId('fixture_individual_policy_v2'),
+  individual_offer: fixtureId('fixture_individual_offer_v2'),
   group_pricing: fixtureId('2026-11-11.1'), private_pricing: fixtureId('fixture_private_customer_pricing_v1'),
   group2_policy: fixtureId('fixture_policy_group2_v1'), group3_policy: fixtureId('fixture_policy_group3_v1'),
   group4_policy: fixtureId('fixture_policy_group_v1'), private_policy: fixtureId('fixture_policy_private_v1'),
@@ -70,7 +74,15 @@ export async function seedCatalog() {
         await audit(`subject_${subject.label}`,id);
       }
     }
-    for(const [scope,id,customer,compensation] of [['group',catalogFixtureIds.group_pricing,customerGroup,feeGroup],['private',catalogFixtureIds.private_pricing,customerPrivate,feePrivate]] as const) {
+    // The original EGP 500 pricing remains addressable by historical finance scenarios.
+    const individualPolicy = { ...editablePolicy('private', catalogFixtureIds.individual_pricing),
+      duration_minutes: tuition.duration_minutes_min, private_seat_price_minor: individualTuition.price_minor };
+    const bundles = [
+      ['group', 'group', catalogFixtureIds.group_pricing, customerGroup, feeGroup],
+      ['private', 'private', catalogFixtureIds.private_pricing, customerPrivate, feePrivate],
+      ['individual_v2', 'private', catalogFixtureIds.individual_pricing, { ...customerPrivate, duration_minutes: individualPolicy.duration_minutes, private_seat_price_minor: individualPolicy.private_seat_price_minor }, feePrivate],
+    ] as const;
+    for(const [label,scope,id,customer,compensation] of bundles) {
       const valid=await database.query('select app_private.catalog_pricing_errors($1,$2,$3,true) as errors',[customer,compensation,scope]);
       if(valid.rows[0].errors.length) throw new Error('CATALOG_FIXTURE_PRICING_INVALID');
       const existing=await database.query('select environment_scope,is_synthetic,source_manifest_version,content_hash from app_private.pricing_versions where id=$1',[id]);
@@ -81,7 +93,7 @@ export async function seedCatalog() {
       } else {
         await database.query("insert into app_private.pricing_versions(id,scope,customer_pricing,environment_scope,is_synthetic,content_hash,source_manifest_version,created_by) values($1,$2,$3,'development_test',true,$4,$5,$6)",[id,scope,customer,hash,sourceVersion,adminId]);
         await database.query('insert into finance_private.pricing_compensation(pricing_version_id,content) values($1,$2)',[id,compensation]);
-        await audit(`pricing_${scope}`,id);
+        await audit(`pricing_${label}`,id);
       }
     }
     const group=editablePolicy('group',catalogFixtureIds.group_pricing);
@@ -95,6 +107,7 @@ export async function seedCatalog() {
     }
     records.push({label:'private',scope:'private',subjectId:fixtureId('subject_calculus'),policyId:catalogFixtureIds.private_policy,offerId:catalogFixtureIds.private_offer,pricingId:catalogFixtureIds.private_pricing,content:privatePolicy,target:null,capacity:1});
     for(const subject of catalogSubjects) records.push({label:`${subject.label}_private`,scope:'private',subjectId:fixtureId(`subject_${subject.label}`),policyId:catalogFixtureIds.private_policy,offerId:fixtureId(`fixture_${subject.label}_private_60_minute_offer`),pricingId:catalogFixtureIds.private_pricing,content:privatePolicy,target:null,capacity:1});
+    records.push({label:'individual_v2',scope:'private',subjectId:fixtureId('subject_calculus'),policyId:catalogFixtureIds.individual_policy,offerId:catalogFixtureIds.individual_offer,pricingId:catalogFixtureIds.individual_pricing,content:individualPolicy,target:null,capacity:1});
     for(const record of records) {
       const {policyId,offerId,pricingId,content,scope,label,target,capacity,subjectId}=record;
       const hash=(await database.query('select app_private.catalog_hash($1) as hash',[content])).rows[0].hash;
@@ -116,9 +129,9 @@ export async function seedCatalog() {
       const existingOffer=await database.query('select subject_id,format,duration_minutes,capacity,target_tier,pricing_version_id,policy_version_id,created_by from app_private.offers where id=$1',[offerId]);
       if(existingOffer.rowCount) {
         const row=existingOffer.rows[0];
-        if(row.subject_id!==subjectId||row.format!==scope||row.duration_minutes!==60||row.capacity!==capacity||row.target_tier!==target||row.pricing_version_id!==pricingId||row.policy_version_id!==policyId||row.created_by!==adminId) throw new Error('CATALOG_SEED_OFFER_CONFLICT');
+        if(row.subject_id!==subjectId||row.format!==scope||row.duration_minutes!==content.duration_minutes||row.capacity!==capacity||row.target_tier!==target||row.pricing_version_id!==pricingId||row.policy_version_id!==policyId||row.created_by!==adminId) throw new Error('CATALOG_SEED_OFFER_CONFLICT');
       } else {
-        await database.query('insert into app_private.offers(id,subject_id,format,duration_minutes,capacity,target_tier,pricing_version_id,policy_version_id,created_by) values($1,$2,$3,60,$4,$5,$6,$7,$8)',[offerId,subjectId,scope,capacity,target,pricingId,policyId,adminId]);
+        await database.query('insert into app_private.offers(id,subject_id,format,duration_minutes,capacity,target_tier,pricing_version_id,policy_version_id,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9)',[offerId,subjectId,scope,content.duration_minutes,capacity,target,pricingId,policyId,adminId]);
         await audit(`offer_${label}`,offerId);
       }
     }
@@ -129,10 +142,9 @@ export async function seedCatalog() {
       if(result.error) throw new Error(`CATALOG_SEED_COMMAND_FAILED:${name}:${result.error.code}`);
       return result.data as Json;
     }
-    for(const scope of ['group','private'] as const) {
-      const id=catalogFixtureIds[`${scope}_pricing`];
+    for(const [label,,id] of bundles) {
       const row=(await database.query('select status,version from app_private.pricing_versions where id=$1',[id])).rows[0];
-      if(row.status==='draft') await rpc('approve_pricing_version',{p_pricing_version_id:id,p_effective_at:effectiveAt,p_approval_note:'Approved synthetic development fixture; not a live commercial approval.',p_expected_version:row.version,p_idempotency_key:`catalog-seed-v1:approve-price:${scope}`});
+      if(row.status==='draft') await rpc('approve_pricing_version',{p_pricing_version_id:id,p_effective_at:effectiveAt,p_approval_note:'Approved synthetic development fixture; not a live commercial approval.',p_expected_version:row.version,p_idempotency_key:`catalog-seed-v1:approve-price:${label}`});
     }
     for(const record of records) {
       const policy=(await database.query('select status,version from app_private.policy_versions where id=$1',[record.policyId])).rows[0];
@@ -152,9 +164,9 @@ export async function seedCatalog() {
       if(!draft||draft.display_name!==tutorProfile.display_name||draft.bio!==tutorProfile.bio||JSON.stringify(draft.subject_ids)!==JSON.stringify(tutorProfile.subject_ids)||draft.created_by!==config.actors.tutor_a.id||draft.state!=='draft') throw new Error('CATALOG_SEED_TUTOR_DRAFT_CONFLICT: existing noncanonical draft preserved without approval');
       await rpc('approve_tutor_profile',{p_tutor_id:teacher.id,p_profile_version_id:teacher.draft_profile_version_id,p_decision:'approved',p_reason:'Reviewed synthetic development teaching profile.',p_expected_version:teacher.version,p_idempotency_key:'catalog-seed-v1:approve-tutor-profile'});
     }
-    const final=(await database.query("select (select count(*) from app_private.pricing_versions where id=any($1::uuid[]) and status='published')::int as pricing,(select count(*) from app_private.policy_versions where id=any($2::uuid[]) and status='published')::int as policies,(select count(*) from app_private.offers where id=any($3::uuid[]) and status='published')::int as offers,(select count(*) from app_private.tutors t join app_private.tutor_profile_versions p on p.id=t.approved_profile_version_id and p.state='approved' where t.id=$4)::int as tutors",[[catalogFixtureIds.group_pricing,catalogFixtureIds.private_pricing],[...new Set(records.map(record=>record.policyId))],records.map(record=>record.offerId),teacher.id])).rows[0];
-    if(final.pricing!==2||final.policies!==4||final.offers!==8||final.tutors!==1) throw new Error('CATALOG_SEED_FINAL_STATE_CONFLICT: retired or altered records preserved');
-    console.log('Synthetic catalog ready: 2 published pricing bundles, 4 published policies, 8 published offers across 5 subjects, approved tutor profile. Existing records preserved.');
+    const final=(await database.query("select (select count(*) from app_private.pricing_versions where id=any($1::uuid[]) and status='published')::int as pricing,(select count(*) from app_private.policy_versions where id=any($2::uuid[]) and status='published')::int as policies,(select count(*) from app_private.offers where id=any($3::uuid[]) and status='published')::int as offers,(select count(*) from app_private.tutors t join app_private.tutor_profile_versions p on p.id=t.approved_profile_version_id and p.state='approved' where t.id=$4)::int as tutors",[bundles.map(bundle=>bundle[2]),[...new Set(records.map(record=>record.policyId))],records.map(record=>record.offerId),teacher.id])).rows[0];
+    if(final.pricing!==3||final.policies!==5||final.offers!==9||final.tutors!==1) throw new Error('CATALOG_SEED_FINAL_STATE_CONFLICT: retired or altered records preserved');
+    console.log('Synthetic catalog ready: 3 published pricing bundles, 5 published policies, 9 published offers across 5 subjects, approved tutor profile. Existing records preserved.');
   } catch(error) { if(inTransaction) await database.query('rollback'); throw error; }
   finally { await Promise.all([admin.auth.signOut({scope:'local'}),tutor?.auth.signOut({scope:'local'})]); await database.query("select pg_advisory_unlock(hashtextextended('git-tutor:catalog-seed:v1',0))"); await database.end(); }
 }

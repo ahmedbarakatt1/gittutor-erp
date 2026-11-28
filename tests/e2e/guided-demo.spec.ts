@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -17,7 +18,7 @@ async function login(page: Page, actor: { id: string; email: string; password: s
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id);
+  await expectSignedInAccount(page, actor.id);
 }
 async function submit(page: Page, form: Locator, path: string, expected = 200) {
   const response = page.waitForResponse(result => new URL(result.url()).pathname === `/api/v1/${path}` && result.request().method() === 'POST');
@@ -64,14 +65,36 @@ test('guided synthetic booking, real receipt review, confirmation, files and fiv
     const enrollmentResponse = await learner.request.get(`/api/v1/enrollments/${slot.enrollmentId}`);
     const enrollment = (await enrollmentResponse.json()).data;
     if (!enrollment.quote.accepted_at) { await accept.getByRole('checkbox').check(); await submit(learner, accept, `quotes/${enrollment.quote.quote_id}/accept`); }
-    await learner.getByRole('link', { name: 'View payment instructions', exact: true }).click();
+    await Promise.all([
+      learner.waitForURL(/\/learn\/payments\/charges\/[\da-f-]{36}$/),
+      learner.getByRole('link', { name: 'View payment instructions', exact: true }).click(),
+    ]);
     slot.chargeId = new URL(learner.url()).pathname.split('/').at(-1); await saveDemo(demo);
     if (!slot.receiptId) {
       await learner.getByLabel('Payment channel', { exact: true }).selectOption(demo.receivingVersionId);
       const receipt = learner.getByRole('form', { name: 'Submit receipt for review', exact: true });
       await receipt.getByLabel('Amount you transferred (EGP)', { exact: true }).fill('500');
       await receipt.getByLabel('Transfer reference', { exact: true }).fill(slot.externalId);
-      await upload(learner, receipt, '.local/demo/verification-receipt.pdf');
+      // Hold the genuine refreshed evidence list so a fast click after the scan is reproducible.
+      const evidenceUrl = `**/api/v1/charges/${slot.chargeId}/receipt-files`;
+      let releaseEvidence!: () => void;
+      const waitingForEvidence = new Promise<void>(resolve => { releaseEvidence = resolve; });
+      let reportIntercept!: () => void;
+      const intercepted = new Promise<void>(resolve => { reportIntercept = resolve; });
+      await learner.route(evidenceUrl, async route => {
+        reportIntercept();
+        await waitingForEvidence;
+        await route.continue();
+      }, {times: 1});
+      let receiptFileId: string;
+      try {
+        receiptFileId = await upload(learner, receipt, '.local/demo/verification-receipt.pdf');
+        await intercepted;
+        await expect(receipt.getByRole('button', { name: 'Submit receipt for review', exact: true })).toBeDisabled();
+      } finally {
+        releaseEvidence();
+      }
+      await expect(receipt.getByLabel('Prepared evidence', { exact: true })).toHaveValue(receiptFileId);
       const saved = await submit(learner, receipt, 'receipts', 201);
       slot.receiptId = saved.receipt_id; slot.caseId = saved.case_id; await saveDemo(demo);
     }
@@ -128,6 +151,7 @@ test('guided synthetic booking, real receipt review, confirmation, files and fiv
       await saveDemo(demo);
     }
     await learner.goto(`/learn/bookings/${slot.enrollmentId}`);
+    await learner.getByText('Study files and class resources', { exact: true }).click();
     await expect(learner.getByRole('heading', { name: 'demo-material.pdf', exact: true })).toBeVisible();
     const download = await learner.request.get(`/api/v1/files/${slot.materialFileId}/content`); expect(download.status()).toBe(200);
     expect(createHash('sha256').update(await download.body()).digest('hex')).toBe(createHash('sha256').update(await readFile('.local/demo/demo-material.pdf')).digest('hex'));

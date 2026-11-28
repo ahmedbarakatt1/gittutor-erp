@@ -21,25 +21,31 @@ import { createIdentifierCipher } from '../src/server/private-identifiers';
 import { createPayoutDestinationTransport } from '../src/server/payout-destination-transport';
 import { privatePayoutDestinationPort } from '../src/server/payout-destination-server';
 import { invokePayrollCommandWithStatus } from '../src/modules/tutor_pay/payroll';
+import { assertHostedOperationalTarget, type HostedOperationalTarget } from './hosted-operational-target';
+import { setTimeout as delay } from 'node:timers/promises';
 
 type Json = Record<string, unknown>;
 type Step = { name: string; args: Json; requestHash: string; result: Json };
 type HistoricalSlot = { occurrenceId: string; enrollmentId: string; quoteId: string; acceptanceId: string; start: string; end: string; funded?: boolean; chargeId?: string; transferId?: string; receiptId?: string; earningId?: string; payoutAttemptId?: string; payoutSettledAt?: string };
 type DeliveryManifest = { marker: typeof operationalPreviewMarker; sourceHash: string; sourceEnrollmentId: string; createdAt: string; state: 'preparing' | 'ready' | 'verified'; provenance: 'fictional_preview_admission_only'; personal: HistoricalSlot; supersededPersonal?: HistoricalSlot; verified: HistoricalSlot; steps: Record<string, Step>; correctedTerms?: { version: 2; feeMinor: number; pricingId: string; policyId: string; offerId: string }; correctedFutureId?: string };
-const folder = resolve('.local/operational-preview'), path = resolve(folder, 'delivery-manifest.json');
+const hostedPreview = process.argv.includes('--hosted-preview');
+const folder = resolve(hostedPreview ? '.local/hosted-preview' : '.local/operational-preview'), path = resolve(folder, 'delivery-manifest.json');
 const hash = (value: string | Uint8Array) => createHash('sha256').update(value).digest('hex');
 const save = async (manifest: DeliveryManifest) => writeFile(path, JSON.stringify(manifest, null, 2) + '\n', { mode: 0o600 });
 
 async function main() {
-  const config = JSON.parse(await readFile(resolve(folder, 'config.json'), 'utf8')) as { marker: string; url: string; database_url: string; worker_database_url: string; publishable_key: string; secret_key: string; secret_encryption_key: string };
+  const config = JSON.parse(await readFile(resolve(folder, 'config.json'), 'utf8')) as HostedOperationalTarget & { publishable_key: string; secret_key: string; secret_encryption_key: string };
   const source = JSON.parse(await readFile(resolve(folder, 'manifest.json'), 'utf8')) as OperationalPreviewManifest;
   const workbook = workflowSnapshotSchema.parse(JSON.parse(await readFile(resolve('.local/workflow-import/workflow-snapshot.json'), 'utf8')));
   assert.equal(workbook.source_sha256, source.sourceHash, 'SOURCE_HASH_CHANGED');
   const correctedTerms = practiceSourceTerms(workbook); assert(correctedTerms.tutorFeeMinor > 0, 'EXPLICIT_POSITIVE_PREVIEW_RATE_REQUIRED');
   const browser = JSON.parse(await readFile(resolve(folder, 'verification-state.json'), 'utf8')) as { enrollmentId: string };
   assert.equal(config.marker, operationalPreviewMarker); assert.equal(source.marker, operationalPreviewMarker);
-  assert.equal(config.url, 'http://127.0.0.1:54331');
-  for (const connection of [config.database_url, config.worker_database_url]) { const address = new URL(connection); assert.equal(address.hostname, '127.0.0.1'); assert.equal(address.port, '54332'); }
+  if (hostedPreview) assertHostedOperationalTarget(config, workbook.source_sha256, process.env.APP_ENV);
+  else {
+    assert.equal(config.url, 'http://127.0.0.1:54331');
+    for (const connection of [config.database_url, config.worker_database_url]) { const address = new URL(connection); assert.equal(address.hostname, '127.0.0.1'); assert.equal(address.port, '54332'); }
+  }
   const database = new Client({ connectionString: config.database_url }); await database.connect();
   const worker = new Pool({ connectionString: config.worker_database_url });
   const makeClient = () => createClient(config.url, config.publishable_key, { db: { schema: 'api' }, auth: { persistSession: false, autoRefreshToken: false } });
@@ -86,6 +92,12 @@ async function main() {
       if (!existing?.can_download) {
         await content.upload(client, fileId, bytes);
         const finalized = await invokeFileCommandWithStatus(client, 'finalize_file_upload', { p_file_id: fileId, p_checksum_sha256: checksum, p_idempotency_key: `operational-delivery-v1:${label}:finalize` });
+        if (hostedPreview) {
+          const deadline = Date.now() + 60000;
+          while (!(await getFile(client, fileId)).can_download && Date.now() < deadline) await delay(1000);
+          assert((await getFile(client, fileId)).can_download, 'HOSTED_WORKER_SCAN_NOT_COMPLETE');
+          return fileId;
+        }
         await database.query('begin'); let job;
         try { await database.query("select id from app_private.outbox_jobs where purpose='files.scan' and id<>$1 for update", [finalized.data.scan_job_id]); const jobs = await claimJobs(worker, 'files.scan', 1, 60); assert(jobs.length === 1 && jobs[0].id === finalized.data.scan_job_id, 'DELIVERY_SCAN_JOB_UNAVAILABLE'); job = jobs[0]; }
         finally { await database.query('rollback'); }
@@ -94,40 +106,44 @@ async function main() {
       }
       return fileId;
     }
-    // Version 2 corrects the fee input from the state-derived due balance to the stated
-    // source rate. Published versions and original postings remain immutable.
-    const priorPrice = (await database.query('select customer_pricing from app_private.pricing_versions where id=$1', [original.pricing_version_id])).rows[0].customer_pricing;
-    const feeRule = { currency: 'EGP', fee_min_minor: correctedTerms.tutorFeeMinor, fee_max_minor: correctedTerms.tutorFeeMinor, exact_occurrence_approval_required: true };
-    const priceV2 = await step('v2:pricing', 'create_pricing_draft', { p_scope: 'private', p_customer_pricing: priorPrice, p_compensation: { currency: 'EGP', group_fee_bands: null, private_fee_rule: feeRule } });
-    const approval = 'Preview terms revision 2: use the explicit source session Instructor Rate, not its historical Fee Due balance. Original versions retained; preview only.';
-    await step('v2:pricing-approve', 'approve_pricing_version', { p_pricing_version_id: priceV2.resource_id, p_effective_at: manifest.createdAt, p_approval_note: approval, p_expected_version: 1 });
-    const policyContent = (await database.query('select app_private.policy_content($1) content', [original.policy_version_id])).rows[0].content;
-    Object.assign(policyContent, { customer_pricing_version: priceV2.resource_id, compensation_policy_version: priceV2.resource_id, private_fee_rule: feeRule });
-    const policyV2 = await step('v2:policy', 'create_policy_draft', { p_kind: 'booking', p_scope: 'private', p_content: policyContent });
-    await step('v2:policy-approve', 'approve_policy_version', { p_policy_version_id: policyV2.resource_id, p_effective_at: manifest.createdAt, p_approval_note: approval, p_expected_version: 1 });
-    const subjectId = (await database.query('select subject_id from app_private.offers where id=$1', [original.offer_id])).rows[0].subject_id;
-    const offerV2 = await step('v2:offer', 'create_offer', { p_subject_id: subjectId, p_format: 'private', p_duration_minutes: original.duration_minutes, p_capacity: 1, p_target_tier: null, p_pricing_version_id: priceV2.resource_id, p_policy_version_id: policyV2.resource_id });
-    await step('v2:publish', 'publish_offer', { p_offer_id: offerV2.resource_id, p_effective_at: manifest.createdAt, p_expected_version: 1 });
-    manifest.correctedTerms = { version: 2, feeMinor: correctedTerms.tutorFeeMinor, pricingId: priceV2.resource_id as string, policyId: policyV2.resource_id as string, offerId: offerV2.resource_id as string };
-    const priorPersonal = source.supersededPersonal ?? source.personal!;
-    await step('v2:cancel-empty-superseded-future', 'cancel_occurrence', { p_occurrence_id: priorPersonal.occurrenceId, p_reason: 'Superseded empty Preview practice by approved fee-input correction revision 2; no historical workbook record changed', p_remedy_proposal_id: null, p_expected_version: 2 });
-    const futureV2 = await step('v2:future', 'create_occurrence', { p_offer_id: offerV2.resource_id, p_tutor_id: original.tutor_id, p_start_at: priorPersonal.start, p_end_at: priorPersonal.end, p_time_zone: 'Africa/Cairo', p_target_tier: null });
-    await step('v2:future-fee', 'approve_tutor_fee', { p_occurrence_id: futureV2.occurrence_id, p_tutor_id: original.tutor_id, p_fee_minor: correctedTerms.tutorFeeMinor, p_currency: 'EGP', p_duration_minutes: original.duration_minutes, p_compensation_policy_version_id: priceV2.resource_id, p_target_tier: null, p_purpose: 'initial', p_reason: approval, p_expected_version: 1 });
-    await step('v2:future-series', 'create_occurrence_series', { p_title: 'Preview practice — your untouched session (terms revision 2)', p_occurrence_ids: [futureV2.occurrence_id] });
-    manifest.correctedFutureId = futureV2.occurrence_id as string;
-    source.supersededPersonal = priorPersonal; source.termsVersion = 2; source.privateOfferId = offerV2.resource_id as string; source.pricingId = priceV2.resource_id as string;
-    source.personal = { ...priorPersonal, occurrenceId: manifest.correctedFutureId, offerId: source.privateOfferId, bookingUrl: `${(await readFile(resolve(folder, 'public-url.txt'), 'utf8')).trim()}/learn/bookings?offer=${source.privateOfferId}&occurrence=${manifest.correctedFutureId}` };
-    await writeFile(resolve(folder, 'manifest.json'), JSON.stringify(source, null, 2) + '\n', { mode: 0o600 });
-    if (!manifest.supersededPersonal) {
-      manifest.supersededPersonal = manifest.personal;
-      const start = new Date(manifest.personal.start); start.setUTCHours(13, 0, 0, 0);
-      manifest.personal = { occurrenceId: stablePreviewId(source.sourceHash, 'historical:personal-v2:occurrence'), enrollmentId: stablePreviewId(source.sourceHash, 'historical:personal-v2:enrollment'), quoteId: stablePreviewId(source.sourceHash, 'historical:personal-v2:quote'), acceptanceId: stablePreviewId(source.sourceHash, 'historical:personal-v2:acceptance'), start: start.toISOString(), end: new Date(start.getTime() + original.duration_minutes * 60000).toISOString() };
+    // Preserve the existing local correction workflow. Fresh hosted imports already
+    // use the source rate, so their original terms and untouched booking stay intact.
+    if (!hostedPreview) {
+      // Version 2 corrects the fee input from the state-derived due balance to the stated
+      // source rate. Published versions and original postings remain immutable.
+      const priorPrice = (await database.query('select customer_pricing from app_private.pricing_versions where id=$1', [original.pricing_version_id])).rows[0].customer_pricing;
+      const feeRule = { currency: 'EGP', fee_min_minor: correctedTerms.tutorFeeMinor, fee_max_minor: correctedTerms.tutorFeeMinor, exact_occurrence_approval_required: true };
+      const priceV2 = await step('v2:pricing', 'create_pricing_draft', { p_scope: 'private', p_customer_pricing: priorPrice, p_compensation: { currency: 'EGP', group_fee_bands: null, private_fee_rule: feeRule } });
+      const approval = 'Preview terms revision 2: use the explicit source session Instructor Rate, not its historical Fee Due balance. Original versions retained; preview only.';
+      await step('v2:pricing-approve', 'approve_pricing_version', { p_pricing_version_id: priceV2.resource_id, p_effective_at: manifest.createdAt, p_approval_note: approval, p_expected_version: 1 });
+      const policyContent = (await database.query('select app_private.policy_content($1) content', [original.policy_version_id])).rows[0].content;
+      Object.assign(policyContent, { customer_pricing_version: priceV2.resource_id, compensation_policy_version: priceV2.resource_id, private_fee_rule: feeRule });
+      const policyV2 = await step('v2:policy', 'create_policy_draft', { p_kind: 'booking', p_scope: 'private', p_content: policyContent });
+      await step('v2:policy-approve', 'approve_policy_version', { p_policy_version_id: policyV2.resource_id, p_effective_at: manifest.createdAt, p_approval_note: approval, p_expected_version: 1 });
+      const subjectId = (await database.query('select subject_id from app_private.offers where id=$1', [original.offer_id])).rows[0].subject_id;
+      const offerV2 = await step('v2:offer', 'create_offer', { p_subject_id: subjectId, p_format: 'private', p_duration_minutes: original.duration_minutes, p_capacity: 1, p_target_tier: null, p_pricing_version_id: priceV2.resource_id, p_policy_version_id: policyV2.resource_id });
+      await step('v2:publish', 'publish_offer', { p_offer_id: offerV2.resource_id, p_effective_at: manifest.createdAt, p_expected_version: 1 });
+      manifest.correctedTerms = { version: 2, feeMinor: correctedTerms.tutorFeeMinor, pricingId: priceV2.resource_id as string, policyId: policyV2.resource_id as string, offerId: offerV2.resource_id as string };
+      const priorPersonal = source.supersededPersonal ?? source.personal!;
+      await step('v2:cancel-empty-superseded-future', 'cancel_occurrence', { p_occurrence_id: priorPersonal.occurrenceId, p_reason: 'Superseded empty Preview practice by approved fee-input correction revision 2; no historical workbook record changed', p_remedy_proposal_id: null, p_expected_version: 2 });
+      const futureV2 = await step('v2:future', 'create_occurrence', { p_offer_id: offerV2.resource_id, p_tutor_id: original.tutor_id, p_start_at: priorPersonal.start, p_end_at: priorPersonal.end, p_time_zone: 'Africa/Cairo', p_target_tier: null });
+      await step('v2:future-fee', 'approve_tutor_fee', { p_occurrence_id: futureV2.occurrence_id, p_tutor_id: original.tutor_id, p_fee_minor: correctedTerms.tutorFeeMinor, p_currency: 'EGP', p_duration_minutes: original.duration_minutes, p_compensation_policy_version_id: priceV2.resource_id, p_target_tier: null, p_purpose: 'initial', p_reason: approval, p_expected_version: 1 });
+      await step('v2:future-series', 'create_occurrence_series', { p_title: 'Preview practice — your untouched session (terms revision 2)', p_occurrence_ids: [futureV2.occurrence_id] });
+      manifest.correctedFutureId = futureV2.occurrence_id as string;
+      source.supersededPersonal = priorPersonal; source.termsVersion = 2; source.privateOfferId = offerV2.resource_id as string; source.pricingId = priceV2.resource_id as string;
+      source.personal = { ...priorPersonal, occurrenceId: manifest.correctedFutureId, offerId: source.privateOfferId, bookingUrl: `${(await readFile(resolve(folder, 'public-url.txt'), 'utf8')).trim()}/learn/bookings?offer=${source.privateOfferId}&occurrence=${manifest.correctedFutureId}` };
+      await writeFile(resolve(folder, 'manifest.json'), JSON.stringify(source, null, 2) + '\n', { mode: 0o600 });
+      if (!manifest.supersededPersonal) {
+        manifest.supersededPersonal = manifest.personal;
+        const start = new Date(manifest.personal.start); start.setUTCHours(13, 0, 0, 0);
+        manifest.personal = { occurrenceId: stablePreviewId(source.sourceHash, 'historical:personal-v2:occurrence'), enrollmentId: stablePreviewId(source.sourceHash, 'historical:personal-v2:enrollment'), quoteId: stablePreviewId(source.sourceHash, 'historical:personal-v2:quote'), acceptanceId: stablePreviewId(source.sourceHash, 'historical:personal-v2:acceptance'), start: start.toISOString(), end: new Date(start.getTime() + original.duration_minutes * 60000).toISOString() };
+      }
+      await save(manifest);
     }
-    await save(manifest);
     for (const kind of ['personal-v2', 'verified'] as const) {
       const slot = kind === 'personal-v2' ? manifest.personal : manifest.verified;
       if (slot.funded) continue;
-      const model = kind === 'personal-v2' ? { ...original, offer_id: manifest.correctedTerms.offerId, pricing_version_id: manifest.correctedTerms.pricingId, policy_version_id: manifest.correctedTerms.policyId, fee_minor: manifest.correctedTerms.feeMinor } : original;
+      const model = kind === 'personal-v2' && manifest.correctedTerms ? { ...original, offer_id: manifest.correctedTerms.offerId, pricing_version_id: manifest.correctedTerms.pricingId, policy_version_id: manifest.correctedTerms.policyId, fee_minor: manifest.correctedTerms.feeMinor } : original;
       await database.query('begin');
       try {
         const existing = (await database.query('select offer_id,tutor_id,start_at,end_at from app_private.occurrences where id=$1', [slot.occurrenceId])).rows[0];
@@ -198,10 +214,10 @@ async function main() {
       manifest.state = 'verified'; await save(manifest);
     }
     const base = (await readFile(resolve(folder, 'public-url.txt'), 'utf8')).trim();
-    process.env.PREVIEW_BASE_URL = base; await writeOperationalHandoff(source); await refreshOperationalCairoHandoff(source);
+    process.env.PREVIEW_BASE_URL = base; await writeOperationalHandoff(source, folder); await refreshOperationalCairoHandoff(source, folder);
     await writeFile(resolve(folder, 'DELIVERY-PRACTICE.md'), `# Fictional historical delivery practice\n\nThese two explicitly labelled practice sessions use the imported learner/tutor identities and approved preview terms. Their historical admission/quote acceptance was deliberately prepared for exercise; no workbook history was changed. Fake payments use uploaded, scanned generated evidence and ordinary authorized reconciliation commands.\n\n## Your tutor exercise\n\n[Tutor practice session](${base}/tutor/schedule?occurrence=${manifest.personal.occurrenceId}) · [Admin practice session](${base}/admin/schedule?occurrence=${manifest.personal.occurrenceId}) · [Learner booking](${base}/learn/bookings/${manifest.personal.enrollmentId})\n\nUse UTC actual start ${manifest.personal.start} and end ${manifest.personal.end}; the UI displays Africa/Cairo. This session is funded and remains ready for your tutor start, attendance and completion exercise.\n\n## Verification example\n\n[Verified tutor session](${base}/tutor/schedule?occurrence=${manifest.verified.occurrenceId}) · [Tutor statement](${base}/tutor/pay) · [Admin payroll](${base}/admin/pay)\n\nState: ${manifest.state}. ${manifest.state === 'verified' ? 'Fictional attendance, completion approval, earning and fake settled payout executed through production commands with generated evidence.' : 'No completion, earning or payout has been asserted yet.'}\n\nIDs and command evidence: [delivery-manifest.json](./delivery-manifest.json). Credentials remain in [START-HERE.md](./START-HERE.md).\n`, { mode: 0o600 });
     await refreshDeliveryCairoHandoff(manifest);
-    console.log(JSON.stringify({ historical_practice_examples: 2, state: manifest.state, untouched_tutor_exercise: true, imported_history_changed: false, handoff: '.local/operational-preview/DELIVERY-PRACTICE.md' }));
+    console.log(JSON.stringify({ historical_practice_examples: 2, state: manifest.state, untouched_tutor_exercise: true, imported_history_changed: false, handoff: resolve(folder, 'DELIVERY-PRACTICE.md') }));
   } finally { await Promise.allSettled(clients.map(client => client.auth.signOut({ scope: 'local' }))); if (locked) await database.query("select pg_advisory_unlock(hashtextextended('git-tutor:operational-delivery:v1',0))"); await worker.end(); await database.end(); }
 }
 export async function refreshDeliveryCairoHandoff(manifest: DeliveryManifest) {

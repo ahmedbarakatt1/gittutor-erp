@@ -1,15 +1,16 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { adminDatabase, loadLocalSupabase } from '../helpers/supabase';
 
 const baseURL = 'http://127.0.0.1:3000';
 const portals = [
-  { actor: 'learner_a', path: '/learn', heading: 'Your learning space.', role: 'student' },
-  { actor: 'tutor_a', path: '/tutor', heading: 'Tutor workspace', role: 'tutor' },
-  { actor: 'cs_a', path: '/service', heading: 'Customer service', role: 'customer_service' },
-  { actor: 'admin_a', path: '/admin', heading: 'Administration', role: 'admin' },
+  { actor: 'learner_a', path: '/learn', heading: /^(Your learning space\.|Your learning overview)$/, role: 'student' },
+  { actor: 'tutor_a', path: '/tutor', heading: /^(Tutor workspace|Your teaching overview)$/, role: 'tutor' },
+  { actor: 'cs_a', path: '/service', heading: /^(Customer service|Your customer overview)$/, role: 'customer_service' },
+  { actor: 'admin_a', path: '/admin', heading: /^(Administration|Your business overview)$/, role: 'admin' },
 ] as const;
 
 async function signIn(page: Page, actorLabel: string | { id: string; email: string; password: string }) {
@@ -21,8 +22,8 @@ async function signIn(page: Page, actorLabel: string | { id: string; email: stri
   const response = page.waitForResponse(result => result.url().endsWith('/api/auth/login') && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page).toHaveURL(/\/(learn|tutor|service|admin)$/, { timeout: 15_000 });
-  await expect(page.getByTestId('account-id')).toHaveText(actor.id);
+  await expect(page).toHaveURL(/\/(learn(?:\/payments)?|tutor|service|admin)$/, { timeout: 15_000 });
+  await expectSignedInAccount(page, actor.id);
 }
 
 async function createSyntheticActor() {
@@ -46,11 +47,34 @@ test('signed-out direct portal URLs require sign-in', async ({ page }) => {
     await page.goto(portal.path);
     await expect(page).toHaveURL(/\/login(?:\?|$)/);
     await expect(page.getByRole('heading', { name: 'Welcome back.', exact: true })).toBeVisible();
-    await expect(page.getByTestId('account-id')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0);
   }
   const response = await page.request.get('/api/v1/me');
   expect(response.status()).toBe(401);
 });
+
+for (const portal of portals) {
+  test(`Back, the logo and public account links preserve the ${portal.role} session`, async ({ page, context }) => {
+    await signIn(page, portal.actor);
+    const detail = portal.path + '/notifications';
+    const direct = await context.newPage();
+    await direct.goto(detail);
+    await direct.getByRole('link', { name: 'Back', exact: true }).click();
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await direct.goto(detail);
+    await direct.locator('header a:has(img)').first().click();
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await direct.goto('/subjects');
+    await direct.locator('header nav').getByRole('link', { name: 'My dashboard' }).click();
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await direct.getByRole('link', { name: 'Back', exact: true }).click();
+    await expect(direct).toHaveURL(baseURL + '/subjects');
+    await direct.goto('/login');
+    await expect(direct).toHaveURL(baseURL + portal.path);
+    await expectSignedInAccount(direct, loadLocalSupabase().actors[portal.actor].id);
+    await direct.close();
+  });
+}
 
 test('form validation is associated with controls and preserves entered email', async ({ page }) => {
   await page.goto('/signup');
@@ -61,6 +85,32 @@ test('form validation is associated with controls and preserves entered email', 
   await expect(page.locator('#email-error')).toHaveText('Enter a valid email address.');
   await expect(page.getByLabel('Email address', { exact: true })).toHaveValue('not-an-email');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('mobile navigation supports keyboard use and keeps the current learner page in view', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, 'learner_a');
+  await page.goto('/learn/bookings');
+  const nav = page.getByRole('navigation', { name: 'Learning', exact: true });
+  const toggle = nav.getByRole('button', { name: /^Menu/ });
+  const current = nav.locator('a[aria-current="page"]');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(current).toBeHidden();
+  await toggle.press('Enter');
+  await expect(current).toHaveAttribute('href', '/learn/bookings');
+  await current.focus();
+  await current.press('Escape');
+  await expect(toggle).toBeFocused();
+  await expect(current).toBeHidden();
+  await toggle.click();
+  await expect(nav.locator('a[href^="/admin"]')).toHaveCount(0);
+  await nav.locator('a[href="/learn/files"]').click();
+  await expect(page).toHaveURL(/\/learn\/files$/);
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(toggle).toBeHidden();
+  await expect(current).toBeVisible();
+  await expect(current).toHaveAttribute('href', '/learn/files');
 });
 
 test('real independent sessions enter only their assigned staff portal', async ({ browser }, testInfo) => {
@@ -87,7 +137,7 @@ test('real independent sessions enter only their assigned staff portal', async (
       if (portal.role !== 'admin') {
         await page.goto('/admin');
         await expect(page).not.toHaveURL(`${baseURL}/admin`);
-        await expect(page.getByRole('heading', { name: 'Administration', exact: true })).toHaveCount(0);
+        await expect(page.getByRole('heading', { name: portals[3].heading })).toHaveCount(0);
       }
     }
   } finally { await Promise.all(contexts.map((context) => context.close())); }
@@ -110,6 +160,101 @@ test('a learner cannot self-assign staff access or open tutor and service URLs',
   expect(data.roles).not.toEqual(expect.arrayContaining(['customer_service']));
 });
 
+test('an administrator without a learner identity stays in administration on learner links', async ({ page }) => {
+  const owner = await createSyntheticActor();
+  const database = await adminDatabase();
+  try {
+    await database.query('begin');
+    await database.query("insert into app_private.account_roles(account_id,role,reason) values ($1,'admin','Synthetic staff-only account')", [owner.id]);
+    await database.query("update app_private.account_roles set revoked_at=now(),version=version+1 where account_id=$1 and role='student'", [owner.id]);
+    await database.query('delete from app_private.learners where account_id=$1', [owner.id]);
+    await database.query('commit');
+  } finally { await database.end(); }
+  await signIn(page, owner);
+  for (const path of ['/learn', '/learn/files', '/learn/requests?topic=Mathematics']) {
+    await page.goto(path);
+    await expect(page).toHaveURL(`${baseURL}/admin`);
+    await expect(page.getByRole('link', { name: 'Learning', exact: true })).toHaveCount(0);
+  }
+  const account = await page.request.get('/api/v1/me');
+  expect(account.status()).toBe(200);
+  expect((await account.json()).data).toMatchObject({ roles: ['admin'], authorized_learner_ids: [] });
+});
+
+test('GT-GRD-003 a guardian with no current links sees guidance and no learner records', async ({ page }) => {
+  const account = await createSyntheticActor();
+  const db = await adminDatabase();
+  try {
+    await db.query("insert into app_private.account_roles(account_id, role, reason) values ($1,'guardian','Synthetic guardian without links')", [account.id]);
+    await db.query("update app_private.account_roles set revoked_at=now(), version=version+1 where account_id=$1 and role='student'", [account.id]);
+    await db.query('delete from app_private.learners where account_id=$1', [account.id]);
+  } finally { await db.end(); }
+  await signIn(page, account);
+  await page.goto('/learn');
+  await expect(page).toHaveURL(baseURL+'/learn/payments');
+  await expect(page.getByText(/^No learner is linked to this account/)).toBeVisible();
+  await expect(page.getByTestId('learner-id')).toHaveCount(0);
+  expect((await (await page.request.get('/api/v1/me')).json()).data.authorized_learner_ids).toEqual([]);
+});
+
+test('GT-ADM-001/002/111 workbook overview, source filters and audited mapping review', async ({ page }) => {
+  test.setTimeout(90_000);
+  const owner = await createSyntheticActor();
+  const db = await adminDatabase();
+  const batch = randomUUID(), target = randomUUID();
+  const hash = createHash('sha256').update(batch).digest('hex');
+  const empty = { columns: [], rows: [] };
+  const sessions = {
+    columns: [
+      { key: 'col_a', label: 'Date', type: 'date' }, { key: 'col_e', label: 'Learner', type: 'text' },
+      { key: 'col_f', label: 'Course', type: 'text' }, { key: 'col_i', label: 'Status', type: 'text' },
+    ],
+    rows: ['Completed','Scheduled'].map((status, i) => ({ source_row: i+2, issues: [], values: {
+      col_a: '2026-10-20', col_e: 'Synthetic learner', col_f: i ? 'Synthetic algebra' : 'Synthetic geometry', col_i: status,
+    } })),
+  };
+  const snapshot = { version: 1, source_name: 'synthetic-dashboard.xlsx', source_sha256: hash, as_of: null,
+    courses: ['Synthetic algebra','Synthetic geometry'], tables: { sessions,
+      students: { columns: [{ key: 'col_a', label: 'Name', type: 'text' }], rows: [{ source_row: 2, issues: [], values: { col_a: 'Synthetic learner' } }] },
+      tutors: { columns: [{ key: 'col_a', label: 'Name', type: 'text' }], rows: [{ source_row: 2, issues: [], values: { col_a: 'Synthetic tutor' } }] },
+      packages: empty, balances: empty, distributions: empty, marketing: empty } };
+  try {
+    await db.query("insert into app_private.account_roles(account_id,role,reason) values($1,'admin','Synthetic dashboard reviewer')", [owner.id]);
+    const learner = (await db.query('select id from app_private.learners where account_id=$1',[owner.id])).rows[0].id;
+    const tutor = (await db.query('select id from app_private.tutors where account_id=$1',[loadLocalSupabase().actors.tutor_a.id])).rows[0].id;
+    await db.query("insert into app_private.workflow_import_batches(id,owner_account_id,source_sha256,content_sha256,source_kind,snapshot) values($1,$2,$3,$3,'synthetic',$4)",[batch,owner.id,hash,JSON.stringify(snapshot)]);
+    await db.query("insert into app_private.operational_workbook_links(id,batch_id,source_table,source_row) values($1,$2,'sessions',2)", [target,batch]);
+    await db.query("insert into app_private.operational_workbook_links(batch_id,source_table,source_row,learner_id,review_state) values($1,'sessions',3,$2,'linked')", [batch,learner]);
+    await db.query("insert into app_private.operational_workbook_links(batch_id,source_table,source_row,learner_id,review_state) values($1,'students',2,$2,'linked')", [batch,learner]);
+    await db.query("insert into app_private.operational_workbook_links(batch_id,source_table,source_row,tutor_id,review_state) values($1,'tutors',2,$2,'linked')", [batch,tutor]);
+    await signIn(page, owner);
+    await page.goto('/admin/workflow');
+    await page.getByRole('searchbox', { name: 'Search this section' }).fill('geometry');
+    await page.getByLabel('Reported status').selectOption('Completed');
+    await expect(page.getByRole('row')).toHaveCount(2);
+    await page.getByRole('button',{name:'Row 2',exact:true}).click();
+    await expect(page.getByRole('heading',{name:'Source row 2'})).toBeVisible();
+    await page.goto('/admin');
+    const overview = page.locator('[data-workflow-view="overview"]');
+    await expect(overview.getByRole('link',{name:/Open request queue/})).toHaveAttribute('href','/admin/requests');
+    await overview.getByRole('button',{name:'Browse records'}).click();
+    const search = overview.getByRole('searchbox');
+    await search.fill('geometry');
+    await overview.getByRole('button',{name:'Completed 1',exact:true}).click();
+    await expect(search).toHaveValue('geometry');
+    await expect(overview.getByText('1 matching record',{exact:false})).toBeVisible();
+    await expect(overview.locator('li > details > summary')).toHaveCount(1);
+    await overview.locator('li > details > summary').click();
+    await overview.getByText('Review record links',{exact:true}).click();
+    await overview.getByLabel('Linked learner').selectOption(learner);
+    await overview.getByLabel('Linked tutor').selectOption(tutor);
+    await overview.getByLabel('Review evidence and reason').fill('Matched to the learner in the synthetic source.');
+    await overview.getByRole('button',{name:'Save mapping review'}).click();
+    await expect.poll(async () => (await db.query('select review_state,version,learner_id from app_private.operational_workbook_links where id=$1',[target])).rows[0]).toEqual({review_state:'reviewed',version:2,learner_id:learner});
+    expect((await db.query('select snapshot from app_private.workflow_import_batches where id=$1',[batch])).rows[0].snapshot).toEqual(snapshot);
+  } finally { await db.end(); }
+});
+
 test('guardian account shows exactly its current authorized learner scope', async ({ page }) => {
   await signIn(page, 'guardian_a');
   await expect(page).toHaveURL(`${baseURL}/learn`);
@@ -124,8 +269,12 @@ test('guardian account shows exactly its current authorized learner scope', asyn
     expect(siblings.rows).toHaveLength(2);
     expect(data.authorized_learner_ids).toEqual(expect.arrayContaining(siblings.rows.map(row => row.id)));
     expect(new Set(data.authorized_learner_ids).size).toBe(data.authorized_learner_ids.length);
+    const authorized = await database.query(`select id from app_private.learners where account_id=$1
+      union select learner_id from app_private.guardian_links where guardian_account_id=$1
+      and revoked_at is null and valid_from<=now() and valid_until>now()`, [actors.guardian_a.id]);
+    expect([...data.authorized_learner_ids].sort()).toEqual(authorized.rows.map(row => row.id).sort());
   } finally { await database.end(); }
-  expect((await page.getByTestId('learner-id').allTextContents()).sort()).toEqual([...data.authorized_learner_ids].sort());
+  await expect(page.locator('#learners')).toBeVisible();
 });
 
 test('logout denies a stale tab and replay of the pre-logout session cookie', async ({ browser }, testInfo) => {
@@ -136,11 +285,13 @@ test('logout denies a stale tab and replay of the pre-logout session cookie', as
     await signIn(page, 'learner_d');
     const stale = await context.newPage();
     await stale.goto('/learn');
-    await expect(stale.getByTestId('account-id')).toBeVisible();
+    await expectSignedInAccount(stale, loadLocalSupabase().actors.learner_d.id);
     const previousCookies = await context.cookies();
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);
-    await stale.reload();
+    await expect(stale).toHaveURL(/\/auth\/session-ended$/);
+    await expect(stale.getByTestId('account-id')).toHaveCount(0);
+    await stale.goto('/learn');
     await expect(stale).toHaveURL(/\/login(?:\?|$)/);
     const staleResponse = await stale.request.get('/api/v1/me');
     expect(staleResponse.status()).toBe(401);
@@ -200,6 +351,7 @@ test('GT-1607 tutor application retries one saved command and requires actual ad
 
     const admin = await adminContext.newPage();
     await signIn(admin, 'admin_a');
+    await admin.goto('/admin/access');
     await admin.getByRole('button', { name: new RegExp(displayName) }).click();
     await expect(admin.getByRole('heading', { name: displayName, exact: true })).toBeVisible();
     const review = admin.getByRole('form', { name: 'Save review decision', exact: true });
@@ -241,6 +393,7 @@ test('refresh discards a delayed older application page while fresh pagination s
       [id, actor.id, index === 25 ? delayedName : `Synthetic reviewed page ${index}`, refs.subject_id, refs.contact_id, index === 25 ? 'pending' : 'rejected', index]);
     }
     await signIn(page, actor);
+    await page.goto('/admin/access');
     const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Tutor applications', exact: true }) });
     await expect(section.getByRole('button', { name: 'Load more records', exact: true })).toBeVisible();
     let signalFetched: (() => void) | undefined;

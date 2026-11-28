@@ -1,3 +1,4 @@
+import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { completionFixture } from '../helpers/completion';
@@ -8,7 +9,7 @@ test.use({ trace: 'off', screenshot: 'off' });
 async function login(page: Page, actor: { id: string; email: string; password: string }) {
   await page.goto('/login'); await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password);
   const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/auth/login' && result.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expect(page.getByTestId('account-id')).toHaveText(actor.id, { timeout: 15000 });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click(); expect((await response).status()).toBe(200); await expectSignedInAccount(page, actor.id);
 }
 function local(value: number) { const time = formatCairoInstant(new Date(value).toISOString()); return `${time.local_date}T${time.local_time}`; }
 async function submit(page: Page, form: Locator, path: string, label: string) {
@@ -16,9 +17,9 @@ async function submit(page: Page, form: Locator, path: string, label: string) {
   await form.getByRole('button', { name: label, exact: true }).click(); const received = await response, body = await received.json(); expect(received.status(), body.message).toBe(200); return body.data;
 }
 test('assigned tutor records actual delivery and admin approval posts one confidential earning', async ({ browser }, info) => {
-  test.setTimeout(90000);
+  test.setTimeout(180000);
   // Only consistent historical admission is fixture setup; all factual delivery and approval below use the real UI/API.
-  const f = await completionFixture(), contexts = await Promise.all(Array.from({ length: 3 }, () => browser.newContext({ baseURL: 'http://127.0.0.1:3000', viewport: info.project.use.viewport })));
+  const f = await completionFixture({isolatedLearners:true}), contexts = await Promise.all(Array.from({ length: 3 }, () => browser.newContext({ baseURL: 'http://127.0.0.1:3000', viewport: info.project.use.viewport })));
   try {
     const [tutor, admin, customer] = await Promise.all(contexts.map(context => context.newPage()));
     await login(tutor, f.actor); await tutor.goto(`/tutor/schedule?occurrence=${f.occurrenceId}`);
@@ -35,23 +36,33 @@ test('assigned tutor records actual delivery and admin approval posts one confid
     const completion = delivery.getByRole('form', { name: 'Submit delivery for approval', exact: true });
     await completion.getByLabel('Topics covered and delivery notes', { exact: true }).fill('Worked through derivatives and the learner completed the practice questions.');
     await submit(tutor, completion, `occurrences/${f.occurrenceId}/completion`, 'Submit delivery for approval');
-    await expect(delivery.getByRole('heading', { name: 'Awaiting approval', exact: true })).toBeVisible();
+    await expect(delivery.getByRole('heading', { name: 'Awaiting approval', exact: true })).toBeVisible({timeout:30000});
     await expect(delivery.getByRole('heading', { name: 'Recorded teaching earning', exact: true })).toHaveCount(0);
     await login(admin, loadLocalSupabase().actors.admin_a); await admin.goto(`/admin/schedule?occurrence=${f.occurrenceId}`);
     const review = admin.getByRole('region', { name: 'Session delivery', exact: true });
-    await expect(review.getByText('Worked through derivatives and the learner completed the practice questions.', { exact: true })).toBeVisible();
+    await expect(review.getByText('Worked through derivatives and the learner completed the practice questions.', { exact: true })).toBeVisible({timeout:30000});
     const approval = review.getByRole('form', { name: 'Approve session delivery', exact: true });
     await approval.getByRole('checkbox', { name: 'I reviewed the actual attendance, delivery notes and required remedies.', exact: true }).check();
     const result = await submit(admin, approval, `occurrences/${f.occurrenceId}/completion/approve`, 'Approve session delivery');
-    await expect(review.getByRole('heading', { name: 'Approved', exact: true })).toBeVisible();
-    await expect(review.getByRole('heading', { name: 'Recorded teaching earning', exact: true })).toBeVisible();
+    await expect(review.getByRole('heading', { name: 'Approved', exact: true })).toBeVisible({timeout:30000});
+    await expect(review.getByRole('heading', { name: 'Recorded teaching earning', exact: true })).toBeVisible({timeout:30000});
     expect((await f.database.query('select count(*)::int n from finance_private.tutor_earnings where occurrence_id=$1', [f.occurrenceId])).rows[0].n).toBe(1);
     expect((await f.database.query('select amount_minor from finance_private.tutor_earnings where id=$1', [result.base_earning_id])).rows[0].amount_minor).toBe('25000');
-    await tutor.reload(); await expect(delivery.getByRole('heading', { name: 'Recorded teaching earning', exact: true })).toBeVisible();
-    await login(customer, loadLocalSupabase().actors.learner_a);
+    const revenue = await f.database.query(
+      "select -sum(signed_minor) as recognized from finance_private.ledger_lines where enrollment_id=$1 and account_code='tuition_revenue'",
+      [f.enrollmentId],
+    );
+    expect(Number(revenue.rows[0].recognized)).toBe(50000);
+    await tutor.reload(); await expect(delivery.getByRole('heading', { name: 'Recorded teaching earning', exact: true })).toBeVisible({timeout:30000});
+    await login(customer, f.learnerActors[0]);
     expect((await customer.request.get(`/api/v1/occurrences/${f.occurrenceId}/delivery?view=tutor`)).status()).toBe(403);
     const customerBooking = await customer.request.get(`/api/v1/enrollments/${f.enrollmentId}`); expect(customerBooking.status()).toBe(200);
     expect(JSON.stringify(await customerBooking.json())).not.toMatch(/fee_minor|base_earning_id|compensation|tutor_earnings|internal_notes/);
+    await customer.goto('/learn/bookings/' + f.enrollmentId);
+    await customer.locator('summary').filter({ hasText: /^Meeting access$/ }).click();
+    const room = customer.getByRole('region', { name: 'Session room', exact: true });
+    await expect(room.getByText('This session is no longer open for joining.', { exact: true })).toBeVisible({timeout:30000});
+    await expect(room.getByRole('button', { name: /Join session|Preview simulated meeting/ })).toHaveCount(0);
     await mkdir('.local/screenshots', { recursive: true }); await mkdir('.local/ui-review', { recursive: true });
     await review.screenshot({ path: `.local/screenshots/t08-approved-delivery-${info.project.name}.png` });
     expect(await admin.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

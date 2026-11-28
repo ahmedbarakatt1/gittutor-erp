@@ -2,6 +2,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {mkdir,readFile,writeFile,rename} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {z} from 'zod';
+import {whatsAppMode} from '../config';
 
 export const whatsappObservation=z.object({outcome:z.enum(['sent','delivered','read','failed','unknown','absent']),provider_message_id:z.string().max(300).nullable(),safe_error_code:z.string().regex(/^[A-Z0-9_]{1,80}$/).nullable()}).strict();
 export type WhatsAppObservation=z.infer<typeof whatsappObservation>;
@@ -10,11 +11,14 @@ export type WhatsAppAdapter={send(message:WhatsAppMessage):Promise<WhatsAppObser
 export type WhatsAppScenario='success'|'timeout_after_success'|'failure';
 const observation=(outcome:WhatsAppObservation['outcome'],provider_message_id:string|null=null,safe_error_code:string|null=null):WhatsAppObservation=>({outcome,provider_message_id,safe_error_code});
 export function parseWhatsAppConfig(raw:Record<string,string|undefined>,isolated:boolean){
- const mode=z.enum(['fake','cloud']).parse(raw.WHATSAPP_ADAPTER||'fake');if(mode==='fake'&&!isolated)throw Error('FAKE_WHATSAPP_REQUIRES_ISOLATION');
+ const mode=whatsAppMode(raw.WHATSAPP_ADAPTER);if(mode==='fake'&&!isolated)throw Error('FAKE_WHATSAPP_REQUIRES_ISOLATION');
  const config={mode,isolated,business_account_id:raw.WHATSAPP_BUSINESS_ACCOUNT_ID||'',phone_number_id:raw.WHATSAPP_PHONE_NUMBER_ID||'',access_token:raw.WHATSAPP_ACCESS_TOKEN||'',app_secret:raw.WHATSAPP_APP_SECRET||'',verify_token:raw.WHATSAPP_VERIFY_TOKEN||'',graph_version:raw.WHATSAPP_GRAPH_VERSION||''};
  if(mode==='cloud'&&(!Object.entries(config).every(([k,v])=>k==='isolated'||Boolean(v))||!/^v\d{2,3}\.\d+$/.test(config.graph_version)||!/^\d+$/.test(config.phone_number_id)||!/^\d+$/.test(config.business_account_id)))throw Error('WHATSAPP_CONFIGURATION_REQUIRED');return config;
 }
-export function createWhatsAppAdapter(config:ReturnType<typeof parseWhatsAppConfig>,scenario:WhatsAppScenario='success'){return config.mode==='cloud'?createCloudWhatsAppAdapter(config):createFakeWhatsAppAdapter('.local/whatsapp-inbox',config.isolated,scenario);}
+export function createWhatsAppAdapter(config:ReturnType<typeof parseWhatsAppConfig>,scenario:WhatsAppScenario='success'){
+ if(config.mode==='manual')throw Error('WHATSAPP_MANUAL_CONTACT_ONLY');
+ return config.mode==='cloud'?createCloudWhatsAppAdapter(config):createFakeWhatsAppAdapter('.local/whatsapp-inbox',config.isolated,scenario);
+}
 export function createFakeWhatsAppAdapter(directory:string,isolated:boolean,scenario:WhatsAppScenario='success'):WhatsAppAdapter{
  if(!isolated)throw Error('FAKE_WHATSAPP_REQUIRES_ISOLATION');const root=resolve(directory),path=(id:string)=>join(root,`${z.uuid().parse(id)}.json`);
  async function read(id:string){try{return JSON.parse(await readFile(path(id),'utf8')) as {hash:string;result:WhatsAppObservation};}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw e;}}

@@ -21,7 +21,25 @@ export function customerReturnPath(value: unknown): string | undefined {
   const booking = bookingReturnPath(value);
   if (booking) return booking;
   if (typeof value !== 'string' || value.length > 500 || /\s/.test(value)) return undefined;
-  if (value === '/learn/payments' || value === '/learn/refunds') return value;
+  const catalog = /^\/(offers|tutors)\/([^/?#]+)$/.exec(value);
+  if (catalog) return z.uuid().safeParse(catalog[2]).success ? value : undefined;
+  if (/^\/learn\/requests(?:\?[^?#]*)?$/.test(value)) {
+    const params = new URLSearchParams(value.split('?')[1] || '');
+    if (new Set(params.keys()).size !== params.size || [...params.keys()].some(key => !['topic', 'request'].includes(key))) return undefined;
+    const result = new URLSearchParams();
+    if (params.has('topic')) {
+      const topic = params.get('topic')!.trim();
+      if (!topic || topic.length > 160 || /[\x00-\x1f\x7f]/.test(topic)) return undefined;
+      result.set('topic', topic);
+    }
+    if (params.has('request')) {
+      const request = z.uuid().safeParse(params.get('request'));
+      if (!request.success) return undefined;
+      result.set('request', request.data);
+    }
+    return `/learn/requests${result.size ? `?${result}` : ''}`;
+  }
+  if (value === '/learn/payments' || value === '/learn/refunds' || value === '/learn/grades') return value;
   const payment = /^(\/learn\/(?:refunds|payments(?:\/(?:charges|transfers|plans|enrollment-transfer-consents))?))\/([^/?#]+)$/.exec(value);
   if (payment) return z.uuid().safeParse(payment[2]).success ? value : undefined;
   const detail = /^\/learn\/packages\/([^/?#]+)$/.exec(value);

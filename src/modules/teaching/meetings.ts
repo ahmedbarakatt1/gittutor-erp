@@ -3,16 +3,23 @@ import type { IdentityRpcClient } from '../identity/commands';
 const id=z.uuid(),version=z.number().int().positive().max(2147483647),instant=z.iso.datetime({offset:true}),integration=z.enum(['simulated','verification_required','verified']);
 const common=z.object({command_id:id,resource_id:id,version}).strict();
 const key=z.string().min(1).max(200),options=z.object({view:z.enum(['customer','tutor','admin']).optional(),learner_id:id.optional()}).strict();
-export const meetingViewSchema=z.object({occurrence_id:id,occurrence_version:version,meeting_generation:z.number().int().nonnegative(),start_at:instant,end_at:instant,server_now:instant,meeting_status:z.enum(['not_requested','pending','ready','failed','revoked']),integration_state:integration,can_join:z.boolean(),join_path:z.string().regex(/^\/api\/v1\/occurrences\/[a-f0-9-]+\/meeting\/access$/).nullable(),reason:z.enum(['NOT_CONFIRMED','PROVISIONING','AUTHORIZATION_REQUIRED','ACCESS_REVOKED','PROVIDER_FAILED','LIVE_VERIFICATION_REQUIRED','SESSION_ENDED']).nullable()}).strict().refine(value=>!value.can_join||(value.meeting_status==='ready'&&value.reason===null&&value.join_path!==null));
+export const meetingViewSchema=z.object({occurrence_id:id,occurrence_version:version,meeting_generation:z.number().int().nonnegative(),start_at:instant,end_at:instant,server_now:instant,meeting_status:z.enum(['not_requested','pending','ready','failed','revoked']),integration_state:integration,can_join:z.boolean(),join_path:z.string().regex(/^\/api\/v1\/occurrences\/[a-f0-9-]+\/meeting\/access$/).nullable(),reason:z.enum(['NOT_CONFIRMED','PROVISIONING','CALENDAR_ORGANIZER_CAPACITY','AUTHORIZATION_REQUIRED','ACCESS_REVOKED','PROVIDER_FAILED','LIVE_VERIFICATION_REQUIRED','SESSION_ENDED']).nullable()}).strict().refine(value=>!value.can_join||(value.meeting_status==='ready'&&value.reason===null&&value.join_path!==null));
 export const meetingAccessSchema=z.object({occurrence_id:id,occurrence_version:version,meeting_generation:version,join_url:z.url(),integration_state:integration}).strict().refine(value=>{const url=new URL(value.join_url);return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&url.hostname===(value.integration_state==='simulated'?'meet.example.test':'meet.google.com');});
-export const calendarConnectionSchema=z.object({connection_id:id.nullable(),version:z.number().int().nonnegative(),mode:z.enum(['fake','google']),state:z.enum(['not_connected','connected','reauthorization_required','revoked']),integration_state:integration,organizer_masked_email:z.string().nullable(),last_verified_at:instant.nullable(),safe_error_code:z.string().nullable()}).strict();
+export const calendarConnectionSchema=z.object({connection_id:id.nullable(),version:z.number().int().nonnegative(),mode:z.enum(['fake','google']),state:z.enum(['not_connected','connected','preview_connected','reauthorization_required','revoked']),integration_state:integration,organizer_masked_email:z.string().nullable(),last_verified_at:instant.nullable(),safe_error_code:z.string().nullable()}).strict();
 export type MeetingView=z.infer<typeof meetingViewSchema>;
 export type MeetingAccess=z.infer<typeof meetingAccessSchema>;
 export type CalendarConnection=z.infer<typeof calendarConnectionSchema>;
 export type MeetingReadOptions=z.infer<typeof options>;
+const newConnection = z.object({p_idempotency_key:key}).strict();
+const targetConnection = newConnection.extend({p_connection_id:id,p_expected_version:version});
+const simulatedConnection = common.extend({connection_id:id,integration_state:z.literal('simulated')});
+const oauthRequest = common.extend({request_id:id,connection_id:id,expires_at:instant});
 export const meetingCommands={
- connect_fake_calendar:{input:z.object({p_idempotency_key:key}).strict(),output:common.extend({connection_id:id,integration_state:z.literal('simulated')}).strict()},
- create_calendar_connection_request:{input:z.object({p_idempotency_key:key}).strict(),output:common.extend({request_id:id,connection_id:id,expires_at:instant}).strict()},
+ connect_fake_calendar:{input:newConnection,output:simulatedConnection},
+ add_fake_calendar_organizer:{input:newConnection,output:simulatedConnection},
+ reconnect_fake_calendar_organizer:{input:targetConnection,output:simulatedConnection},
+ create_calendar_connection_request:{input:newConnection,output:oauthRequest},
+ create_calendar_reconnection_request:{input:targetConnection,output:oauthRequest},
  revoke_calendar_connection:{input:z.object({p_connection_id:id,p_expected_version:version,p_idempotency_key:key}).strict(),output:common},
  retry_meeting_provisioning:{input:z.object({p_occurrence_id:id,p_expected_version:version,p_idempotency_key:key}).strict(),output:common.extend({job_id:id}).strict()},
  replace_meeting_access:{input:z.object({p_occurrence_id:id,p_reason:z.string().trim().min(1).max(2000),p_expected_version:version,p_idempotency_key:key}).strict(),output:common.extend({job_id:id,meeting_generation:version}).strict()},
@@ -23,6 +30,10 @@ async function call(client:IdentityRpcClient,name:string,args:Record<string,unkn
 function parsed<T>(schema:z.ZodType<T>,data:unknown):T{const result=schema.safeParse(data);if(!result.success)throw new MeetingRpcError('DEPENDENCY_UNAVAILABLE');return result.data;}
 export async function invokeMeetingCommandWithStatus(client:IdentityRpcClient,name:string,args:Record<string,unknown>){if(!Object.hasOwn(meetingCommands,name))throw new MeetingRpcError('VALIDATION_ERROR');const command=meetingCommands[name as keyof typeof meetingCommands],input=command.input.safeParse(args);if(!input.success)throw new MeetingRpcError('VALIDATION_ERROR');const result=await call(client,name,input.data);return {data:parsed(command.output as z.ZodType,result.data),status:result.status??200};}
 export async function getCalendarConnection(client:IdentityRpcClient):Promise<CalendarConnection>{return parsed(calendarConnectionSchema,(await call(client,'get_calendar_connection',{})).data);}
+export async function listCalendarConnections(client:IdentityRpcClient) {
+  const organizer = calendarConnectionSchema.extend({connection_id:id,version});
+  return parsed(z.array(organizer),(await call(client,'list_calendar_connections',{})).data);
+}
 export async function getCalendarConnectionRequest(client:IdentityRpcClient,requestId:string){return parsed(z.object({request_id:id,connection_id:id,expires_at:instant}).strict(),(await call(client,'get_calendar_connection_request',{p_request_id:id.parse(requestId)})).data);}
 export async function getOccurrenceMeeting(client:IdentityRpcClient,occurrenceId:string,filters:MeetingReadOptions={}):Promise<MeetingView>{const value=options.parse(filters);return parsed(meetingViewSchema,(await call(client,'get_occurrence_meeting',{p_occurrence_id:id.parse(occurrenceId),p_view:value.view??'customer',p_learner_id:value.learner_id??null})).data);}
 export async function getMeetingAccess(client:IdentityRpcClient,occurrenceId:string,filters:MeetingReadOptions={}):Promise<MeetingAccess>{const value=options.parse(filters);return parsed(meetingAccessSchema,(await call(client,'get_meeting_access',{p_occurrence_id:id.parse(occurrenceId),p_view:value.view??'customer',p_learner_id:value.learner_id??null})).data);}

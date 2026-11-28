@@ -7,14 +7,16 @@ import { invokeTeachingCommandWithStatus as invokeTeachingOperation, type teachi
 import { teachingOperationRoutes, findTeachingOperationReadRoute } from "@/server/teaching-operations-http";
 import { invokeTeachingCommandWithStatus as invokeDeliveryCommand, type TeachingCommandName as DeliveryCommandName } from "@/modules/teaching/commands";
 import { deliveryCommandRoutes, findDeliveryReadRoute } from "@/server/delivery-http";
+import { scheduleRequestDrive } from '@/server/schedule-request-drive';
 import { randomUUID } from "node:crypto";
 import { invokeMeetingCommandWithStatus, type meetingCommands } from "@/modules/teaching/meetings";
 import { meetingCommandRoutes, findMeetingReadRoute } from "@/server/meeting-http";
 import { invokeFileCommandWithStatus, type FileCommandName } from "@/modules/files/commands";
 import { fileCommandRoutes, findFileReadRoute } from "@/server/file-http";
 import { NextRequest, NextResponse } from "next/server";
-import { publicSupabase, requestSupabase } from "@/server/supabase";
+import { requestSupabase } from "@/server/supabase";
 import { allowedOrigin, DomainError, readJson, safeError } from "@/server/http";
+
 import { invokeIdentityCommandWithStatus, type IdentityCommandName } from "@/modules/identity/commands";
 import { getApplicationSubjects, getLearnerSummary, getMyGuardianLinks, getMyVerifiedContacts, getStaffInvitations, getStaffRoleGrants, getTutorApplications, getTutorProfile } from "@/modules/identity/queries";
 import { invokeCatalogCommandWithStatus, type CatalogCommandName } from "@/modules/catalog/commands";
@@ -38,6 +40,8 @@ import {
   listPackageEnrollments, listPackageGrantPolicies, listPackageLineage, listPackageLots,
   listPackageMovements, listPackageOperationProposals, listPackageRenewals,
 } from "@/modules/packages/queries";
+
+export const maxDuration = 300;
 
 type CommandRoute = { pattern: RegExp; fields: string[]; pathArgument?: string } & (
   { family?: "identity"; rpc: IdentityCommandName } | { family: "catalog"; rpc: CatalogCommandName } | { family: "booking"; rpc: BookingCommandName } | { family: "packages"; rpc: PackageCommandName } | { family: "payments"; rpc: PaymentCommandName } | { family: "enrollment-transfer"; rpc: EnrollmentTransferCommandName } | { family: "files"; rpc: FileCommandName } | { family: "meetings"; rpc: keyof typeof meetingCommands } | { family: "delivery"; rpc: DeliveryCommandName } | { family: "finance"; rpc: keyof typeof financeCommands } | { family: "payroll"; rpc: keyof typeof payrollCommands } | { family: "teaching-operations"; rpc: keyof typeof teachingOperations }
@@ -176,6 +180,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       : route.family === "catalog"
       ? await invokeCatalogCommandWithStatus(context.client, route.rpc, args)
       : await invokeIdentityCommandWithStatus(context.client, route.rpc, args);
+    if (route.rpc === "finalize_file_upload" && typeof args.p_file_id === "string") scheduleRequestDrive({fileId: args.p_file_id});
+    else if (["payments", "booking", "identity", "enrollment-transfer", "teaching-operations", "catalog", "packages"].includes(route.family ?? "identity")) scheduleRequestDrive();
     return context.finish(NextResponse.json({ data: result.data, request_id: requestId }, { status: result.status }));
   } catch (error) {
     const safe = safeError(error);
@@ -239,15 +245,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       options.active = filters.get("active") === "true";
     }
     context = requestSupabase(request);
-    if (route === "public/offers") {
-      return context.finish(NextResponse.json({ data: await listPublicOffers(publicSupabase(), options), request_id: requestId }));
-    }
-    if (path.length === 3 && path[0] === "public" && path[1] === "tutors") {
-      return context.finish(NextResponse.json({ data: await getPublicTutor(publicSupabase(), path[2]), request_id: requestId }));
-    }
-    if (path[0] === "public") throw new DomainError("NOT_FOUND");
     const { data, error } = await context.client.auth.getClaims();
     if (error || !data?.claims.sub) throw new DomainError("AUTH_REQUIRED");
+    if (route === "public/offers") {
+      return context.finish(NextResponse.json({ data: await listPublicOffers(context.client, options), request_id: requestId }));
+    }
+    if (path.length === 3 && path[0] === "public" && path[1] === "tutors") {
+      return context.finish(NextResponse.json({ data: await getPublicTutor(context.client, path[2]), request_id: requestId }));
+    }
+    if (path[0] === "public") throw new DomainError("NOT_FOUND");
     let result: unknown;
     if (route === "me/package-learners") result = await listMyPackageLearners(context.client, pageOptions);
     else if (route === "me/package-contracts") result = await listPackageContracts(context.client, { ...options, learner_id: filters.get("learner_id") || "" });

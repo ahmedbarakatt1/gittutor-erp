@@ -1,24 +1,34 @@
+import { LanguageSwitch } from '@/components/site-language';
+import { groupTuition, individualTuition } from '@/modules/catalog/public-tuition';
+import { formatMinorUnits } from '@/modules/shared/format';
 import { StudyExample } from '@/components/study-example';
 import { GizaAccent } from '@/components/giza-accent';
-import { en as copy } from '@/locales/en';
+import { getSiteLanguage } from '@/server/site-language';
+import { dashboardLabel, homeMessages } from '@/locales/ar-public';
 import Link from 'next/link';
 import { PublicContactLinks } from '@/components/public-contact';
 import { BrandLogo } from '@/components/brand-logo';
+import { publicWorkspaceHome } from '@/server/auth';
 
-export default function HomePage() {
-  const money = new Intl.NumberFormat(copy.locale, { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 });
+export default async function HomePage() {
+  const language = await getSiteLanguage();
+  const copy = homeMessages(language);
+  const workspace = await publicWorkspaceHome();
+  const dashboard = dashboardLabel(language);
+  const money = (minor: number) => formatMinorUnits(minor, 'EGP', copy.locale, true);
   return (
     <>
       <a className="skip-link" href="#main">{copy.navigation.skip}</a>
+      <LanguageSwitch workspaceHome={workspace} />
       <header className="site-header container" id="top">
-        <a className="brand-link" href="#top" aria-label={copy.brand}><BrandLogo /></a>
+        <Link className="brand-link" href={workspace || '#top'} aria-label={workspace ? dashboard : copy.brand}><BrandLogo compact /></Link>
         <nav aria-label={copy.navigation.label}>
           <Link href="/subjects">{copy.navigation.subjects}</Link>
           <a href="#formats">{copy.navigation.formats}</a>
           <a href="#how-it-works">{copy.navigation.how}</a>
           <a href="#questions">{copy.navigation.faq}</a>
-          <Link href="/support">Support</Link>
-          <Link href="/login">{copy.navigation.account}</Link>
+          <Link href="/support">{language === 'ar' ? 'الدعم' : 'Support'}</Link>
+          <Link href={workspace || '/login'}>{workspace ? dashboard : copy.navigation.account}</Link>
         </nav>
       </header>
 
@@ -29,13 +39,13 @@ export default function HomePage() {
             <p className="hero-lead">{copy.hero.lead}</p>
             <p className="hero-body">{copy.hero.body}</p>
             <div className="hero-actions">
-              <a className="button button-primary" href="#subjects">{copy.hero.primary}</a>
+              <Link className="button button-primary" href="/learn/requests">{copy.hero.primary}</Link>
               <a className="text-link" href="#how-it-works">{copy.hero.secondary}</a>
             </div>
             <p className="hero-note">{copy.hero.note}</p>
           </div>
           <div className="hero-example">
-            <StudyExample copy={copy.example} />
+            <StudyExample language={language} copy={copy.example} />
             <p className="example-undertext">{copy.example.title}</p>
           </div>
         </section>
@@ -63,6 +73,7 @@ export default function HomePage() {
               <p>{copy.formats.lead}</p>
               <div className="private-format">
                 <h3>{copy.formats.privateTitle}</h3>
+                <p className="private-tuition"><strong>{money(individualTuition.price_minor)}</strong> {language === 'ar' ? 'للحصة' : 'per session'}</p>
                 <p>{copy.formats.privateBody}</p>
               </div>
             </div>
@@ -70,10 +81,10 @@ export default function HomePage() {
               <h3>{copy.formats.groupTitle}</h3>
               <p>{copy.formats.groupBody}</p>
               <ul className="tuition-list">
-                {copy.formats.tiers.map((tier) => (
-                  <li key={tier.size}>
-                    <div className="group-size"><strong>{tier.size}</strong><span>{copy.formats.students}</span></div>
-                    <div className="group-price"><strong data-testid={`tuition-${tier.priceMinor / 100}`}>{money.format(tier.priceMinor / 100)}</strong><span>{copy.formats.perStudent}</span></div>
+                {groupTuition.map((tier) => (
+                  <li key={tier.students}>
+                    <div className="group-size"><strong>{tier.students.toLocaleString(copy.locale)}</strong><span>{copy.formats.students}</span></div>
+                    <div className="group-price"><strong data-testid={`tuition-${tier.price_minor / 100}`}>{money(tier.price_minor)}</strong><span>{copy.formats.perStudent}</span></div>
                   </li>
                 ))}
               </ul>

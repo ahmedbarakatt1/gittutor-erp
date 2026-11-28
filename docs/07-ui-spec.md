@@ -19,15 +19,17 @@ Use the approved logo asset once supplied. A text Git Tutor wordmark is the deve
 
 Application copy is externalized by locale. The initial English copy below is a draft. Components support RTL direction, logical CSS properties and locale-aware dates, numbers and currency. Countdown values derive from server-synchronized time and the saved occurrence start.
 
+The website starts in English. The language button reads **العربية** in English and **English** in Arabic. Switching keeps the current route and query, including a sign-in return link. A site-wide cookie remembers the selection in that browser. The document uses Arabic and right-to-left direction from the server when Arabic is selected. The interface language is independent of teaching language, uploaded documents, user-entered text and the underlying records.
+
 ## Public website
 
 | Route | Required content | Primary action |
 |---|---|---|
 | `/` | Brand promise, subjects, private/group formats, how booking works, tutor introduction, FAQ and support entry | Find a session |
-| `/subjects` | Computer Science, Engineering, Business and Business Intelligence, with available course offers | Explore a subject |
-| `/offers` | Filterable subject, format, dates, tutor and group size | Open an offer |
-| `/offers/[id]` | Topic, tutor, duration, student price, group size, availability, formation/confirmation terms, deposit and cancellation terms | Reserve a place |
-| `/tutors/[id]` | Approved public biography, subjects and available offers | View available sessions |
+| `/subjects` | Public descriptions and topic examples for the four study areas, plus requests for other subjects | Request tutoring after sign-in |
+| `/offers` | Published individual and group tuition per student per session | Request a session |
+| `/offers/[id]` | Verified accounts can read published topics, duration, customer tuition, eligible sessions and booking terms | Reserve a place |
+| `/tutors/[id]` | Verified accounts can read approved biographies and teaching subjects | View available sessions |
 | `/how-it-works` | Choose, reserve, pay, prepare, join and follow up | Browse sessions |
 | `/faq` | Approved answers, payment steps, uploads, groups, cancellations and technical help | Get help |
 | `/support` | FAQ and human-support entry, staffed hours and expected next step | Talk to a person |

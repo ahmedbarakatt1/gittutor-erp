@@ -125,3 +125,24 @@ test('opposite concurrent transfers retain one acyclic lineage', async () => {
   expect(results.find(result => result.error)?.error).toBe('VERSION_CONFLICT');
   expect((await fixture.database.query('select count(*)::int as n from app_private.package_transfers where source_purchase_id=any($1::uuid[]) and target_purchase_id=any($1::uuid[])', [packages.map(purchase => purchase.resource_id)])).rows[0].n).toBe(1);
 });
+
+test('GT-CON-004 two enrollment reservations cannot use the same final purchased or granted credit', async () => {
+  const source = await fixture.purchase();
+  const policy = await fixture.grantPolicy(50000);
+  await fixture.grant(String(source.resource_id), policy, 50000, 1000);
+  const first = await fixture.hold(), second = await fixture.hold();
+  const calls = [first, second].map(seat => ({
+    client: fixture.learner, name: 'reserve_package_credit',
+    args: { p_package_id: source.resource_id, p_enrollment_id: seat.enrollmentId, p_credit_quanta: 1000, p_coverage_proposal_id: null, p_expected_version: 2, p_idempotency_key: randomUUID() },
+  }));
+  const results = await raceBookingCalls(calls);
+  // A concurrent financial-graph change can roll back either contender before either gets the lot.
+  // Retry only that explicit transient outcome, using the original key and expected version.
+  for (const [index, result] of results.entries()) {
+    if (result.error === 'RETRYABLE_CONFLICT') results[index] = (await raceBookingCalls([calls[index]]))[0];
+  }
+  expect(results.filter(row => !row.error), JSON.stringify(results.map(row => row.error))).toHaveLength(1);
+  expect(['VERSION_CONFLICT', 'RETRYABLE_CONFLICT']).toContain(results.find(row => row.error)?.error);
+  expect((await fixture.database.query("select count(*)::int n from app_private.package_reservations where purchase_id=$1 and state='reserved'", [source.resource_id])).rows[0].n).toBe(1);
+  expect((await fixture.database.query('select app_private.package_balance($1) b', [source.resource_id])).rows[0].b).toMatchObject({ available_credit_quanta: 0, reserved_credit_quanta: 1000, reserved_value_minor: 50000 });
+});

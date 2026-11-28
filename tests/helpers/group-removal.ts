@@ -3,8 +3,8 @@ import { paymentFixture } from './payments';
 import { settleEnrollment } from './financial-booking';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
 
-export async function groupRemovalFixture(target: 3 | 4 = 4, fundAll = true) {
-  const f = await paymentFixture();
+export async function groupRemovalFixture(target: 3 | 4 = 4, fundAll = true, options: { isolatedLearners?: boolean } = {}) {
+  const f = await paymentFixture(options);
   const times = f.interval();
   const occurrence = await f.rpc('create_occurrence', { p_offer_id: target === 4 ? catalogFixtureIds.group4_offer : catalogFixtureIds.group3_offer, p_tutor_id: f.tutorId, p_start_at: times.start_at, p_end_at: times.end_at, p_time_zone: 'Africa/Cairo', p_target_tier: target, p_idempotency_key: randomUUID() });
   const fee = await f.rpc('approve_tutor_fee', { p_occurrence_id: occurrence.resource_id, p_tutor_id: f.tutorId, p_fee_minor: target === 4 ? 72500 : 62500, p_currency: 'EGP', p_duration_minutes: 60, p_compensation_policy_version_id: catalogFixtureIds.group_pricing, p_target_tier: target, p_purpose: 'initial', p_reason: 'Exact initial dropout agreement', p_expected_version: 1, p_idempotency_key: randomUUID() });

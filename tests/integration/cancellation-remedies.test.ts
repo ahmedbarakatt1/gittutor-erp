@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
+vi.mock('server-only', () => ({}));
+import { createVerifiedRefund } from '../helpers/refunds';
+import { getRefund, listMyRefunds } from '../../src/modules/payments/queries';
 import { paymentFixture } from '../helpers/payments';
 import { settleEnrollment } from '../helpers/financial-booking';
 import { getOperationProposal, getEnrollment } from '../../src/modules/booking/queries';
@@ -14,6 +17,7 @@ test('reviewed cancellation replaces immutable terms, gathers exact consent and 
     const account = await f.receiving(), paid = await settleEnrollment(f, enrollmentId, 0, 50000, account);
     const seat = await getEnrollment(f.learner, enrollmentId);
     const original = await f.rpc('create_operation_proposal', { p_kind: 'cancellation_remedy', p_target_id: enrollmentId, p_requested_terms: { target_type: 'enrollment', remedy: 'cash_refund', expires_at: new Date(Date.now() + 600000).toISOString() }, p_reason: 'Prestart learner cancellation request', p_expected_version: seat.version, p_idempotency_key: randomUUID() }, f.learner);
+    expect((await getEnrollment(f.learner, enrollmentId)).state).toBe('confirmed');
     const review = { p_proposal_id: original.proposal_id, p_tutor_compensation_minor: 10000, p_reason: 'Exact bounded compensation review', p_expected_version: 1, p_idempotency_key: randomUUID() };
     expect((await f.learner.rpc('revise_cancellation_proposal', review)).error?.message).toBe('FORBIDDEN');
     expect((await f.admin.rpc('revise_cancellation_proposal', { ...review, p_tutor_compensation_minor: 25001, p_idempotency_key: randomUUID() })).error?.message).toBe('AMOUNT_OUT_OF_RANGE');
@@ -37,6 +41,17 @@ test('reviewed cancellation replaces immutable terms, gathers exact consent and 
     expect((await f.database.query('select finance_private.finance_transfer_balance($1) result', [paid.transferId])).rows[0].result).toMatchObject({ gross_settled_minor: 50000, available_minor: 50000 });
     expect((await f.database.query('select mode,value_minor,credit_quanta,source_ancestry from finance_private.financial_remedy_plans where id=$1', [cancelled.remedy_id])).rows[0]).toMatchObject({ mode: 'cash', value_minor: '50000', credit_quanta: '0', source_ancestry: { allocation_ids: paid.allocation.allocation_ids } });
     expect((await f.database.query('select state,amount_minor from finance_private.cancellation_compensation_obligations where proposal_id=$1', [revised.proposal_id])).rows[0]).toEqual({ state: 'approved_pending_T08_posting', amount_minor: '10000' });
+    // J4 follows the actual cash released by this cancellation through the payer's refund history.
+    const refund = await createVerifiedRefund(f, 50000, paid.transferId);
+    const approved = await f.rpc('approve_refund', { p_refund_id: refund.refundId, p_remedy_id: cancelled.remedy_id, p_destination_version_id: refund.destinationVersionId, p_amount_minor: 50000, p_reason: 'Apply agreed cancellation remedy', p_expected_version: refund.version, p_idempotency_key: randomUUID() });
+    const attempt = await f.rpc('record_refund_attempt', { p_refund_id: refund.refundId, p_external_reference: randomUUID(), p_expected_version: approved.version, p_idempotency_key: randomUUID() });
+    const evidence = await f.evidence({ purpose: 'refund_outcome', parentType: 'refund_attempt', parentId: String(attempt.attempt_id) });
+    await f.rpc('reconcile_refund', { p_refund_id: refund.refundId, p_attempt_id: attempt.attempt_id, p_outcome: 'settled', p_evidence_file_id: evidence, p_external_reference: randomUUID(), p_settled_at: new Date().toISOString(), p_expected_version: attempt.version, p_idempotency_key: randomUUID() });
+    expect((await listMyRefunds(f.learner)).items.map(row => row.refund_id)).toContain(refund.refundId);
+    const history = await getRefund(f.learner, refund.refundId);
+    expect(history).toMatchObject({ state: 'settled', settled_minor: 50000, destination: { verification_status: 'verified', masked_identifier: expect.any(String) } });
+    expect(JSON.stringify(history)).not.toContain('synthetic-');
+    expect((await f.database.query('select amount_minor::int as original from finance_private.charges where id=$1', [paid.chargeId])).rows[0].original).toBe(50000);
   } finally { await f.close(); }
 });
 

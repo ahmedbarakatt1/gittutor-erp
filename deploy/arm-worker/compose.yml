@@ -1,0 +1,32 @@
+name: git-tutor-background
+services:
+  worker:
+    image: ${GIT_TUTOR_WORKER_IMAGE:?Supply the local ARM64 image ID from the verified build}
+    platform: linux/arm64
+    pull_policy: never
+    env_file: ${GIT_TUTOR_ENV_FILE:?Supply the absolute private production settings path}
+    environment:
+      APP_ENV: production
+      FILE_SCAN_ADAPTER: clamav
+      FILE_SCAN_URL: tcp://127.0.0.1:3310
+      # For the initial upload rehearsal, leave billing, mail and other jobs queued.
+      # Explicitly export an empty value to enable all handlers after backlog review.
+      WORKER_PURPOSE: ${GIT_TUTOR_WORKER_PURPOSE-files.scan}
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 120s
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=384m
+    volumes:
+      - signatures:/var/lib/clamav
+    mem_limit: 6g
+    memswap_limit: 6g
+    cap_drop: [ALL]
+    cap_add: [SETUID, SETGID, KILL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+volumes:
+  signatures:

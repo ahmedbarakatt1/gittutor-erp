@@ -8,11 +8,12 @@ import { Client } from 'pg';
 import { createClient } from '@supabase/supabase-js';
 import { adminDatabase, anonymousClient, assertLocalSupabase, loadLocalSupabase, type LocalSupabase } from '../tests/helpers/supabase';
 import { fixtureId } from './db-seed';
-import { NATIVE_BASELINE_MIGRATIONS } from './db-migrate';
+import { FOUNDATION_MIGRATION } from './db-migrate';
 import { seedCatalog } from './catalog-seed';
 import { seedBooking } from './booking-seed';
 import { seedPackages } from './package-seed';
 import { seedPayments } from './payments-seed';
+import { requestDriveWorkerSignatures } from './production-worker-boundary';
 import { chooseLocalBootstrapPlan, historicalBootstrapSource, historicalCatalogCutoff, historicalCatalogMigrations } from './bootstrap-plan';
 
 const execute = promisify(execFile);
@@ -100,9 +101,11 @@ export function assertPaymentWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' 
 }
 
 const integrationWorkerSignatures: Record<string, string> = {
+  ...requestDriveWorkerSignatures,
   prepare_file_content: 'uuid,uuid', record_file_object: 'uuid,uuid,uuid,jsonb', prepare_file_download: 'uuid,uuid',
   prepare_file_scan: 'uuid,uuid,uuid', finalize_file_scan: 'uuid,integer,uuid,uuid,jsonb',
-  record_calendar_connection: 'uuid,uuid,uuid,text,text,jsonb,text', prepare_calendar_sync: 'uuid,uuid,uuid',
+  record_simulated_room_check: 'uuid,uuid,uuid,integer,text',
+  verify_calendar_organizer: 'uuid,uuid,integer,uuid', record_calendar_organizer: 'uuid,uuid,uuid,text,text,jsonb,text,text', record_calendar_connection: 'uuid,uuid,uuid,text,text,jsonb,text', prepare_calendar_sync: 'uuid,uuid,uuid',
   get_calendar_credentials: 'uuid,integer,uuid,uuid', finalize_calendar_sync: 'uuid,integer,uuid,integer,integer,uuid,uuid,jsonb',
   rotate_calendar_credentials: 'uuid,integer,uuid,uuid,jsonb,text,uuid,uuid',
   route_notification_event: 'uuid,uuid', prepare_notification_delivery: 'uuid,uuid,uuid',
@@ -112,9 +115,9 @@ const integrationWorkerSignatures: Record<string, string> = {
 };
 export function assertIntegrationWorkerBoundary(fn: Pick<DefinerBoundary, 'proname' | 'nspname' | 'signature' | 'rolname' | 'prosecdef' | 'executors'> & { worker: boolean }) {
   const signature = integrationWorkerSignatures[fn.proname];
-  if (signature) {
+  if (signature !== undefined) {
     if (fn.nspname !== 'app_private' || !fn.worker || !fn.prosecdef || fn.signature !== `app_private.${fn.proname}(${signature})` || fn.rolname !== 'git_tutor_commands' || [...fn.executors].sort().join(',') !== 'git_tutor_commands,git_tutor_worker') throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
-  } else if (fn.worker && /^(file_|calendar_|notification_)/.test(fn.proname)) throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
+  } else if (fn.worker && (/^(file_|calendar_|notification_|drive_)/.test(fn.proname) || fn.proname.includes('request_drive'))) throw new Error('SUPABASE_INTEGRATION_WORKER_BOUNDARY_INVALID');
 }
 
 async function verifyProjectContainer() {
@@ -242,7 +245,7 @@ async function copyLocalConfiguration() {
   await mkdir(resolve(workspace, 'supabase/migrations'), { recursive: true });
   const configText = (await readFile('supabase/config.toml', 'utf8')).replace(/(\[db\.migrations\][\s\S]*?)enabled = true/, '$1enabled = false');
   await writeFile(resolve(workspace, 'supabase/config.toml'), configText);
-  for (const filename of NATIVE_BASELINE_MIGRATIONS) await writeFile(resolve(workspace, 'supabase/migrations', filename), await readFile(resolve('supabase/migrations', filename)));
+  await writeFile(resolve(workspace, 'supabase/migrations', FOUNDATION_MIGRATION), await readFile(resolve('supabase/migrations', FOUNDATION_MIGRATION)));
   let templates: string[] = [];
   try { templates = await readdir('supabase/templates'); } catch { /* No custom template yet. */ }
   await mkdir(resolve(workspace, 'supabase/templates'), { recursive: true });
@@ -409,8 +412,7 @@ async function verify() {
       from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_roles r on r.oid=p.proowner join pg_language l on l.oid=p.prolang
       where n.nspname in ('api','app_private','finance_private')`);
     for (const fn of functions.rows) {
-      const publicRead = fn.nspname === 'api' && ['list_public_offers', 'get_public_tutor'].includes(fn.proname);
-      if (fn.anonymous && !publicRead) throw new Error(`SUPABASE_ANON_FUNCTION_INVALID:${fn.proname}`);
+      if (fn.anonymous) throw new Error(`SUPABASE_ANON_FUNCTION_INVALID:${fn.proname}`);
       if (fn.nspname !== 'api' && fn.authenticated) throw new Error(`SUPABASE_PRIVATE_FUNCTION_INVALID:${fn.proname}`);
       if (fn.nspname === 'app_private' && fn.proname.startsWith('booking_') && fn.worker) throw new Error(`SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID:${fn.proname}`);
       if (fn.proname === 'process_occurrence_booking_due' && (fn.nspname !== 'app_private' || !fn.worker || fn.signature !== 'app_private.process_occurrence_booking_due(uuid,text)' || fn.rolname !== 'git_tutor_commands' || fn.executors.some((role: string) => !['git_tutor_commands', 'git_tutor_worker'].includes(role)))) throw new Error('SUPABASE_BOOKING_WORKER_BOUNDARY_INVALID');

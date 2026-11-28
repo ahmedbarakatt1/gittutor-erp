@@ -1,3 +1,5 @@
+import type { SiteLanguage } from '@/locales/language';
+
 /** Format scaled integer units without rounding a large monetary/entitlement value through division. */
 function formatScaled(value: number|string, scaleDigits: number, locale: string, options: Intl.NumberFormatOptions, trimFraction: boolean) {
   if (typeof value==='number'?!Number.isSafeInteger(value):! /^-?(?:0|[1-9]\d{0,99})$/.test(value)) throw new Error('SAFE_INTEGER_REQUIRED');
@@ -38,11 +40,18 @@ export function scaledIntegerInput(value: number, scaleDigits: 2 | 3) {
 }
 
 /** Parse an unsigned plain decimal directly into integer units without floating-point scaling. */
+export function decimalInputPattern(scaleDigits: 2 | 3) {
+  return `[0-9٠-٩۰-۹]+(?:[.٫][0-9٠-٩۰-۹]{1,${scaleDigits}})?`;
+}
+
 export function parseScaledIntegerInput(raw: string, scaleDigits: 2 | 3) {
   if (scaleDigits !== 2 && scaleDigits !== 3) throw new Error('UNIT_SCALE_REQUIRED');
-  if (raw.length > 32 || !new RegExp(`^\\d+(?:\\.\\d{1,${scaleDigits}})?$`).test(raw)) throw new Error('DECIMAL_INPUT_REQUIRED');
-  const [whole, fraction = ''] = raw.split('.');
+  if (raw.length > 32 || !new RegExp(`^${decimalInputPattern(scaleDigits)}$`, 'u').test(raw)) throw new Error('DECIMAL_INPUT_REQUIRED');
+  const normalized = raw.replace(/[٠-٩۰-۹]/gu, digit => String(digit.charCodeAt(0) & 15)).replace('٫', '.');
+  const [whole, fraction = ''] = normalized.split('.');
   const exact = BigInt(whole) * (10n ** BigInt(scaleDigits)) + BigInt(fraction.padEnd(scaleDigits, '0'));
   if (exact > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error('DECIMAL_INPUT_REQUIRED');
   return Number(exact);
 }
+
+export const formatTuition = (minor: number, currency = 'EGP', language: SiteLanguage = 'en') => formatMinorUnits(minor, currency, language === 'ar' ? 'ar-EG' : 'en-EG', true);
