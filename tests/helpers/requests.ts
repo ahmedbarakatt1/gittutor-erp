@@ -5,7 +5,11 @@ import { bookingFixture } from './booking';
 
 export async function requestFixture() {
   const f = await bookingFixture();
-  async function eligibleOccurrence(priceMinor = 65000, durationMinutes = 90) {
+  return { ...f, eligibleOccurrence: (priceMinor = 65000, durationMinutes = 90, startAt?: string) =>
+    eligibleRequestOccurrence(f, priceMinor, durationMinutes, startAt) };
+}
+
+export async function eligibleRequestOccurrence(f: Awaited<ReturnType<typeof bookingFixture>>, priceMinor = 65000, durationMinutes = 90, startAt?: string) {
     const privateFee = { currency: 'EGP', fee_min_minor: 25000, fee_max_minor: 25000, exact_occurrence_approval_required: true };
     const effectiveAt = new Date(Date.now() - 60000).toISOString();
     const price = await f.rpc('create_pricing_draft', {
@@ -32,12 +36,10 @@ export async function requestFixture() {
       p_pricing_version_id: pricing, p_policy_version_id: policy.policy_version_id, p_idempotency_key: randomUUID(),
     });
     await f.rpc('publish_offer', { p_offer_id: offer.offer_id, p_effective_at: effectiveAt, p_expected_version: 1, p_idempotency_key: randomUUID() });
-    const { start_at } = f.interval();
+    const start_at = startAt ?? f.interval().start_at;
     return f.rpc('create_occurrence', {
       p_offer_id: offer.offer_id, p_tutor_id: f.tutorId, p_start_at: start_at,
       p_end_at: new Date(Date.parse(start_at) + durationMinutes * 60_000).toISOString(), p_time_zone: 'Africa/Cairo',
       p_target_tier: null, p_idempotency_key: randomUUID(),
     });
-  }
-  return { ...f, eligibleOccurrence };
 }

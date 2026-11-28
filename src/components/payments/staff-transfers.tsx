@@ -48,7 +48,7 @@ function StatementImportForm({ account }: { account: ReceivingAccount }) {
   const { copy } = textByLanguage[uiLanguage];
 
   const [file, setFile] = useState('');
-  return <details className={styles.disclosure}><summary>{copy.import}</summary><IdentityForm action="statement-imports" submitLabel={copy.import} successMessage={copy.importSaved} disabled={!file} payload={form => ({ file_id: file, receiving_account_id: account.receiving_account_id, channel: account.channel, statement_period: { from: instantField(form, 'from'), to: instantField(form, 'to') } })}><CairoInput name="from" label={copy.periodFrom} /><CairoInput name="to" label={copy.periodTo} /><EvidenceSelect action="create_statement_import" targetId={account.receiving_account_id} value={file} onChange={setFile} /></IdentityForm></details>;
+  return <details className={styles.disclosure}><summary>{copy.import}</summary><IdentityForm action="statement-imports" submitLabel={copy.import} successMessage={copy.importSaved} disabled={!file} payload={form => ({ file_id: file, receiving_account_id: account.receiving_account_id, channel: account.channel, statement_period: { from: String(form.get('from')), to: String(form.get('to')) } })}><TextField type="date" name="from" label={copy.periodFrom} /><TextField type="date" name="to" label={copy.periodTo} /><EvidenceSelect action="create_statement_import" targetId={account.receiving_account_id} value={file} onChange={setFile} /></IdentityForm></details>;
 }
 function IncomingList({ path }: { path: string }) {
   const uiLanguage = useSiteLanguage();

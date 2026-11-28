@@ -1,5 +1,13 @@
 # Implementation status
 
+## Workbook retest (28 November 2026)
+
+The supplied workbook now records 251 passes and four live-provider blockers. The original 211 passes retain their evidence. This cycle added 40 passes, retested all 13 original bugs, and completed 43 steps across seven connected journeys. The [case report](QA-WORKBOOK-2026-11-28.md) lists the executable evidence and remaining live Google Drive, Google Meet and mailbox checks. The local deliverable is `output/review/GitTutor-Website-Testing-Retest.xlsx`. Its dashboard originally counted only 79 of 255 cases. The corrected copy preserves all six sheets and the original file.
+
+- Verification included `pnpm lint`, `pnpm typecheck`, `pnpm test:unit` (638 passes), `pnpm build` and `python tools/verify-pack.py`. The desktop and mobile dashboard browser test also persisted a reviewed mapping and confirmed that the imported snapshot remained identical.
+- The local notification, export and portal run passed 32 of 33. Its single CRM export check passed on an isolated rerun. The final teaching run passed all 24 checks with isolated learners. The previously failing individual lesson passed from PDF submission to a settled synthetic tutor payout on the same booking.
+- Both hosted databases passed rollback rehearsals for the six migrations, including preserved account, import, booking, ledger and job counts, private table grants, and worker permissions. CLI dry runs selected exactly those migrations with no seeds or role script. No hosted mutation was made in these rehearsals. Full CI and release evidence follow once executed.
+
 ## Production administrator access (26 November 2026)
 
 The production account and role check found that one of the two requested colleagues already held an active Administrator grant, the management role used by the owner. The other colleague had an existing account awaiting email verification. The staff-grant command requires a verified mailbox, and the new-staff invitation command excludes existing accounts. One fresh activation email was sent to the intended existing account. A clean browser opened the private site-entry link at Git Tutor sign-in and the private records API returned 401. `.local/nov26-rawan-history.ps1` found one matching message with Mailjet event and status `sent`. At the last readback the second account still awaited verification and its Administrator grant remained outstanding. No role was removed or duplicated.

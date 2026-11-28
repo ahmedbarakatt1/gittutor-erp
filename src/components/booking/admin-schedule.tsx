@@ -13,7 +13,7 @@ import { scaledIntegerInput } from '@/modules/shared/format';
 import { bookingCopy } from '@/locales/booking';
 import { IdentityForm, TextField } from '../identity-form';
 import { usePagedRecords } from '../identity-workspaces';
-import { AvailabilityEditor } from './availability-editor';
+import { AvailabilityEditor, ScheduleConflicts } from './availability-editor';
 import { CreateOperationProposal, StaffProposal } from './staff-proposals';
 import { GroupAmendmentForm } from './group-amendment';
 import { CairoInput, ReadState, Select, SessionTime, cairoTime, instantField, money, moneyField } from './shared';
@@ -52,10 +52,12 @@ function CreateSession({ offers, tutors, onSaved }: { offers: AdminOffer[]; tuto
 
   const [offerId, setOfferId] = useState(''); const [tutorId, setTutorId] = useState(''); const [start, setStart] = useState('');
   const offer = offers.find(item => item.offer_id === offerId);
-  return <IdentityForm action="occurrences" submitLabel={copy.create} successMessage={copy.scheduled} onSaved={onSaved} payload={form => {
+  const [conflicts, setConflicts] = useState<string[]>([]);
+  return <><IdentityForm action="occurrences" onPendingChange={pending => { if (pending) setConflicts([]); }}
+    onFailure={result => setConflicts(result.field_errors?.conflicting_occurrence_ids || [])} submitLabel={copy.create} successMessage={copy.scheduled} onSaved={onSaved} payload={form => {
     if (!offer || !tutorId) throw new Error('CHOOSE_APPROVED_RECORDS'); const start_at = instantField(form, 'start_at');
     return { offer_id: offer.offer_id, tutor_id: tutorId, start_at, end_at: new Date(Date.parse(start_at) + offer.duration_minutes * 60_000).toISOString(), time_zone: 'Africa/Cairo', target_tier: offer.target_tier };
-  }}><Select name="offer_id" label={copy.offer} value={offerId} onChange={value => { setOfferId(value); setTutorId(''); }}><option value="">{copy.chooseOffer}</option>{offers.map(item => <option key={item.offer_id} value={item.offer_id}>{item.title} · {item.duration_minutes} {transactionLabel(uiLanguage, "min ·")} {item.offer_id.slice(0, 8)}</option>)}</Select><Select name="tutor_id" label={copy.tutor} value={tutorId} onChange={setTutorId}><option value="">{copy.chooseTutor}</option>{tutors.filter(item => offer && item.approved_profile_version_id && item.approved_subject_ids.includes(offer.subject.subject_id)).map(item => <option key={item.tutor_id} value={item.tutor_id}>{item.display_name}</option>)}</Select><CairoInput name="start_at" label={copy.startAt} onChange={setStart} />{offer && <p>{copy.duration}: {offer.duration_minutes} {transactionLabel(uiLanguage, "min.")} {copy.durationNote}{start && <> {copy.endAt}: {cairoTime(new Date(Date.parse(start) + offer.duration_minutes * 60_000).toISOString(), uiLanguage)} {bookingCopy.timezone}.</>}</p>}</IdentityForm>;
+  }}><Select name="offer_id" label={copy.offer} value={offerId} onChange={value => { setOfferId(value); setTutorId(''); }}><option value="">{copy.chooseOffer}</option>{offers.map(item => <option key={item.offer_id} value={item.offer_id}>{item.title} · {item.duration_minutes} {transactionLabel(uiLanguage, "min ·")} {item.offer_id.slice(0, 8)}</option>)}</Select><Select name="tutor_id" label={copy.tutor} value={tutorId} onChange={setTutorId}><option value="">{copy.chooseTutor}</option>{tutors.filter(item => offer && item.approved_profile_version_id && item.approved_subject_ids.includes(offer.subject.subject_id)).map(item => <option key={item.tutor_id} value={item.tutor_id}>{item.display_name}</option>)}</Select><CairoInput name="start_at" label={copy.startAt} onChange={setStart} />{offer && <p>{copy.duration}: {offer.duration_minutes} {transactionLabel(uiLanguage, "min.")} {copy.durationNote}{start && <> {copy.endAt}: {cairoTime(new Date(Date.parse(start) + offer.duration_minutes * 60_000).toISOString(), uiLanguage)} {bookingCopy.timezone}.</>}</p>}</IdentityForm><ScheduleConflicts ids={conflicts} admin /></>;
 }
 
 function SessionOperations({ item, pricing, policies, onSaved }: { item: AdminOccurrence; pricing: Records<AdminPricing>; policies: Records<AdminPolicy>; onSaved: () => void }) {

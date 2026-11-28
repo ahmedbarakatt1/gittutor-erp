@@ -1,7 +1,7 @@
 import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { adminDatabase, loadLocalSupabase } from '../helpers/supabase';
 
@@ -22,7 +22,7 @@ async function signIn(page: Page, actorLabel: string | { id: string; email: stri
   const response = page.waitForResponse(result => result.url().endsWith('/api/auth/login') && result.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page).toHaveURL(/\/(learn|tutor|service|admin)$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/(learn(?:\/payments)?|tutor|service|admin)$/, { timeout: 15_000 });
   await expectSignedInAccount(page, actor.id);
 }
 
@@ -179,6 +179,80 @@ test('an administrator without a learner identity stays in administration on lea
   const account = await page.request.get('/api/v1/me');
   expect(account.status()).toBe(200);
   expect((await account.json()).data).toMatchObject({ roles: ['admin'], authorized_learner_ids: [] });
+});
+
+test('GT-GRD-003 a guardian with no current links sees guidance and no learner records', async ({ page }) => {
+  const account = await createSyntheticActor();
+  const db = await adminDatabase();
+  try {
+    await db.query("insert into app_private.account_roles(account_id, role, reason) values ($1,'guardian','Synthetic guardian without links')", [account.id]);
+    await db.query("update app_private.account_roles set revoked_at=now(), version=version+1 where account_id=$1 and role='student'", [account.id]);
+    await db.query('delete from app_private.learners where account_id=$1', [account.id]);
+  } finally { await db.end(); }
+  await signIn(page, account);
+  await page.goto('/learn');
+  await expect(page).toHaveURL(baseURL+'/learn/payments');
+  await expect(page.getByText(/^No learner is linked to this account/)).toBeVisible();
+  await expect(page.getByTestId('learner-id')).toHaveCount(0);
+  expect((await (await page.request.get('/api/v1/me')).json()).data.authorized_learner_ids).toEqual([]);
+});
+
+test('GT-ADM-001/002/111 workbook overview, source filters and audited mapping review', async ({ page }) => {
+  test.setTimeout(90_000);
+  const owner = await createSyntheticActor();
+  const db = await adminDatabase();
+  const batch = randomUUID(), target = randomUUID();
+  const hash = createHash('sha256').update(batch).digest('hex');
+  const empty = { columns: [], rows: [] };
+  const sessions = {
+    columns: [
+      { key: 'col_a', label: 'Date', type: 'date' }, { key: 'col_e', label: 'Learner', type: 'text' },
+      { key: 'col_f', label: 'Course', type: 'text' }, { key: 'col_i', label: 'Status', type: 'text' },
+    ],
+    rows: ['Completed','Scheduled'].map((status, i) => ({ source_row: i+2, issues: [], values: {
+      col_a: '2026-10-20', col_e: 'Synthetic learner', col_f: i ? 'Synthetic algebra' : 'Synthetic geometry', col_i: status,
+    } })),
+  };
+  const snapshot = { version: 1, source_name: 'synthetic-dashboard.xlsx', source_sha256: hash, as_of: null,
+    courses: ['Synthetic algebra','Synthetic geometry'], tables: { sessions,
+      students: { columns: [{ key: 'col_a', label: 'Name', type: 'text' }], rows: [{ source_row: 2, issues: [], values: { col_a: 'Synthetic learner' } }] },
+      tutors: { columns: [{ key: 'col_a', label: 'Name', type: 'text' }], rows: [{ source_row: 2, issues: [], values: { col_a: 'Synthetic tutor' } }] },
+      packages: empty, balances: empty, distributions: empty, marketing: empty } };
+  try {
+    await db.query("insert into app_private.account_roles(account_id,role,reason) values($1,'admin','Synthetic dashboard reviewer')", [owner.id]);
+    const learner = (await db.query('select id from app_private.learners where account_id=$1',[owner.id])).rows[0].id;
+    const tutor = (await db.query('select id from app_private.tutors where account_id=$1',[loadLocalSupabase().actors.tutor_a.id])).rows[0].id;
+    await db.query("insert into app_private.workflow_import_batches(id,owner_account_id,source_sha256,content_sha256,source_kind,snapshot) values($1,$2,$3,$3,'synthetic',$4)",[batch,owner.id,hash,JSON.stringify(snapshot)]);
+    await db.query("insert into app_private.operational_workbook_links(id,batch_id,source_table,source_row) values($1,$2,'sessions',2)", [target,batch]);
+    await db.query("insert into app_private.operational_workbook_links(batch_id,source_table,source_row,learner_id,review_state) values($1,'sessions',3,$2,'linked')", [batch,learner]);
+    await db.query("insert into app_private.operational_workbook_links(batch_id,source_table,source_row,learner_id,review_state) values($1,'students',2,$2,'linked')", [batch,learner]);
+    await db.query("insert into app_private.operational_workbook_links(batch_id,source_table,source_row,tutor_id,review_state) values($1,'tutors',2,$2,'linked')", [batch,tutor]);
+    await signIn(page, owner);
+    await page.goto('/admin/workflow');
+    await page.getByRole('searchbox', { name: 'Search this section' }).fill('geometry');
+    await page.getByLabel('Reported status').selectOption('Completed');
+    await expect(page.getByRole('row')).toHaveCount(2);
+    await page.getByRole('button',{name:'Row 2',exact:true}).click();
+    await expect(page.getByRole('heading',{name:'Source row 2'})).toBeVisible();
+    await page.goto('/admin');
+    const overview = page.locator('[data-workflow-view="overview"]');
+    await expect(overview.getByRole('link',{name:/Open request queue/})).toHaveAttribute('href','/admin/requests');
+    await overview.getByRole('button',{name:'Browse records'}).click();
+    const search = overview.getByRole('searchbox');
+    await search.fill('geometry');
+    await overview.getByRole('button',{name:'Completed 1',exact:true}).click();
+    await expect(search).toHaveValue('geometry');
+    await expect(overview.getByText('1 matching record',{exact:false})).toBeVisible();
+    await expect(overview.locator('li > details > summary')).toHaveCount(1);
+    await overview.locator('li > details > summary').click();
+    await overview.getByText('Review record links',{exact:true}).click();
+    await overview.getByLabel('Linked learner').selectOption(learner);
+    await overview.getByLabel('Linked tutor').selectOption(tutor);
+    await overview.getByLabel('Review evidence and reason').fill('Matched to the learner in the synthetic source.');
+    await overview.getByRole('button',{name:'Save mapping review'}).click();
+    await expect.poll(async () => (await db.query('select review_state,version,learner_id from app_private.operational_workbook_links where id=$1',[target])).rows[0]).toEqual({review_state:'reviewed',version:2,learner_id:learner});
+    expect((await db.query('select snapshot from app_private.workflow_import_batches where id=$1',[batch])).rows[0].snapshot).toEqual(snapshot);
+  } finally { await db.end(); }
 });
 
 test('guardian account shows exactly its current authorized learner scope', async ({ page }) => {

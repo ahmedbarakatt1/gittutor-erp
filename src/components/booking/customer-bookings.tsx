@@ -9,6 +9,7 @@ import { quizCopy } from '@/locales/quizzes';
 import { MeetingPanel } from '../teaching/meeting-panel';
 import { useState, type ReactNode } from 'react';
 import type { CustomerEnrollment, PublicOccurrence } from '@/modules/booking/queries';
+import { cairoBookingPeriod } from '@/modules/booking/scheduling';
 import { bookingCopy as copy } from '@/locales/booking';
 import { IdentityForm, TextField } from '../identity-form';
 import { usePagedRecords } from '../identity-workspaces';
@@ -65,8 +66,27 @@ function EnrollmentList({ learner }: { learner: Learner }) {
   const uiLanguage = useSiteLanguage();
   const { copy } = textByLanguage[uiLanguage];
 
-  const records = usePagedRecords<CustomerEnrollment>(`me/enrollments?learner_id=${learner.learner_id}`);
-  return <section className={styles.section}><h2>{copy.upcoming}</h2><ReadState pending={records.items === null} {...records} />{records.items?.length === 0 && <p className={styles.empty}>{copy.empty}</p>}<ul className={styles.list}>{records.items?.map(item => <li key={item.enrollment_id} className={styles.sessionRow}><div><SessionTime start={item.occurrence.start_at} end={item.occurrence.end_at} /><p>{copy.withTutor} {item.occurrence.tutor.display_name}</p><p className={styles.status}>{copy.states[item.state] || item.state}</p></div><Link className={styles.link} href={`/learn/bookings/${item.enrollment_id}`}>{copy.openReservation}</Link></li>)}</ul></section>;
+  const [from, setFrom] = useState('');
+  const [through, setThrough] = useState('');
+  const [query, setQuery] = useState('');
+  return <section className={styles.section}>
+    <h2>{copy.upcoming}</h2>
+    <form aria-label={copy.period} className={styles.tools} onSubmit={event => {
+      event.preventDefault();
+      setQuery(from && through ? new URLSearchParams(cairoBookingPeriod(from, through)).toString() : '');
+    }}>
+      <label className={formStyles.field}>{copy.from}<input type="date" value={from} min="1900-01-01" max={through || '9998-12-31'} required={Boolean(through)} onChange={event => setFrom(event.target.value)} /></label>
+      <label className={formStyles.field}>{copy.to}<input type="date" value={through} min={from || '1900-01-01'} max="9998-12-31" required={Boolean(from)} onChange={event => setThrough(event.target.value)} /></label>
+      <button type="submit" className={formStyles.signout}>{copy.applyPeriod}</button>
+    </form>
+    <EnrollmentResults key={query} path={`me/enrollments?learner_id=${learner.learner_id}${query ? '&' + query : ''}`} />
+  </section>;
+}
+
+function EnrollmentResults({ path }: { path: string }) {
+  const { copy } = textByLanguage[useSiteLanguage()];
+  const records = usePagedRecords<CustomerEnrollment>(path);
+  return <><ReadState pending={records.items === null} {...records} />{records.items?.length === 0 && <p className={styles.empty}>{copy.empty}</p>}<ul className={styles.list}>{records.items?.map(item => <li key={item.enrollment_id} className={styles.sessionRow}><div><SessionTime start={item.occurrence.start_at} end={item.occurrence.end_at} /><p>{copy.withTutor} {item.occurrence.tutor.display_name}</p><p className={styles.status}>{copy.states[item.state] || item.state}</p></div><Link className={styles.link} href={`/learn/bookings/${item.enrollment_id}`}>{copy.openReservation}</Link></li>)}</ul></>;
 }
 
 function WaitlistList({ learner }: { learner: Learner }) { return <><WaitlistRecords learner={learner} state="offered" /><WaitlistRecords learner={learner} state="waiting" /></>; }

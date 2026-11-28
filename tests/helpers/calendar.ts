@@ -11,7 +11,7 @@ import { calendarHandler } from '../../src/worker/calendar';
 import { createFakeCalendarAdapter } from '../../src/server/providers/calendar';
 import { getOccurrenceMeeting,invokeMeetingCommandWithStatus } from '../../src/modules/teaching/meetings';
 /** Genuine verified quote, source payment, exact fee and confirmed booking; provider alone is fake. */
-export async function calendarFixture(){const f=await paymentFixture({charge:'enrollment'});try{
+export async function calendarFixture(options: {isolatedLearners?: boolean} = {}){const f=await paymentFixture({charge:'enrollment',...options});try{
  const connection=await f.rpc('add_fake_calendar_organizer',{p_idempotency_key:randomUUID()});
  // Fixtures often use the same hour. Give this generated tutor a dedicated fake
  // identity, so parallel lessons exercise the same organizer preference as Google.

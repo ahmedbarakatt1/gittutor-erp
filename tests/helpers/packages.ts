@@ -4,8 +4,8 @@ import {policyFixture} from '../unit/policy-vectors';
 import {catalogFixtureIds} from '../../tools/catalog-seed';
 import {fixtureId} from '../../tools/db-seed';
 
-export async function packageFixture(options:{coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up';cancellationRefundBasisPoints?:number;groupTargetSize?:2|3|4}={}){
- const booking=await bookingFixture();
+export async function packageFixture(options:{isolatedLearners?:boolean;coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up';cancellationRefundBasisPoints?:number;groupTargetSize?:2|3|4}={}){
+ const booking=await bookingFixture(options);
  await booking.availability();
  const content=policyFixture('group');
  const target=options.groupTargetSize??2;

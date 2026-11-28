@@ -6,7 +6,7 @@ import{catalogFixtureIds}from'../../tools/catalog-seed';
 import{fixtureId}from'../../tools/db-seed';
 
 /** Isolated historical schedule/admission fixture only. No completion, earning, consumption or revenue is fabricated. */
-export async function completionFixture(options:{packageValue?:number;startsInSeconds?:number;coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up'}={}){const f=await paymentFixture({charge:'enrollment'});try{
+export async function completionFixture(options:{isolatedLearners?:boolean;packageValue?:number;startsInSeconds?:number;coverageRule?:'named_entitlement_covers_eligible_occurrence'|'allocated_value_with_explicit_top_up'}={}){const f=await paymentFixture({charge:'enrollment',isolatedLearners:options.isolatedLearners});try{
  const occurrenceId=randomUUID(),enrollmentId=randomUUID(),quoteId=randomUUID(),acceptanceId=randomUUID();
  const prior=(await f.database.query('select o.*,e.current_quote_id from app_private.occurrences o join app_private.enrollments e on e.occurrence_id=o.id where e.id=$1',[f.enrollmentId])).rows[0];
  let policyId=prior.policy_version_id as string,offerId=prior.offer_id as string;

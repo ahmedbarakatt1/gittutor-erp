@@ -5,6 +5,7 @@ import { accountSchema } from "@/server/auth";
 import { allowedOrigin, DomainError, landingForRoles, loginInput, readJson, safeError, signupInput } from "@/server/http";
 import { z } from "zod";
 import { priorSessionToken, retireReplacedSession } from "@/server/session-replacement";
+import { reservePasswordLogin } from "@/server/password-login-limit";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ action: string }> }) {
   const requestId = randomUUID();
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const parsed = z.object({ password: z.string().min(12).max(256) }).strict().safeParse(await readJson(request));
       if (!parsed.success) throw new DomainError("VALIDATION_ERROR");
       const { error } = await context.client.auth.updateUser({ password: parsed.data.password });
+      if (error?.code === "signup_disabled") throw new DomainError("SIGNUP_CLOSED");
       if (error) throw new DomainError(error.status === 429 ? "RATE_LIMITED" : "VALIDATION_ERROR");
       const others = await context.client.auth.signOut({ scope: 'others' });
       if (others.error) throw new DomainError('PASSWORD_UPDATED_REVOCATION_UNCONFIRMED');
@@ -64,9 +66,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await retireReplacedSession(context.client.auth, previous, data.session?.access_token);
       return context.finish(NextResponse.json({ data: { verification_required: true }, request_id: requestId }, { status: 201 }));
     }
+    // Only the deployment platform's overwritten forwarding header is trustworthy.
+    const source = process.env.VERCEL === '1' ? request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() : undefined;
+    const slot = await reservePasswordLogin(email, context.config.supabase_secret_key, source || 'default');
+    if (slot.retrySeconds) {
+      const limited = safeError(new DomainError('RATE_LIMITED'));
+      return context.finish(NextResponse.json({ code: limited.code, message: limited.message, request_id: requestId },
+        { status: 429, headers: { 'Retry-After': String(slot.retrySeconds) } }));
+    }
     const { data, error } = await context.client.auth.signInWithPassword({ email, password: parsed.data.password });
     if (error) throw new DomainError(error.code === "email_not_confirmed" ? "VERIFIED_ACCOUNT_REQUIRED" : error.status === 429 ? "RATE_LIMITED" : "AUTH_FAILED");
     replacingSession = true;
+    await slot.releaseSuccessfulAttempt().catch(() => console.warn("auth_login_slot_release_failed", { request_id: requestId }));
     await retireReplacedSession(context.client.auth, previous, data.session?.access_token);
     const account = await context.client.rpc("get_my_account");
     if (account.error) throw account.error;

@@ -1,9 +1,11 @@
 import { expectSignedInAccount } from '../helpers/browser-auth';
 import { expect, test, type Page, type Locator, type APIRequestContext, type Response } from '@playwright/test';
+import { requestFixture } from '../helpers/requests';
+import { packageFixture } from '../helpers/packages';
 import { bookingFixture } from '../helpers/booking';
 import { loadLocalSupabase } from '../helpers/supabase';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
-import { formatCairoInstant } from '@/modules/booking/scheduling';
+import { formatCairoInstant, resolveCairoLocalTime } from '@/modules/booking/scheduling';
 import type { AdminPricing } from '@/modules/catalog/queries';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
@@ -236,6 +238,18 @@ test('tutor availability conflict preserves the scheduled session and shows its 
     const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/v1/availability' && result.request().method() === 'POST'); await availability.getByRole('button', { name: 'Save availability', exact: true }).click(); expect((await response).status()).toBe(409);
     const affected = page.getByRole('region', { name: 'Sessions affected by this change', exact: true }); await expect(affected).toBeVisible(); await expect(affected.getByRole('link', { name: 'Review this session', exact: true })).toHaveAttribute('href', `/tutor/schedule?occurrence=${created.occurrence_id}`);
     await expect(availability.getByLabel('Date 1', { exact: true })).toHaveValue(local.local_date);
+    await availability.getByRole('button', { name: 'Remove date exception', exact: true }).click();
+    await availability.getByRole('button', { name: 'Remove day ' + local.weekday, exact: true }).click();
+    const weeklyResponse = page.waitForResponse(result => new URL(result.url()).pathname === '/api/v1/availability' && result.request().method() === 'POST');
+    await availability.getByRole('button', { name: 'Save availability', exact: true }).click();
+    const weeklyRefused = await weeklyResponse;
+    expect(weeklyRefused.status()).toBe(409);
+    expect((await weeklyRefused.json()).field_errors.conflicting_occurrence_ids).toEqual([created.occurrence_id]);
+    await expect(affected).toContainText('Cairo', { timeout: 30000 });
+    expect(Date.parse((await affected.locator('time').first().getAttribute('datetime'))!)).toBe(Date.parse(times.start_at));
+    const persisted = await fixture.tutor.rpc('get_tutor_availability');
+    expect(persisted.data.weekly_intervals).toEqual(fixture.weekly);
+
     const record = await context.request.get(`/api/v1/tutor/occurrences?occurrence_id=${created.occurrence_id}`); expect(record.status()).toBe(200); expect(Date.parse((await record.json()).data.items[0].occurrence.start_at)).toBe(Date.parse(times.start_at));
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await mkdir('.local/ui-review', { recursive: true }); await context.storageState({ path: `.local/ui-review/t04-${info.project.name}-tutor.json` }); await writeFile(`.local/ui-review/t04-${info.project.name}-tutor-meta.json`, JSON.stringify({ occurrenceId: created.occurrence_id, localDate: local.local_date }));
@@ -304,4 +318,116 @@ test('an accepted schedule-only proposal is reviewed and applied without changin
     await adminPage.getByText('Review proposed terms', { exact: true }).click(); const commit = adminPage.getByRole('form', { name: 'Save new session time', exact: true }); await commit.getByLabel('Reason for this request', { exact: true }).fill('Apply reviewed schedule-only change'); await submit(adminPage, commit, `occurrences/${occurrenceId}/reschedule`);
     const response = await contexts[1].request.get(`/api/v1/enrollments/${seat.enrollment_id}`); expect(response.status()).toBe(200); const enrollment = (await response.json()).data; expect(Date.parse(enrollment.occurrence.start_at)).toBe(Date.parse(target)); expect(enrollment.quote.customer_price_minor).toBe(original.customer_price_minor); expect(enrollment.quote.quote_id).not.toBe(original.quote_id); expect(enrollment.quote.accepted_at).not.toBeNull(); expect(enrollment.funding.integration_state).toBe('ready'); expect(enrollment.funding.eligible).toBe(false);
   } finally { await Promise.all(contexts.map(context => context.close())); await fixture.close(); }
+});
+
+test('learner period uses Cairo dates, includes the through date and clears reservations outside the selected period', async ({ page }) => {
+  test.setTimeout(120000);
+  const f = await bookingFixture();
+  try {
+    await f.availability();
+    const time = f.interval(391);
+    const early = new Date(Date.parse(time.start_at) - 3600000).toISOString();
+    const earlierOccurrence = await f.occurrence('private', {start_at: early, end_at: time.start_at});
+    const earlierHold = await f.reserve(String(earlierOccurrence.occurrence_id));
+    const occurrence = await f.occurrence('private', time);
+    const hold = await f.reserve(String(occurrence.occurrence_id));
+    await login(page, 'learner_a');
+    await page.goto('/learn/bookings');
+    // Request a one-record page through the genuine endpoint to exercise the cursor without adding 26 seats.
+    await page.route('**/api/v1/me/enrollments?**', async route => {
+      const url = new URL(route.request().url());
+      url.searchParams.set('limit', '1');
+      await route.continue({url: url.toString()});
+    });
+    const date = time.start_at.slice(0, 10);
+    const form = page.getByRole('form', { name: 'Session period' });
+    await form.getByLabel('From date').fill(date);
+    await form.getByLabel('Through date').fill(date);
+    const response = page.waitForResponse(r => new URL(r.url()).pathname === '/api/v1/me/enrollments' && new URL(r.url()).searchParams.has('from'));
+    await form.getByRole('button', { name: 'Show this period' }).click();
+    const fetched = await response;
+    expect(fetched.status()).toBe(200);
+    const data = (await fetched.json()).data;
+    expect(data.items).toHaveLength(1);
+    expect(data.next_cursor).toEqual(expect.any(String));
+    for (const item of data.items) expect(new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date(item.occurrence.start_at))).toBe(date);
+    const bookings = page.getByRole('heading', { name: 'Your reservations' }).locator('..');
+    const own = bookings.locator(`a[href="/learn/bookings/${hold.enrollment_id}"]`);
+    await expect(bookings.getByRole('button', { name: 'Load more results' })).toBeVisible();
+    while (await own.count() === 0 && await bookings.getByRole('button', { name: 'Load more results' }).isVisible()) {
+      const next = page.waitForResponse(r => new URL(r.url()).pathname === '/api/v1/me/enrollments' && new URL(r.url()).searchParams.has('cursor'));
+      await bookings.getByRole('button', { name: 'Load more results' }).click();
+      expect((await next).status()).toBe(200);
+    }
+    await expect(own).toBeVisible();
+    await expect(bookings.locator(`a[href="/learn/bookings/${earlierHold.enrollment_id}"]`)).toBeVisible();
+    await form.getByLabel('From date').fill('2001-01-01');
+    await form.getByLabel('Through date').fill('2001-01-01');
+    await form.getByRole('button', { name: 'Show this period' }).click();
+    await expect(page.getByText('No reservations in this period.')).toBeVisible();
+    await expect(own).toHaveCount(0);
+  } finally { await f.close(); }
+});
+
+test('an overnight session shows both Cairo dates to the booked learner, assigned tutor and administrator', async ({ browser }) => {
+  test.setTimeout(150000);
+  const f = await requestFixture();
+  try {
+    const date = f.interval(15).start_at.slice(0, 10);
+    const start = resolveCairoLocalTime(`${date}T23:30`)[0].instant;
+    const end = new Date(Date.parse(start) + 105 * 60000).toISOString();
+    const tomorrow = formatCairoInstant(end).local_date;
+    const exceptions = [
+      { local_date: date, intervals: [{ start_local: '23:30', end_local: '24:00' }] },
+      { local_date: tomorrow, intervals: [{ start_local: '00:00', end_local: '01:15' }] },
+    ];
+    await f.rpc('set_availability', { p_tutor_id: f.tutorId, p_weekly_intervals: [], p_dated_exceptions: exceptions,
+      p_expected_version: 0, p_reason: 'Synthetic overnight availability', p_idempotency_key: randomUUID() });
+    const occurrence = await f.eligibleOccurrence(65000, 105, start);
+    const hold = await f.reserve(String(occurrence.occurrence_id));
+    const rejected = await f.tutor.rpc('set_availability', { p_tutor_id: f.tutorId, p_weekly_intervals: [],
+      p_dated_exceptions: exceptions.slice(0, 1), p_expected_version: 1, p_reason: 'Test missing second-day coverage', p_idempotency_key: randomUUID() });
+    expect(rejected.error?.message).toContain('SCHEDULE_CONFLICT');
+    const dayLabel = (instant: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Cairo' }).format(new Date(instant));
+    for (const [user, url] of [
+      ['learner_a', `/learn/bookings/${hold.enrollment_id}`],
+      [f.actor, `/tutor/schedule?occurrence=${occurrence.occurrence_id}`],
+      ['admin_a', `/admin/schedule?occurrence=${occurrence.occurrence_id}`],
+    ] as const) {
+      const context = await browser.newContext({ baseURL });
+      try {
+        const page = await context.newPage();
+        await login(page, user);
+        await page.goto(url);
+        await expect(page.locator('time').filter({hasText: `${dayLabel(start)} · 23:30`}).first()).toBeVisible();
+        await expect(page.locator('time').filter({hasText: `${dayLabel(end)} · 01:15`}).first()).toBeVisible();
+      } finally { await context.close(); }
+    }
+  } finally { await f.close(); }
+});
+
+test('GT-ADM-021 admin sees the conflicting session and Cairo time', async ({ page }) => {
+  test.setTimeout(120000);
+  const f = await packageFixture();
+  try {
+    const times = f.interval();
+    const existing = await f.rpc('create_occurrence', { p_tutor_id: f.tutorId, p_offer_id: f.offerId,
+      p_start_at: times.start_at, p_end_at: times.end_at, p_time_zone: 'Africa/Cairo', p_target_tier: 2,
+      p_idempotency_key: randomUUID(),
+    });
+    await login(page, 'admin_a');
+    await page.goto('/admin/schedule');
+    await ensureOption(page, 'Published offer', f.offerId);
+    await ensureOption(page, 'Approved tutor', f.tutorId);
+    const form = page.getByRole('form', { name: 'Schedule a session', exact: true });
+    const local = formatCairoInstant(times.start_at);
+    await form.getByLabel('Session starts', { exact: true }).fill(local.local_date + 'T' + local.local_time);
+    const refused = page.waitForResponse(res => new URL(res.url()).pathname === '/api/v1/occurrences' && res.request().method() === 'POST');
+    await form.getByRole('button', { name: 'Schedule a session', exact: true }).click();
+    expect((await refused).status()).toBe(409);
+    const affected = page.getByRole('region', { name: 'Sessions affected by this change' });
+    await expect(affected.getByRole('link')).toHaveAttribute('href', '/admin/schedule?occurrence=' + existing.occurrence_id);
+    await expect(affected).toContainText('Cairo', { timeout: 30000 });
+    expect(Date.parse((await affected.locator('time').first().getAttribute('datetime'))!)).toBe(Date.parse(times.start_at));
+  } finally { await f.close(); }
 });

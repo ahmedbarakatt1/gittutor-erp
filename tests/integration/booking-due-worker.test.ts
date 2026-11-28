@@ -68,6 +68,12 @@ test('a lost worker acknowledgement replays one expiry/promotion and the next ex
   expect((await fixture.database.query('select state from app_private.waitlist_entries where id=$1', [queued[0].waitlist_entry_id])).rows[0].state).toBe('expired');
   expect((await fixture.database.query('select state from app_private.waitlist_entries where id=$1', [queued[1].waitlist_entry_id])).rows[0].state).toBe('offered');
   expect((await fixture.database.query("select count(*)::int as count from app_private.enrollments where occurrence_id=$1 and state='held' and hold_expires_at>now()", [occurrenceId])).rows[0].count).toBe(1);
+  const expiredQuote = (await fixture.database.query('select current_quote_id id from app_private.enrollments where id=$1', [promoted.offered_enrollment_id])).rows[0];
+  const stale = await fixture.rpc('get_quote', { p_quote_id: expiredQuote.id }, fixture.students[1]);
+  expect((await fixture.students[1].rpc('accept_quote', { p_quote_id: stale.quote_id, p_quote_hash: stale.quote_hash, p_expected_version: stale.version, p_idempotency_key: randomUUID() })).error?.message).toBe('WINDOW_CLOSED');
+  const nextQuote = (await fixture.database.query('select e.current_quote_id id from app_private.enrollments e join app_private.waitlist_entries w on w.offered_enrollment_id=e.id where w.id=$1', [queued[1].waitlist_entry_id])).rows[0];
+  const current = await fixture.rpc('get_quote', { p_quote_id: nextQuote.id }, fixture.students[2]);
+  expect((await fixture.rpc('accept_quote', { p_quote_id: current.quote_id, p_quote_hash: current.quote_hash, p_expected_version: current.version, p_idempotency_key: randomUUID() }, fixture.students[2])).accepted_at).toBeTruthy();
 });
 
 test('promotion rechecks withdrawn guardian consent and skips to the next eligible learner', async () => {

@@ -10,12 +10,14 @@ import { createDatabasePool, databaseUrl } from './database';
 import { getCalendarConnectionRequest, listCalendarConnections, invokeMeetingCommandWithStatus } from '../modules/teaching/meetings';
 import { createProviderTokenCipher, type ProviderTokenKeys } from './provider-tokens';
 import { createOAuthHandshake, readOAuthHandshake, googleAuthorizationUrl, exchangeGoogleCode } from './google-oauth';
+import { checkSimulatedRoom } from './simulated-room-check';
 import { verifyGoogleOrganizer } from './google-organizer-probe';
 import type { ServerConfig } from './config';
 
 const legacyCookieName = 'git_tutor_google_oauth', cookiePath = '/api/calendar';
 function stateCookieName(state: string) { return `${legacyCookieName}_${state}`; }
 const connectInput = z.union([
+  z.object({ action: z.literal('recheck'), connection_id: z.uuid(), expected_version: z.int().positive().max(2147483647) }).strict(),
   z.object({ action: z.literal('add'), verify_room: z.literal(true).optional() }).strict(),
   z.object({ action: z.literal('reconnect'), connection_id: z.uuid(), expected_version: z.int().positive().max(2147483647), verify_room: z.literal(true).optional() }).strict(),
   z.object({}).strict().transform(() => ({ action: 'legacy' as const })),
@@ -33,7 +35,7 @@ async function actor(client: ReturnType<typeof requestSupabase>['client']) {
 }
 function secure(response: NextResponse) { response.headers.set('Cache-Control', 'private, no-store'); response.headers.set('Referrer-Policy', 'no-referrer'); response.headers.set('X-Content-Type-Options', 'nosniff'); return response; }
 
-async function legacyGoogleTarget(client: ReturnType<typeof requestSupabase>['client']): Promise<ConnectInput> {
+async function legacyGoogleTarget(client: ReturnType<typeof requestSupabase>['client']): Promise<Exclude<ConnectInput, {action:'recheck'}>> {
   const organizers = (await listCalendarConnections(client)).filter(connection => connection.mode === 'google');
   const current = organizers.filter(connection => connection.state !== 'revoked');
   const candidates = current.length ? current : organizers;
@@ -52,6 +54,20 @@ export async function connectCalendar(request: NextRequest) {
     if (!key || key.length > 200 || !input.success) throw new DomainError('VALIDATION_ERROR');
     const current = await actor(client);
     const mode = config.providers.calendar;
+    if (input.data.action === 'recheck') {
+      if (!config.isolated || mode !== 'fake') throw new DomainError('FORBIDDEN');
+      const { connection_id: id, expected_version: version } = input.data;
+      const organizer = (await listCalendarConnections(client)).find(row => row.connection_id === id);
+      if (!organizer) throw new DomainError('NOT_FOUND');
+      if (organizer.version !== version) throw new DomainError('VERSION_CONFLICT');
+      if (organizer.mode !== 'fake' || organizer.state !== 'connected') throw new DomainError('STATE_CONFLICT');
+      await checkSimulatedRoom(id, version);
+      workerPool ??= createDatabasePool(databaseUrl('worker'));
+      await workerPool.query('select app_private.record_simulated_room_check($1,$2,$3,$4,$5)', [
+        current.actor_id, current.session_id, id, version, key,
+      ]);
+      return transport.finish(secure(NextResponse.json({ data: { mode: 'fake', authorization_url: '/admin/integrations' } })));
+    }
     const verifyRoom = input.data.action !== 'legacy' && input.data.verify_room === true;
     if (verifyRoom && (mode !== 'google' || config.environment !== 'production')) throw new DomainError('VALIDATION_ERROR');
     const target = input.data.action === 'legacy' && mode === 'google' ? await legacyGoogleTarget(client) : input.data;

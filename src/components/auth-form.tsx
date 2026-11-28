@@ -13,6 +13,7 @@ function arabicAuthError(code?: string) {
   switch (code) {
     case 'AUTH_FAILED': return 'تحقّق من بريدك الإلكتروني وكلمة المرور ثم حاول مرة أخرى.';
     case 'VERIFIED_ACCOUNT_REQUIRED': return 'أكّد عنوان بريدك الإلكتروني قبل تسجيل الدخول.';
+    case 'SIGNUP_CLOSED': return 'التسجيل متاح بدعوة فقط. استخدم الدعوة التي أرسلها لك Git Tutor لتفعيل حسابك.';
     case 'RATE_LIMITED': return 'حاول مرة أخرى بعد قليل.';
     case 'VALIDATION_ERROR': return 'تحقّق من البيانات المدخلة ثم حاول مرة أخرى.';
     case 'AUTH_REQUIRED': return 'سجّل الدخول من جديد ثم أعد المحاولة.';

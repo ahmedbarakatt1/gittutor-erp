@@ -173,3 +173,17 @@ test.each(['inconclusive','probe-error','stale-grant','missing-calendar','previe
   expect(port.query).toHaveBeenCalledTimes(problem==='stale-grant'?2:1);
   expect(port.probe).toHaveBeenCalledTimes(['missing-calendar','preview-database'].includes(problem)?0:1);
 });
+
+test('simulated room checks require a current admin, an isolated backend and the active fake organizer', async () => {
+  const request = { action: 'recheck', connection_id: target, expected_version: 7 };
+  port.admin = false;
+  expect((await post(request)).status).toBe(403);
+  port.admin = true;
+  port.environment = 'production';
+  expect((await post(request)).status).toBe(403);
+  port.environment = 'test';
+  port.mode = 'fake';
+  expect((await post({ ...request, expected_version: 6 })).status).toBe(409);
+  expect((await post(request)).status).toBe(409);
+  expect(port.query).not.toHaveBeenCalled();
+});

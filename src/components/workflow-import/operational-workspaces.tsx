@@ -91,8 +91,8 @@ function WorkflowSection({ section, data, onSaved, hasWorkflow, overviewAction }
     requestAnimationFrame(() => registrySummary.current?.focus());
   }
   function drillDown(next: ChartSelection) {
-    resetFilters();
-    if (next.chart !== selected?.chart || next.group !== selected.group) setSelected(next);
+    setPage(0);
+    setSelected(next.chart === selected?.chart && next.group === selected.group ? null : next);
     openRegister();
   }
   const summaryMetrics = section.metrics.filter(metric => metric.key !== 'source_records');
@@ -196,8 +196,8 @@ function MappingReview({ row, options, onSaved }: { row: WorkflowOperationsRecor
   const [learner, setLearner] = useState(row.links.learner_id || ''), [tutor, setTutor] = useState(row.links.tutor_id || ''), id = useId();
   const showLearner = ['sessions', 'packages', 'students'].includes(row.source_table), showTutor = ['sessions', 'tutors'].includes(row.source_table);
   return <details className={styles.details}><summary>{t("Review record links")}</summary><p className={styles.description}>{t("Confirm the people linked to this source row. Payment and delivery figures remain reported after this review.")}</p><IdentityForm action="workflow-operations" payload={form => ({ link_id: row.id, expected_version: row.review.version, review_state: 'reviewed', links: { ...(showLearner ? { learner_id: learner || null } : {}), ...(showTutor ? { tutor_id: tutor || null } : {}) }, reason: String(form.get('reason')).trim() })} submitLabel={t("Save mapping review")} successMessage={t("Mapping review saved. Historical financial and delivery claims remain reported.")} resettable={false} onSaved={onSaved}>
-    {showLearner && <div className={styles.filters}><label htmlFor={`${id}-learner`}>{t("Linked learner")}<select id={`${id}-learner`} value={learner} onChange={event => setLearner(event.target.value)}><option value="">{t("Unresolved learner")}</option>{options.learners.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
-    {showTutor && <div className={styles.filters}><label htmlFor={`${id}-tutor`}>{t("Linked tutor")}<select id={`${id}-tutor`} value={tutor} onChange={event => setTutor(event.target.value)}><option value="">{t("Unresolved tutor")}</option>{options.tutors.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
+    {showLearner && <div className={styles.filters}><label htmlFor={`${id}-learner`}>{t("Linked learner")}<select id={`${id}-learner`} required value={learner} onChange={event => setLearner(event.target.value)}><option value="">{t("Unresolved learner")}</option>{options.learners.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
+    {showTutor && <div className={styles.filters}><label htmlFor={`${id}-tutor`}>{t("Linked tutor")}<select id={`${id}-tutor`} required value={tutor} onChange={event => setTutor(event.target.value)}><option value="">{t("Unresolved tutor")}</option>{options.tutors.map(option => <option key={option.id} value={option.id}>{option.display_name}</option>)}</select></label></div>}
     <TextField name="reason" label={t("Review evidence and reason")} maxLength={2000} multiline />
   </IdentityForm></details>;
 }

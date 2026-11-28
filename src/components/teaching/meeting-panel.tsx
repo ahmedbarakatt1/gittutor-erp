@@ -35,7 +35,7 @@ export function MeetingPanel({ occurrenceId, learnerId, view = 'customer', displ
   }, [path, occurrenceId, attempt]);
   const now = data && record ? Date.parse(data.server_now) + Math.max(0, clock - record.received) : 0;
   const remaining = data ? Math.max(0, Math.ceil((Date.parse(data.start_at) - now) / 60000)) : 0;
-  const ended = Boolean(data && now >= Date.parse(data.end_at));
+  const ended = Boolean(data && (data.reason === 'SESSION_ENDED' || now >= Date.parse(data.end_at)));
   function refresh() { setPreview(false); setJoinError(''); setAttempt(value => value + 1); }
   async function join() {
     if (!data?.can_join || ended || joining) return;
@@ -66,17 +66,17 @@ export function MeetingPanel({ occurrenceId, learnerId, view = 'customer', displ
           {(!displayedSchedule || displayedSchedule.start !== data.start_at || displayedSchedule.end !== data.end_at) && <SessionTime start={data.start_at} end={data.end_at} />}
           <p role="timer" aria-live="off">{ended ? copy.ended : remaining > 0
             ? `${copy.starts} ${copy.countdown(Math.floor(remaining / 1440), Math.floor(remaining % 1440 / 60), remaining % 60)}` : copy.scheduledNow}</p>
-          {data.reason && data.reason !== 'SESSION_ENDED' && <p>{copy.reasons[data.reason]}</p>}
+          {ended ? <p>{copy.reasons.SESSION_ENDED}</p> : data.reason && <p>{copy.reasons[data.reason]}</p>}
         </div>
         <div className={styles.action}>
-          <button type="button" className={formStyles.primary} onClick={() => void join()} disabled={!data.can_join || ended || joining || failed}>
+          {!ended && <button type="button" className={formStyles.primary} onClick={() => void join()} disabled={!data.can_join || joining || failed}>
             {joining ? copy.joining : data.integration_state === 'simulated' ? copy.preview : copy.join}
-          </button>
+          </button>}
           <p>{data.integration_state === 'simulated' ? copy.simulated : data.integration_state === 'verified' ? copy.live : data.reason !== 'LIVE_VERIFICATION_REQUIRED' ? copy.verification : null}</p>
         </div>
       </div>
       {joinError && <p role="alert" className={formStyles.error}>{joinError}</p>}
-      {preview && <section className={styles.preview} aria-label={copy.previewTitle}>
+      {preview && !ended && <section className={styles.preview} aria-label={copy.previewTitle}>
         <h3>{copy.previewTitle}</h3><p role="status">{copy.previewDescription}</p>
         <button type="button" className={formStyles.signout} onClick={() => setPreview(false)}>{copy.close}</button>
       </section>}

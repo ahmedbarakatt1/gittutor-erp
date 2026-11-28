@@ -3,7 +3,7 @@ import { identityRpc,type IdentityRpcClient } from '../identity/commands';
 import { notificationContentSchema } from './templates';
 const id=z.uuid(),version=z.number().int().positive(),instant=z.iso.datetime({offset:true});
 export const notificationStates=z.enum(['queued','sent','delivered','bounced','suppressed','failed','unknown']);
-export const notificationSchema=z.object({delivery_id:id,event_id:id,state:notificationStates,created_at:instant,content:notificationContentSchema}).strict();
+export const notificationSchema=z.object({delivery_id:id,event_id:z.guid(),state:notificationStates,created_at:instant,content:notificationContentSchema}).strict();
 export const deliverySchema=z.object({delivery_id:id,event_type:z.string().max(100),audience:z.enum(['customer','tutor','staff']),channel:z.enum(['email','in_app']),state:notificationStates,safe_error_code:z.string().nullable(),masked_recipient:z.string(),created_at:instant,version,can_retry:z.boolean(),can_reconcile:z.boolean()}).strict();
 export const preferencesSchema=z.object({email_enabled:z.boolean(),version}).strict();
 export type Notification=z.infer<typeof notificationSchema>;

@@ -7,8 +7,8 @@ import { catalogFixtureIds } from '../../tools/catalog-seed';
 import { policyFixture, pricingFixture } from '../unit/policy-vectors';
 
 /** Genuine accepted and settled local scenario; future-debit money remains unreserved. */
-export async function fundedAmendmentFixture({ newPrice = 60000, named = false, proposalLifetimeMs = 600000 } = {}) {
-  const f = await paymentFixture();
+export async function fundedAmendmentFixture({ newPrice = 60000, named = false, proposalLifetimeMs = 600000, isolatedLearners = false } = {}) {
+  const f = await paymentFixture({ isolatedLearners });
   try {
     const account = await f.receiving(), first = await f.hold();
     const second = await f.reserve(first.occurrenceId, 1), quote = await f.rpc('get_quote', { p_quote_id: second.quote_id }, f.students[1]);

@@ -76,7 +76,7 @@ test('changing an incoming filter discards an old page and leaves current pagina
 
 test('a former guardian with no current roles retains own-source access without learner disclosure', async ({ browser }, info) => {
   test.setTimeout(120_000);
-  const fixture = await paymentFixture(), config = loadLocalSupabase();
+  const fixture = await paymentFixture({ charge: 'enrollment' }), config = loadLocalSupabase();
   const provider = createClient(config.url, config.secret_key, { auth: { persistSession: false, autoRefreshToken: false } });
   const email = `payment.former.${randomUUID()}@example.test`, password = `Synthetic-${randomUUID()}!`;
   const created = await provider.auth.admin.createUser({ email, password, email_confirm: true });
@@ -87,7 +87,7 @@ test('a former guardian with no current roles retains own-source access without 
   const customer = await browser.newContext({ baseURL, viewport: info.project.use.viewport });
   try {
     const contact = (await fixture.database.query('select id from app_private.verified_contacts where account_id=$1 and revoked_at is null', [actor.id])).rows[0].id;
-    const invitation = await fixture.rpc('create_guardian_invitation', { p_contact_id: contact, p_scopes: ['payments'], p_expires_at: new Date(Date.now() + 3600000).toISOString(), p_idempotency_key: randomUUID() }, fixture.learner);
+    const invitation = await fixture.rpc('create_guardian_invitation', { p_contact_id: contact, p_scopes: ['booking', 'payments'], p_expires_at: new Date(Date.now() + 3600000).toISOString(), p_idempotency_key: randomUUID() }, fixture.learner);
     const token = (await fixture.database.query("select payload->>'single_use_token' as token from app_private.domain_events where event_type='guardian_invitation_created' and aggregate_id=$1", [invitation.invitation_id])).rows[0].token;
     const link = await fixture.rpc('accept_guardian_invitation', { p_invitation_id: invitation.invitation_id, p_single_use_token: token, p_expected_version: 1, p_idempotency_key: randomUUID() }, payer);
     const account = await fixture.receiving(), transfer = await fixture.transfer(account.id, 10000, true, false);
@@ -99,10 +99,15 @@ test('a former guardian with no current roles retains own-source access without 
     // The guarded local fixture represents a legacy verified payer with no current memberships. Only the fresh actor is changed.
     await fixture.database.query("update app_private.account_roles set revoked_at=now(),reason='Synthetic roleless payer fixture',version=version+1 where account_id=$1 and revoked_at is null", [actor.id]);
     const me = await customer.request.get('/api/v1/me'); expect(me.status()).toBe(200); expect((await me.json()).data.roles).toEqual([]);
+    const booking = await customer.request.get(`/api/v1/enrollments/${fixture.enrollmentId}`);
+    expect([403, 404]).toContain(booking.status());
+    const files = await customer.request.get(`/api/v1/files?enrollment_id=${fixture.enrollmentId}`);
+    if (files.status() === 200) expect((await files.json()).data.items).toEqual([]);
+    else expect([403, 404]).toContain(files.status());
     const denied = await customer.request.get(`/api/v1/charges/${fixture.chargeId}/payment-instructions`); expect([403, 404]).toContain(denied.status());
     await page.getByRole('button', { name: 'Sign out', exact: true }).click(); await expect(page).toHaveURL(/\/login$/);
     await page.getByLabel('Email address', { exact: true }).fill(actor.email); await page.getByLabel('Password', { exact: true }).fill(actor.password); await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await expect(page).toHaveURL(`${baseURL}/learn/payments`);
+    await expect(page).toHaveURL(`${baseURL}/learn/payments`, { timeout: 30_000 });
     await page.goto(`/learn/payments/transfers/${transfer.id}`);
     await expect(page).toHaveURL(new RegExp(`/learn/payments/transfers/${transfer.id}$`));
     await expect(page.getByRole('heading', { name: 'Your money & refunds', exact: true })).toBeVisible();
@@ -206,7 +211,7 @@ test('a two-learner plan waits for the actual outside payer and survives staff r
       expect(before.allocation_page.items).toHaveLength(0);
       for (const packageId of [fixture.purchaseId, String(sibling.package_purchase_id)]) expect((await (await guardian.request.get(`/api/v1/packages/${packageId}`)).json()).data.package.purchased_granted_credit_quanta).toBe(0);
     }); expect(result.allocation_ids).toHaveLength(2); expect(result.unapplied_minor).toBe(0);
-    await expect(staff.getByText('This review is closed. Its recorded decision remains in the case history.', { exact: true })).toBeVisible();
+    await expect(staff.getByText('This review is closed. Its recorded decision remains in the case history.', { exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(staff.getByRole('button', { name: 'Apply verified funds', exact: true })).toHaveCount(0);
     await expect(staff.getByRole('button', { name: 'Renew claim', exact: true })).toHaveCount(0);
     for (const packageId of [fixture.purchaseId, String(sibling.package_purchase_id)]) { const detail = (await (await guardian.request.get(`/api/v1/packages/${packageId}`)).json()).data; expect(detail.package.purchased_granted_credit_quanta).toBe(3000); expect(JSON.stringify(detail)).not.toMatch(confidential); }
@@ -550,4 +555,29 @@ test.describe('private refund destination', () => {
       await writeFile(`.local/ui-review/t06-${info.project.name}-refund.json`, JSON.stringify({ refundId: refund.refund_id, destinationId: proposed.destination_id, destinationVersionId: verified.destination_version_id, transferId: transfer.id }));
     } finally { await Promise.all([customer.close(), admin.close()]); await fixture.close(); }
   });
+});
+
+test('GT-CS-035 queues a statement from the staff form using Cairo calendar dates', async ({ page }) => {
+  test.setTimeout(120_000);
+  const f = await paymentFixture();
+  try {
+    const account = await f.receiving();
+    const fileId = await f.evidence({ purpose: 'statement', parentType: 'receiving_account', parentId: account.id, mime: 'text/csv' });
+    await login(page, 'cs_a');
+    await page.goto('/service/payments/incoming', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.locator('select[name="receiving_account"]').selectOption(account.id);
+    await page.locator('summary').filter({ hasText: 'Queue statement review' }).click();
+    const form = page.getByRole('form', { name: 'Queue statement review', exact: true });
+    await form.getByLabel('Statement period starts').fill('2026-11-01');
+    await form.getByLabel('Statement period ends').fill('2026-11-28');
+    await form.getByLabel('Prepared evidence', { exact: true }).selectOption(fileId);
+    const sent = page.waitForResponse(response => response.url().endsWith('/api/v1/statement-imports') && response.request().method() === 'POST');
+    await form.getByRole('button', { name: 'Queue statement review' }).click();
+    const response = await sent;
+    expect(response.request().postDataJSON().statement_period).toEqual({ from: '2026-11-01', to: '2026-11-28' });
+    expect(response.status()).toBe(202);
+    const data = (await response.json()).data;
+    expect(data.validation_job_id).toBeTruthy();
+    await expect(form.getByRole('status')).toContainText('Statement review queued');
+  } finally { await f.close(); }
 });

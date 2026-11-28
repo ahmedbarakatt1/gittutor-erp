@@ -39,6 +39,7 @@ const errors: Record<string, [number, string]> = {
   SESSION_REVOKED: [401, "Your session has ended. Sign in again."],
   PASSWORD_UPDATED_REVOCATION_UNCONFIRMED: [503, "Your password changed. Use Account security to sign out on all devices."],
   VERIFIED_ACCOUNT_REQUIRED: [401, "Verify your email before continuing."],
+  SIGNUP_CLOSED: [403, "Registration is by invitation. Use the invitation from Git Tutor to activate your account."],
   FORBIDDEN: [403, "You do not have permission for this action."],
   OWNER_REQUIRED: [403, "This action needs the current owner."],
   CONSENT_REQUIRED: [403, "Current consent is required."],

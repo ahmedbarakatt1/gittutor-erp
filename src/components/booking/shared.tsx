@@ -46,7 +46,7 @@ export function cairoTime(value: string, language: 'ar' | 'en' = 'en') { return 
 export function SessionTime({ start, end }: { start: string; end: string }) {
   const uiLanguage = useSiteLanguage();
   const { copy } = textByLanguage[uiLanguage];
- return <bdi dir={uiLanguage === 'ar' ? 'rtl' : 'ltr'} className={styles.date}><time dateTime={start}>{cairoDate(start, uiLanguage)} · {cairoTime(start, uiLanguage)}</time>–<time dateTime={end}>{cairoTime(end, uiLanguage)}</time><span className={styles.meta}> {copy.timezone}</span></bdi>; }
+ return <bdi dir={uiLanguage === 'ar' ? 'rtl' : 'ltr'} className={styles.date}><time dateTime={start}>{cairoDate(start, uiLanguage)} · {cairoTime(start, uiLanguage)}</time>–<time dateTime={end}>{cairoDate(start, uiLanguage) !== cairoDate(end, uiLanguage) && `${cairoDate(end, uiLanguage)} · `}{cairoTime(end, uiLanguage)}</time><span className={styles.meta}> {copy.timezone}</span></bdi>; }
 export function CairoTimestamp({ value }: { value: string }) {
   const uiLanguage = useSiteLanguage();
   const { copy } = textByLanguage[uiLanguage];

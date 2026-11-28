@@ -18,7 +18,7 @@ const textByLanguage = {
 };
 
 
-type ConnectAction = { action: 'add' } | { action: 'reconnect'; connection_id: string; expected_version: number };
+type ConnectAction = { action: 'add' } | { action: 'reconnect' | 'recheck'; connection_id: string; expected_version: number };
 
 export function CalendarConnectionPanel({ provider, outcome, verifyGoogleRooms }: { provider: 'fake' | 'google'; outcome?: string; verifyGoogleRooms: boolean }) {
   const uiLanguage = useSiteLanguage();
@@ -66,7 +66,7 @@ export function CalendarConnectionPanel({ provider, outcome, verifyGoogleRooms }
       try { sessionStorage.removeItem(storageKey); } catch { /* The request has already completed. */ }
       operation.current = null;
       if (url) window.location.assign(url.href);
-      else { setFeedback(copy.connectedFake); records.reload(); }
+      else { setFeedback(action.action === 'recheck' ? copy.roomChecked : copy.connectedFake); records.reload(); }
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : copy.connectFailed);
     } finally {
@@ -112,13 +112,16 @@ export function CalendarConnectionPanel({ provider, outcome, verifyGoogleRooms }
             <div className={styles.accountBody}>
               <div className={styles.accountName}><strong>{title}{ambiguous && <small> · {id.slice(-6)}</small>}</strong><span className={styles.state}>{copy.states[row.state]}</span></div>
               <p>{row.mode === 'fake' ? transactionLabel(uiLanguage, "Simulated rooms") : practice ? transactionLabel(uiLanguage, "Designated test bookings") : 'Google Meet'} · {copy.states[row.integration_state]}</p>
-              {row.last_verified_at && <small>{transactionLabel(uiLanguage, "Last verified")} <CairoTimestamp value={row.last_verified_at} /></small>}
+              <small>{row.mode === 'fake' ? copy.lastSimulatedCheck : copy.lastVerified} · {row.last_verified_at
+                ? <time dateTime={row.last_verified_at}><CairoTimestamp value={row.last_verified_at} /></time> : copy.noCheck}</small>
             </div>
             <details className={styles.manage}><summary>{transactionLabel(uiLanguage, "Manage")}<span className={styles.srOnly}> {title}</span></summary>
               <div className={styles.actions}>
+                {canReconnect && row.mode === 'fake' && row.state === 'connected' && <button type="button" disabled={pending} className={styles.secondary}
+                  onClick={() => void connect({ action: 'recheck', connection_id: id, expected_version: row.version })}>{copy.recheckRoom}</button>}
                 {canReconnect && <button type="button" disabled={pending} className={styles.secondary}
                   onClick={() => void connect({ action: 'reconnect', connection_id: id, expected_version: row.version })}>
-                  {verifyGoogleRooms && row.mode === 'google' ? transactionLabel(uiLanguage, "Reconnect and verify Google Meet") : row.mode === 'google' ? copy.reconnect : transactionLabel(uiLanguage, "Reconnect simulated calendar")}
+                  {verifyGoogleRooms && row.mode === 'google' ? copy.recheckGoogle : row.mode === 'google' ? copy.reconnect : transactionLabel(uiLanguage, "Reconnect simulated calendar")}
                 </button>}
                 {row.state !== 'revoked' && <IdentityForm key={row.version} action="calendar/connection/revoke"
                   submitLabel={copy.revoke} successMessage={copy.revoked} resettable={false} onSaved={records.reload}

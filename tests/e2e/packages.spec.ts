@@ -182,3 +182,13 @@ test('an interrupted purchase retries once; approved bonus credits stay separate
     await mkdir('.local/ui-review', { recursive: true }); await customer.storageState({ path: `.local/ui-review/t05-${info.project.name}-customer.json` }); await admin.storageState({ path: `.local/ui-review/t05-${info.project.name}-admin.json` }); await writeFile(`.local/ui-review/t05-${info.project.name}-package.json`, JSON.stringify({ packageId: committedId, learnerId: fixture.learnerId, policyId: fixture.policyId, offerId: fixture.offerId }));
   } finally { await Promise.all([customer.close(), admin.close()]); await fixture.close(); }
 });
+
+test('GT-STU-080 shows the empty package catalog message when the contract list is empty', async ({ page }) => {
+  test.setTimeout(90_000);
+  await login(page, 'learner_a');
+  await page.route('**/api/v1/me/package-contracts?*', route =>
+    route.fulfill({ json: { data: { items: [], next_cursor: null } } }));
+  await page.goto('/learn/packages');
+  await expect(page.getByText('No complete approved package is available for purchase yet.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Accept terms and create purchase' })).toHaveCount(0);
+});

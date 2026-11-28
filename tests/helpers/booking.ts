@@ -5,7 +5,7 @@ import { fixtureId } from '../../tools/db-seed';
 import { catalogFixtureIds } from '../../tools/catalog-seed';
 
 export type BookingJson = Record<string, unknown>;
-export async function bookingFixture() {
+export async function bookingFixture({ isolatedLearners = false }: { isolatedLearners?: boolean } = {}) {
   const database=await adminDatabase(),config=loadLocalSupabase();
   const admin=await authClient('admin_a');
   const provider=createClient(config.url,config.secret_key,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -24,8 +24,19 @@ export async function bookingFixture() {
   await rpc('update_tutor_profile',{p_display_name:'Synthetic booking tutor',p_bio:'Isolated scheduling verification profile.',p_subject_ids:[fixtureId('subject_calculus')],p_contact_id:teacher.contact_id,p_locale:'en',p_expected_version:teacher.version,p_idempotency_key:randomUUID()},tutor);
   const profile=(await database.query('select version,draft_profile_version_id from app_private.tutors where id=$1',[teacher.id])).rows[0];
   await rpc('approve_tutor_profile',{p_tutor_id:teacher.id,p_profile_version_id:profile.draft_profile_version_id,p_decision:'approved',p_reason:'Synthetic booking verification',p_expected_version:profile.version,p_idempotency_key:randomUUID()});
-  const students=await Promise.all(['learner_a','learner_b','learner_c','learner_d'].map(authClient));
-  const accountIds=['learner_a','learner_b','learner_c','learner_d'].map(label=>config.actors[label].id);
+  const learnerActors = await Promise.all(['learner_a','learner_b','learner_c','learner_d'].map(async label => {
+    if (!isolatedLearners) return config.actors[label];
+    const email = 'lesson-' + randomUUID() + '@example.test', password = 'Synthetic-' + randomUUID() + '!';
+    const created = await provider.auth.admin.createUser({email,password,email_confirm:true});
+    if (created.error || !created.data.user) throw new Error('SYNTHETIC_LEARNER_CREATION_FAILED');
+    return {id:created.data.user.id,email,password};
+  }));
+  const students = await Promise.all(learnerActors.map(async ({id,email,password}) => {
+    const client = anonymousClient(), signed = await client.auth.signInWithPassword({email,password});
+    if (signed.error || signed.data.user?.id !== id) throw new Error('SYNTHETIC_AUTH_FAILED');
+    return client;
+  }));
+  const accountIds=learnerActors.map(actor=>actor.id);
   const learners=(await database.query('select id from app_private.learners where account_id=any($1::uuid[]) order by array_position($1::uuid[],account_id)',[accountIds])).rows.map(row=>row.id as string);
   const weekly=Array.from({length:7},(_,index)=>({weekday:index+1,start_local:'06:00',end_local:'23:00'}));
   async function availability() {
@@ -39,7 +50,7 @@ export async function bookingFixture() {
   }
   async function reserve(id:string,index=0,key=randomUUID()) {return rpc('reserve_enrollment',{p_occurrence_id:id,p_learner_id:learners[index],p_idempotency_key:key},students[index]);}
   async function close(){await Promise.all([admin,tutor,...students].map(client=>client.auth.signOut({scope:'local'})));await database.end();}
-  return {database,admin,tutor,students,learners,actor:{id:created.data.user.id,email,password},tutorId:teacher.id as string,rpc,weekly,availability,interval,occurrence,reserve,close};
+  return {database,admin,tutor,students,learners,learnerActors,actor:{id:created.data.user.id,email,password},tutorId:teacher.id as string,rpc,weekly,availability,interval,occurrence,reserve,close};
 }
 
 /** Independent transactions use claims from genuine local Auth sessions; no invented auth.users/session records. */

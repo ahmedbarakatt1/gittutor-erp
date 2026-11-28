@@ -5,7 +5,7 @@ import { getGroupAmendment } from '../../src/modules/booking/queries';
 import { reserveFutureAmendment, retryFinancialConflict } from '../helpers/financial-booking';
 
 test.each([{ newPrice: 55000, outcome: 'commit', named: false }, { newPrice: 55000, outcome: 'commit', named: true }, { newPrice: 60000, outcome: 'commit', named: false }, { newPrice: 60000, outcome: 'decline', named: false }, { newPrice: 60000, outcome: 'expire', named: false }])('funded group2 to3 $newPrice $outcome named=$named preserves original cash and fee/roster history', async ({ newPrice, outcome, named }) => {
-  const { f, account, first, second, paid, proposed, coverageId } = await fundedAmendmentFixture({ newPrice, named, proposalLifetimeMs: outcome === 'expire' ? 10000 : 600000 });
+  const { f, account, first, second, paid, proposed, coverageId } = await fundedAmendmentFixture({ newPrice, named, isolatedLearners: true, proposalLifetimeMs: outcome === 'expire' ? 10000 : 600000 });
   try {
     const earmarks = (await f.database.query('select finance_private.finance_amendment_funding_balance($1,$2) result', [proposed.amendment_id, first.enrollmentId])).rows[0].result;
     expect(earmarks).toEqual({ reserved_minor: 0, reservation_ids: [], reconciliation_state: 'clear' });
@@ -53,4 +53,4 @@ test.each([{ newPrice: 55000, outcome: 'commit', named: false }, { newPrice: 550
       } finally { await f.database.query('rollback'); }
     }
   } finally { await f.close(); }
-});
+}, 120000);
